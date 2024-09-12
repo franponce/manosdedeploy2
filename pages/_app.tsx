@@ -1,11 +1,11 @@
 import * as React from "react";
 import Head from "next/head";
 import Script from 'next/script';
+import Image from 'next/image';
 import {
   ChakraProvider,
   Heading,
   Text,
-  Image,
   Container,
   Stack,
   Divider,
@@ -141,12 +141,13 @@ const App: React.FC<AppProps> = ({ Component, pageProps }) => {
               height={{ md: "300px" }}
               overflow="hidden"
               width="100%"
+              position="relative"
             >
               <Image
                 alt="Header image"
                 src={INFORMATION.banner}
-                layout="fill"
-                objectFit="cover"
+                fill
+                style={{ objectFit: "cover" }}
                 quality={100}
               />
             </Box>
@@ -165,13 +166,13 @@ const App: React.FC<AppProps> = ({ Component, pageProps }) => {
               marginBottom={{ base: 4, sm: 0 }}
               marginRight={{ base: 0, sm: 6 }}
               overflow="hidden"
+              position="relative"
             >
               <Image
                 alt="Avatar"
                 src={INFORMATION.avatar}
-                width="100%"
-                height="100%"
-                objectFit="cover"
+                fill
+                style={{ objectFit: "cover" }}
               />
             </Box>
             <Stack
@@ -202,7 +203,7 @@ const App: React.FC<AppProps> = ({ Component, pageProps }) => {
                       justifyContent="center"
                       width={8}
                     >
-                      <img
+                      <img 
                         alt={`${social.name} icon`}
                         src={`https://icongr.am/fontawesome/${social.name}.svg?size=20&color=ffffff`}
                       />
