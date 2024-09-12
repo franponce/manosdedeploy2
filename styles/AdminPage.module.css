@@ -1,0 +1,352 @@
+.container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.heading {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.createButton {
+  background-color: #48bb78;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+
+.controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.searchInput {
+  padding: 8px;
+  width: 100%;
+  max-width: 300px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.toggleLabel {
+  display: flex;
+  align-items: center;
+}
+
+.toggleSwitch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+  background-color: #ccc;
+  border-radius: 34px;
+  margin-left: 10px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.toggleSwitch.active {
+  background-color: #2196f3;
+}
+
+.toggleSlider {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+
+.toggleSwitch.active .toggleSlider {
+  transform: translateX(26px);
+}
+
+.warning {
+  background-color: #feebc8;
+  border: 1px solid #f6ad55;
+  color: #c05621;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+.error {
+  background-color: #fed7d7;
+  border: 1px solid #fc8181;
+  color: #c53030;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+.productGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.productCard {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.productImage {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.productCard h3 {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.productCard p {
+  font-size: 14px;
+  color: #4a5568;
+  margin-bottom: 10px;
+}
+
+.price {
+  font-weight: bold;
+  color: #2d3748;
+  font-size: 16px;
+}
+
+.cardActions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: auto;
+}
+
+.editButton,
+.deleteButton {
+  padding: 5px 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.editButton {
+  background-color: #4299e1;
+  color: white;
+}
+
+.deleteButton {
+  background-color: #f56565;
+  color: white;
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modalContent {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 1001;
+}
+
+.modalContent h2 {
+  margin-bottom: 20px;
+}
+
+.modalContent form {
+  display: flex;
+  flex-direction: column;
+}
+
+.modalContent label {
+  margin-bottom: 10px;
+}
+
+.modalContent input {
+  width: 100%;
+  padding: 8px;
+  margin-top: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.modalContent button {
+  margin-top: 10px;
+  padding: 8px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.modalContent button[type="submit"] {
+  background-color: #4299e1;
+  color: white;
+}
+
+.modalContent button[type="button"] {
+  background-color: #e2e8f0;
+}
+
+.imagePreview {
+  max-width: 100%;
+  max-height: 200px;
+  margin-top: 10px;
+  object-fit: contain;
+}
+
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background-color: #4caf50;
+  color: white;
+  padding: 15px;
+  border-radius: 5px;
+  z-index: 1000;
+  animation: fadeInOut 3s ease-in-out;
+}
+
+@keyframes fadeInOut {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  10%,
+  90% {
+    opacity: 1;
+  }
+}
+
+/* Estilos para la sección de configuración de pagos */
+.paymentSettings {
+  background-color: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.paymentSettings h2 {
+  font-size: 20px;
+  margin-bottom: 15px;
+}
+
+.paymentOption {
+  margin-bottom: 10px;
+}
+
+.paymentOption label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.paymentOption input[type="checkbox"] {
+  margin-right: 10px;
+}
+
+.customPaymentLabel {
+  margin-top: 10px;
+}
+
+.customPaymentLabel input {
+  width: 100%;
+  padding: 8px;
+  margin-top: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.paymentSettings button {
+  background-color: #4299e1;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 15px;
+}
+
+.paymentSettings button:disabled {
+  background-color: #a0aec0;
+  cursor: not-allowed;
+}
+
+.saveError {
+  background-color: #fed7d7;
+  border: 1px solid #fc8181;
+  color: #c53030;
+  padding: 10px;
+  border-radius: 4px;
+  margin-top: 10px;
+}
+
+.saveError button {
+  background-color: #fc8181;
+  color: white;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.imageRecommendation {
+  background-color: #e6fffa;
+  border: 1px solid #81e6d9;
+  border-radius: 4px;
+  padding: 10px;
+  margin-bottom: 15px;
+}
+
+.imageRecommendation p {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.imageRecommendation ul {
+  margin-left: 20px;
+}
+
+.imagePreviewContainer {
+  text-align: center;
+  margin-top: 15px;
+}
+
+.imagePreviewContainer p {
+  margin-top: 5px;
+  font-size: 14px;
+  color: #4a5568;
+}
