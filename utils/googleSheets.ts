@@ -22,6 +22,9 @@
   const PRODUCT_LIMIT = 30;
 
   export async function getProducts(): Promise<Product[]> {
+    console.log('GOOGLE_SHEET_ID:', process.env.GOOGLE_SHEET_ID);
+    console.log('GOOGLE_APPLICATION_CREDENTIALS exists:', !!process.env.GOOGLE_APPLICATION_CREDENTIALS);
+  
     try {
       const response = await sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
