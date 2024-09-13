@@ -32,7 +32,7 @@ import {
 import { useRouter } from "next/router";
 import imageCompression from "browser-image-compression";
 
-import { INFORMATION } from "../app/constants";
+import { getSiteInformation, SiteInformation } from "../utils/siteInfo";
 
 interface Product {
   id: string;
@@ -53,7 +53,7 @@ const AdminPage: React.FC = () => {
   const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [siteInfo, setSiteInfo] = useState(INFORMATION);
+  const [siteInfo, setSiteInfo] = useState<SiteInformation>(getSiteInformation());
   const [isMercadoPagoEnabled, setIsMercadoPagoEnabled] = useState(false);
   const [customScripts, setCustomScripts] = useState<string>("");
   const toast = useToast();
