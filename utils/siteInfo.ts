@@ -33,9 +33,9 @@ export const getDefaultSiteInformation = (): SiteInformation => ({
   avatar: ""
 });
 
-export const getSiteInformation = async (): Promise<SiteInformation> => {
+export const getSiteInformation = async (baseUrl: string): Promise<SiteInformation> => {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/get-site-info`);
+    const response = await fetch(`${baseUrl}/api/get-site-info`);
     if (!response.ok) {
       throw new Error('Failed to fetch site information');
     }
@@ -46,7 +46,16 @@ export const getSiteInformation = async (): Promise<SiteInformation> => {
   }
 };
 
-export const getServerSideProps: GetServerSideProps = async () => {
-  const siteInfo = await getSiteInformation();
-  return { props: { siteInfo } };
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+  const host = context.req.headers.host || 'localhost:3000';
+  const baseUrl = `${protocol}://${host}`;
+  
+  const siteInfo = await getSiteInformation(baseUrl);
+  return { 
+    props: { 
+      siteInfo,
+      baseUrl
+    } 
+  };
 };

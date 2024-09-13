@@ -45,12 +45,13 @@ interface Product {
 
 interface AdminPageProps {
   initialSiteInfo: SiteInformation;
+  baseUrl: string;
 }
 
 const PRODUCT_LIMIT = 30;
 const SYNC_INTERVAL = 30000; // 30 segundos
 
-const AdminPage: React.FC<AdminPageProps> = ({ initialSiteInfo }) => {
+const AdminPage: React.FC<AdminPageProps> = ({ initialSiteInfo, baseUrl }) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -66,7 +67,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialSiteInfo }) => {
 
   const fetchProducts = useCallback(async () => {
     try {
-      const response = await fetch("/api/products");
+      const response = await fetch(`${baseUrl}/api/products`);
       if (!response.ok) throw new Error("Failed to fetch products");
       const data = await response.json();
       setProducts(data);
@@ -81,7 +82,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialSiteInfo }) => {
         isClosable: true,
       });
     }
-  }, [toast]);
+  }, [baseUrl, toast]);
 
   useEffect(() => {
     fetchProducts();
@@ -92,7 +93,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialSiteInfo }) => {
   useEffect(() => {
     const fetchMercadoPagoStatus = async () => {
       try {
-        const response = await fetch("/api/mercadopago-status");
+        const response = await fetch(`${baseUrl}/api/mercadopago-status`);
         if (!response.ok) throw new Error("Failed to fetch MercadoPago status");
         const data = await response.json();
         setIsMercadoPagoEnabled(data.enabled);
@@ -109,7 +110,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialSiteInfo }) => {
     };
 
     fetchMercadoPagoStatus();
-  }, [toast]);
+  }, [baseUrl, toast]);
 
   useEffect(() => {
     const lowercasedTerm = searchTerm.toLowerCase();
@@ -242,7 +243,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialSiteInfo }) => {
   const handleSaveInfo = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("/api/update-site-info", {
+      const response = await fetch(`${baseUrl}/api/update-site-info`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(siteInfo),
@@ -255,7 +256,6 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialSiteInfo }) => {
         duration: 3000,
         isClosable: true,
       });
-      // Recargar la página para obtener la información actualizada
       router.reload();
     } catch (error) {
       console.error("Error updating site info:", error);
@@ -273,7 +273,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialSiteInfo }) => {
 
   const handleToggleMercadoPago = async () => {
     try {
-      const response = await fetch("/api/toggle-mercadopago", {
+      const response = await fetch(`${baseUrl}/api/toggle-mercadopago`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ enabled: !isMercadoPagoEnabled }),
@@ -325,7 +325,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialSiteInfo }) => {
   const handleDelete = async (id: string) => {
     if (window.confirm("¿Estás seguro de que quieres eliminar este producto?")) {
       try {
-        const response = await fetch(`/api/products?id=${id}`, { method: "DELETE" });
+        const response = await fetch(`${baseUrl}/api/products?id=${id}`, { method: "DELETE" });
         if (!response.ok) throw new Error("Failed to delete product");
         fetchProducts();
         toast({
@@ -367,7 +367,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialSiteInfo }) => {
     setIsLoading(true);
     try {
       const productToSave = { ...currentProduct, price: price };
-      const response = await fetch("/api/products", {
+      const response = await fetch(`${baseUrl}/api/products`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(productToSave),
@@ -408,7 +408,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialSiteInfo }) => {
   const handleSaveScripts = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("/api/update-scripts", {
+      const response = await fetch(`${baseUrl}/api/update-scripts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ scripts: customScripts }),
@@ -438,7 +438,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialSiteInfo }) => {
   useEffect(() => {
     const fetchScripts = async () => {
       try {
-        const response = await fetch("/api/get-scripts");
+        const response = await fetch(`${baseUrl}/api/get-scripts`);
         if (!response.ok) throw new Error("Failed to fetch scripts");
         const data = await response.json();
         setCustomScripts(data.scripts);
@@ -447,7 +447,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialSiteInfo }) => {
       }
     };
     fetchScripts();
-  }, []);
+  }, [baseUrl]);
 
   return (
     <Box margin="auto" maxWidth="1200px" padding={8}>
@@ -770,9 +770,18 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialSiteInfo }) => {
   );
 };
 
-export const getServerSideProps: GetServerSideProps = async () => {
-  const siteInfo = await getSiteInformation();
-  return { props: { initialSiteInfo: siteInfo } };
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+  const host = context.req.headers.host || 'localhost:3000';
+  const baseUrl = `${protocol}://${host}`;
+  
+  const siteInfo = await getSiteInformation(baseUrl);
+  return { 
+    props: { 
+      initialSiteInfo: siteInfo,
+      baseUrl
+    } 
+  };
 };
 
 export default AdminPage;
