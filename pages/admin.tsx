@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { GetServerSideProps } from 'next';
 import {
   Box,
   Heading,
@@ -33,7 +32,7 @@ import {
 import { useRouter } from "next/router";
 import imageCompression from "browser-image-compression";
 
-import { getSiteInformation, SiteInformation } from "../utils/siteInfo";
+import { getSiteInformation, SiteInformation, updateSiteInformation } from "../utils/siteInfo";
 
 interface Product {
   id: string;
@@ -43,15 +42,10 @@ interface Product {
   price: string | number;
 }
 
-interface AdminPageProps {
-  initialSiteInfo: SiteInformation;
-  baseUrl: string;
-}
-
 const PRODUCT_LIMIT = 30;
 const SYNC_INTERVAL = 30000; // 30 segundos
 
-const AdminPage: React.FC<AdminPageProps> = ({ initialSiteInfo, baseUrl }) => {
+const AdminPage: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -59,7 +53,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialSiteInfo, baseUrl }) => {
   const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [siteInfo, setSiteInfo] = useState<SiteInformation>(initialSiteInfo);
+  const [siteInfo, setSiteInfo] = useState<SiteInformation>(getSiteInformation());
   const [isMercadoPagoEnabled, setIsMercadoPagoEnabled] = useState(false);
   const [customScripts, setCustomScripts] = useState<string>("");
   const toast = useToast();
@@ -67,7 +61,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialSiteInfo, baseUrl }) => {
 
   const fetchProducts = useCallback(async () => {
     try {
-      const response = await fetch(`${baseUrl}/api/products`);
+      const response = await fetch("/api/products");
       if (!response.ok) throw new Error("Failed to fetch products");
       const data = await response.json();
       setProducts(data);
@@ -82,7 +76,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialSiteInfo, baseUrl }) => {
         isClosable: true,
       });
     }
-  }, [baseUrl, toast]);
+  }, [toast]);
 
   useEffect(() => {
     fetchProducts();
@@ -93,7 +87,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialSiteInfo, baseUrl }) => {
   useEffect(() => {
     const fetchMercadoPagoStatus = async () => {
       try {
-        const response = await fetch(`${baseUrl}/api/mercadopago-status`);
+        const response = await fetch("/api/mercadopago-status");
         if (!response.ok) throw new Error("Failed to fetch MercadoPago status");
         const data = await response.json();
         setIsMercadoPagoEnabled(data.enabled);
@@ -110,7 +104,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialSiteInfo, baseUrl }) => {
     };
 
     fetchMercadoPagoStatus();
-  }, [baseUrl, toast]);
+  }, [toast]);
 
   useEffect(() => {
     const lowercasedTerm = searchTerm.toLowerCase();
@@ -243,12 +237,13 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialSiteInfo, baseUrl }) => {
   const handleSaveInfo = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${baseUrl}/api/update-site-info`, {
+      const response = await fetch("/api/update-site-info", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(siteInfo),
       });
       if (!response.ok) throw new Error("Failed to update site info");
+      updateSiteInformation(siteInfo);  // Actualiza la información localmente
       toast({
         title: "Éxito",
         description: "La información de la tienda se ha actualizado correctamente",
@@ -256,7 +251,6 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialSiteInfo, baseUrl }) => {
         duration: 3000,
         isClosable: true,
       });
-      router.reload();
     } catch (error) {
       console.error("Error updating site info:", error);
       toast({
@@ -273,7 +267,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialSiteInfo, baseUrl }) => {
 
   const handleToggleMercadoPago = async () => {
     try {
-      const response = await fetch(`${baseUrl}/api/toggle-mercadopago`, {
+      const response = await fetch("/api/toggle-mercadopago", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ enabled: !isMercadoPagoEnabled }),
@@ -325,7 +319,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialSiteInfo, baseUrl }) => {
   const handleDelete = async (id: string) => {
     if (window.confirm("¿Estás seguro de que quieres eliminar este producto?")) {
       try {
-        const response = await fetch(`${baseUrl}/api/products?id=${id}`, { method: "DELETE" });
+        const response = await fetch(`/api/products?id=${id}`, { method: "DELETE" });
         if (!response.ok) throw new Error("Failed to delete product");
         fetchProducts();
         toast({
@@ -367,7 +361,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialSiteInfo, baseUrl }) => {
     setIsLoading(true);
     try {
       const productToSave = { ...currentProduct, price: price };
-      const response = await fetch(`${baseUrl}/api/products`, {
+      const response = await fetch("/api/products", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(productToSave),
@@ -408,7 +402,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialSiteInfo, baseUrl }) => {
   const handleSaveScripts = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${baseUrl}/api/update-scripts`, {
+      const response = await fetch("/api/update-scripts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ scripts: customScripts }),
@@ -438,7 +432,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialSiteInfo, baseUrl }) => {
   useEffect(() => {
     const fetchScripts = async () => {
       try {
-        const response = await fetch(`${baseUrl}/api/get-scripts`);
+        const response = await fetch("/api/get-scripts");
         if (!response.ok) throw new Error("Failed to fetch scripts");
         const data = await response.json();
         setCustomScripts(data.scripts);
@@ -447,7 +441,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialSiteInfo, baseUrl }) => {
       }
     };
     fetchScripts();
-  }, [baseUrl]);
+  }, []);
 
   return (
     <Box margin="auto" maxWidth="1200px" padding={8}>
@@ -768,20 +762,6 @@ const AdminPage: React.FC<AdminPageProps> = ({ initialSiteInfo, baseUrl }) => {
       </Modal>
     </Box>
   );
-};
-
-export const getServerSideProps: GetServerSideProps = async (context) => {
-  const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
-  const host = context.req.headers.host || 'localhost:3000';
-  const baseUrl = `${protocol}://${host}`;
-  
-  const siteInfo = await getSiteInformation(baseUrl);
-  return { 
-    props: { 
-      initialSiteInfo: siteInfo,
-      baseUrl
-    } 
-  };
 };
 
 export default AdminPage;
