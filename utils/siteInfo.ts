@@ -6,6 +6,8 @@ export interface SiteInformation {
     sheet: string;
     color: string;
     social: Array<{ name: string; url: string }>;
+    banner?: string;  
+    avatar?: string;
   }
   
   export const getDefaultSiteInformation = (): SiteInformation => ({
@@ -25,6 +27,8 @@ export interface SiteInformation {
         url: "https://wa.me/54929542201999"
       }
     ],
+    banner: "", 
+    avatar: "",
   });
   
   export const getSiteInformation = (): SiteInformation => {
