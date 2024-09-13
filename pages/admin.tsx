@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { GetServerSideProps } from 'next';
 import {
   Box,
   Heading,
@@ -42,10 +43,14 @@ interface Product {
   price: string | number;
 }
 
+interface AdminPageProps {
+  initialSiteInfo: SiteInformation;
+}
+
 const PRODUCT_LIMIT = 30;
 const SYNC_INTERVAL = 30000; // 30 segundos
 
-const AdminPage: React.FC = () => {
+const AdminPage: React.FC<AdminPageProps> = ({ initialSiteInfo }) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -53,7 +58,7 @@ const AdminPage: React.FC = () => {
   const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [siteInfo, setSiteInfo] = useState<SiteInformation>(getSiteInformation());
+  const [siteInfo, setSiteInfo] = useState<SiteInformation>(initialSiteInfo);
   const [isMercadoPagoEnabled, setIsMercadoPagoEnabled] = useState(false);
   const [customScripts, setCustomScripts] = useState<string>("");
   const toast = useToast();
@@ -250,6 +255,8 @@ const AdminPage: React.FC = () => {
         duration: 3000,
         isClosable: true,
       });
+      // Recargar la página para obtener la información actualizada
+      router.reload();
     } catch (error) {
       console.error("Error updating site info:", error);
       toast({
@@ -761,6 +768,11 @@ const AdminPage: React.FC = () => {
       </Modal>
     </Box>
   );
+};
+
+export const getServerSideProps: GetServerSideProps = async () => {
+  const siteInfo = await getSiteInformation();
+  return { props: { initialSiteInfo: siteInfo } };
 };
 
 export default AdminPage;
