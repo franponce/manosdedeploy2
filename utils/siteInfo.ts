@@ -31,12 +31,30 @@ export interface SiteInformation {
     avatar: ""
   };
   
-  let siteInformation = { ...DEFAULT_SITE_INFORMATION };
+  let siteInformation: SiteInformation = { ...DEFAULT_SITE_INFORMATION };
   
   export const getSiteInformation = (): SiteInformation => {
     return siteInformation;
   };
   
-  export const updateSiteInformation = (newInfo: Partial<SiteInformation>) => {
+  export const updateSiteInformation = (newInfo: Partial<SiteInformation>): void => {
     siteInformation = { ...siteInformation, ...newInfo };
+  };
+  
+  // Si necesitas una función para resetear la información a los valores por defecto
+  export const resetSiteInformation = (): void => {
+    siteInformation = { ...DEFAULT_SITE_INFORMATION };
+  };
+  
+  // Si necesitas una función para actualizar un campo específico
+  export const updateSiteInformationField = (field: keyof SiteInformation, value: any): void => {
+    siteInformation = { ...siteInformation, [field]: value };
+  };
+  
+  // Si necesitas una función para actualizar la información social
+  export const updateSocialInformation = (name: string, url: string): void => {
+    const updatedSocial = siteInformation.social.map(item => 
+      item.name === name ? { ...item, url } : item
+    );
+    siteInformation = { ...siteInformation, social: updatedSocial };
   };

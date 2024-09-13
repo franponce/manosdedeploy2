@@ -1,18 +1,10 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { getDefaultSiteInformation, SiteInformation } from '../../utils/siteInfo';
+import { DEFAULT_SITE_INFORMATION, SiteInformation, getSiteInformation } from '../../utils/siteInfo';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'GET') {
     try {
-      const siteInfoString = process.env.SITE_INFORMATION;
-      let siteInfo: SiteInformation;
-
-      if (siteInfoString) {
-        siteInfo = JSON.parse(siteInfoString);
-      } else {
-        siteInfo = getDefaultSiteInformation();
-      }
-
+      const siteInfo = getSiteInformation();
       res.status(200).json(siteInfo);
     } catch (error) {
       console.error('Error fetching site information:', error);
