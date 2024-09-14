@@ -1,26 +1,58 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 
 const updateVercelEnv = async (key: string, value: string) => {
-  const response = await fetch(`https://api.vercel.com/v9/projects/${process.env.VERCEL_PROJECT_ID}/env`, {
-    method: 'POST',
+  // Primero, intentamos obtener la variable existente
+  const getResponse = await fetch(`https://api.vercel.com/v9/projects/${process.env.VERCEL_PROJECT_ID}/env?key=${key}`, {
     headers: {
       'Authorization': `Bearer ${process.env.VERCEL_API_TOKEN}`,
-      'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      key,
-      value,
-      target: ['production', 'preview', 'development'],
-      type: 'plain',
-    }),
   });
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(`Failed to update environment variable: ${errorData.error?.message || 'Unknown error'}`);
+  if (getResponse.status === 200) {
+    // La variable existe, actualizamos su valor
+    const { envs } = await getResponse.json();
+    const envId = envs[0].id;
+    const updateResponse = await fetch(`https://api.vercel.com/v9/projects/${process.env.VERCEL_PROJECT_ID}/env/${envId}`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${process.env.VERCEL_API_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        value,
+        type: 'plain',
+      }),
+    });
+
+    if (!updateResponse.ok) {
+      const errorData = await updateResponse.json();
+      throw new Error(`Failed to update environment variable: ${errorData.error?.message || 'Unknown error'}`);
+    }
+  } else if (getResponse.status === 404) {
+    // La variable no existe, la creamos
+    const createResponse = await fetch(`https://api.vercel.com/v9/projects/${process.env.VERCEL_PROJECT_ID}/env`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.VERCEL_API_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        key,
+        value,
+        target: ['production', 'preview', 'development'],
+        type: 'plain',
+      }),
+    });
+
+    if (!createResponse.ok) {
+      const errorData = await createResponse.json();
+      throw new Error(`Failed to create environment variable: ${errorData.error?.message || 'Unknown error'}`);
+    }
+  } else {
+    throw new Error(`Unexpected response when checking for existing variable: ${getResponse.status}`);
   }
 
-  return response.json();
+  return { success: true };
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -31,7 +63,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       res.status(200).json({ message: 'Scripts updated successfully' })
     } catch (error) {
       console.error('Error updating scripts:', error);
-      res.status(500).json({ error: 'Failed to update scripts' })
+      res.status(500).json({ error: 'Failed to update scripts', details: error.message })
     }
   } else {
     res.setHeader('Allow', ['POST'])
