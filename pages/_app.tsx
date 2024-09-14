@@ -25,7 +25,7 @@ import { useRouter } from "next/router";
 
 import theme from "../theme";
 import { getSiteInformation, SiteInformation, DEFAULT_SITE_INFORMATION } from "../utils/siteInfo";
-import CustomScripts from '../components/CustomScripts';
+import CustomScripts from '../product/components/CustomScripts';
 
 const HamburgerIcon = () => (
   <Flex flexDirection="column" justifyContent="space-between" height="24px" width="24px">
