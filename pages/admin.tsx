@@ -32,7 +32,8 @@ import {
 import { useRouter } from "next/router";
 import imageCompression from "browser-image-compression";
 
-import { getSiteInformation, SiteInformation, updateSiteInformation } from "../utils/siteInfo";
+import { useSiteInfo } from "../hooks/useSiteInfo";
+import { SiteInformation } from "../utils/siteInfo";
 
 interface Product {
   id: string;
@@ -46,6 +47,7 @@ const PRODUCT_LIMIT = 30;
 const SYNC_INTERVAL = 30000; // 30 segundos
 
 const AdminPage: React.FC = () => {
+  const { siteInfo, isLoading: isSiteInfoLoading, isError: isSiteInfoError, updateSiteInfo } = useSiteInfo();
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -53,7 +55,6 @@ const AdminPage: React.FC = () => {
   const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [siteInfo, setSiteInfo] = useState<SiteInformation>(getSiteInformation());
   const [isMercadoPagoEnabled, setIsMercadoPagoEnabled] = useState(false);
   const [customScripts, setCustomScripts] = useState<string>("");
   const toast = useToast();
@@ -121,23 +122,21 @@ const AdminPage: React.FC = () => {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setSiteInfo((prev) => ({ ...prev, [name]: value }));
+    updateSiteInfo({ ...siteInfo, [name]: value } as SiteInformation);
   };
 
   const handleSocialChange = (name: string, value: string) => {
-    setSiteInfo((prev) => ({
-      ...prev,
-      social: prev.social.map((s) => {
-        if (s.name === name) {
-          if (name === "whatsapp") {
-            const phoneNumber = value.split("https://wa.me/")[1];
-            return { ...s, url: `https://wa.me/${phoneNumber}` };
-          }
-          return { ...s, url: value };
+    const updatedSocial = siteInfo.social.map((s) => {
+      if (s.name === name) {
+        if (name === "whatsapp") {
+          const phoneNumber = value.split("https://wa.me/")[1];
+          return { ...s, url: `https://wa.me/${phoneNumber}` };
         }
-        return s;
-      }),
-    }));
+        return { ...s, url: value };
+      }
+      return s;
+    });
+    updateSiteInfo({ ...siteInfo, social: updatedSocial });
   };
 
   const handleSiteImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>, type: "banner" | "avatar") => {
@@ -153,7 +152,7 @@ const AdminPage: React.FC = () => {
       const compressedFile = await imageCompression(file, options);
       const base64 = await convertToBase64(compressedFile);
       
-      setSiteInfo((prev) => ({ ...prev, [type]: base64 }));
+      updateSiteInfo({ ...siteInfo, [type]: base64 });
 
       toast({
         title: "Imagen cargada",
@@ -172,7 +171,7 @@ const AdminPage: React.FC = () => {
         isClosable: true,
       });
     }
-  }, [toast]);
+  }, [toast, siteInfo, updateSiteInfo]);
 
   const handleProductImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -237,13 +236,7 @@ const AdminPage: React.FC = () => {
   const handleSaveInfo = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("/api/update-site-info", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(siteInfo),
-      });
-      if (!response.ok) throw new Error("Failed to update site info");
-      updateSiteInformation(siteInfo);  // Actualiza la información localmente
+      await updateSiteInfo(siteInfo);
       toast({
         title: "Éxito",
         description: "La información de la tienda se ha actualizado correctamente",
@@ -442,6 +435,9 @@ const AdminPage: React.FC = () => {
     };
     fetchScripts();
   }, []);
+
+  if (isSiteInfoLoading) return <Box>Cargando...</Box>;
+  if (isSiteInfoError) return <Box>Error al cargar la información del sitio</Box>;
 
   return (
     <Box margin="auto" maxWidth="1200px" padding={8}>
