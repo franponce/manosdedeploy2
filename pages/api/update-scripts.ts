@@ -1,15 +1,33 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import fs from 'fs'
-import path from 'path'
+
+const updateVercelEnv = async (key: string, value: string) => {
+  const response = await fetch(`https://api.vercel.com/v9/projects/${process.env.VERCEL_PROJECT_ID}/env`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${process.env.VERCEL_API_TOKEN}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      key,
+      value,
+      target: ['production', 'preview', 'development'],
+      type: 'plain',
+    }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(`Failed to update environment variable: ${errorData.error?.message || 'Unknown error'}`);
+  }
+
+  return response.json();
+};
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
     try {
       const { scripts } = req.body
-      const filePath = path.join(process.cwd(), 'custom-scripts.js')
-      
-      fs.writeFileSync(filePath, scripts)
-      
+      await updateVercelEnv('CUSTOM_SCRIPTS', scripts);
       res.status(200).json({ message: 'Scripts updated successfully' })
     } catch (error) {
       console.error('Error updating scripts:', error);
