@@ -61,9 +61,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const { scripts } = req.body
       await updateVercelEnv('CUSTOM_SCRIPTS', scripts);
       res.status(200).json({ message: 'Scripts updated successfully' })
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error updating scripts:', error);
-      res.status(500).json({ error: 'Failed to update scripts', details: error.message })
+      if (error instanceof Error) {
+        res.status(500).json({ error: 'Failed to update scripts', details: error.message })
+      } else {
+        res.status(500).json({ error: 'Failed to update scripts', details: 'An unknown error occurred' })
+      }
     }
   } else {
     res.setHeader('Allow', ['POST'])
