@@ -26,6 +26,7 @@ import { useRouter } from "next/router";
 
 import theme from "../theme";
 import { INFORMATION } from "../app/constants";
+import CustomScripts from '../product/components/CustomScripts';
 
 const HamburgerIcon = () => (
   <Flex flexDirection="column" justifyContent="space-between" height="24px" width="24px">
@@ -48,24 +49,10 @@ const App: React.FC<AppProps> = ({ Component, pageProps }) => {
   const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = React.useState(false);
   const [isMounted, setIsMounted] = React.useState(false);
-  const [customScripts, setCustomScripts] = React.useState<string[]>([]);
 
   React.useEffect(() => {
     setIsLoggedIn(localStorage.getItem("isLoggedIn") === "true");
     setIsMounted(true);
-
-    const fetchScripts = async () => {
-      try {
-        const response = await fetch("/api/get-scripts");
-        if (response.ok) {
-          const data = await response.json();
-          setCustomScripts(Array.isArray(data.scripts) ? data.scripts : [data.scripts]);
-        }
-      } catch (error) {
-        console.error("Error fetching custom scripts:", error);
-      }
-    };
-    fetchScripts();
   }, []);
 
   const handleLogout = () => {
@@ -97,11 +84,7 @@ const App: React.FC<AppProps> = ({ Component, pageProps }) => {
             rel="stylesheet"
           />
         </Head>
-        {customScripts.map((script, index) => (
-          <Script key={index} id={`custom-script-${index}`} strategy="afterInteractive">
-            {script}
-          </Script>
-        ))}
+        <CustomScripts />
         <Container
           backgroundColor="white"
           borderRadius="sm"
