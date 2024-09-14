@@ -236,7 +236,12 @@ const AdminPage: React.FC = () => {
   const handleSaveInfo = async () => {
     setIsLoading(true);
     try {
-      await updateSiteInfo(siteInfo);
+      const response = await fetch("/api/update-site-info", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(siteInfo),
+      });
+      if (!response.ok) throw new Error("Failed to update site info");
       toast({
         title: "Éxito",
         description: "La información de la tienda se ha actualizado correctamente",

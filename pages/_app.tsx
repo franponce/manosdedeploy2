@@ -1,6 +1,5 @@
 import * as React from "react";
 import Head from "next/head";
-import Script from 'next/script';
 import Image from 'next/image';
 import {
   ChakraProvider,
@@ -25,8 +24,8 @@ import NextLink from "next/link";
 import { useRouter } from "next/router";
 
 import theme from "../theme";
-import { INFORMATION } from "../app/constants";
-import CustomScripts from '../product/components/CustomScripts';
+import { getSiteInformation, SiteInformation, DEFAULT_SITE_INFORMATION } from "../utils/siteInfo";
+import CustomScripts from '../components/CustomScripts';
 
 const HamburgerIcon = () => (
   <Flex flexDirection="column" justifyContent="space-between" height="24px" width="24px">
@@ -49,10 +48,17 @@ const App: React.FC<AppProps> = ({ Component, pageProps }) => {
   const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = React.useState(false);
   const [isMounted, setIsMounted] = React.useState(false);
+  const [siteInfo, setSiteInfo] = React.useState<SiteInformation>(DEFAULT_SITE_INFORMATION);
 
   React.useEffect(() => {
     setIsLoggedIn(localStorage.getItem("isLoggedIn") === "true");
     setIsMounted(true);
+
+    const fetchSiteInfo = async () => {
+      const info = await getSiteInformation();
+      setSiteInfo(info);
+    };
+    fetchSiteInfo();
   }, []);
 
   const handleLogout = () => {
@@ -72,7 +78,7 @@ const App: React.FC<AppProps> = ({ Component, pageProps }) => {
           `}
         />
         <Head>
-          <title>Manos de manteca - Catálogo online</title>
+          <title>{siteInfo.title} - Catálogo online</title>
           <meta
             content="initial-scale=1.0, width=device-width"
             name="viewport"
@@ -128,7 +134,7 @@ const App: React.FC<AppProps> = ({ Component, pageProps }) => {
             >
               <Image
                 alt="Header image"
-                src={INFORMATION.banner}
+                src={siteInfo.banner || '/default-banner.jpg'}
                 fill
                 style={{ objectFit: "cover" }}
                 quality={100}
@@ -153,7 +159,7 @@ const App: React.FC<AppProps> = ({ Component, pageProps }) => {
             >
               <Image
                 alt="Avatar"
-                src={INFORMATION.avatar}
+                src={siteInfo.avatar || '/default-avatar.jpg'}
                 fill
                 style={{ objectFit: "cover" }}
               />
@@ -167,15 +173,15 @@ const App: React.FC<AppProps> = ({ Component, pageProps }) => {
               spacing={3}
               textAlign={{ base: "center", sm: "left" }}
             >
-              <Heading size="lg">{INFORMATION.title}</Heading>
+              <Heading size="lg">{siteInfo.title}</Heading>
               <Text color="gray.600" fontSize="md">
-                {INFORMATION.description}
+                {siteInfo.description}
               </Text>
               <Text color="gray.600" fontSize="md">
-                {INFORMATION.description2}
+                {siteInfo.description2}
               </Text>
               <Stack direction="row" mt={2} spacing={2}>
-                {INFORMATION.social.map((social) => (
+                {siteInfo.social.map((social) => (
                   <Link key={social.name} href={social.url} isExternal>
                     <Flex
                       alignItems="center"
