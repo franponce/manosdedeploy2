@@ -122,7 +122,7 @@ const AdminPage: React.FC = () => {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    updateSiteInfo({ ...siteInfo, [name]: value } as SiteInformation);
+    updateSiteInfo({ [name]: value });
   };
 
   const handleSocialChange = (name: string, value: string) => {
@@ -136,7 +136,7 @@ const AdminPage: React.FC = () => {
       }
       return s;
     });
-    updateSiteInfo({ ...siteInfo, social: updatedSocial });
+    updateSiteInfo({ social: updatedSocial });
   };
 
   const handleSiteImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>, type: "banner" | "avatar") => {
@@ -152,7 +152,7 @@ const AdminPage: React.FC = () => {
       const compressedFile = await imageCompression(file, options);
       const base64 = await convertToBase64(compressedFile);
       
-      updateSiteInfo({ ...siteInfo, [type]: base64 });
+      updateSiteInfo({ [type]: base64 });
 
       toast({
         title: "Imagen cargada",
@@ -171,7 +171,7 @@ const AdminPage: React.FC = () => {
         isClosable: true,
       });
     }
-  }, [toast, siteInfo, updateSiteInfo]);
+  }, [toast, updateSiteInfo]);
 
   const handleProductImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -400,7 +400,10 @@ const AdminPage: React.FC = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ scripts: customScripts }),
       });
-      if (!response.ok) throw new Error("Failed to update scripts");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update scripts");
+      }
       toast({
         title: "Éxito",
         description: "Los scripts personalizados se han actualizado correctamente",
@@ -412,7 +415,7 @@ const AdminPage: React.FC = () => {
       console.error("Error updating scripts:", error);
       toast({
         title: "Error",
-        description: "No se pudieron actualizar los scripts personalizados",
+        description: error instanceof Error ? error.message : "No se pudieron actualizar los scripts personalizados",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -426,15 +429,24 @@ const AdminPage: React.FC = () => {
     const fetchScripts = async () => {
       try {
         const response = await fetch("/api/get-scripts");
-        if (!response.ok) throw new Error("Failed to fetch scripts");
+        if (!response.ok) {
+          throw new Error("Failed to fetch scripts");
+        }
         const data = await response.json();
         setCustomScripts(data.scripts);
       } catch (error) {
         console.error("Error fetching scripts:", error);
+        toast({
+          title: "Error",
+          description: "No se pudieron cargar los scripts personalizados",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
       }
     };
     fetchScripts();
-  }, []);
+  }, [toast]);
 
   if (isSiteInfoLoading) return <Box>Cargando...</Box>;
   if (isSiteInfoError) return <Box>Error al cargar la información del sitio</Box>;
