@@ -152,7 +152,7 @@ const AdminPage: React.FC = () => {
       const compressedFile = await imageCompression(file, options);
       const base64 = await convertToBase64(compressedFile);
       
-      await updateSiteInfo({ [type]: base64 });
+      updateSiteInfo({ [type]: base64 });
 
       toast({
         title: "Imagen cargada",
@@ -231,6 +231,36 @@ const AdminPage: React.FC = () => {
       reader.onload = () => resolve(reader.result as string);
       reader.onerror = (error) => reject(error);
     });
+  };
+
+  const handleSaveInfo = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch("/api/update-site-info", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(siteInfo),
+      });
+      if (!response.ok) throw new Error("Failed to update site info");
+      toast({
+        title: "Éxito",
+        description: "La información de la tienda se ha actualizado correctamente",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error("Error updating site info:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar la información de la tienda",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleToggleMercadoPago = async () => {
@@ -549,6 +579,15 @@ const AdminPage: React.FC = () => {
                     objectFit="cover"
                   />
                 )}
+
+                <Button
+                  colorScheme="blue"
+                  isLoading={isLoading}
+                  loadingText="Guardando"
+                  onClick={handleSaveInfo}
+                >
+                  Guardar y actualizar info de la tienda
+                </Button>
               </VStack>
             </AccordionPanel>
           </AccordionItem>
