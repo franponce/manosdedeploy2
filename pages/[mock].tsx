@@ -4,18 +4,21 @@ import { GetStaticPaths, GetStaticProps } from "next";
 import { Product } from "../product/types";
 import api from "../product/api";
 import StoreScreen from "../product/screens/Store";
+import { SiteInformation, getSiteInformation } from "../utils/siteInfo";
 
 interface Props {
   products: Product[];
+  siteInfo: SiteInformation;
 }
 
-const MockRoute: React.FC<Props> = ({ products }) => {
-  return <StoreScreen products={products} />;
+const MockRoute: React.FC<Props> = ({ products, siteInfo }) => {
+  return <StoreScreen products={products} siteInfo={siteInfo} />;
 };
 
 export const getStaticProps: GetStaticProps = async (context) => {
   const mock = context.params?.mock as string;
   let products: Product[] = [];
+  let siteInfo: SiteInformation;
 
   try {
     const fetchedProducts = await api.mock.list(mock);
@@ -31,14 +34,19 @@ export const getStaticProps: GetStaticProps = async (context) => {
         typeof product.image === "string" &&
         typeof product.price === "number"
     );
+
+    // Obtener la información del sitio
+    siteInfo = await getSiteInformation();
   } catch (error) {
-    console.error(`Error fetching products for mock "${mock}":`, error);
-    // En caso de error, devolvemos una lista vacía de productos
+    console.error(`Error fetching data for mock "${mock}":`, error);
+    // En caso de error, devolvemos una lista vacía de productos y la información del sitio por defecto
+    siteInfo = await getSiteInformation();
   }
 
   return {
     props: {
       products,
+      siteInfo,
     },
     revalidate: 10,
   };
