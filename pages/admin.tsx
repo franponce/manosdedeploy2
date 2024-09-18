@@ -12,7 +12,6 @@ import {
   useToast,
   FormControl,
   FormLabel,
-  Divider,
   Text,
   Accordion,
   AccordionItem,
@@ -32,8 +31,6 @@ import {
 import { useRouter } from "next/router";
 import imageCompression from "browser-image-compression";
 
-import { useSiteInfo } from "../pages/api/SiteInfoContext";
-
 interface Product {
   id: string;
   title: string;
@@ -46,7 +43,6 @@ const PRODUCT_LIMIT = 30;
 const SYNC_INTERVAL = 30000; // 30 segundos
 
 const AdminPage: React.FC = () => {
-  const { siteInfo, updateSiteInfo } = useSiteInfo();
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -117,61 +113,6 @@ const AdminPage: React.FC = () => {
     setFilteredProducts(filtered);
   }, [searchTerm, products]);
 
-  const handleInfoChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    updateSiteInfo({ [name]: value });
-  };
-
-  const handleSocialChange = (name: string, value: string) => {
-    const updatedSocial = siteInfo.social.map((s) => {
-      if (s.name === name) {
-        if (name === "whatsapp") {
-          const phoneNumber = value.split("https://wa.me/")[1];
-          return { ...s, url: `https://wa.me/${phoneNumber}` };
-        }
-        return { ...s, url: value };
-      }
-      return s;
-    });
-    updateSiteInfo({ social: updatedSocial });
-  };
-
-  const handleSiteImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>, type: "banner" | "avatar") => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    try {
-      const options = {
-        maxSizeMB: 1,
-        useWebWorker: true,
-      };
-
-      const compressedFile = await imageCompression(file, options);
-      const base64 = await convertToBase64(compressedFile);
-      
-      updateSiteInfo({ [type]: base64 });
-
-      toast({
-        title: "Imagen cargada",
-        description: `La imagen se ha procesado y optimizado correctamente. Tamaño final: ${(compressedFile.size / (1024 * 1024)).toFixed(2)}MB`,
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-    } catch (error) {
-      console.error("Error processing image:", error);
-      toast({
-        title: "Error",
-        description: "No se pudo procesar la imagen. Por favor, intenta de nuevo.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    }
-  }, [toast, updateSiteInfo]);
-
   const handleProductImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -230,36 +171,6 @@ const AdminPage: React.FC = () => {
       reader.onload = () => resolve(reader.result as string);
       reader.onerror = (error) => reject(error);
     });
-  };
-
-  const handleSaveInfo = async () => {
-    setIsLoading(true);
-    try {
-      const response = await fetch("/api/update-site-info", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(siteInfo),
-      });
-      if (!response.ok) throw new Error("Failed to update site info");
-      toast({
-        title: "Éxito",
-        description: "La información de la tienda se ha actualizado correctamente",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-    } catch (error) {
-      console.error("Error updating site info:", error);
-      toast({
-        title: "Error",
-        description: "No se pudo actualizar la información de la tienda",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   const handleToggleMercadoPago = async () => {
@@ -483,116 +394,6 @@ const AdminPage: React.FC = () => {
               <AccordionButton>
                 <Box flex="1" textAlign="left">
                   <Heading as="h2" size="lg">
-                    Información de la tienda
-                  </Heading>
-                </Box>
-                <AccordionIcon />
-              </AccordionButton>
-            </h2>
-            <AccordionPanel pb={4}>
-              <VStack align="stretch" spacing={6}>
-                <FormControl>
-                  <FormLabel>Título</FormLabel>
-                  <Input
-                    name="title"
-                    value={siteInfo.title}
-                    onChange={handleInfoChange}
-                  />
-                </FormControl>
-                <FormControl>
-                  <FormLabel>Descripción</FormLabel>
-                  <Textarea
-                    name="description"
-                    value={siteInfo.description}
-                    onChange={handleInfoChange}
-                  />
-                </FormControl>
-                <FormControl>
-                  <FormLabel>Descripción adicional</FormLabel>
-                  <Textarea
-                    name="description2"
-                    value={siteInfo.description2}
-                    onChange={handleInfoChange}
-                  />
-                </FormControl>
-
-                <Divider my={5} />
-
-                <Heading as="h3" size="md">
-                  Instagram + número para checkout WhatsApp
-                </Heading>
-                <FormControl>
-                  <FormLabel>WhatsApp (carrito)</FormLabel>
-                  <Input
-                    name="whatsappCart"
-                    value={siteInfo.whatsappCart}
-                    onChange={handleInfoChange}
-                  />
-                </FormControl>
-                <FormControl>
-                  <FormLabel>Instagram</FormLabel>
-                  <Input
-                    value={siteInfo.social.find((s) => s.name === "instagram")?.url || ""}
-                    onChange={(e) => handleSocialChange("instagram", e.target.value)}
-                  />
-                </FormControl>
-
-                <Divider my={5} />
-
-                <Heading as="h3" size="md">
-                  Imágenes (header + logo)
-                </Heading>
-                <FormControl>
-                  <FormLabel>Banner (Recomendado: 1920x400 px)</FormLabel>
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleSiteImageUpload(e, "banner")}
-                  />
-                </FormControl>
-                {siteInfo.banner && (
-                  <Image
-                    src={siteInfo.banner}
-                    alt="Banner preview"
-                    maxHeight="200px"
-                    objectFit="cover"
-                  />
-                )}
-
-                <FormControl>
-                  <FormLabel>Avatar (Recomendado: 400x400 px)</FormLabel>
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleSiteImageUpload(e, "avatar")}
-                  />
-                </FormControl>
-                {siteInfo.avatar && (
-                  <Image
-                    src={siteInfo.avatar}
-                    alt="Avatar preview"
-                    boxSize="100px"
-                    objectFit="cover"
-                  />
-                )}
-
-                <Button
-                  colorScheme="blue"
-                  isLoading={isLoading}
-                  loadingText="Guardando"
-                  onClick={handleSaveInfo}
-                >
-                  Guardar y actualizar info de la tienda
-                </Button>
-              </VStack>
-            </AccordionPanel>
-          </AccordionItem>
-
-          <AccordionItem>
-            <h2>
-              <AccordionButton>
-                <Box flex="1" textAlign="left">
-                  <Heading as="h2" size="lg">
                     Gestión de productos
                   </Heading>
                 </Box>
@@ -635,7 +436,7 @@ const AdminPage: React.FC = () => {
                     </AspectRatio>
                     <Box p={4}>
                       <Heading as="h3" size="md" noOfLines={2} mb={2}>
-                        {product.title}
+                      {product.title}
                       </Heading>
                       <Text noOfLines={3} mb={2}>{product.description}</Text>
                       <Text fontWeight="bold" mb={4}>
