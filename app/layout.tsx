@@ -1,6 +1,7 @@
 import { ChakraProvider } from '@chakra-ui/react'
 import theme from '../theme'
 import { AuthProvider } from '../context/AuthContext'
+import { SiteInfoProvider } from '../pages/api/SiteInfoContext'
 
 export default function RootLayout({
   children,
@@ -12,7 +13,9 @@ export default function RootLayout({
       <body>
         <ChakraProvider theme={theme}>
           <AuthProvider>
-            {children}
+            <SiteInfoProvider>
+              {children}
+            </SiteInfoProvider>
           </AuthProvider>
         </ChakraProvider>
       </body>

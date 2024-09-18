@@ -32,8 +32,7 @@ import {
 import { useRouter } from "next/router";
 import imageCompression from "browser-image-compression";
 
-import { useSiteInfo } from "../hooks/useSiteInfo";
-import { SiteInformation } from "../utils/siteInfo";
+import { useSiteInfo } from "../pages/api/SiteInfoContext";
 
 interface Product {
   id: string;
@@ -47,7 +46,7 @@ const PRODUCT_LIMIT = 30;
 const SYNC_INTERVAL = 30000; // 30 segundos
 
 const AdminPage: React.FC = () => {
-  const { siteInfo, isLoading: isSiteInfoLoading, isError: isSiteInfoError, updateSiteInfo } = useSiteInfo();
+  const { siteInfo, updateSiteInfo } = useSiteInfo();
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -452,9 +451,6 @@ const AdminPage: React.FC = () => {
     };
     fetchScripts();
   }, [toast]);
-
-  if (isSiteInfoLoading) return <Box>Cargando...</Box>;
-  if (isSiteInfoError) return <Box>Error al cargar la información del sitio</Box>;
 
   return (
     <Box margin="auto" maxWidth="1200px" padding={8}>
