@@ -6,21 +6,18 @@ import {
   Stack,
   Text,
   Box,
-  Heading,
 } from "@chakra-ui/react";
 import { CartItem, Product } from "../types";
 import ProductCard from "../components/ProductCard";
 import CartDrawer from "../components/CartDrawer";
 import { editCart } from "../selectors";
 import { parseCurrency } from "../../utils/currency";
-import { SiteInformation } from "../../utils/siteInfo";
 
 interface Props {
   products: Product[];
-  siteInfo: SiteInformation;
 }
 
-const StoreScreen: React.FC<Props> = ({ products, siteInfo }) => {
+const StoreScreen: React.FC<Props> = ({ products }) => {
   const [cart, setCart] = React.useState<CartItem[]>([]);
   const [isCartOpen, toggleCart] = React.useState<boolean>(false);
 
@@ -36,18 +33,13 @@ const StoreScreen: React.FC<Props> = ({ products, siteInfo }) => {
   }
 
   // Filtrar productos inválidos
-  const validProducts = products.filter(product => 
+  const validProducts = products.filter(product =>
     product && product.id && product.title && product.image && product.price
   );
 
   return (
     <>
       <Stack spacing={6}>
-        <Box>
-          <Heading as="h1" size="xl" mb={2}>{siteInfo.title}</Heading>
-          <Text fontSize="lg" mb={4}>{siteInfo.description}</Text>
-          <Text fontSize="md" mb={6}>{siteInfo.description2}</Text>
-        </Box>
         {validProducts.length ? (
           <Grid
             gridGap={8}
