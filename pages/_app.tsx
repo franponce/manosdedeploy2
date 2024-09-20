@@ -22,11 +22,12 @@ import { AppProps } from "next/app";
 import { Global, css } from "@emotion/react";
 import NextLink from "next/link";
 import { useRouter } from "next/router";
-import { SiteInfoProvider } from '../context/SiteInfoContext';
-
 
 import theme from "../theme";
-import { getSiteInformation, SiteInformation, DEFAULT_SITE_INFORMATION } from "../utils/siteInfo";
+import { useSiteInfo } from '../hooks/useSiteInfo';
+import { AuthContext } from '../context/AuthContext';
+import { DEFAULT_SITE_INFORMATION } from '../utils/siteInfo';
+
 const HamburgerIcon = () => (
   <Flex flexDirection="column" justifyContent="space-between" height="24px" width="24px">
     <Box bg="currentColor" h="2px" w="24px" />
@@ -35,30 +36,16 @@ const HamburgerIcon = () => (
   </Flex>
 );
 
-export const AuthContext = React.createContext<{
-  isLoggedIn: boolean;
-  setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean>>;
-}>({
-  isLoggedIn: false,
-  setIsLoggedIn: () => {},
-});
-
 const App: React.FC<AppProps> = ({ Component, pageProps }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = React.useState(false);
   const [isMounted, setIsMounted] = React.useState(false);
-  const [siteInfo, setSiteInfo] = React.useState<SiteInformation>(DEFAULT_SITE_INFORMATION);
+  const { siteInfo, isLoading } = useSiteInfo();
 
   React.useEffect(() => {
     setIsLoggedIn(localStorage.getItem("isLoggedIn") === "true");
     setIsMounted(true);
-
-    const fetchSiteInfo = async () => {
-      const info = await getSiteInformation();
-      setSiteInfo(info);
-    };
-    fetchSiteInfo();
   }, []);
 
   const handleLogout = () => {
@@ -67,9 +54,10 @@ const App: React.FC<AppProps> = ({ Component, pageProps }) => {
     router.push("/");
   };
 
+  if (isLoading) return <Box>Cargando...</Box>;
+
   return (
     <AuthContext.Provider value={{ isLoggedIn, setIsLoggedIn }}>
-      <SiteInfoProvider>
       <ChakraProvider theme={theme}>
         <Global
           styles={css`
@@ -79,7 +67,7 @@ const App: React.FC<AppProps> = ({ Component, pageProps }) => {
           `}
         />
         <Head>
-          <title>{siteInfo.title} - Catálogo online</title>
+          <title>{siteInfo?.title ?? DEFAULT_SITE_INFORMATION.title} - Catálogo online</title>
           <meta
             content="initial-scale=1.0, width=device-width"
             name="viewport"
@@ -137,7 +125,7 @@ const App: React.FC<AppProps> = ({ Component, pageProps }) => {
             >
               <Image
                 alt="Header image"
-                src={siteInfo.bannerUrl || '/default-banner.jpg'}
+                src={siteInfo?.bannerUrl ?? DEFAULT_SITE_INFORMATION.bannerUrl}
                 fill
                 style={{ objectFit: "cover" }}
                 quality={100}
@@ -162,7 +150,7 @@ const App: React.FC<AppProps> = ({ Component, pageProps }) => {
             >
               <Image
                 alt="Avatar"
-                src={siteInfo.logoUrl || '/default-avatar.jpg'}
+                src={siteInfo?.logoUrl ?? DEFAULT_SITE_INFORMATION.logoUrl}
                 fill
                 style={{ objectFit: "cover" }}
               />
@@ -176,15 +164,15 @@ const App: React.FC<AppProps> = ({ Component, pageProps }) => {
               spacing={3}
               textAlign={{ base: "center", sm: "left" }}
             >
-              <Heading size="lg">{siteInfo.title}</Heading>
+              <Heading size="lg">{siteInfo?.title ?? DEFAULT_SITE_INFORMATION.title}</Heading>
               <Text color="gray.600" fontSize="md">
-                {siteInfo.description}
+                {siteInfo?.description ?? DEFAULT_SITE_INFORMATION.description}
               </Text>
               <Text color="gray.600" fontSize="md">
-                {siteInfo.description2}
+                {siteInfo?.description2 ?? DEFAULT_SITE_INFORMATION.description2}
               </Text>
               <Stack direction="row" mt={2} spacing={2}>
-                {siteInfo.social.map((social) => (
+                {(siteInfo?.social ?? DEFAULT_SITE_INFORMATION.social).map((social) => (
                   <Link key={social.name} href={social.url} isExternal>
                     <Flex
                       alignItems="center"
@@ -212,7 +200,6 @@ const App: React.FC<AppProps> = ({ Component, pageProps }) => {
           </Text>
         </Container>
       </ChakraProvider>
-      </SiteInfoProvider>
     </AuthContext.Provider>
   );
 };

@@ -1,4 +1,5 @@
-import { kv } from '@vercel/kv'
+import { kv } from '@vercel/kv';
+import { put } from '@vercel/blob';
 
 export interface SiteInformation {
   title: string;
@@ -59,6 +60,17 @@ export async function updateSiteInformation(newInfo: Partial<SiteInformation>): 
     }
   } catch (error) {
     console.error('Error updating site information:', error);
+    throw error;
+  }
+}
+
+export async function uploadImage(file: File, type: 'logo' | 'banner'): Promise<string> {
+  try {
+    const filename = `${type}-${Date.now()}.${file.name.split('.').pop()}`;
+    const { url } = await put(filename, file, { access: 'public' });
+    return url;
+  } catch (error) {
+    console.error('Error uploading image:', error);
     throw error;
   }
 }
