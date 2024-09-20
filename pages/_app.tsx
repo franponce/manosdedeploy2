@@ -113,6 +113,18 @@ const App: React.FC<AppProps> = ({ Component, pageProps }) => {
                       <NextLink href="/admin" passHref legacyBehavior>
                         <MenuItem as="a">Panel Administrador</MenuItem>
                       </NextLink>
+                      <NextLink href="/admin#store-info" passHref legacyBehavior>
+                        <MenuItem as="a">Configuración de la tienda</MenuItem>
+                      </NextLink>
+                      <NextLink href="/admin#products" passHref legacyBehavior>
+                        <MenuItem as="a">Gestión de productos</MenuItem>
+                      </NextLink>
+                      <NextLink href="/admin#mercadopago" passHref legacyBehavior>
+                        <MenuItem as="a">Configuración de MercadoPago</MenuItem>
+                      </NextLink>
+                      <NextLink href="/admin#scripts" passHref legacyBehavior>
+                        <MenuItem as="a">Scripts personalizados</MenuItem>
+                      </NextLink>
                       <MenuItem onClick={handleLogout}>Cerrar sesión</MenuItem>
                     </>
                   ) : (
@@ -134,7 +146,7 @@ const App: React.FC<AppProps> = ({ Component, pageProps }) => {
             >
               <Image
                 alt="Header image"
-                src={siteInfo.banner || '/default-banner.jpg'}
+                src={siteInfo.bannerUrl || '/default-banner.jpg'}
                 fill
                 style={{ objectFit: "cover" }}
                 quality={100}
@@ -159,7 +171,7 @@ const App: React.FC<AppProps> = ({ Component, pageProps }) => {
             >
               <Image
                 alt="Avatar"
-                src={siteInfo.avatar || '/default-avatar.jpg'}
+                src={siteInfo.logoUrl || '/default-avatar.jpg'}
                 fill
                 style={{ objectFit: "cover" }}
               />
@@ -214,4 +226,3 @@ const App: React.FC<AppProps> = ({ Component, pageProps }) => {
 };
 
 export default App;
-

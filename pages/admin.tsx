@@ -12,7 +12,7 @@ import {
 import MercadoPagoConfig from "../product/components/MercadoPagoConfig";
 import ProductManagement from "../product/components/ProductManagement";
 import CustomScripts from "../product/components/CustomScripts";
-import SiteImageManagement from "../product/components/SiteImageManagement";
+import StoreConfiguration from "../product/components/StoreConfiguration";
 
 const AdminPage: React.FC = () => {
   return (
@@ -22,22 +22,20 @@ const AdminPage: React.FC = () => {
       </Heading>
 
       <VStack spacing={8} align="stretch">
-        <MercadoPagoConfig />
-
         <Accordion allowMultiple>
           <AccordionItem>
             <h2>
               <AccordionButton>
                 <Box flex="1" textAlign="left">
                   <Heading as="h2" size="lg">
-                    Gestión de imágenes del sitio
+                    Información de la tienda
                   </Heading>
                 </Box>
                 <AccordionIcon />
               </AccordionButton>
             </h2>
             <AccordionPanel pb={4}>
-              <SiteImageManagement />
+              <StoreConfiguration />
             </AccordionPanel>
           </AccordionItem>
 
@@ -54,6 +52,22 @@ const AdminPage: React.FC = () => {
             </h2>
             <AccordionPanel pb={4}>
               <ProductManagement />
+            </AccordionPanel>
+          </AccordionItem>
+
+          <AccordionItem>
+            <h2>
+              <AccordionButton>
+                <Box flex="1" textAlign="left">
+                  <Heading as="h2" size="lg">
+                    Configuración de MercadoPago
+                  </Heading>
+                </Box>
+                <AccordionIcon />
+              </AccordionButton>
+            </h2>
+            <AccordionPanel pb={4}>
+              <MercadoPagoConfig />
             </AccordionPanel>
           </AccordionItem>
 
