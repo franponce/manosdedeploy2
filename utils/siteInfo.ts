@@ -1,5 +1,3 @@
-// utils/siteInfo.ts
-
 import { kv } from '@vercel/kv'
 
 export interface SiteInformation {

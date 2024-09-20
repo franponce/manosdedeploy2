@@ -22,11 +22,11 @@ import { AppProps } from "next/app";
 import { Global, css } from "@emotion/react";
 import NextLink from "next/link";
 import { useRouter } from "next/router";
+import { SiteInfoProvider } from '../context/SiteInfoContext';
+
 
 import theme from "../theme";
 import { getSiteInformation, SiteInformation, DEFAULT_SITE_INFORMATION } from "../utils/siteInfo";
-import CustomScripts from '../product/components/CustomScripts';
-
 const HamburgerIcon = () => (
   <Flex flexDirection="column" justifyContent="space-between" height="24px" width="24px">
     <Box bg="currentColor" h="2px" w="24px" />
@@ -69,6 +69,7 @@ const App: React.FC<AppProps> = ({ Component, pageProps }) => {
 
   return (
     <AuthContext.Provider value={{ isLoggedIn, setIsLoggedIn }}>
+      <SiteInfoProvider>
       <ChakraProvider theme={theme}>
         <Global
           styles={css`
@@ -90,7 +91,6 @@ const App: React.FC<AppProps> = ({ Component, pageProps }) => {
             rel="stylesheet"
           />
         </Head>
-        <CustomScripts />
         <Container
           backgroundColor="white"
           borderRadius="sm"
@@ -212,6 +212,7 @@ const App: React.FC<AppProps> = ({ Component, pageProps }) => {
           </Text>
         </Container>
       </ChakraProvider>
+      </SiteInfoProvider>
     </AuthContext.Provider>
   );
 };

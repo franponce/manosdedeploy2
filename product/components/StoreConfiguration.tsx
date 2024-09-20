@@ -12,26 +12,18 @@ import {
   useToast,
 } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
-import { getSiteInformation, updateSiteInformation, SiteInformation } from '../../utils/siteInfo';
+import { updateSiteInformation } from '../../utils/siteInfo';
+import { useSiteInfo } from '../../context/SiteInfoContext';
 
 const StoreConfiguration: React.FC = () => {
-  const [storeInfo, setStoreInfo] = useState<SiteInformation | null>(null);
+  const { siteInfo, updateSiteInfo } = useSiteInfo();
   const [isLoading, setIsLoading] = useState(false);
   const toast = useToast();
   const router = useRouter();
 
-  useEffect(() => {
-    fetchStoreInfo();
-  }, []);
-
-  const fetchStoreInfo = async () => {
-    const info = await getSiteInformation();
-    setStoreInfo(info);
-  };
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setStoreInfo(prev => prev ? { ...prev, [name]: value } : null);
+    updateSiteInfo({ [name]: value });
   };
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>, type: 'logoUrl' | 'bannerUrl') => {
@@ -54,11 +46,7 @@ const StoreConfiguration: React.FC = () => {
       }
 
       const data = await response.json();
-      const updatedInfo = { ...storeInfo, [type]: data.url } as SiteInformation;
-      setStoreInfo(updatedInfo);
-
-      // Actualizar el estado global
-      await updateSiteInformation(updatedInfo);
+      updateSiteInfo({ [type]: data.url });
 
       toast({
         title: 'Éxito',
@@ -67,9 +55,6 @@ const StoreConfiguration: React.FC = () => {
         duration: 3000,
         isClosable: true,
       });
-
-      // Forzar una actualización de la página principal
-      router.push('/');
     } catch (error) {
       console.error('Error:', error);
       toast({
@@ -86,11 +71,9 @@ const StoreConfiguration: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!storeInfo) return;
-
     setIsLoading(true);
     try {
-      await updateSiteInformation(storeInfo);
+      await updateSiteInformation(siteInfo);
       toast({
         title: 'Éxito',
         description: 'La información de la tienda se ha actualizado correctamente.',
@@ -98,7 +81,6 @@ const StoreConfiguration: React.FC = () => {
         duration: 3000,
         isClosable: true,
       });
-      router.push('/');
     } catch (error) {
       console.error('Error updating store information:', error);
       toast({
@@ -113,20 +95,20 @@ const StoreConfiguration: React.FC = () => {
     }
   };
 
-  if (!storeInfo) return <Box>Cargando...</Box>;
+  if (!siteInfo) return <Box>Cargando...</Box>;
 
   return (
     <Box as="form" onSubmit={handleSubmit}>
       <VStack spacing={6} align="stretch">
         <Heading as="h3" size="md">Logo de la tienda</Heading>
-        <Image src={storeInfo.logoUrl} alt="Logo" maxHeight="100px" />
+        <Image src={siteInfo.logoUrl} alt="Logo" maxHeight="100px" />
         <FormControl>
           <FormLabel>Cambiar logo (Recomendado: 400x400 px)</FormLabel>
           <Input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, 'logoUrl')} />
         </FormControl>
 
         <Heading as="h3" size="md">Banner de la tienda</Heading>
-        <Image src={storeInfo.bannerUrl} alt="Banner" maxHeight="200px" />
+        <Image src={siteInfo.bannerUrl} alt="Banner" maxHeight="200px" />
         <FormControl>
           <FormLabel>Cambiar banner (Recomendado: 1920x400 px)</FormLabel>
           <Input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, 'bannerUrl')} />
@@ -134,17 +116,17 @@ const StoreConfiguration: React.FC = () => {
 
         <FormControl>
           <FormLabel>Título de la tienda</FormLabel>
-          <Input name="title" value={storeInfo.title} onChange={handleInputChange} />
+          <Input name="title" value={siteInfo.title} onChange={handleInputChange} />
         </FormControl>
 
         <FormControl>
           <FormLabel>Descripción principal</FormLabel>
-          <Textarea name="description" value={storeInfo.description} onChange={handleInputChange} />
+          <Textarea name="description" value={siteInfo.description} onChange={handleInputChange} />
         </FormControl>
 
         <FormControl>
           <FormLabel>Descripción secundaria</FormLabel>
-          <Textarea name="description2" value={storeInfo.description2} onChange={handleInputChange} />
+          <Textarea name="description2" value={siteInfo.description2} onChange={handleInputChange} />
         </FormControl>
 
         <Button type="submit" colorScheme="blue" isLoading={isLoading}>
