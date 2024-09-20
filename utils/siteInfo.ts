@@ -34,37 +34,38 @@ export const DEFAULT_SITE_INFORMATION: SiteInformation = {
   bannerUrl: "/default-banner.jpg"
 };
 
+let cachedSiteInfo: SiteInformation | null = null;
+
 export async function getSiteInformation(): Promise<SiteInformation> {
+  if (typeof window !== 'undefined') {
+    return cachedSiteInfo || DEFAULT_SITE_INFORMATION;
+  }
+
   try {
-    // Verificar si estamos en el servidor y si Vercel KV está configurado
-    if (typeof window === 'undefined' && process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
+    if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
       const storedInfo = await kv.get('site_information') as SiteInformation | null;
       if (storedInfo) {
-        console.log('Retrieved site information from Vercel KV');
-        return { ...DEFAULT_SITE_INFORMATION, ...storedInfo };
-      } else {
-        console.log('No stored site information found in Vercel KV, using default');
-        return DEFAULT_SITE_INFORMATION;
+        cachedSiteInfo = { ...DEFAULT_SITE_INFORMATION, ...storedInfo };
+        return cachedSiteInfo;
       }
-    } else {
-      console.warn('Vercel KV is not configured or running on client side. Using default site information.');
-      return DEFAULT_SITE_INFORMATION;
     }
   } catch (error) {
     console.error('Error fetching site information:', error);
-    return DEFAULT_SITE_INFORMATION;
   }
+
+  return DEFAULT_SITE_INFORMATION;
 }
 
 export async function updateSiteInformation(newInfo: Partial<SiteInformation>): Promise<void> {
   try {
-    if (typeof window === 'undefined' && process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
+    if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
       const currentInfo = await getSiteInformation();
       const updatedInfo = { ...currentInfo, ...newInfo };
       await kv.set('site_information', updatedInfo);
+      cachedSiteInfo = updatedInfo;
       console.log('Site information updated successfully');
     } else {
-      console.warn('Vercel KV is not configured or running on client side. Site information not saved.');
+      console.warn('Vercel KV is not configured. Site information not saved.');
     }
   } catch (error) {
     console.error('Error updating site information:', error);
@@ -74,13 +75,13 @@ export async function updateSiteInformation(newInfo: Partial<SiteInformation>): 
 
 export async function uploadImage(file: File, type: 'logo' | 'banner'): Promise<string> {
   try {
-    if (typeof window === 'undefined' && process.env.BLOB_READ_WRITE_TOKEN) {
+    if (process.env.BLOB_READ_WRITE_TOKEN) {
       const filename = `${type}-${Date.now()}.${file.name.split('.').pop()}`;
       const { url } = await put(filename, file, { access: 'public' });
       console.log(`${type} image uploaded successfully`);
       return url;
     } else {
-      console.warn('Vercel Blob is not configured or running on client side. Image not uploaded.');
+      console.warn('Vercel Blob is not configured. Image not uploaded.');
       return '';
     }
   } catch (error) {

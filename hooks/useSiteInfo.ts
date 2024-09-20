@@ -4,7 +4,10 @@ import { SiteInformation, getSiteInformation } from '../utils/siteInfo';
 const fetcher = () => getSiteInformation();
 
 export function useSiteInfo() {
-  const { data, error, mutate } = useSWR<SiteInformation>('site-info', fetcher);
+  const { data, error, mutate } = useSWR<SiteInformation>('site-info', fetcher, {
+    fallbackData: undefined,
+    revalidateOnMount: true,
+  });
 
   return {
     siteInfo: data,
