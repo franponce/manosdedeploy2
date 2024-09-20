@@ -1,5 +1,4 @@
 import { kv } from '@vercel/kv';
-import { put } from '@vercel/blob';
 
 export interface SiteInformation {
   title: string;
@@ -21,14 +20,8 @@ export const DEFAULT_SITE_INFORMATION: SiteInformation = {
   sheet: "https://docs.google.com/spreadsheets/d/e/2PACX-1vReSQMLVR-O0uKqZr28Y9j29RN1YYoaFkb29qVJjofGNZSRUnhCsgoohDDDrsAV0FW4R9xdulrn0aYE/pub?output=csv",
   color: "teal",
   social: [
-    {
-      name: "instagram",
-      url: "https://www.hola.com"
-    },
-    {
-      name: "whatsapp",
-      url: "https://wa.me/54929542201999"
-    }
+    { name: "instagram", url: "https://www.hola.com" },
+    { name: "whatsapp", url: "https://wa.me/54929542201999" }
   ],
   logoUrl: "/default-logo.png",
   bannerUrl: "/default-banner.jpg"
@@ -54,38 +47,4 @@ export async function getSiteInformation(): Promise<SiteInformation> {
   }
 
   return DEFAULT_SITE_INFORMATION;
-}
-
-export async function updateSiteInformation(newInfo: Partial<SiteInformation>): Promise<void> {
-  try {
-    if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
-      const currentInfo = await getSiteInformation();
-      const updatedInfo = { ...currentInfo, ...newInfo };
-      await kv.set('site_information', updatedInfo);
-      cachedSiteInfo = updatedInfo;
-      console.log('Site information updated successfully');
-    } else {
-      console.warn('Vercel KV is not configured. Site information not saved.');
-    }
-  } catch (error) {
-    console.error('Error updating site information:', error);
-    throw error;
-  }
-}
-
-export async function uploadImage(file: File, type: 'logo' | 'banner'): Promise<string> {
-  try {
-    if (process.env.BLOB_READ_WRITE_TOKEN) {
-      const filename = `${type}-${Date.now()}.${file.name.split('.').pop()}`;
-      const { url } = await put(filename, file, { access: 'public' });
-      console.log(`${type} image uploaded successfully`);
-      return url;
-    } else {
-      console.warn('Vercel Blob is not configured. Image not uploaded.');
-      return '';
-    }
-  } catch (error) {
-    console.error('Error uploading image:', error);
-    throw error;
-  }
 }

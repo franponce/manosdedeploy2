@@ -22,7 +22,6 @@ import { AppProps } from "next/app";
 import { Global, css } from "@emotion/react";
 import NextLink from "next/link";
 import { useRouter } from "next/router";
-import { GetServerSideProps } from 'next';
 import { SWRConfig } from 'swr';
 
 import theme from "../theme";
@@ -74,7 +73,7 @@ const MyApp = ({ Component, pageProps, fallback }: MyAppProps) => {
             `}
           />
           <Head>
-            <title>{siteInfo?.title || DEFAULT_SITE_INFORMATION.title} - Catálogo online</title>
+            <title>{siteInfo.title} - Catálogo online</title>
             <meta
               content="initial-scale=1.0, width=device-width"
               name="viewport"
@@ -132,7 +131,7 @@ const MyApp = ({ Component, pageProps, fallback }: MyAppProps) => {
               >
                 <Image
                   alt="Header image"
-                  src={siteInfo?.bannerUrl || DEFAULT_SITE_INFORMATION.bannerUrl}
+                  src={siteInfo.bannerUrl}
                   fill
                   style={{ objectFit: "cover" }}
                   quality={100}
@@ -157,7 +156,7 @@ const MyApp = ({ Component, pageProps, fallback }: MyAppProps) => {
               >
                 <Image
                   alt="Avatar"
-                  src={siteInfo?.logoUrl || DEFAULT_SITE_INFORMATION.logoUrl}
+                  src={siteInfo.logoUrl}
                   fill
                   style={{ objectFit: "cover" }}
                 />
@@ -171,15 +170,15 @@ const MyApp = ({ Component, pageProps, fallback }: MyAppProps) => {
                 spacing={3}
                 textAlign={{ base: "center", sm: "left" }}
               >
-                <Heading size="lg">{siteInfo?.title || DEFAULT_SITE_INFORMATION.title}</Heading>
+                <Heading size="lg">{siteInfo.title}</Heading>
                 <Text color="gray.600" fontSize="md">
-                  {siteInfo?.description || DEFAULT_SITE_INFORMATION.description}
+                  {siteInfo.description}
                 </Text>
                 <Text color="gray.600" fontSize="md">
-                  {siteInfo?.description2 || DEFAULT_SITE_INFORMATION.description2}
+                  {siteInfo.description2}
                 </Text>
                 <Stack direction="row" mt={2} spacing={2}>
-                  {(siteInfo?.social || DEFAULT_SITE_INFORMATION.social).map((social) => (
+                  {siteInfo.social.map((social) => (
                     <Link key={social.name} href={social.url} isExternal>
                       <Flex
                         alignItems="center"
@@ -212,13 +211,17 @@ const MyApp = ({ Component, pageProps, fallback }: MyAppProps) => {
   );
 };
 
-export const getServerSideProps: GetServerSideProps = async () => {
-  const siteInfo = await getSiteInformation();
+MyApp.getInitialProps = async () => {
+  let siteInfo: SiteInformation;
+  try {
+    siteInfo = await getSiteInformation();
+  } catch (error) {
+    console.error('Error fetching initial site info:', error);
+    siteInfo = DEFAULT_SITE_INFORMATION;
+  }
   return {
-    props: {
-      fallback: {
-        'site-info': siteInfo,
-      },
+    fallback: {
+      'site-info': siteInfo,
     },
   };
 };

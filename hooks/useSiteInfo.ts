@@ -1,16 +1,15 @@
 import useSWR from 'swr';
-import { SiteInformation, getSiteInformation } from '../utils/siteInfo';
+import { SiteInformation, getSiteInformation, DEFAULT_SITE_INFORMATION } from '../utils/siteInfo';
 
 const fetcher = () => getSiteInformation();
 
 export function useSiteInfo() {
   const { data, error, mutate } = useSWR<SiteInformation>('site-info', fetcher, {
-    fallbackData: undefined,
-    revalidateOnMount: true,
+    fallbackData: DEFAULT_SITE_INFORMATION,
   });
 
   return {
-    siteInfo: data,
+    siteInfo: data || DEFAULT_SITE_INFORMATION,
     isLoading: !error && !data,
     isError: error,
     mutate,
