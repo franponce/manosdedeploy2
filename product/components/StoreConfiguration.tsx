@@ -11,12 +11,14 @@ import {
   Image,
   useToast,
 } from '@chakra-ui/react';
+import { useRouter } from 'next/router';
 import { getSiteInformation, updateSiteInformation, SiteInformation } from '../../utils/siteInfo';
 
 const StoreConfiguration: React.FC = () => {
   const [storeInfo, setStoreInfo] = useState<SiteInformation | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const toast = useToast();
+  const router = useRouter();
 
   useEffect(() => {
     fetchStoreInfo();
@@ -52,7 +54,11 @@ const StoreConfiguration: React.FC = () => {
       }
 
       const data = await response.json();
-      setStoreInfo(prev => prev ? { ...prev, [type]: data.url } : null);
+      const updatedInfo = { ...storeInfo, [type]: data.url } as SiteInformation;
+      setStoreInfo(updatedInfo);
+
+      // Actualizar el estado global
+      await updateSiteInformation(updatedInfo);
 
       toast({
         title: 'Éxito',
@@ -61,6 +67,9 @@ const StoreConfiguration: React.FC = () => {
         duration: 3000,
         isClosable: true,
       });
+
+      // Forzar una actualización de la página principal
+      router.push('/');
     } catch (error) {
       console.error('Error:', error);
       toast({
@@ -89,6 +98,7 @@ const StoreConfiguration: React.FC = () => {
         duration: 3000,
         isClosable: true,
       });
+      router.push('/');
     } catch (error) {
       console.error('Error updating store information:', error);
       toast({

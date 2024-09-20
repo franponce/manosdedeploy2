@@ -113,17 +113,8 @@ const App: React.FC<AppProps> = ({ Component, pageProps }) => {
                       <NextLink href="/admin" passHref legacyBehavior>
                         <MenuItem as="a">Panel Administrador</MenuItem>
                       </NextLink>
-                      <NextLink href="/admin#store-info" passHref legacyBehavior>
+                      <NextLink href="/store-config" passHref legacyBehavior>
                         <MenuItem as="a">Configuración de la tienda</MenuItem>
-                      </NextLink>
-                      <NextLink href="/admin#products" passHref legacyBehavior>
-                        <MenuItem as="a">Gestión de productos</MenuItem>
-                      </NextLink>
-                      <NextLink href="/admin#mercadopago" passHref legacyBehavior>
-                        <MenuItem as="a">Configuración de MercadoPago</MenuItem>
-                      </NextLink>
-                      <NextLink href="/admin#scripts" passHref legacyBehavior>
-                        <MenuItem as="a">Scripts personalizados</MenuItem>
                       </NextLink>
                       <MenuItem onClick={handleLogout}>Cerrar sesión</MenuItem>
                     </>
