@@ -102,7 +102,7 @@ const App: React.FC<AppProps> = ({ Component, pageProps }) => {
                         <MenuItem as="a">Panel Administrador</MenuItem>
                       </NextLink>
                       <NextLink href="/store-config" passHref legacyBehavior>
-                        <MenuItem as="a">Configuración de la tienda</MenuItem>
+                        <MenuItem as="a">Información de la tienda</MenuItem>
                       </NextLink>
                       <MenuItem onClick={handleLogout}>Cerrar sesión</MenuItem>
                     </>
@@ -183,7 +183,7 @@ const App: React.FC<AppProps> = ({ Component, pageProps }) => {
                       justifyContent="center"
                       width={8}
                     >
-                      <img 
+                      <img
                         alt={`${social.name} icon`}
                         src={`https://icongr.am/fontawesome/${social.name}.svg?size=20&color=ffffff`}
                       />
