@@ -48,3 +48,26 @@ export async function getSiteInformation(): Promise<SiteInformation> {
 
   return DEFAULT_SITE_INFORMATION;
 }
+
+export async function updateSiteInformation(newInfo: Partial<SiteInformation>): Promise<void> {
+  try {
+    if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
+      const currentInfo = await getSiteInformation();
+      const updatedInfo = { ...currentInfo, ...newInfo };
+      await kv.set('site_information', updatedInfo);
+      cachedSiteInfo = updatedInfo;
+      console.log('Site information updated successfully');
+    } else {
+      console.warn('Vercel KV is not configured. Site information not saved.');
+    }
+  } catch (error) {
+    console.error('Error updating site information:', error);
+    throw error;
+  }
+}
+
+export async function uploadImage(file: File, type: 'logo' | 'banner'): Promise<string> {
+  // Implementa la lógica de carga de imágenes aquí
+  // Por ahora, simplemente devolvemos una URL ficticia
+  return `https://example.com/${type}-${Date.now()}.jpg`;
+}
