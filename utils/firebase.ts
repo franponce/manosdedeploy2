@@ -14,17 +14,16 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage(app);
-
 export interface SiteInformation {
-    title: string;
-    description: string;
-    description2: string;
-    whatsappCart: string;
-    sheet: string;
-    color: string;
-    social: Array<{ name: string; url: string }>;
-    logoUrl: string;
-    bannerUrl: string;
+  title: string;
+  description: string;
+  description2: string;
+  whatsappCart: string;
+  sheet: string;
+  color: string;
+  social: Array<{ name: string; url: string }>;
+  logoUrl: string;
+  bannerUrl: string;
 }
 
 export const DEFAULT_SITE_INFORMATION: SiteInformation = {
@@ -43,23 +42,26 @@ export const DEFAULT_SITE_INFORMATION: SiteInformation = {
 };
 
 export async function getSiteInformation(): Promise<SiteInformation> {
-    const docRef = doc(db, "siteInfo", "main");
-    const docSnap = await getDoc(docRef);
-
-    if (docSnap.exists()) {
+    try {
+      const docRef = doc(db, "siteInfo", "main");
+      const docSnap = await getDoc(docRef);
+  
+      if (docSnap.exists()) {
         return docSnap.data() as SiteInformation;
-    } else {
-        return DEFAULT_SITE_INFORMATION;
+      }
+    } catch (error) {
+      console.error('Error fetching site information:', error);
     }
-}
-
-export async function updateSiteInformation(newInfo: Partial<SiteInformation>): Promise<void> {
+    return DEFAULT_SITE_INFORMATION;
+  }
+  
+  export async function updateSiteInformation(newInfo: Partial<SiteInformation>): Promise<void> {
     const docRef = doc(db, "siteInfo", "main");
     await setDoc(docRef, newInfo, { merge: true });
-}
-
-export async function uploadImage(file: File, type: 'logo' | 'banner'): Promise<string> {
-    const storageRef = ref(storage, `${type}/${file.name}`);
+  }
+  
+  export async function uploadImage(file: File, type: 'logo' | 'banner'): Promise<string> {
+    const storageRef = ref(storage, `${type}/${Date.now()}_${file.name}`);
     await uploadBytes(storageRef, file);
     return getDownloadURL(storageRef);
-}   
+  }
