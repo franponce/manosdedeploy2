@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   VStack,
+  Heading,
   FormControl,
   FormLabel,
   Input,
@@ -11,37 +12,56 @@ import {
   useToast,
 } from '@chakra-ui/react';
 import { useSiteInfo } from '../../hooks/useSiteInfo';
-import { updateSiteInformation, uploadImage, SiteInformation } from '../../utils/siteInfo';
+import { SiteInformation } from '../../utils/siteInfo';
 
 const StoreConfiguration: React.FC = () => {
   const { siteInfo, mutate } = useSiteInfo();
+  const [localSiteInfo, setLocalSiteInfo] = useState<SiteInformation | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const toast = useToast();
 
+  useEffect(() => {
+    if (siteInfo) {
+      setLocalSiteInfo(siteInfo);
+    }
+  }, [siteInfo]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    if (siteInfo) {
-      mutate({ ...siteInfo, [name]: value }, false);
-    }
+    setLocalSiteInfo(prev => prev ? { ...prev, [name]: value } : null);
   };
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>, type: 'logoUrl' | 'bannerUrl') => {
     const file = event.target.files?.[0];
-    if (!file || !siteInfo) return;
+    if (!file) return;
 
     setIsLoading(true);
     try {
-      const imageUrl = await uploadImage(file, type === 'logoUrl' ? 'logo' : 'banner');
-      const updatedSiteInfo = { ...siteInfo, [type]: imageUrl };
-      mutate(updatedSiteInfo, false);
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('type', type);
+
+      const response = await fetch('/api/upload-image', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload image');
+      }
+
+      const data = await response.json();
+      setLocalSiteInfo(prev => prev ? { ...prev, [type]: data.url } : null);
+
       toast({
-        title: 'Imagen cargada',
-        description: 'La imagen se ha actualizado correctamente.',
+        title: 'Éxito',
+        description: 'La imagen se ha cargado correctamente.',
         status: 'success',
         duration: 3000,
         isClosable: true,
       });
     } catch (error) {
+      console.error('Error uploading image:', error);
       toast({
         title: 'Error',
         description: 'No se pudo cargar la imagen.',
@@ -56,12 +76,23 @@ const StoreConfiguration: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!siteInfo) return;
+    if (!localSiteInfo) return;
 
     setIsLoading(true);
     try {
-      await updateSiteInformation(siteInfo);
-      mutate(siteInfo);
+      const response = await fetch('/api/update-site-info', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(localSiteInfo),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update site information');
+      }
+
+      await mutate(localSiteInfo);
       toast({
         title: 'Éxito',
         description: 'La información de la tienda se ha actualizado correctamente.',
@@ -70,6 +101,7 @@ const StoreConfiguration: React.FC = () => {
         isClosable: true,
       });
     } catch (error) {
+      console.error('Error updating site information:', error);
       toast({
         title: 'Error',
         description: 'No se pudo actualizar la información de la tienda.',
@@ -82,33 +114,40 @@ const StoreConfiguration: React.FC = () => {
     }
   };
 
-  if (!siteInfo) return <Box>Cargando...</Box>;
+  if (!localSiteInfo) return <Box>Cargando...</Box>;
 
   return (
     <Box as="form" onSubmit={handleSubmit}>
       <VStack spacing={6} align="stretch">
+        <Heading as="h3" size="md">Logo de la tienda</Heading>
+        <Image src={localSiteInfo.logoUrl} alt="Logo" maxHeight="100px" />
+        <FormControl>
+          <FormLabel>Cambiar logo (Recomendado: 400x400 px)</FormLabel>
+          <Input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, 'logoUrl')} />
+        </FormControl>
+
+        <Heading as="h3" size="md">Banner de la tienda</Heading>
+        <Image src={localSiteInfo.bannerUrl} alt="Banner" maxHeight="200px" />
+        <FormControl>
+          <FormLabel>Cambiar banner (Recomendado: 1920x400 px)</FormLabel>
+          <Input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, 'bannerUrl')} />
+        </FormControl>
+
         <FormControl>
           <FormLabel>Título de la tienda</FormLabel>
-          <Input name="title" value={siteInfo.title} onChange={handleInputChange} />
+          <Input name="title" value={localSiteInfo.title} onChange={handleInputChange} />
         </FormControl>
+
         <FormControl>
           <FormLabel>Descripción principal</FormLabel>
-          <Textarea name="description" value={siteInfo.description} onChange={handleInputChange} />
+          <Textarea name="description" value={localSiteInfo.description} onChange={handleInputChange} />
         </FormControl>
+
         <FormControl>
           <FormLabel>Descripción secundaria</FormLabel>
-          <Textarea name="description2" value={siteInfo.description2} onChange={handleInputChange} />
+          <Textarea name="description2" value={localSiteInfo.description2} onChange={handleInputChange} />
         </FormControl>
-        <FormControl>
-          <FormLabel>Logo de la tienda</FormLabel>
-          <Input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, 'logoUrl')} />
-          {siteInfo.logoUrl && <Image src={siteInfo.logoUrl} alt="Logo" maxHeight="100px" mt={2} />}
-        </FormControl>
-        <FormControl>
-          <FormLabel>Banner de la tienda</FormLabel>
-          <Input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, 'bannerUrl')} />
-          {siteInfo.bannerUrl && <Image src={siteInfo.bannerUrl} alt="Banner" maxHeight="200px" mt={2} />}
-        </FormControl>
+
         <Button type="submit" colorScheme="blue" isLoading={isLoading}>
           Guardar cambios
         </Button>

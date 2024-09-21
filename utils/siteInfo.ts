@@ -27,26 +27,19 @@ export const DEFAULT_SITE_INFORMATION: SiteInformation = {
   bannerUrl: "/default-banner.jpg"
 };
 
-let cachedSiteInfo: SiteInformation | null = null;
-
 export async function getSiteInformation(): Promise<SiteInformation> {
   console.log('Iniciando getSiteInformation');
   if (typeof window !== 'undefined') {
-    console.log('Ejecutando en el cliente, devolviendo caché o valor por defecto');
-    return cachedSiteInfo || DEFAULT_SITE_INFORMATION;
+    console.log('Ejecutando en el cliente, devolviendo valor por defecto');
+    return DEFAULT_SITE_INFORMATION;
   }
 
   try {
-    if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
-      console.log('Vercel KV está configurado, intentando obtener información');
-      const storedInfo = await kv.get('site_information') as SiteInformation | null;
-      if (storedInfo) {
-        console.log('Información obtenida de Vercel KV');
-        cachedSiteInfo = { ...DEFAULT_SITE_INFORMATION, ...storedInfo };
-        return cachedSiteInfo;
-      }
-    } else {
-      console.warn('Vercel KV no está configurado. Usando información por defecto.');
+    console.log('Intentando obtener información de Vercel KV');
+    const storedInfo = await kv.get('site_information') as SiteInformation | null;
+    if (storedInfo) {
+      console.log('Información obtenida de Vercel KV');
+      return { ...DEFAULT_SITE_INFORMATION, ...storedInfo };
     }
   } catch (error) {
     console.error('Error al obtener la información del sitio:', error);
@@ -58,19 +51,17 @@ export async function getSiteInformation(): Promise<SiteInformation> {
 
 export async function updateSiteInformation(newInfo: Partial<SiteInformation>): Promise<void> {
   console.log('Iniciando updateSiteInformation');
+  if (typeof window !== 'undefined') {
+    console.error('updateSiteInformation no puede ejecutarse en el cliente');
+    return;
+  }
+
   try {
-    if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
-      console.log('Vercel KV está configurado');
-      const currentInfo = await getSiteInformation();
-      console.log('Información actual obtenida:', currentInfo);
-      const updatedInfo = { ...currentInfo, ...newInfo };
-      console.log('Información actualizada:', updatedInfo);
-      await kv.set('site_information', updatedInfo);
-      console.log('Información guardada en Vercel KV');
-      cachedSiteInfo = updatedInfo;
-    } else {
-      console.warn('Vercel KV no está configurado. La información del sitio no se guardó.');
-    }
+    const currentInfo = await getSiteInformation();
+    const updatedInfo = { ...currentInfo, ...newInfo };
+    console.log('Guardando información actualizada en Vercel KV');
+    await kv.set('site_information', updatedInfo);
+    console.log('Información guardada en Vercel KV');
   } catch (error) {
     console.error('Error al actualizar la información del sitio:', error);
     throw error;
