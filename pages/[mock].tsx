@@ -4,14 +4,15 @@ import { GetStaticPaths, GetStaticProps } from "next";
 import { Product } from "../product/types";
 import api from "../product/api";
 import StoreScreen from "../product/screens/Store";
-import { SiteInformation, getSiteInformation } from "../utils/siteInfo";
+import { getSiteInformation, SiteInformation } from "../utils/firebase";
 
 interface Props {
   products: Product[];
+  siteInfo: SiteInformation;
 }
 
-const MockRoute: React.FC<Props> = ({ products }) => {
-  return <StoreScreen products={products} />;
+const MockRoute: React.FC<Props> = ({ products, siteInfo }) => {
+  return <StoreScreen products={products} siteInfo={siteInfo} />;
 };
 
 export const getStaticProps: GetStaticProps = async (context) => {
@@ -45,6 +46,7 @@ export const getStaticProps: GetStaticProps = async (context) => {
   return {
     props: {
       products,
+      siteInfo,
     },
     revalidate: 10,
   };
