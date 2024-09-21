@@ -1,10 +1,12 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { SiteInformation, getSiteInformation, DEFAULT_SITE_INFORMATION } from '../utils/siteInfo';
+import { SiteInformation, DEFAULT_SITE_INFORMATION, getSiteInformation } from '../utils/firebase';
 
-const SiteInfoContext = createContext<{
+interface SiteInfoContextType {
   siteInfo: SiteInformation;
   updateSiteInfo: (newInfo: Partial<SiteInformation>) => void;
-}>({
+}
+
+const SiteInfoContext = createContext<SiteInfoContextType>({
   siteInfo: DEFAULT_SITE_INFORMATION,
   updateSiteInfo: () => {},
 });
@@ -16,14 +18,18 @@ export const SiteInfoProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   useEffect(() => {
     const fetchSiteInfo = async () => {
-      const info = await getSiteInformation();
-      setSiteInfo(info);
+      try {
+        const info = await getSiteInformation();
+        setSiteInfo(info);
+      } catch (error) {
+        console.error('Error fetching site information:', error);
+      }
     };
     fetchSiteInfo();
   }, []);
 
   const updateSiteInfo = (newInfo: Partial<SiteInformation>) => {
-    setSiteInfo(prevInfo => ({ ...prevInfo, ...newInfo }));
+    setSiteInfo((prevInfo: SiteInformation) => ({ ...prevInfo, ...newInfo }));
   };
 
   return (
