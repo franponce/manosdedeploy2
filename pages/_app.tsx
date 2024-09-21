@@ -25,7 +25,7 @@ import { useRouter } from "next/router";
 import { SWRConfig } from 'swr';
 
 import theme from "../theme";
-import { getSiteInformation, SiteInformation, DEFAULT_SITE_INFORMATION } from "../utils/siteInfo";
+import { getSiteInformation, SiteInformation, DEFAULT_SITE_INFORMATION } from "../utils/firebase";
 import { useSiteInfo } from '../hooks/useSiteInfo';
 
 const HamburgerIcon = () => (

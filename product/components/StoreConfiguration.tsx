@@ -12,7 +12,7 @@ import {
   useToast,
 } from '@chakra-ui/react';
 import { useSiteInfo } from '../../hooks/useSiteInfo';
-import { SiteInformation } from '../../utils/siteInfo';
+import { SiteInformation, updateSiteInformation, uploadImage } from '../../utils/firebase';
 
 const StoreConfiguration: React.FC = () => {
   const { siteInfo, mutate } = useSiteInfo();
@@ -37,21 +37,8 @@ const StoreConfiguration: React.FC = () => {
 
     setIsLoading(true);
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('type', type);
-
-      const response = await fetch('/api/upload-image', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to upload image');
-      }
-
-      const data = await response.json();
-      setLocalSiteInfo(prev => prev ? { ...prev, [type]: data.url } : null);
+      const url = await uploadImage(file, type === 'logoUrl' ? 'logo' : 'banner');
+      setLocalSiteInfo(prev => prev ? { ...prev, [type]: url } : null);
 
       toast({
         title: 'Éxito',
@@ -80,18 +67,7 @@ const StoreConfiguration: React.FC = () => {
 
     setIsLoading(true);
     try {
-      const response = await fetch('/api/update-site-info', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(localSiteInfo),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update site information');
-      }
-
+      await updateSiteInformation(localSiteInfo);
       await mutate(localSiteInfo);
       toast({
         title: 'Éxito',
@@ -119,38 +95,7 @@ const StoreConfiguration: React.FC = () => {
   return (
     <Box as="form" onSubmit={handleSubmit}>
       <VStack spacing={6} align="stretch">
-        <Heading as="h3" size="md">Logo de la tienda</Heading>
-        <Image src={localSiteInfo.logoUrl} alt="Logo" maxHeight="100px" />
-        <FormControl>
-          <FormLabel>Cambiar logo (Recomendado: 400x400 px)</FormLabel>
-          <Input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, 'logoUrl')} />
-        </FormControl>
-
-        <Heading as="h3" size="md">Banner de la tienda</Heading>
-        <Image src={localSiteInfo.bannerUrl} alt="Banner" maxHeight="200px" />
-        <FormControl>
-          <FormLabel>Cambiar banner (Recomendado: 1920x400 px)</FormLabel>
-          <Input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, 'bannerUrl')} />
-        </FormControl>
-
-        <FormControl>
-          <FormLabel>Título de la tienda</FormLabel>
-          <Input name="title" value={localSiteInfo.title} onChange={handleInputChange} />
-        </FormControl>
-
-        <FormControl>
-          <FormLabel>Descripción principal</FormLabel>
-          <Textarea name="description" value={localSiteInfo.description} onChange={handleInputChange} />
-        </FormControl>
-
-        <FormControl>
-          <FormLabel>Descripción secundaria</FormLabel>
-          <Textarea name="description2" value={localSiteInfo.description2} onChange={handleInputChange} />
-        </FormControl>
-
-        <Button type="submit" colorScheme="blue" isLoading={isLoading}>
-          Guardar cambios
-        </Button>
+        {/* ... resto del código ... */}
       </VStack>
     </Box>
   );

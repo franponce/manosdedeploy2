@@ -1,5 +1,5 @@
 import useSWR from 'swr';
-import { SiteInformation, getSiteInformation, DEFAULT_SITE_INFORMATION } from '../utils/siteInfo';
+import { getSiteInformation, SiteInformation, DEFAULT_SITE_INFORMATION } from '../utils/firebase';
 
 const fetcher = () => getSiteInformation();
 
