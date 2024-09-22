@@ -1,6 +1,5 @@
 import * as React from "react";
 import Head from "next/head";
-import Image from 'next/image';
 import {
   ChakraProvider,
   Heading,
@@ -130,9 +129,17 @@ const MyApp = ({ Component, pageProps, fallback }: MyAppProps) => {
               <img
                 alt="Header image"
                 src={siteInfo.bannerUrl}
-                style={{ width: '100%', height: '100%', objectFit: "cover" }}
+                style={{ 
+                  width: '100%', 
+                  height: '100%', 
+                  objectFit: "cover",
+                  transition: 'opacity 0.3s ease-in-out'
+                }}
                 onError={(e) => {
                   e.currentTarget.src = "/default-banner.jpg";
+                }}
+                onLoad={(e) => {
+                  e.currentTarget.style.opacity = '1';
                 }}
               />
             </Box>
@@ -156,9 +163,17 @@ const MyApp = ({ Component, pageProps, fallback }: MyAppProps) => {
               <img
                 alt="Avatar"
                 src={siteInfo.logoUrl}
-                style={{ width: '100%', height: '100%', objectFit: "cover" }}
+                style={{ 
+                  width: '100%', 
+                  height: '100%', 
+                  objectFit: "cover",
+                  transition: 'opacity 0.3s ease-in-out'
+                }}
                 onError={(e) => {
                   e.currentTarget.src = "/default-logo.png";
+                }}
+                onLoad={(e) => {
+                  e.currentTarget.style.opacity = '1';
                 }}
               />
             </Box>

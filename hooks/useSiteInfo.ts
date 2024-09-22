@@ -7,7 +7,7 @@ export function useSiteInfo() {
   const { data, error, mutate } = useSWR<SiteInformation>('site-info', fetcher, {
     fallbackData: DEFAULT_SITE_INFORMATION,
     revalidateOnFocus: false,
-    revalidateOnReconnect: false,
+    dedupingInterval: 5000, // Evita múltiples solicitudes en un corto período de tiempo
   });
 
   return {
