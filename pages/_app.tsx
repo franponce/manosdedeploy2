@@ -25,7 +25,7 @@ import { useRouter } from "next/router";
 import { SWRConfig } from 'swr';
 
 import theme from "../theme";
-import { getSiteInformation, SiteInformation, DEFAULT_SITE_INFORMATION } from "../utils/firebase";
+import { SiteInformation } from "../utils/firebase";
 import { useSiteInfo } from '../hooks/useSiteInfo';
 
 const HamburgerIcon = () => (
@@ -37,7 +37,7 @@ const HamburgerIcon = () => (
 );
 
 interface MyAppProps extends AppProps {
-  fallback: {
+  fallback?: {
     'site-info': SiteInformation;
   };
 }
@@ -214,21 +214,6 @@ const MyApp = ({ Component, pageProps, fallback }: MyAppProps) => {
       </ChakraProvider>
     </SWRConfig>
   );
-};
-
-MyApp.getInitialProps = async () => {
-  let siteInfo: SiteInformation;
-  try {
-    siteInfo = await getSiteInformation();
-  } catch (error) {
-    console.error('Error fetching initial site info:', error);
-    siteInfo = DEFAULT_SITE_INFORMATION;
-  }
-  return {
-    fallback: {
-      'site-info': siteInfo,
-    },
-  };
 };
 
 export default MyApp;
