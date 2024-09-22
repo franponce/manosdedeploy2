@@ -14,6 +14,7 @@ import StoreConfiguration from '../product/components/StoreConfiguration';
 import MercadoPagoConfig from '../product/components/MercadoPagoConfig';
 import CustomScripts from '../product/components/CustomScripts';
 import { useRouter } from 'next/router';
+import { FaArrowLeft } from 'react-icons/fa';
 
 const StoreConfigPage: React.FC = () => {
   const router = useRouter();
@@ -28,7 +29,13 @@ const StoreConfigPage: React.FC = () => {
         Configuración de la tienda
       </Heading>
 
-      <Button colorScheme="gray" onClick={handleBackToAdmin} mb={8}>
+      <Button
+        colorScheme="gray"
+        onClick={handleBackToAdmin}
+        mb={8}
+        leftIcon={<Icon as={FaArrowLeft} />}
+        width={{ base: "full", sm: "auto" }}
+      >
         Volver a la gestión de productos
       </Button>
 
