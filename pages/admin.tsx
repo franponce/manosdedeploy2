@@ -2,91 +2,43 @@ import React from "react";
 import {
   Box,
   Heading,
+  Button,
+  Flex,
   VStack,
-  Accordion,
-  AccordionItem,
-  AccordionButton,
-  AccordionPanel,
-  AccordionIcon,
 } from "@chakra-ui/react";
-import MercadoPagoConfig from "../product/components/MercadoPagoConfig";
 import ProductManagement from "../product/components/ProductManagement";
-import CustomScripts from "../product/components/CustomScripts";
-import StoreConfiguration from "../product/components/StoreConfiguration";
+import { useRouter } from 'next/router';
 
 const AdminPage: React.FC = () => {
+  const router = useRouter();
+
+  const handleCreateProduct = () => {
+    // Implementar la lógica para crear un nuevo producto
+    console.log("Crear nuevo producto");
+  };
+
+  const handleStoreSettings = () => {
+    router.push('/store-config');
+  };
+
   return (
     <Box margin="auto" maxWidth="1200px" padding={8}>
-      <Heading as="h1" mb={8} size="xl">
-        Panel de administración
-      </Heading>
+      <Flex justifyContent="space-between" alignItems="center" mb={8}>
+        <Heading as="h1" size="xl">
+          Gestión de productos
+        </Heading>
+        <Flex>
+          <Button colorScheme="blue" onClick={handleCreateProduct} mr={4}>
+            Crear nuevo producto
+          </Button>
+          <Button colorScheme="gray" onClick={handleStoreSettings}>
+            Configuración de la tienda
+          </Button>
+        </Flex>
+      </Flex>
 
       <VStack spacing={8} align="stretch">
-        <Accordion allowMultiple>
-          <AccordionItem>
-            <h2>
-              <AccordionButton>
-                <Box flex="1" textAlign="left">
-                  <Heading as="h2" size="lg">
-                    Información de la tienda
-                  </Heading>
-                </Box>
-                <AccordionIcon />
-              </AccordionButton>
-            </h2>
-            <AccordionPanel pb={4}>
-              <StoreConfiguration />
-            </AccordionPanel>
-          </AccordionItem>
-
-          <AccordionItem>
-            <h2>
-              <AccordionButton>
-                <Box flex="1" textAlign="left">
-                  <Heading as="h2" size="lg">
-                    Gestión de productos
-                  </Heading>
-                </Box>
-                <AccordionIcon />
-              </AccordionButton>
-            </h2>
-            <AccordionPanel pb={4}>
-              <ProductManagement />
-            </AccordionPanel>
-          </AccordionItem>
-
-          <AccordionItem>
-            <h2>
-              <AccordionButton>
-                <Box flex="1" textAlign="left">
-                  <Heading as="h2" size="lg">
-                    Configuración de MercadoPago
-                  </Heading>
-                </Box>
-                <AccordionIcon />
-              </AccordionButton>
-            </h2>
-            <AccordionPanel pb={4}>
-              <MercadoPagoConfig />
-            </AccordionPanel>
-          </AccordionItem>
-
-          <AccordionItem>
-            <h2>
-              <AccordionButton>
-                <Box flex="1" textAlign="left">
-                  <Heading as="h2" size="lg">
-                    Scripts personalizados
-                  </Heading>
-                </Box>
-                <AccordionIcon />
-              </AccordionButton>
-            </h2>
-            <AccordionPanel pb={4}>
-              <CustomScripts />
-            </AccordionPanel>
-          </AccordionItem>
-        </Accordion>
+        <ProductManagement />
       </VStack>
     </Box>
   );
