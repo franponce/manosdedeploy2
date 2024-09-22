@@ -120,7 +120,7 @@ const MyApp = ({ Component, pageProps, fallback }: MyAppProps) => {
                         <MenuItem as="a">Panel Administrador</MenuItem>
                       </NextLink>
                       <NextLink href="/store-config" passHref legacyBehavior>
-                        <MenuItem as="a">Información de la tienda</MenuItem>
+                        <MenuItem as="a">Configuraciones</MenuItem>
                       </NextLink>
                       <MenuItem onClick={handleLogout}>Cerrar sesión</MenuItem>
                     </>
@@ -155,7 +155,7 @@ const MyApp = ({ Component, pageProps, fallback }: MyAppProps) => {
                   fallback={<Box bg="gray.200" w="100%" h="100%" display="flex" alignItems="center" justifyContent="center">Cargando..</Box>}
                 />
               ) : (
-                <Box bg="gray.200" w="100%" h="100%" display="flex" alignItems="center" justifyContent="center">No hay imagen de banner</Box>
+                <Box bg="gray.200" w="100%" h="100%" display="flex" alignItems="center" justifyContent="center">Aún hay imagen de banner</Box>
               )}
             </Box>
           </Box>
@@ -239,21 +239,6 @@ const MyApp = ({ Component, pageProps, fallback }: MyAppProps) => {
       </ChakraProvider>
     </SWRConfig>
   );
-};
-
-MyApp.getInitialProps = async () => {
-  let siteInfo: SiteInformation;
-  try {
-    siteInfo = await getSiteInformation();
-  } catch (error) {
-    console.error('Error fetching initial site info:', error);
-    siteInfo = DEFAULT_SITE_INFORMATION;
-  }
-  return {
-    fallback: {
-      'site-info': siteInfo,
-    },
-  };
 };
 
 export default MyApp;
