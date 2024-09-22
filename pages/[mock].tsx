@@ -8,11 +8,10 @@ import { getSiteInformation, SiteInformation } from "../utils/firebase";
 
 interface Props {
   products: Product[];
-  siteInfo: SiteInformation;
 }
 
-const MockRoute: React.FC<Props> = ({ products, siteInfo }) => {
-  return <StoreScreen products={products} siteInfo={siteInfo} />;
+const MockRoute: React.FC<Props> = ({ products }) => {
+  return <StoreScreen products={products} />;
 };
 
 export const getStaticProps: GetStaticProps = async (context) => {
@@ -46,7 +45,6 @@ export const getStaticProps: GetStaticProps = async (context) => {
   return {
     props: {
       products,
-      siteInfo,
     },
     revalidate: 10,
   };

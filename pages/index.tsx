@@ -6,24 +6,23 @@ import { getSiteInformation, SiteInformation } from '../utils/firebase';
 
 interface Props {
   products: Product[];
-  siteInfo: SiteInformation;
 }
 
-const IndexRoute: React.FC<Props> = ({ products, siteInfo }) => {
-  return <StoreScreen products={products} siteInfo={siteInfo} />;
+const IndexRoute: React.FC<Props> = ({ products }) => {
+  return <StoreScreen products={products} />;
 };
 
 export const getStaticProps: GetStaticProps = async () => {
   try {
-    const [products, siteInfo] = await Promise.all([
-      api.list(),
-      getSiteInformation()
-    ]);
+    const products = await api.list();
+
+    // Aunque ya no pasamos siteInfo a StoreScreen, aún podríamos necesitarla
+    // para el layout general o para metadatos de la página
+    const siteInfo = await getSiteInformation();
 
     return {
       props: {
         products,
-        siteInfo,
       },
       revalidate: 60, // Revalidar cada minuto
     };
@@ -32,7 +31,6 @@ export const getStaticProps: GetStaticProps = async () => {
     return {
       props: {
         products: [],
-        siteInfo: await getSiteInformation(),
       },
       revalidate: 60,
     };
