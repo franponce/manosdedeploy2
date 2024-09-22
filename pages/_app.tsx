@@ -152,7 +152,7 @@ const MyApp = ({ Component, pageProps, fallback }: MyAppProps) => {
                     console.error("Error loading banner image");
                     setBannerError(true);
                   }}
-                  fallback={<Box bg="gray.200" w="100%" h="100%" display="flex" alignItems="center" justifyContent="center">Error al cargar la imagen</Box>}
+                  fallback={<Box bg="gray.200" w="100%" h="100%" display="flex" alignItems="center" justifyContent="center">Cargando..</Box>}
                 />
               ) : (
                 <Box bg="gray.200" w="100%" h="100%" display="flex" alignItems="center" justifyContent="center">No hay imagen de banner</Box>
