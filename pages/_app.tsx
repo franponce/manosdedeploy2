@@ -16,6 +16,7 @@ import {
   MenuList,
   MenuItem,
   useDisclosure,
+  Image,
 } from "@chakra-ui/react";
 import { AppProps } from "next/app";
 import { Global, css } from "@emotion/react";
@@ -47,6 +48,7 @@ const MyApp = ({ Component, pageProps, fallback }: MyAppProps) => {
   const [isLoggedIn, setIsLoggedIn] = React.useState(false);
   const [isMounted, setIsMounted] = React.useState(false);
   const { siteInfo } = useSiteInfo();
+  const [bannerError, setBannerError] = React.useState(false);
 
   React.useEffect(() => {
     setIsLoggedIn(localStorage.getItem("isLoggedIn") === "true");
@@ -126,21 +128,14 @@ const MyApp = ({ Component, pageProps, fallback }: MyAppProps) => {
               width="100%"
               position="relative"
             >
-              <img
+              <Image
+                src={bannerError ? "/default-banner.jpg" : siteInfo.bannerUrl}
                 alt="Header image"
-                src={siteInfo.bannerUrl}
-                style={{ 
-                  width: '100%', 
-                  height: '100%', 
-                  objectFit: "cover",
-                  transition: 'opacity 0.3s ease-in-out'
-                }}
-                onError={(e) => {
-                  e.currentTarget.src = "/default-banner.jpg";
-                }}
-                onLoad={(e) => {
-                  e.currentTarget.style.opacity = '1';
-                }}
+                objectFit="cover"
+                width="100%"
+                height="100%"
+                onError={() => setBannerError(true)}
+                fallback={<Box bg="gray.200" w="100%" h="100%" />}
               />
             </Box>
           </Box>
@@ -160,21 +155,13 @@ const MyApp = ({ Component, pageProps, fallback }: MyAppProps) => {
               overflow="hidden"
               position="relative"
             >
-              <img
-                alt="Avatar"
+              <Image
                 src={siteInfo.logoUrl}
-                style={{ 
-                  width: '100%', 
-                  height: '100%', 
-                  objectFit: "cover",
-                  transition: 'opacity 0.3s ease-in-out'
-                }}
-                onError={(e) => {
-                  e.currentTarget.src = "/default-logo.png";
-                }}
-                onLoad={(e) => {
-                  e.currentTarget.style.opacity = '1';
-                }}
+                alt="Avatar"
+                objectFit="cover"
+                width="100%"
+                height="100%"
+                fallback={<Box bg="gray.200" w="100%" h="100%" borderRadius="full" />}
               />
             </Box>
             <Stack
@@ -205,7 +192,7 @@ const MyApp = ({ Component, pageProps, fallback }: MyAppProps) => {
                       justifyContent="center"
                       width={8}
                     >
-                      <img 
+                      <Image 
                         alt={`${social.name} icon`}
                         src={`https://icongr.am/fontawesome/${social.name}.svg?size=20&color=ffffff`}
                       />

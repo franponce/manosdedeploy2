@@ -68,6 +68,8 @@ const StoreConfiguration: React.FC = () => {
       setLocalSiteInfo(updatedInfo);
       await updateSiteInformation({ [type]: url });
       await mutate(updatedInfo, false);
+  
+      console.log(`Updated ${type}. New URL:`, url); // Para debugging
 
       toast({
         title: 'Éxito',
