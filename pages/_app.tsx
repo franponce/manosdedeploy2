@@ -17,7 +17,6 @@ import {
   MenuItem,
   useDisclosure,
   Image,
-  Spinner,
 } from "@chakra-ui/react";
 import { AppProps } from "next/app";
 import { Global, css } from "@emotion/react";
@@ -50,20 +49,11 @@ const MyApp = ({ Component, pageProps, fallback }: MyAppProps) => {
   const [isMounted, setIsMounted] = React.useState(false);
   const { siteInfo, isLoading, isError } = useSiteInfo();
   const [bannerError, setBannerError] = React.useState(false);
-  const [logoError, setLogoError] = React.useState(false);
 
   React.useEffect(() => {
     setIsLoggedIn(localStorage.getItem("isLoggedIn") === "true");
     setIsMounted(true);
   }, []);
-
-  React.useEffect(() => {
-    if (siteInfo) {
-      console.log("SiteInfo loaded:", siteInfo);
-      console.log("Banner URL:", siteInfo.bannerUrl);
-      console.log("Logo URL:", siteInfo.logoUrl);
-    }
-  }, [siteInfo]);
 
   const handleLogout = () => {
     localStorage.removeItem("isLoggedIn");
@@ -71,8 +61,8 @@ const MyApp = ({ Component, pageProps, fallback }: MyAppProps) => {
     router.push("/");
   };
 
-  if (isLoading) return <Box display="flex" justifyContent="center" alignItems="center" height="100vh"><Spinner /></Box>;
-  if (isError) return <Box>Cargando...</Box>;
+  if (isLoading) return <Box>Cargando...</Box>;
+  if (isError) return <Box>Error al cargar la información del sitio</Box>;
 
   return (
     <SWRConfig value={{ fallback }}>
@@ -120,7 +110,7 @@ const MyApp = ({ Component, pageProps, fallback }: MyAppProps) => {
                         <MenuItem as="a">Panel Administrador</MenuItem>
                       </NextLink>
                       <NextLink href="/store-config" passHref legacyBehavior>
-                        <MenuItem as="a">Configuraciones</MenuItem>
+                        <MenuItem as="a">Información de la tienda</MenuItem>
                       </NextLink>
                       <MenuItem onClick={handleLogout}>Cerrar sesión</MenuItem>
                     </>
@@ -141,22 +131,15 @@ const MyApp = ({ Component, pageProps, fallback }: MyAppProps) => {
               width="100%"
               position="relative"
             >
-              {siteInfo.bannerUrl ? (
-                <Image
-                  src={`${siteInfo.bannerUrl}?${new Date().getTime()}`}
-                  alt="Header image"
-                  objectFit="cover"
-                  width="100%"
-                  height="100%"
-                  onError={() => {
-                    console.error("Error loading banner image");
-                    setBannerError(true);
-                  }}
-                  fallback={<Box bg="gray.200" w="100%" h="100%" display="flex" alignItems="center" justifyContent="center">Cargando..</Box>}
-                />
-              ) : (
-                <Box bg="gray.200" w="100%" h="100%" display="flex" alignItems="center" justifyContent="center">Aún hay imagen de banner</Box>
-              )}
+              <Image
+                src={bannerError ? "/default-banner.jpg" : `${siteInfo.bannerUrl}?${new Date().getTime()}`}
+                alt="Header image"
+                objectFit="cover"
+                width="100%"
+                height="100%"
+                onError={() => setBannerError(true)}
+                fallback={<Box bg="gray.200" w="100%" h="100%" />}
+              />
             </Box>
           </Box>
           <Flex
@@ -175,22 +158,14 @@ const MyApp = ({ Component, pageProps, fallback }: MyAppProps) => {
               overflow="hidden"
               position="relative"
             >
-              {siteInfo.logoUrl ? (
-                <Image
-                  src={`${siteInfo.logoUrl}?${new Date().getTime()}`}
-                  alt="Avatar"
-                  objectFit="cover"
-                  width="100%"
-                  height="100%"
-                  onError={() => {
-                    console.error("Error loading logo image");
-                    setLogoError(true);
-                  }}
-                  fallback={<Box bg="gray.200" w="100%" h="100%" borderRadius="full" display="flex" alignItems="center" justifyContent="center">Error</Box>}
-                />
-              ) : (
-                <Box bg="gray.200" w="100%" h="100%" borderRadius="full" display="flex" alignItems="center" justifyContent="center">No logo</Box>
-              )}
+              <Image
+                src={`${siteInfo.logoUrl}?${new Date().getTime()}`}
+                alt="Avatar"
+                objectFit="cover"
+                width="100%"
+                height="100%"
+                fallback={<Box bg="gray.200" w="100%" h="100%" borderRadius="full" />}
+              />
             </Box>
             <Stack
               align={{ base: "center", sm: "flex-start" }}
@@ -209,7 +184,7 @@ const MyApp = ({ Component, pageProps, fallback }: MyAppProps) => {
                 {siteInfo.description2}
               </Text>
               <Stack direction="row" mt={2} spacing={2}>
-                {siteInfo.social.map((social) => (
+                {siteInfo.social?.map((social) => (
                   <Link key={social.name} href={social.url} isExternal>
                     <Flex
                       alignItems="center"
@@ -239,6 +214,21 @@ const MyApp = ({ Component, pageProps, fallback }: MyAppProps) => {
       </ChakraProvider>
     </SWRConfig>
   );
+};
+
+MyApp.getInitialProps = async () => {
+  let siteInfo: SiteInformation;
+  try {
+    siteInfo = await getSiteInformation();
+  } catch (error) {
+    console.error('Error fetching initial site info:', error);
+    siteInfo = DEFAULT_SITE_INFORMATION;
+  }
+  return {
+    fallback: {
+      'site-info': siteInfo,
+    },
+  };
 };
 
 export default MyApp;
