@@ -29,7 +29,7 @@ const StoreConfigPage: React.FC = () => {
       </Heading>
 
       <Button colorScheme="gray" onClick={handleBackToAdmin} mb={8}>
-        Volver a Gestión de productos
+        Volver a la gestión de productos
       </Button>
 
       <VStack spacing={8} align="stretch">
