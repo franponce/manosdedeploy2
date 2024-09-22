@@ -38,11 +38,14 @@ const StoreConfiguration: React.FC = () => {
     setIsLoading(true);
     try {
       const url = await uploadImage(file, type === 'logoUrl' ? 'logo' : 'banner');
-      setLocalSiteInfo(prev => prev ? { ...prev, [type]: url } : null);
+      const updatedInfo = { ...localSiteInfo, [type]: url } as SiteInformation;
+      setLocalSiteInfo(updatedInfo);
+      await updateSiteInformation({ [type]: url });
+      await mutate(updatedInfo, false);
 
       toast({
         title: 'Éxito',
-        description: 'La imagen se ha cargado correctamente.',
+        description: 'La imagen se ha cargado y actualizado correctamente.',
         status: 'success',
         duration: 3000,
         isClosable: true,
@@ -68,7 +71,7 @@ const StoreConfiguration: React.FC = () => {
     setIsLoading(true);
     try {
       await updateSiteInformation(localSiteInfo);
-      await mutate(localSiteInfo);
+      await mutate(localSiteInfo, false);
       toast({
         title: 'Éxito',
         description: 'La información de la tienda se ha actualizado correctamente.',

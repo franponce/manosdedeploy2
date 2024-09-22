@@ -6,6 +6,8 @@ const fetcher = () => getSiteInformation();
 export function useSiteInfo() {
   const { data, error, mutate } = useSWR<SiteInformation>('site-info', fetcher, {
     fallbackData: DEFAULT_SITE_INFORMATION,
+    revalidateOnFocus: false,
+    revalidateOnReconnect: false,
   });
 
   return {
