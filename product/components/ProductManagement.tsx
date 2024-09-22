@@ -153,12 +153,6 @@ const ProductManagement: React.FC = () => {
 
   return (
     <Box>
-      <Heading as="h2" size="lg" mb={4}>
-        Gestión de productos
-      </Heading>
-      <Button colorScheme="green" mb={4} onClick={handleCreate}>
-        Crear nuevo producto
-      </Button>
       <Input
         mb={4}
         placeholder="Buscar productos..."
