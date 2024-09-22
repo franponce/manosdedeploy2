@@ -72,7 +72,7 @@ const MyApp = ({ Component, pageProps, fallback }: MyAppProps) => {
   };
 
   if (isLoading) return <Box display="flex" justifyContent="center" alignItems="center" height="100vh"><Spinner /></Box>;
-  if (isError) return <Box>Error al cargar la información del sitio</Box>;
+  if (isError) return <Box>Cargando...</Box>;
 
   return (
     <SWRConfig value={{ fallback }}>
