@@ -78,9 +78,6 @@ const CustomScripts: React.FC = () => {
 
   return (
     <Box>
-      <Heading as="h2" size="lg" mb={4}>
-        Scripts personalizados
-      </Heading>
       <VStack align="stretch" spacing={6}>
         <Text>
           Añade aquí scripts personalizados que se ejecutarán en todas las páginas del sitio.

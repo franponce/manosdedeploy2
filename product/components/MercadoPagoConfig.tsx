@@ -70,9 +70,6 @@ const MercadoPagoConfig: React.FC = () => {
 
   return (
     <Box>
-      <Heading as="h2" size="lg" mb={4}>
-        Configuración de MercadoPago
-      </Heading>
       <HStack>
         <FormControl display="flex" alignItems="center">
           <FormLabel htmlFor="mercadopago-switch" mb="0">
