@@ -110,7 +110,7 @@ const MyApp = ({ Component, pageProps, fallback }: MyAppProps) => {
                         <MenuItem as="a">Panel Administrador</MenuItem>
                       </NextLink>
                       <NextLink href="/store-config" passHref legacyBehavior>
-                        <MenuItem as="a">Información de la tienda</MenuItem>
+                        <MenuItem as="a">Configuración de la tienda</MenuItem>
                       </NextLink>
                       <MenuItem onClick={handleLogout}>Cerrar sesión</MenuItem>
                     </>
