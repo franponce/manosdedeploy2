@@ -17,6 +17,7 @@ import {
   MenuItem,
   useDisclosure,
   Image,
+  Spinner,
 } from "@chakra-ui/react";
 import { AppProps } from "next/app";
 import { Global, css } from "@emotion/react";
@@ -47,19 +48,31 @@ const MyApp = ({ Component, pageProps, fallback }: MyAppProps) => {
   const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = React.useState(false);
   const [isMounted, setIsMounted] = React.useState(false);
-  const { siteInfo } = useSiteInfo();
+  const { siteInfo, isLoading, isError } = useSiteInfo();
   const [bannerError, setBannerError] = React.useState(false);
+  const [logoError, setLogoError] = React.useState(false);
 
   React.useEffect(() => {
     setIsLoggedIn(localStorage.getItem("isLoggedIn") === "true");
     setIsMounted(true);
   }, []);
 
+  React.useEffect(() => {
+    if (siteInfo) {
+      console.log("SiteInfo loaded:", siteInfo);
+      console.log("Banner URL:", siteInfo.bannerUrl);
+      console.log("Logo URL:", siteInfo.logoUrl);
+    }
+  }, [siteInfo]);
+
   const handleLogout = () => {
     localStorage.removeItem("isLoggedIn");
     setIsLoggedIn(false);
     router.push("/");
   };
+
+  if (isLoading) return <Box display="flex" justifyContent="center" alignItems="center" height="100vh"><Spinner /></Box>;
+  if (isError) return <Box>Error al cargar la información del sitio</Box>;
 
   return (
     <SWRConfig value={{ fallback }}>
@@ -128,15 +141,22 @@ const MyApp = ({ Component, pageProps, fallback }: MyAppProps) => {
               width="100%"
               position="relative"
             >
-              <Image
-                src={bannerError ? "/default-banner.jpg" : siteInfo.bannerUrl}
-                alt="Header image"
-                objectFit="cover"
-                width="100%"
-                height="100%"
-                onError={() => setBannerError(true)}
-                fallback={<Box bg="gray.200" w="100%" h="100%" />}
-              />
+              {siteInfo.bannerUrl ? (
+                <Image
+                  src={`${siteInfo.bannerUrl}?${new Date().getTime()}`}
+                  alt="Header image"
+                  objectFit="cover"
+                  width="100%"
+                  height="100%"
+                  onError={() => {
+                    console.error("Error loading banner image");
+                    setBannerError(true);
+                  }}
+                  fallback={<Box bg="gray.200" w="100%" h="100%" display="flex" alignItems="center" justifyContent="center">Error al cargar la imagen</Box>}
+                />
+              ) : (
+                <Box bg="gray.200" w="100%" h="100%" display="flex" alignItems="center" justifyContent="center">No hay imagen de banner</Box>
+              )}
             </Box>
           </Box>
           <Flex
@@ -155,14 +175,22 @@ const MyApp = ({ Component, pageProps, fallback }: MyAppProps) => {
               overflow="hidden"
               position="relative"
             >
-              <Image
-                src={siteInfo.logoUrl}
-                alt="Avatar"
-                objectFit="cover"
-                width="100%"
-                height="100%"
-                fallback={<Box bg="gray.200" w="100%" h="100%" borderRadius="full" />}
-              />
+              {siteInfo.logoUrl ? (
+                <Image
+                  src={`${siteInfo.logoUrl}?${new Date().getTime()}`}
+                  alt="Avatar"
+                  objectFit="cover"
+                  width="100%"
+                  height="100%"
+                  onError={() => {
+                    console.error("Error loading logo image");
+                    setLogoError(true);
+                  }}
+                  fallback={<Box bg="gray.200" w="100%" h="100%" borderRadius="full" display="flex" alignItems="center" justifyContent="center">Error</Box>}
+                />
+              ) : (
+                <Box bg="gray.200" w="100%" h="100%" borderRadius="full" display="flex" alignItems="center" justifyContent="center">No logo</Box>
+              )}
             </Box>
             <Stack
               align={{ base: "center", sm: "flex-start" }}

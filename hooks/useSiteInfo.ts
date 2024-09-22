@@ -8,6 +8,9 @@ export function useSiteInfo() {
     fallbackData: DEFAULT_SITE_INFORMATION,
     revalidateOnFocus: false,
     dedupingInterval: 5000, // Evita múltiples solicitudes en un corto período de tiempo
+    shouldRetryOnError: true,
+    errorRetryInterval: 5000,
+    refreshInterval: 300000, // Revalidar cada 5 minutos
   });
 
   return {
