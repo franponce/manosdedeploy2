@@ -9,6 +9,7 @@ import {
   AccordionPanel,
   AccordionIcon,
   Button,
+  Icon,
 } from '@chakra-ui/react';
 import StoreConfiguration from '../product/components/StoreConfiguration';
 import MercadoPagoConfig from '../product/components/MercadoPagoConfig';
