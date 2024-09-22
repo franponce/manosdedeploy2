@@ -127,12 +127,13 @@ const MyApp = ({ Component, pageProps, fallback }: MyAppProps) => {
               width="100%"
               position="relative"
             >
-              <Image
+              <img
                 alt="Header image"
                 src={siteInfo.bannerUrl}
-                fill
-                style={{ objectFit: "cover" }}
-                quality={100}
+                style={{ width: '100%', height: '100%', objectFit: "cover" }}
+                onError={(e) => {
+                  e.currentTarget.src = "/default-banner.jpg";
+                }}
               />
             </Box>
           </Box>
@@ -152,11 +153,13 @@ const MyApp = ({ Component, pageProps, fallback }: MyAppProps) => {
               overflow="hidden"
               position="relative"
             >
-              <Image
+              <img
                 alt="Avatar"
                 src={siteInfo.logoUrl}
-                fill
-                style={{ objectFit: "cover" }}
+                style={{ width: '100%', height: '100%', objectFit: "cover" }}
+                onError={(e) => {
+                  e.currentTarget.src = "/default-logo.png";
+                }}
               />
             </Box>
             <Stack

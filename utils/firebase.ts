@@ -64,5 +64,6 @@ export async function getSiteInformation(): Promise<SiteInformation> {
   export async function uploadImage(file: File, type: 'logo' | 'banner'): Promise<string> {
     const storageRef = ref(storage, `${type}/${Date.now()}_${file.name}`);
     await uploadBytes(storageRef, file);
-    return getDownloadURL(storageRef);
+    const url = await getDownloadURL(storageRef);
+    return encodeURI(url);
   }

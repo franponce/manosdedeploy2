@@ -35,6 +35,32 @@ const StoreConfiguration: React.FC = () => {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    // Validar formato
+    const validFormats = ['image/jpeg', 'image/png', 'image/gif'];
+    if (!validFormats.includes(file.type)) {
+      toast({
+        title: 'Error',
+        description: 'Formato de imagen no válido. Por favor, usa JPEG, PNG o GIF.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    // Validar tamaño (por ejemplo, máximo 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      toast({
+        title: 'Error',
+        description: 'La imagen es demasiado grande. El tamaño máximo es 5MB.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
       const url = await uploadImage(file, type === 'logoUrl' ? 'logo' : 'banner');
