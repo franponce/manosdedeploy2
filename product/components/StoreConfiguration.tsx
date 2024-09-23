@@ -15,9 +15,9 @@ import { useSiteInfo } from '../../hooks/useSiteInfo';
 import { SiteInformation, updateSiteInformation, uploadImage } from '../../utils/firebase';
 
 const StoreConfiguration: React.FC = () => {
-  const { siteInfo, mutate } = useSiteInfo();
+  const { siteInfo, isLoading, isError, mutate } = useSiteInfo();
   const [localSiteInfo, setLocalSiteInfo] = useState<SiteInformation | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const toast = useToast();
 
   useEffect(() => {
@@ -35,60 +35,25 @@ const StoreConfiguration: React.FC = () => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validar formato
-    const validFormats = ['image/jpeg', 'image/png', 'image/gif'];
-    if (!validFormats.includes(file.type)) {
-      toast({
-        title: 'Error',
-        description: 'Formato de imagen no válido. Por favor, usa JPEG, PNG o GIF.',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
-    // Validar tamaño (por ejemplo, máximo 5MB)
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    if (file.size > maxSize) {
-      toast({
-        title: 'Error',
-        description: 'La imagen es demasiado grande. El tamaño máximo es 5MB.',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
-    setIsLoading(true);
     try {
       const url = await uploadImage(file, type === 'logoUrl' ? 'logo' : 'banner');
-      const updatedInfo = { ...localSiteInfo, [type]: url } as SiteInformation;
-      setLocalSiteInfo(updatedInfo);
-      await updateSiteInformation({ [type]: url });
-      await mutate(updatedInfo, false);
-  
-      console.log(`Updated ${type}. New URL:`, url); // Para debugging
-
+      setLocalSiteInfo(prev => prev ? { ...prev, [type]: url } : null);
       toast({
-        title: 'Éxito',
-        description: 'La imagen se ha cargado y actualizado correctamente.',
-        status: 'success',
+        title: "Imagen cargada",
+        description: "La imagen se ha cargado correctamente.",
+        status: "success",
         duration: 3000,
         isClosable: true,
       });
     } catch (error) {
       console.error('Error uploading image:', error);
       toast({
-        title: 'Error',
-        description: 'No se pudo cargar la imagen.',
-        status: 'error',
+        title: "Error",
+        description: "No se pudo cargar la imagen.",
+        status: "error",
         duration: 3000,
         isClosable: true,
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -96,32 +61,34 @@ const StoreConfiguration: React.FC = () => {
     e.preventDefault();
     if (!localSiteInfo) return;
 
-    setIsLoading(true);
+    setIsSubmitting(true);
     try {
       await updateSiteInformation(localSiteInfo);
-      await mutate(localSiteInfo, false);
+      await mutate(localSiteInfo);
       toast({
-        title: 'Éxito',
-        description: 'La información de la tienda se ha actualizado correctamente.',
-        status: 'success',
+        title: "Configuración actualizada",
+        description: "La información de la tienda se ha actualizado correctamente.",
+        status: "success",
         duration: 3000,
         isClosable: true,
       });
     } catch (error) {
       console.error('Error updating site information:', error);
       toast({
-        title: 'Error',
-        description: 'No se pudo actualizar la información de la tienda.',
-        status: 'error',
+        title: "Error",
+        description: "No se pudo actualizar la información de la tienda.",
+        status: "error",
         duration: 3000,
         isClosable: true,
       });
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  if (!localSiteInfo) return <Box>Cargando...</Box>;
+  if (isLoading) return <Box>Cargando...</Box>;
+  if (isError) return <Box>Error al cargar la información de la tienda</Box>;
+  if (!localSiteInfo) return null;
 
   return (
     <Box as="form" onSubmit={handleSubmit}>
@@ -129,14 +96,14 @@ const StoreConfiguration: React.FC = () => {
         <Heading as="h3" size="md">Logo de la tienda</Heading>
         <Image src={localSiteInfo.logoUrl} alt="Logo" maxHeight="100px" />
         <FormControl>
-          <FormLabel>Cambiar logo (Recomendado: 400x400 px)</FormLabel>
+          <FormLabel>Cambiar logo</FormLabel>
           <Input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, 'logoUrl')} />
         </FormControl>
 
         <Heading as="h3" size="md">Banner de la tienda</Heading>
         <Image src={localSiteInfo.bannerUrl} alt="Banner" maxHeight="200px" />
         <FormControl>
-          <FormLabel>Cambiar banner (Recomendado: 1920x400 px)</FormLabel>
+          <FormLabel>Cambiar banner</FormLabel>
           <Input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, 'bannerUrl')} />
         </FormControl>
 
@@ -155,7 +122,7 @@ const StoreConfiguration: React.FC = () => {
           <Textarea name="description2" value={localSiteInfo.description2} onChange={handleInputChange} />
         </FormControl>
 
-        <Button type="submit" colorScheme="blue" isLoading={isLoading}>
+        <Button type="submit" colorScheme="blue" isLoading={isSubmitting}>
           Guardar cambios
         </Button>
       </VStack>
