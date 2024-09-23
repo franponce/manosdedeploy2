@@ -4,7 +4,7 @@ import { GetStaticPaths, GetStaticProps } from "next";
 import { Product } from "../product/types";
 import api from "../product/api";
 import StoreScreen from "../product/screens/Store";
-import { SiteInformation, getSiteInformation } from "../utils/siteInfo";
+import { getSiteInformation, SiteInformation } from "../utils/firebase";
 
 interface Props {
   products: Product[];

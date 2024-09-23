@@ -6,6 +6,7 @@ import {
   Stack,
   Text,
   Box,
+  Heading,
 } from "@chakra-ui/react";
 import { CartItem, Product } from "../types";
 import ProductCard from "../components/ProductCard";
