@@ -43,10 +43,17 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
   const [isMounted, setIsMounted] = React.useState(false);
   const { siteInfo, isLoading, isError } = useSiteInfo();
   const [bannerError, setBannerError] = React.useState(false);
+  const [customScripts, setCustomScripts] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     setIsLoggedIn(localStorage.getItem("isLoggedIn") === "true");
     setIsMounted(true);
+
+    // Fetch custom scripts
+    fetch('/api/get-scripts')
+      .then(response => response.json())
+      .then(data => setCustomScripts(data.scripts))
+      .catch(error => console.error('Error fetching custom scripts:', error));
   }, []);
 
   const handleLogout = () => {
@@ -79,6 +86,9 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
           href="https://fonts.googleapis.com/css2?family=Jost&display=swap"
           rel="stylesheet"
         />
+        {customScripts && (
+          <script dangerouslySetInnerHTML={{ __html: customScripts }} />
+        )}
       </Head>
       <Container
         backgroundColor="white"
