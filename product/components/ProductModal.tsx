@@ -15,6 +15,7 @@ import {
   Textarea,
   Image,
   useToast,
+  Text,
 } from "@chakra-ui/react";
 import imageCompression from "browser-image-compression";
 
@@ -38,6 +39,9 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
   const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const toast = useToast();
+
+  const MAX_TITLE_LENGTH = 60;
+  const MAX_DESCRIPTION_LENGTH = 180;
 
   useEffect(() => {
     setCurrentProduct(product);
@@ -99,7 +103,13 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          resolve(reader.result);
+        } else {
+          reject(new Error('Failed to convert file to base64'));
+        }
+      };
       reader.onerror = (error) => reject(error);
     });
   };
@@ -123,6 +133,16 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     onSubmit({ ...currentProduct, price });
   };
 
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newTitle = e.target.value.slice(0, MAX_TITLE_LENGTH);
+    setCurrentProduct((prev) => (prev ? { ...prev, title: newTitle } : null));
+  };
+
+  const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newDescription = e.target.value.slice(0, MAX_DESCRIPTION_LENGTH);
+    setCurrentProduct((prev) => (prev ? { ...prev, description: newDescription } : null));
+  };
+
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
@@ -137,23 +157,23 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
               <FormLabel>Título</FormLabel>
               <Input
                 value={currentProduct?.title || ""}
-                onChange={(e) =>
-                  setCurrentProduct((prev) =>
-                    prev ? { ...prev, title: e.target.value } : null
-                  )
-                }
+                onChange={handleTitleChange}
+                maxLength={MAX_TITLE_LENGTH}
               />
+              <Text fontSize="sm" color="gray.500">
+                {`${currentProduct?.title?.length || 0}/${MAX_TITLE_LENGTH}`}
+              </Text>
             </FormControl>
             <FormControl>
               <FormLabel>Descripción</FormLabel>
               <Textarea
                 value={currentProduct?.description || ""}
-                onChange={(e) =>
-                  setCurrentProduct((prev) =>
-                    prev ? { ...prev, description: e.target.value } : null
-                  )
-                }
+                onChange={handleDescriptionChange}
+                maxLength={MAX_DESCRIPTION_LENGTH}
               />
+              <Text fontSize="sm" color="gray.500">
+                {`${currentProduct?.description?.length || 0}/${MAX_DESCRIPTION_LENGTH}`}
+              </Text>
             </FormControl>
             <FormControl>
               <FormLabel>Precio</FormLabel>
