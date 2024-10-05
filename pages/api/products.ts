@@ -1,71 +1,56 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextApiRequest, NextApiResponse } from 'next';
+import { getProducts, createProduct, updateProduct, deleteProduct } from '../../utils/googleSheets';
+import { Product } from '../../product/types';
 
-import {
-  getProducts,
-  createProduct,
-  updateProduct,
-  deleteProduct,
-  getProductCount,
-} from "../../utils/googleSheets";
-
-const PRODUCT_LIMIT = 30;
-
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  try {
-    switch (req.method) {
-      case "GET":
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  switch (req.method) {
+    case 'GET':
+      try {
         const products = await getProducts();
-
         res.status(200).json(products);
-        break;
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        res.status(500).json({ error: 'Failed to fetch products' });
+      }
+      break;
 
-      case "POST":
-        const product = req.body;
+    case 'POST':
+      try {
+        const newProduct = await createProduct(req.body as Product);
+        res.status(201).json(newProduct);
+      } catch (error) {
+        console.error('Error creating product:', error);
+        res.status(500).json({ error: 'Failed to create product' });
+      }
+      break;
 
-        if (product.id) {
-          const updatedProduct = await updateProduct(product);
+    case 'PUT':
+      try {
+        await updateProduct(req.body as Product);
+        res.status(200).json({ message: 'Product updated successfully' });
+      } catch (error) {
+        console.error('Error updating product:', error);
+        res.status(500).json({ error: 'Failed to update product' });
+      }
+      break;
 
-          res.status(200).json(updatedProduct);
-        } else {
-          const productCount = await getProductCount();
-
-          if (productCount >= PRODUCT_LIMIT) {
-            res.status(400).json({
-              message: `Product limit of ${PRODUCT_LIMIT} reached. Unable to add more products.`,
-            });
-          } else {
-            const newProduct = await createProduct(product);
-
-            res.status(201).json(newProduct);
-          }
-        }
-        break;
-
-      case "DELETE":
+    case 'DELETE':
+      try {
         const { id } = req.query;
-
-        if (typeof id !== "string") {
-          res.status(400).json({ message: "Invalid product ID" });
-
+        if (typeof id !== 'string') {
+          res.status(400).json({ error: 'Invalid product ID' });
           return;
         }
         await deleteProduct(id);
-        res.status(200).json({ message: "Product deleted successfully" });
-        break;
+        res.status(200).json({ message: 'Product deleted successfully' });
+      } catch (error) {
+        console.error('Error deleting product:', error);
+        res.status(500).json({ error: 'Failed to delete product' });
+      }
+      break;
 
-      default:
-        res.setHeader("Allow", ["GET", "POST", "DELETE"]);
-        res.status(405).json({ message: `Method ${req.method} Not Allowed` });
-    }
-  } catch (error) {
-    console.error("API error:", error);
-    res.status(500).json({
-      error: "Internal Server Error",
-      message:
-        error instanceof Error ? error.message : "An unknown error occurred",
-    });
+    default:
+      res.setHeader('Allow', ['GET', 'POST', 'PUT', 'DELETE']);
+      res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
