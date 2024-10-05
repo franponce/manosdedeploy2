@@ -38,9 +38,6 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
 
   useEffect(() => {
     if (product) {
-      setCurrentProduct({...product, price: product.price.toString()});
-      setImagePreview(product.image);
-    } else {
       setCurrentProduct({ id: "", title: "", description: "", image: "", price: "" });
       setImagePreview(null);
     }
