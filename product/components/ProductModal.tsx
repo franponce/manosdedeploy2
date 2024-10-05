@@ -18,25 +18,18 @@ import {
   Text,
 } from "@chakra-ui/react";
 import imageCompression from "browser-image-compression";
-
-interface Product {
-  id: string;
-  title: string;
-  description: string;
-  image: string;
-  price: string | number;
-}
+import { Product } from "../types";
 
 interface ProductModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (product: Product) => void;
+  onSubmit: (product: Omit<Product, 'price'> & { price: string | number }) => Promise<void>;
   product: Product | null;
   isLoading: boolean;
 }
 
 const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, product, isLoading }) => {
-  const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
+  const [currentProduct, setCurrentProduct] = useState<Omit<Product, 'price'> & { price: string | number } | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const toast = useToast();
 
@@ -44,8 +37,13 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
   const MAX_DESCRIPTION_LENGTH = 180;
 
   useEffect(() => {
-    setCurrentProduct(product);
-    setImagePreview(product?.image || null);
+    if (product) {
+      setCurrentProduct({...product, price: product.price.toString()});
+      setImagePreview(product.image);
+    } else {
+      setCurrentProduct({ id: "", title: "", description: "", image: "", price: "" });
+      setImagePreview(null);
+    }
   }, [product]);
 
   const handleProductImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -114,11 +112,11 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentProduct) return;
 
-    const price = parseFloat(currentProduct.price as string);
+    const price = parseFloat(currentProduct.price.toString());
     if (isNaN(price) || price <= 0) {
       toast({
         title: "Error",
@@ -130,17 +128,24 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
       return;
     }
 
-    onSubmit({ ...currentProduct, price });
+    try {
+      await onSubmit(currentProduct);
+      onClose();
+    } catch (error) {
+      console.error("Error al guardar el producto:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo guardar el producto. Por favor, intente de nuevo.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
 
-  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newTitle = e.target.value.slice(0, MAX_TITLE_LENGTH);
-    setCurrentProduct((prev) => (prev ? { ...prev, title: newTitle } : null));
-  };
-
-  const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newDescription = e.target.value.slice(0, MAX_DESCRIPTION_LENGTH);
-    setCurrentProduct((prev) => (prev ? { ...prev, description: newDescription } : null));
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setCurrentProduct((prev) => prev ? { ...prev, [name]: value } : null);
   };
 
   return (
@@ -156,8 +161,9 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
             <FormControl>
               <FormLabel>Título</FormLabel>
               <Input
+                name="title"
                 value={currentProduct?.title || ""}
-                onChange={handleTitleChange}
+                onChange={handleInputChange}
                 maxLength={MAX_TITLE_LENGTH}
               />
               <Text fontSize="sm" color="gray.500">
@@ -167,8 +173,9 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
             <FormControl>
               <FormLabel>Descripción</FormLabel>
               <Textarea
+                name="description"
                 value={currentProduct?.description || ""}
-                onChange={handleDescriptionChange}
+                onChange={handleInputChange}
                 maxLength={MAX_DESCRIPTION_LENGTH}
               />
               <Text fontSize="sm" color="gray.500">
@@ -178,14 +185,11 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
             <FormControl>
               <FormLabel>Precio</FormLabel>
               <Input
+                name="price"
                 type="number"
                 step="0.01"
                 value={currentProduct?.price || ""}
-                onChange={(e) =>
-                  setCurrentProduct((prev) =>
-                    prev ? { ...prev, price: e.target.value } : null
-                  )
-                }
+                onChange={handleInputChange}
               />
             </FormControl>
             <FormControl>
@@ -206,7 +210,6 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
             )}
           </VStack>
         </ModalBody>
-
         <ModalFooter>
           <Button colorScheme="blue" mr={3} onClick={handleSubmit} isLoading={isLoading}>
             Guardar

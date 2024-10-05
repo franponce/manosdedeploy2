@@ -2,7 +2,7 @@ import { google } from 'googleapis';
 import { Product } from '../product/types';
 
 const SPREADSHEET_ID = process.env.GOOGLE_SHEET_ID;
-const RANGE = 'A1:E'; // Incluimos la primera fila para los encabezados
+const RANGE = 'A2:E'; // Empezamos desde A2 para omitir los encabezados
 const PRODUCT_LIMIT = 30; // Ajusta este número según tus necesidades
 
 async function getAuthClient() {
@@ -44,13 +44,11 @@ export async function getProducts(): Promise<Product[]> {
     console.log('Spreadsheet data fetched');
 
     const rows = response.data.values;
-    if (!rows || rows.length <= 1) {
+    if (!rows || rows.length === 0) {
       return [];
     }
 
-    // Omitimos la primera fila (encabezados) y mapeamos el resto
     return rows
-      .slice(1)
       .map((row) => ({
         id: row[0],
         title: row[1],

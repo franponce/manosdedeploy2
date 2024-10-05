@@ -12,14 +12,8 @@ import {
   HStack,
 } from "@chakra-ui/react";
 import ProductModal from "./ProductModal";
-
-interface Product {
-  id: string;
-  title: string;
-  description: string;
-  image: string;
-  price: string | number;
-}
+import { getProducts, createProduct, updateProduct, deleteProduct } from "../../utils/googleSheets";
+import { Product } from "../types";
 
 const PRODUCT_LIMIT = 30;
 const SYNC_INTERVAL = 30000; // 30 segundos
@@ -35,11 +29,9 @@ const ProductManagement: React.FC = () => {
 
   const fetchProducts = useCallback(async () => {
     try {
-      const response = await fetch("/api/products");
-      if (!response.ok) throw new Error("Failed to fetch products");
-      const data = await response.json();
-      setProducts(data);
-      setFilteredProducts(data);
+      const fetchedProducts = await getProducts();
+      setProducts(fetchedProducts);
+      setFilteredProducts(fetchedProducts);
     } catch (error) {
       console.error("Error fetching products:", error);
       toast({
@@ -62,9 +54,9 @@ const ProductManagement: React.FC = () => {
     const lowercasedTerm = searchTerm.toLowerCase();
     const filtered = products.filter(
       (product) =>
-        (product.title?.toLowerCase().includes(lowercasedTerm) ?? false) ||
-        (product.description?.toLowerCase().includes(lowercasedTerm) ?? false) ||
-        (product.price?.toString().includes(lowercasedTerm) ?? false)
+        product.title.toLowerCase().includes(lowercasedTerm) ||
+        product.description.toLowerCase().includes(lowercasedTerm) ||
+        product.price.toString().includes(lowercasedTerm)
     );
     setFilteredProducts(filtered);
   }, [searchTerm, products]);
@@ -80,7 +72,7 @@ const ProductManagement: React.FC = () => {
       });
       return;
     }
-    setCurrentProduct({ id: "", title: "", description: "", image: "", price: "" });
+    setCurrentProduct({ id: "", title: "", description: "", image: "", price: 0 });
     setIsModalOpen(true);
   };
 
@@ -92,9 +84,8 @@ const ProductManagement: React.FC = () => {
   const handleDelete = async (id: string) => {
     if (window.confirm("¿Estás seguro de que quieres eliminar este producto?")) {
       try {
-        const response = await fetch(`/api/products?id=${id}`, { method: "DELETE" });
-        if (!response.ok) throw new Error("Failed to delete product");
-        fetchProducts();
+        await deleteProduct(id);
+        await fetchProducts();
         toast({
           title: "Producto eliminado",
           description: "El producto ha sido eliminado exitosamente.",
@@ -115,24 +106,26 @@ const ProductManagement: React.FC = () => {
     }
   };
 
-  const handleSubmit = async (product: Product) => {
+  const handleSubmit = async (product: Omit<Product, 'price'> & { price: string | number }) => {
     setIsLoading(true);
     try {
-      const response = await fetch("/api/products", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(product),
-      });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Error al guardar el producto");
+      const formattedProduct: Product = {
+        ...product,
+        price: typeof product.price === 'string' ? parseFloat(product.price) : product.price
+      };
+
+      if (formattedProduct.id) {
+        await updateProduct(formattedProduct);
+      } else {
+        const newId = await createProduct(formattedProduct);
+        formattedProduct.id = newId;
       }
-      fetchProducts();
+      await fetchProducts();
       setIsModalOpen(false);
       setCurrentProduct(null);
       toast({
         title: "Éxito",
-        description: `Producto ${product.id ? "actualizado" : "creado"} exitosamente.`,
+        description: `Producto ${formattedProduct.id ? "actualizado" : "creado"} exitosamente.`,
         status: "success",
         duration: 3000,
         isClosable: true,
@@ -169,6 +162,9 @@ const ProductManagement: React.FC = () => {
           Has alcanzado el límite de productos. Contacta con soporte para aumentar tu límite.
         </Text>
       )}
+      <Button onClick={handleCreate} colorScheme="blue" mb={4}>
+        Crear nuevo producto
+      </Button>
       <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
         {filteredProducts.map((product) => (
           <Box key={product.id} borderRadius="lg" borderWidth={1} overflow="hidden">
@@ -185,7 +181,7 @@ const ProductManagement: React.FC = () => {
               </Heading>
               <Text noOfLines={3} mb={2}>{product.description}</Text>
               <Text fontWeight="bold" mb={4}>
-                ${Number(product.price).toFixed(2)}
+                ${product.price.toFixed(2)}
               </Text>
               <HStack spacing={4}>
                 <Button colorScheme="blue" onClick={() => handleEdit(product)}>

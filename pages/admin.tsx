@@ -13,37 +13,17 @@ import ProductManagement from "../product/components/ProductManagement";
 import ProductModal from "../product/components/ProductModal";
 import { useRouter } from 'next/router';
 import { FaArrowRight } from 'react-icons/fa';
-
-interface Product {
-  id: string;
-  title: string;
-  description: string;
-  image: string;
-  price: string | number;
-}
-
-const PRODUCT_LIMIT = 100; // Ajusta este número según tus necesidades
+import { Product } from "../product/types";
 
 const AdminPage: React.FC = () => {
   const router = useRouter();
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [products, setProducts] = useState<Product[]>([]); // Asegúrate de cargar los productos reales aquí
   const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleCreate = () => {
-    if (products.length >= PRODUCT_LIMIT) {
-      toast({
-        title: "Límite alcanzado",
-        description: `Has alcanzado el límite de ${PRODUCT_LIMIT} productos. Contacta con soporte para aumentar tu límite.`,
-        status: "warning",
-        duration: 5000,
-        isClosable: true,
-      });
-      return;
-    }
-    setCurrentProduct({ id: "", title: "", description: "", image: "", price: "" });
+    setCurrentProduct({ id: "", title: "", description: "", image: "", price: 0 });
     onOpen();
   };
 
@@ -51,7 +31,7 @@ const AdminPage: React.FC = () => {
     router.push('/store-config');
   };
 
-  const handleSubmit = async (product: Product) => {
+  const handleSubmit = async (product: Omit<Product, 'price'> & { price: string | number }) => {
     setIsLoading(true);
     try {
       // Aquí iría la lógica para guardar el producto en tu backend
@@ -59,8 +39,15 @@ const AdminPage: React.FC = () => {
       
       // Simulando una operación asíncrona
       await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const newProduct: Product = {
+        ...product,
+        price: typeof product.price === 'string' ? parseFloat(product.price) : product.price
+      };
 
-      setProducts([...products, { ...product, id: Date.now().toString() }]);
+      // Actualiza el estado o realiza otras operaciones necesarias
+      // setProducts([...products, newProduct]);
+      
       toast({
         title: "Producto creado",
         description: "El producto se ha creado exitosamente.",
@@ -85,29 +72,29 @@ const AdminPage: React.FC = () => {
 
   return (
     <Box margin="auto" maxWidth="1200px" padding={4}>
-      <Flex 
-        direction={{ base: "column", md: "row" }} 
-        justifyContent="space-between" 
-        alignItems={{ base: "stretch", md: "center" }} 
+      <Flex
+        direction={{ base: "column", md: "row" }}
+        justifyContent="space-between"
+        alignItems={{ base: "stretch", md: "center" }}
         mb={8}
         gap={4}
       >
         <Heading as="h1" size="xl" mb={{ base: 4, md: 0 }}>
           Gestión de productos
         </Heading>
-        <Flex 
-          direction={{ base: "column", sm: "row" }} 
+        <Flex
+          direction={{ base: "column", sm: "row" }}
           gap={4}
         >
-          <Button 
-            colorScheme="blue" 
-            onClick={handleCreate} 
+          <Button
+            colorScheme="blue"
+            onClick={handleCreate}
             width={{ base: "full", sm: "auto" }}
           >
             Crear nuevo producto
           </Button>
-          <Button 
-            colorScheme="gray" 
+          <Button
+            colorScheme="gray"
             onClick={handleStoreSettings}
             width={{ base: "full", sm: "auto" }}
             rightIcon={<Icon as={FaArrowRight} />}
