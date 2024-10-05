@@ -12,6 +12,7 @@ const nextConfig = {
         child_process: false,
         net: false,
         tls: false,
+        http2: false,
       };
     }
     return config;

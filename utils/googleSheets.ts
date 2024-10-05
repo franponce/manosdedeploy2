@@ -3,6 +3,10 @@ import { Product } from '../product/types';
 let googleSheetsApi: any;
 
 async function getAuthClient() {
+  if (typeof window !== 'undefined') {
+    throw new Error('This function should only be called on the server side');
+  }
+
   const credentials = {
     type: 'service_account',
     project_id: process.env.GOOGLE_PROJECT_ID,
@@ -16,7 +20,7 @@ async function getAuthClient() {
     client_x509_cert_url: `https://www.googleapis.com/robot/v1/metadata/x509/${encodeURIComponent(process.env.GOOGLE_CLIENT_EMAIL || '')}`
   };
 
-  const { google } = require('googleapis');
+  const { google } = await import('googleapis');
   const auth = new google.auth.GoogleAuth({
     credentials,
     scopes: ['https://www.googleapis.com/auth/spreadsheets'],
@@ -39,7 +43,7 @@ if (typeof window === 'undefined') {
         const auth = await getAuthClient();
         console.log('GoogleAuth instance created');
 
-        const { google } = require('googleapis');
+        const { google } = await import('googleapis');
         const sheets = google.sheets({ version: 'v4', auth });
 
         const response = await sheets.spreadsheets.values.get({
@@ -73,7 +77,7 @@ if (typeof window === 'undefined') {
     updateProduct: async (product: Product): Promise<void> => {
       try {
         const auth = await getAuthClient();
-        const { google } = require('googleapis');
+        const { google } = await import('googleapis');
         const sheets = google.sheets({ version: 'v4', auth });
 
         const values = [
@@ -101,7 +105,7 @@ if (typeof window === 'undefined') {
         }
 
         const auth = await getAuthClient();
-        const { google } = require('googleapis');
+        const { google } = await import('googleapis');
         const sheets = google.sheets({ version: 'v4', auth });
 
         const newId = (Math.max(...currentProducts.map((p: Product) => parseInt(p.id)), 0) + 1).toString();
@@ -128,7 +132,7 @@ if (typeof window === 'undefined') {
     deleteProduct: async (id: string): Promise<void> => {
       try {
         const auth = await getAuthClient();
-        const { google } = require('googleapis');
+        const { google } = await import('googleapis');
         const sheets = google.sheets({ version: 'v4', auth });
 
         // En lugar de eliminar, vamos a limpiar la fila correspondiente
