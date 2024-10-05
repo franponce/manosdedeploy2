@@ -4,25 +4,22 @@ import api from '../product/api';
 import StoreScreen from '../product/screens/Store';
 import { getSiteInformation, SiteInformation } from '../utils/firebase';
 
-interface Props {
-  products: Product[];
+interface IndexRouteProps {
+  initialProducts: Product[];
 }
 
-const IndexRoute: React.FC<Props> = ({ products }) => {
-  return <StoreScreen products={products} />;
+const IndexRoute: React.FC<IndexRouteProps> = ({ initialProducts }) => {
+  return <StoreScreen initialProducts={initialProducts} />;
 };
 
 export const getStaticProps: GetStaticProps = async () => {
   try {
     const products = await api.list();
-
-    // Aunque ya no pasamos siteInfo a StoreScreen, aún podríamos necesitarla
-    // para el layout general o para metadatos de la página
     const siteInfo = await getSiteInformation();
 
     return {
       props: {
-        products,
+        initialProducts: products,
       },
       revalidate: 60, // Revalidar cada minuto
     };
@@ -30,7 +27,7 @@ export const getStaticProps: GetStaticProps = async () => {
     console.error('Error fetching data:', error);
     return {
       props: {
-        products: [],
+        initialProducts: [],
       },
       revalidate: 60,
     };

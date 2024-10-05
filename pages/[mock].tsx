@@ -7,11 +7,11 @@ import StoreScreen from "../product/screens/Store";
 import { getSiteInformation, SiteInformation } from "../utils/firebase";
 
 interface Props {
-  products: Product[];
+  initialProducts: Product[];
 }
 
-const MockRoute: React.FC<Props> = ({ products }) => {
-  return <StoreScreen products={products} />;
+const MockRoute: React.FC<Props> = ({ initialProducts }) => {
+  return <StoreScreen initialProducts={initialProducts} />;
 };
 
 export const getStaticProps: GetStaticProps = async (context) => {
@@ -44,7 +44,7 @@ export const getStaticProps: GetStaticProps = async (context) => {
 
   return {
     props: {
-      products,
+      initialProducts: products,
     },
     revalidate: 10,
   };

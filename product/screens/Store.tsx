@@ -13,14 +13,20 @@ import ProductCard from "../components/ProductCard";
 import CartDrawer from "../components/CartDrawer";
 import { editCart } from "../selectors";
 import { parseCurrency } from "../../utils/currency";
+import useSWR from 'swr';
 
-interface Props {
-  products: Product[];
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
+
+interface StoreScreenProps {
+  initialProducts: Product[];
 }
 
-const StoreScreen: React.FC<Props> = ({ products }) => {
+const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts }) => {
   const [cart, setCart] = React.useState<CartItem[]>([]);
   const [isCartOpen, toggleCart] = React.useState<boolean>(false);
+  const { data: products, error } = useSWR<Product[]>('/api/products', fetcher, {
+    fallbackData: initialProducts,
+  });
 
   const total = React.useMemo(
     () => parseCurrency(cart.reduce((total, product) => total + product.price * product.quantity, 0)),
@@ -33,7 +39,9 @@ const StoreScreen: React.FC<Props> = ({ products }) => {
     setCart(editCart(product, action));
   }
 
-  // Filtrar productos inválidos
+  if (error) return <div>Failed to load products</div>;
+  if (!products) return <div>Loading...</div>;
+
   const validProducts = products.filter(product =>
     product && product.id && product.title && product.image && product.price
   );
