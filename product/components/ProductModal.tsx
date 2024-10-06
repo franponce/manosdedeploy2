@@ -78,8 +78,10 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
         return;
       }
 
+      const MAX_IMAGE_SIZE = 5;
+
       const options = {
-        maxSizeMB: 1,
+        maxSizeMB: MAX_IMAGE_SIZE,
         maxWidthOrHeight: Math.max(img.width, img.height),
         useWebWorker: true,
       };
