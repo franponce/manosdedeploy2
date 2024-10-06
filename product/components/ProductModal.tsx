@@ -39,8 +39,8 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const toast = useToast();
 
-  const MAX_TITLE_LENGTH = 60;
-  const MAX_DESCRIPTION_LENGTH = 180;
+  const MAX_TITLE_LENGTH = 40;
+  const MAX_DESCRIPTION_LENGTH = 80;
 
   useEffect(() => {
     if (product) {
