@@ -23,13 +23,19 @@ import { Product } from "../types";
 interface ProductModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (product: Omit<Product, 'price'> & { price: string | number }) => Promise<void>;
+  onSubmit: (product: Product) => Promise<void>;
   product: Product | null;
   isLoading: boolean;
 }
 
 const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, product, isLoading }) => {
-  const [currentProduct, setCurrentProduct] = useState<Omit<Product, 'price'> & { price: string | number } | null>(null);
+  const [currentProduct, setCurrentProduct] = useState<Product>({
+    id: "",
+    title: "",
+    description: "",
+    image: "",
+    price: 0,
+  });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const toast = useToast();
 
@@ -38,7 +44,16 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
 
   useEffect(() => {
     if (product) {
-      setCurrentProduct({ id: "", title: "", description: "", image: "", price: "" });
+      setCurrentProduct(product);
+      setImagePreview(product.image);
+    } else {
+      setCurrentProduct({
+        id: "",
+        title: "",
+        description: "",
+        image: "",
+        price: 0,
+      });
       setImagePreview(null);
     }
   }, [product]);
@@ -73,7 +88,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
       const base64 = await convertToBase64(compressedFile);
       
       setImagePreview(base64);
-      setCurrentProduct((prev) => prev ? { ...prev, image: base64 } : null);
+      setCurrentProduct((prev) => ({ ...prev, image: base64 }));
 
       toast({
         title: "Imagen cargada",
@@ -126,7 +141,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     }
 
     try {
-      await onSubmit(currentProduct);
+      await onSubmit({...currentProduct, price});
       onClose();
     } catch (error) {
       console.error("Error al guardar el producto:", error);
@@ -142,7 +157,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setCurrentProduct((prev) => prev ? { ...prev, [name]: value } : null);
+    setCurrentProduct((prev) => ({ ...prev, [name]: value }));
   };
 
   return (
@@ -150,7 +165,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>
-          {currentProduct?.id ? "Editar Producto" : "Crear nuevo producto"}
+          {currentProduct.id ? "Editar Producto" : "Crear nuevo producto"}
         </ModalHeader>
         <ModalCloseButton />
         <ModalBody>
@@ -159,24 +174,24 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
               <FormLabel>Título</FormLabel>
               <Input
                 name="title"
-                value={currentProduct?.title || ""}
+                value={currentProduct.title}
                 onChange={handleInputChange}
                 maxLength={MAX_TITLE_LENGTH}
               />
               <Text fontSize="sm" color="gray.500">
-                {`${currentProduct?.title?.length || 0}/${MAX_TITLE_LENGTH}`}
+                {`${currentProduct.title.length}/${MAX_TITLE_LENGTH}`}
               </Text>
             </FormControl>
             <FormControl>
               <FormLabel>Descripción</FormLabel>
               <Textarea
                 name="description"
-                value={currentProduct?.description || ""}
+                value={currentProduct.description}
                 onChange={handleInputChange}
                 maxLength={MAX_DESCRIPTION_LENGTH}
               />
               <Text fontSize="sm" color="gray.500">
-                {`${currentProduct?.description?.length || 0}/${MAX_DESCRIPTION_LENGTH}`}
+                {`${currentProduct.description.length}/${MAX_DESCRIPTION_LENGTH}`}
               </Text>
             </FormControl>
             <FormControl>
@@ -185,7 +200,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                 name="price"
                 type="number"
                 step="0.01"
-                value={currentProduct?.price || ""}
+                value={currentProduct.price}
                 onChange={handleInputChange}
               />
             </FormControl>
@@ -209,7 +224,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
         </ModalBody>
         <ModalFooter>
           <Button colorScheme="blue" mr={3} onClick={handleSubmit} isLoading={isLoading}>
-            Guardar
+            {currentProduct.id ? "Actualizar" : "Crear"}
           </Button>
           <Button variant="ghost" onClick={onClose}>
             Cancelar

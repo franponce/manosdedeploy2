@@ -72,7 +72,7 @@ const ProductManagement: React.FC = () => {
       });
       return;
     }
-    setCurrentProduct({ id: "", title: "", description: "", image: "", price: 0 });
+    setCurrentProduct(null);
     setIsModalOpen(true);
   };
 
@@ -106,26 +106,20 @@ const ProductManagement: React.FC = () => {
     }
   };
 
-  const handleSubmit = async (product: Omit<Product, 'price'> & { price: string | number }) => {
+  const handleSubmit = async (product: Product) => {
     setIsLoading(true);
     try {
-      const formattedProduct: Product = {
-        ...product,
-        price: typeof product.price === 'string' ? parseFloat(product.price) : product.price
-      };
-
-      if (formattedProduct.id) {
-        await updateProduct(formattedProduct);
+      if (product.id) {
+        await updateProduct(product);
       } else {
-        const newId = await createProduct(formattedProduct);
-        formattedProduct.id = newId;
+        await createProduct(product);
       }
       await fetchProducts();
       setIsModalOpen(false);
       setCurrentProduct(null);
       toast({
         title: "Éxito",
-        description: `Producto ${formattedProduct.id ? "actualizado" : "creado"} exitosamente.`,
+        description: `Producto ${product.id ? "actualizado" : "creado"} exitosamente.`,
         status: "success",
         duration: 3000,
         isClosable: true,
@@ -197,7 +191,10 @@ const ProductManagement: React.FC = () => {
       </SimpleGrid>
       <ProductModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setCurrentProduct(null);
+        }}
         onSubmit={handleSubmit}
         product={currentProduct}
         isLoading={isLoading}
