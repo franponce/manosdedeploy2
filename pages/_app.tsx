@@ -44,6 +44,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
   const { siteInfo, isLoading, isError } = useSiteInfo();
   const [bannerError, setBannerError] = React.useState(false);
   const [customScripts, setCustomScripts] = React.useState<string | null>(null);
+  const [announcementBar, setAnnouncementBar] = React.useState<any>(null);
 
   React.useEffect(() => {
     setIsLoggedIn(localStorage.getItem("isLoggedIn") === "true");
@@ -54,6 +55,12 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
       .then(response => response.json())
       .then(data => setCustomScripts(data.scripts))
       .catch(error => console.error('Error fetching custom scripts:', error));
+
+    // Load announcement bar configuration
+    const loadedConfig = localStorage.getItem('announcementBarConfig');
+    if (loadedConfig) {
+      setAnnouncementBar(JSON.parse(loadedConfig));
+    }
   }, []);
 
   const handleLogout = () => {
@@ -90,6 +97,21 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
           <script dangerouslySetInnerHTML={{ __html: customScripts }} />
         )}
       </Head>
+      {announcementBar && announcementBar.isEnabled && (
+        <Box bg="blue.500" color="white" py={2}>
+          <Container maxW="container.xl">
+            <Flex justify="space-between">
+              {[1, 2, 3].map((num) => (
+                announcementBar[`message${num}`] && (
+                  <Link key={num} href={announcementBar[`link${num}`]} isExternal>
+                    {announcementBar[`message${num}`]}
+                  </Link>
+                )
+              ))}
+            </Flex>
+          </Container>
+        </Box>
+      )}
       <Container
         backgroundColor="white"
         borderRadius="sm"
@@ -114,6 +136,9 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
                     </NextLink>
                     <NextLink href="/store-config" passHref legacyBehavior>
                       <MenuItem as="a">Información de la tienda</MenuItem>
+                    </NextLink>
+                    <NextLink href="/diseno" passHref legacyBehavior>
+                      <MenuItem as="a">Diseño</MenuItem>
                     </NextLink>
                     <MenuItem onClick={handleLogout}>Cerrar sesión</MenuItem>
                   </>

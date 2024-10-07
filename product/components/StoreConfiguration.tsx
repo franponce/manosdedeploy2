@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   VStack,
@@ -11,10 +11,12 @@ import {
   Image,
   useToast,
   Link,
+  Text,
 } from '@chakra-ui/react';
 import { useSiteInfo } from '../../hooks/useSiteInfo';
 import { SiteInformation, updateSiteInformation, uploadImage } from '../../utils/firebase';
 import PersistentTooltip from '../components/PersistentTooltip';
+import imageCompression from "browser-image-compression";
 
 const StoreConfiguration: React.FC = () => {
   const { siteInfo, isLoading, isError, mutate } = useSiteInfo();
@@ -33,31 +35,63 @@ const StoreConfiguration: React.FC = () => {
     setLocalSiteInfo(prev => prev ? { ...prev, [name]: value } : null);
   };
 
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>, type: 'logoUrl' | 'bannerUrl') => {
+  const handleImageUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>, type: 'logoUrl' | 'bannerUrl') => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     try {
-      const url = await uploadImage(file, type === 'logoUrl' ? 'logo' : 'banner');
+      const img = await createImageBitmap(file);
+      
+      const options = {
+        maxSizeMB: 5,
+        maxWidthOrHeight: type === 'logoUrl' ? 400 : 1920,
+        useWebWorker: true,
+      };
+
+      const compressedFile = await imageCompression(file, options);
+      
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      let newWidth = img.width;
+      let newHeight = img.height;
+      const targetWidth = type === 'logoUrl' ? 400 : 1920;
+      const targetHeight = type === 'logoUrl' ? 400 : 400;
+
+      if (newWidth > targetWidth || newHeight > targetHeight) {
+        const ratio = Math.min(targetWidth / newWidth, targetHeight / newHeight);
+        newWidth *= ratio;
+        newHeight *= ratio;
+      }
+      
+      canvas.width = newWidth;
+      canvas.height = newHeight;
+      
+      ctx?.drawImage(img, 0, 0, newWidth, newHeight);
+      
+      const base64 = canvas.toDataURL('image/jpeg', 0.7);
+      
+      const url = await uploadImage(base64, type === 'logoUrl' ? 'logo' : 'banner');
       setLocalSiteInfo(prev => prev ? { ...prev, [type]: url } : null);
+
       toast({
         title: "Imagen cargada",
-        description: "La imagen se ha cargado correctamente.",
+        description: "La imagen se ha procesado y optimizado correctamente.",
         status: "success",
         duration: 3000,
         isClosable: true,
       });
     } catch (error) {
-      console.error('Error uploading image:', error);
+      console.error("Error processing image:", error);
       toast({
         title: "Error",
-        description: "No se pudo cargar la imagen.",
+        description: "No se pudo procesar la imagen. Por favor, intenta de nuevo.",
         status: "error",
         duration: 3000,
         isClosable: true,
       });
     }
-  };
+  }, [toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,8 +126,8 @@ const StoreConfiguration: React.FC = () => {
   if (isError) return <Box>Error al cargar la información de la tienda</Box>;
   if (!localSiteInfo) return null;
 
-    return (
-      <Box as="form" onSubmit={handleSubmit}>
+  return (
+    <Box as="form" onSubmit={handleSubmit}>
       <VStack spacing={6} align="stretch">
         <PersistentTooltip 
           label={
@@ -108,6 +142,7 @@ const StoreConfiguration: React.FC = () => {
         >
           <Box>
             <Heading as="h3" size="md">Banner de la tienda</Heading>
+            <Text fontSize="sm" color="gray.600" mb={2}>Recomendado: 1920x400 px, máx 5MB</Text>
             <Image src={localSiteInfo.bannerUrl} alt="Banner" maxHeight="200px" />
             <FormControl>
               <FormLabel>Cambiar banner</FormLabel>
@@ -129,6 +164,7 @@ const StoreConfiguration: React.FC = () => {
         >
           <Box>
             <Heading as="h3" size="md">Logo de la tienda</Heading>
+            <Text fontSize="sm" color="gray.600" mb={2}>Recomendado: 400x400 px, máx 5MB</Text>
             <Image src={localSiteInfo.logoUrl} alt="Logo" maxWidth="200px" maxHeight="100px" objectFit="contain" />
             <FormControl>
               <FormLabel>Cambiar logo</FormLabel>

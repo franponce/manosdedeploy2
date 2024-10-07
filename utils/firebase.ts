@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { getStorage, ref, uploadString, getDownloadURL } from "firebase/storage";
 
 const firebaseConfig = {
     apiKey: "AIzaSyDwcuPITsTK09h8nv--CW0uRWiCWyITjHo",
@@ -46,7 +46,7 @@ export async function getSiteInformation(): Promise<SiteInformation> {
     try {
       const docRef = doc(db, "siteInfo", "main");
       const docSnap = await getDoc(docRef);
-  
+      
       if (docSnap.exists()) {
         return docSnap.data() as SiteInformation;
       }
@@ -54,17 +54,17 @@ export async function getSiteInformation(): Promise<SiteInformation> {
       console.error('Error fetching site information:', error);
     }
     return DEFAULT_SITE_INFORMATION;
-  }
-  
-  export async function updateSiteInformation(newInfo: Partial<SiteInformation>): Promise<void> {
+}
+    
+export async function updateSiteInformation(newInfo: Partial<SiteInformation>): Promise<void> {
     const docRef = doc(db, "siteInfo", "main");
     await setDoc(docRef, newInfo, { merge: true });
-  }
-  
-  export async function uploadImage(file: File, type: 'logo' | 'banner'): Promise<string> {
-    const storageRef = ref(storage, `${type}/${Date.now()}_${file.name}`);
-    await uploadBytes(storageRef, file);
+}
+    
+export async function uploadImage(imageData: string, type: 'logo' | 'banner'): Promise<string> {
+    const storageRef = ref(storage, `${type}/${Date.now()}`);
+    await uploadString(storageRef, imageData, 'data_url');
     const downloadURL = await getDownloadURL(storageRef);
     console.log(`Uploaded ${type} image. URL:`, downloadURL); // Para debugging
     return downloadURL;
-  }
+}
