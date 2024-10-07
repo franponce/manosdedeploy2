@@ -2,30 +2,43 @@ import React, { useState, useEffect } from "react";
 import {
   Box,
   Heading,
-  HStack,
+  VStack,
   FormControl,
   FormLabel,
   Switch,
+  Checkbox,
   useToast,
 } from "@chakra-ui/react";
 
+interface PaymentMethods {
+  mercadoPago: boolean;
+  cashOnPickup: boolean;
+  cashOnDelivery: boolean;
+  bankTransfer: boolean;
+}
+
 const MercadoPagoConfig: React.FC = () => {
-  const [isMercadoPagoEnabled, setIsMercadoPagoEnabled] = useState(false);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethods>({
+    mercadoPago: false,
+    cashOnPickup: false,
+    cashOnDelivery: false,
+    bankTransfer: false,
+  });
   const [isLoading, setIsLoading] = useState(false);
   const toast = useToast();
 
   useEffect(() => {
-    const fetchMercadoPagoStatus = async () => {
+    const fetchPaymentMethods = async () => {
       try {
-        const response = await fetch("/api/mercadopago-status");
-        if (!response.ok) throw new Error("Failed to fetch MercadoPago status");
+        const response = await fetch("/api/payment-methods");
+        if (!response.ok) throw new Error("Failed to fetch payment methods");
         const data = await response.json();
-        setIsMercadoPagoEnabled(data.enabled);
+        setPaymentMethods(data);
       } catch (error) {
-        console.error("Error fetching MercadoPago status:", error);
+        console.error("Error fetching payment methods:", error);
         toast({
           title: "Error",
-          description: "Failed to fetch MercadoPago status",
+          description: "Failed to fetch payment methods",
           status: "error",
           duration: 3000,
           isClosable: true,
@@ -33,32 +46,35 @@ const MercadoPagoConfig: React.FC = () => {
       }
     };
 
-    fetchMercadoPagoStatus();
+    fetchPaymentMethods();
   }, [toast]);
 
-  const handleToggleMercadoPago = async () => {
+  const handleTogglePaymentMethod = async (method: keyof PaymentMethods) => {
     setIsLoading(true);
     try {
-      const response = await fetch("/api/toggle-mercadopago", {
+      const response = await fetch("/api/update-payment-methods", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ enabled: !isMercadoPagoEnabled }),
+        body: JSON.stringify({ 
+          ...paymentMethods, 
+          [method]: !paymentMethods[method] 
+        }),
       });
-      if (!response.ok) throw new Error("Failed to toggle MercadoPago");
+      if (!response.ok) throw new Error("Failed to update payment methods");
       const data = await response.json();
-      setIsMercadoPagoEnabled(data.enabled);
+      setPaymentMethods(data);
       toast({
         title: "Éxito",
-        description: `MercadoPago ha sido ${data.enabled ? "activado" : "desactivado"}`,
+        description: `Método de pago ${data[method] ? "activado" : "desactivado"}`,
         status: "success",
         duration: 3000,
         isClosable: true,
       });
     } catch (error) {
-      console.error("Error toggling MercadoPago:", error);
+      console.error("Error updating payment methods:", error);
       toast({
         title: "Error",
-        description: "No se pudo cambiar el estado de MercadoPago",
+        description: "No se pudo actualizar los métodos de pago",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -70,19 +86,41 @@ const MercadoPagoConfig: React.FC = () => {
 
   return (
     <Box>
-      <HStack>
+      <VStack align="start" spacing={4}>
+        <Heading size="md">Métodos de Pago</Heading>
         <FormControl display="flex" alignItems="center">
           <FormLabel htmlFor="mercadopago-switch" mb="0">
-            {isMercadoPagoEnabled ? "Desactivar" : "Activar"} MercadoPago
+            MercadoPago
           </FormLabel>
           <Switch
             id="mercadopago-switch"
-            isChecked={isMercadoPagoEnabled}
-            onChange={handleToggleMercadoPago}
+            isChecked={paymentMethods.mercadoPago}
+            onChange={() => handleTogglePaymentMethod('mercadoPago')}
             isDisabled={isLoading}
           />
         </FormControl>
-      </HStack>
+        <Checkbox
+          isChecked={paymentMethods.cashOnPickup}
+          onChange={() => handleTogglePaymentMethod('cashOnPickup')}
+          isDisabled={isLoading}
+        >
+          Efectivo al retirar
+        </Checkbox>
+        <Checkbox
+          isChecked={paymentMethods.cashOnDelivery}
+          onChange={() => handleTogglePaymentMethod('cashOnDelivery')}
+          isDisabled={isLoading}
+        >
+          Efectivo al recibir
+        </Checkbox>
+        <Checkbox
+          isChecked={paymentMethods.bankTransfer}
+          onChange={() => handleTogglePaymentMethod('bankTransfer')}
+          isDisabled={isLoading}
+        >
+          Transferencia bancaria
+        </Checkbox>
+      </VStack>
     </Box>
   );
 };
