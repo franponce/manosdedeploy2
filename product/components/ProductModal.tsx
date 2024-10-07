@@ -39,8 +39,11 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const toast = useToast();
 
-  const MAX_TITLE_LENGTH = 40;
-  const MAX_DESCRIPTION_LENGTH = 80;
+  const MAX_TITLE_LENGTH = 60;
+  const MAX_DESCRIPTION_LENGTH = 180;
+  const MAX_IMAGE_SIZE_MB = 5;
+  const TARGET_WIDTH = 800;
+  const TARGET_HEIGHT = 800;
 
   useEffect(() => {
     if (product) {
@@ -64,37 +67,41 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
 
     try {
       const img = await createImageBitmap(file);
-      const minDimension = 500;
-      const maxDimension = 800;
       
-      if (img.width < minDimension || img.height < minDimension || img.width > maxDimension || img.height > maxDimension) {
-        toast({
-          title: "Dimensiones incorrectas",
-          description: `La imagen debe tener dimensiones entre ${minDimension}x${minDimension} y ${maxDimension}x${maxDimension} píxeles.`,
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-        return;
-      }
-
-      const MAX_IMAGE_SIZE = 5;
-
       const options = {
-        maxSizeMB: MAX_IMAGE_SIZE,
-        maxWidthOrHeight: Math.max(img.width, img.height),
+        maxSizeMB: MAX_IMAGE_SIZE_MB,
+        maxWidthOrHeight: Math.max(TARGET_WIDTH, TARGET_HEIGHT),
         useWebWorker: true,
       };
 
       const compressedFile = await imageCompression(file, options);
-      const base64 = await convertToBase64(compressedFile);
+      
+      // Crear un canvas para redimensionar la imagen si es necesario
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      // Calcular las nuevas dimensiones manteniendo la proporción
+      let newWidth = img.width;
+      let newHeight = img.height;
+      if (newWidth > TARGET_WIDTH || newHeight > TARGET_HEIGHT) {
+        const ratio = Math.min(TARGET_WIDTH / newWidth, TARGET_HEIGHT / newHeight);
+        newWidth *= ratio;
+        newHeight *= ratio;
+      }
+      
+      canvas.width = newWidth;
+      canvas.height = newHeight;
+      
+      ctx?.drawImage(img, 0, 0, newWidth, newHeight);
+      
+      const base64 = canvas.toDataURL('image/jpeg', 0.7); // Ajusta la calidad si es necesario
       
       setImagePreview(base64);
       setCurrentProduct((prev) => ({ ...prev, image: base64 }));
 
       toast({
         title: "Imagen cargada",
-        description: `La imagen se ha procesado y comprimido correctamente. Tamaño final: ${(compressedFile.size / (1024 * 1024)).toFixed(2)}MB`,
+        description: `La imagen se ha procesado y optimizado correctamente. Tamaño final: ${(compressedFile.size / (1024 * 1024)).toFixed(2)}MB`,
         status: "success",
         duration: 3000,
         isClosable: true,
@@ -110,21 +117,6 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
       });
     }
   }, [toast]);
-
-  const convertToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => {
-        if (typeof reader.result === 'string') {
-          resolve(reader.result);
-        } else {
-          reject(new Error('Failed to convert file to base64'));
-        }
-      };
-      reader.onerror = (error) => reject(error);
-    });
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -207,7 +199,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
               />
             </FormControl>
             <FormControl>
-              <FormLabel>Imagen (Recomendado: 500x500 a 800x800 px, máx 1MB)</FormLabel>
+              <FormLabel>Imagen (Se optimizará automáticamente a un máximo de 800x800 px y 5MB)</FormLabel>
               <Input
                 type="file"
                 accept="image/*"
@@ -219,7 +211,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                 src={imagePreview}
                 alt="Preview"
                 maxHeight="200px"
-                objectFit="cover"
+                objectFit="contain"
               />
             )}
           </VStack>
