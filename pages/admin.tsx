@@ -8,8 +8,9 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import ProductManagement from "../product/components/ProductManagement";
+import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { FaArrowRight } from 'react-icons/fa';
+import { FaArrowRight, FaStore } from 'react-icons/fa';
 
 const AdminPage: React.FC = () => {
   const router = useRouter();
@@ -35,6 +36,16 @@ const AdminPage: React.FC = () => {
           direction={{ base: "column", sm: "row" }}
           gap={4}
         >
+          <Link href="/" passHref>
+            <Button
+              as="a"
+              colorScheme="green"
+              width={{ base: "full", sm: "auto" }}
+              leftIcon={<Icon as={FaStore} />}
+            >
+              Ir a la tienda
+            </Button>
+          </Link>
           <Button
             colorScheme="gray"
             onClick={handleStoreSettings}
