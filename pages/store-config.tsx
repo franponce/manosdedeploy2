@@ -12,7 +12,7 @@ import {
   Icon,
 } from '@chakra-ui/react';
 import StoreConfiguration from '../product/components/StoreConfiguration';
-import MercadoPagoConfig from '../product/components/MercadoPagoConfig';
+import PaymentMethodsConfig from '../product/components/PaymentMethodsConfig';
 import CustomScripts from '../product/components/CustomScripts';
 import { useRouter } from 'next/router';
 import { FaArrowLeft } from 'react-icons/fa';
@@ -63,14 +63,14 @@ const StoreConfigPage: React.FC = () => {
               <AccordionButton>
                 <Box flex="1" textAlign="left">
                   <Heading as="h2" size="lg">
-                    Configuración de MercadoPago
+                    Configuración de métodos de pago
                   </Heading>
                 </Box>
                 <AccordionIcon />
               </AccordionButton>
             </h2>
             <AccordionPanel pb={4}>
-              <MercadoPagoConfig />
+              <PaymentMethodsConfig />
             </AccordionPanel>
           </AccordionItem>
 

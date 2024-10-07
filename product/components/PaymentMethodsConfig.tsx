@@ -3,9 +3,6 @@ import {
   Box,
   Heading,
   VStack,
-  FormControl,
-  FormLabel,
-  Switch,
   Checkbox,
   useToast,
 } from "@chakra-ui/react";
@@ -17,7 +14,7 @@ interface PaymentMethods {
   bankTransfer: boolean;
 }
 
-const MercadoPagoConfig: React.FC = () => {
+const PaymentMethodsConfig: React.FC = () => {
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethods>({
     mercadoPago: false,
     cashOnPickup: false,
@@ -52,13 +49,11 @@ const MercadoPagoConfig: React.FC = () => {
   const handleTogglePaymentMethod = async (method: keyof PaymentMethods) => {
     setIsLoading(true);
     try {
+      const updatedMethods = { ...paymentMethods, [method]: !paymentMethods[method] };
       const response = await fetch("/api/update-payment-methods", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          ...paymentMethods, 
-          [method]: !paymentMethods[method] 
-        }),
+        body: JSON.stringify(updatedMethods),
       });
       if (!response.ok) throw new Error("Failed to update payment methods");
       const data = await response.json();
@@ -87,18 +82,14 @@ const MercadoPagoConfig: React.FC = () => {
   return (
     <Box>
       <VStack align="start" spacing={4}>
-        <Heading size="md">Métodos de Pago</Heading>
-        <FormControl display="flex" alignItems="center">
-          <FormLabel htmlFor="mercadopago-switch" mb="0">
-            MercadoPago
-          </FormLabel>
-          <Switch
-            id="mercadopago-switch"
-            isChecked={paymentMethods.mercadoPago}
-            onChange={() => handleTogglePaymentMethod('mercadoPago')}
-            isDisabled={isLoading}
-          />
-        </FormControl>
+        <Heading size="md">Métodos de Pago Disponibles</Heading>
+        <Checkbox
+          isChecked={paymentMethods.mercadoPago}
+          onChange={() => handleTogglePaymentMethod('mercadoPago')}
+          isDisabled={isLoading}
+        >
+          MercadoPago
+        </Checkbox>
         <Checkbox
           isChecked={paymentMethods.cashOnPickup}
           onChange={() => handleTogglePaymentMethod('cashOnPickup')}
@@ -125,4 +116,4 @@ const MercadoPagoConfig: React.FC = () => {
   );
 };
 
-export default MercadoPagoConfig;
+export default PaymentMethodsConfig;

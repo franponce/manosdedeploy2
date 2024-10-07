@@ -46,8 +46,6 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
     bankTransfer: false,
   });
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('');
-  const [isPaymentComplete, setIsPaymentComplete] = useState(false);
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const toast = useToast();
 
   useEffect(() => {
@@ -70,67 +68,10 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
     [items]
   );
 
-  const handlePayment = async () => {
-    setIsProcessingPayment(true);
-    try {
-      if (selectedPaymentMethod === 'mercadoPago') {
-        await handleMercadoPagoPayment();
-      } else {
-        handleWhatsAppRedirect(false, selectedPaymentMethod);
-      }
-    } catch (error) {
-      console.error("Error processing payment:", error);
-      toast({
-        title: "Error",
-        description: "Hubo un problema al procesar el pago. Por favor, intenta de nuevo.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    } finally {
-      setIsProcessingPayment(false);
-    }
-  };
-
-  const handleMercadoPagoPayment = async () => {
-    setIsProcessingPayment(true);
-    try {
-      const response = await fetch("/api/create-preference", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          items: items.map((item) => ({
-            title: item.title,
-            unit_price: item.price,
-            quantity: item.quantity,
-          })),
-        }),
-      });
-
-      if (!response.ok) throw new Error("Failed to create MercadoPago preference");
-
-      const data = await response.json();
-      window.location.href = data.init_point;
-    } catch (error) {
-      console.error("Error processing MercadoPago payment:", error);
-      toast({
-        title: "Error",
-        description: "Hubo un problema al procesar el pago. Por favor, intenta de nuevo.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    } finally {
-      setIsProcessingPayment(false);
-    }
-  };
-
-  const handleWhatsAppRedirect = (isPaid: boolean = false, paymentMethod: string = '') => {
-    const paymentInfo = isPaid 
-      ? "\n\nEl pedido ya ha sido pagado a través de MercadoPago." 
-      : `\n\nMétodo de pago seleccionado: ${paymentMethod}`;
+  const handleWhatsAppRedirect = () => {
+    const paymentInfo = selectedPaymentMethod 
+      ? `\n\nVoy a pagar con: ${selectedPaymentMethod}`
+      : '';
 
     const whatsappMessage = encodeURIComponent(
       `¡Hola! Me gustaría realizar el siguiente pedido:\n${items
@@ -154,7 +95,30 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
           <DrawerHeader>Tu carrito</DrawerHeader>
 
           <DrawerBody>
-            {/* ... (código existente para mostrar items) ... */}
+            <VStack spacing={4}>
+              {items.map((item) => (
+                <Flex key={item.id} w="100%" justify="space-between" align="center">
+                  <Image src={item.image} alt={item.title} boxSize="50px" objectFit="cover" mr={2} />
+                  <Box flex={1}>
+                    <Text fontWeight="bold">{item.title}</Text>
+                    <Text>{parseCurrency(item.price)}</Text>
+                  </Box>
+                  <HStack>
+                    <IconButton
+                      aria-label="Decrease quantity"
+                      icon={<MinusIcon />}
+                      onClick={() => onDecrement(item)}
+                    />
+                    <Text>{item.quantity}</Text>
+                    <IconButton
+                      aria-label="Increase quantity"
+                      icon={<AddIcon />}
+                      onClick={() => onIncrement(item)}
+                    />
+                  </HStack>
+                </Flex>
+              ))}
+            </VStack>
           </DrawerBody>
 
           <DrawerFooter>
@@ -163,27 +127,23 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
                 <Text fontWeight="bold">Total:</Text>
                 <Text fontWeight="bold">{total}</Text>
               </Flex>
-              {!isPaymentComplete && (
-                <Select 
-                  placeholder="Selecciona método de pago" 
-                  onChange={(e) => setSelectedPaymentMethod(e.target.value)}
-                  isDisabled={items.length === 0}
-                >
-                  {paymentMethods.mercadoPago && <option value="mercadoPago">MercadoPago</option>}
-                  {paymentMethods.cashOnPickup && <option value="cashOnPickup">Efectivo al retirar</option>}
-                  {paymentMethods.cashOnDelivery && <option value="cashOnDelivery">Efectivo al recibir</option>}
-                  {paymentMethods.bankTransfer && <option value="bankTransfer">Transferencia bancaria</option>}
-                </Select>
-              )}
+              <Select 
+                placeholder="Selecciona método de pago" 
+                onChange={(e) => setSelectedPaymentMethod(e.target.value)}
+                isDisabled={items.length === 0}
+              >
+                {paymentMethods.mercadoPago && <option value="MercadoPago">MercadoPago</option>}
+                {paymentMethods.cashOnPickup && <option value="Efectivo al retirar">Efectivo al retirar</option>}
+                {paymentMethods.cashOnDelivery && <option value="Efectivo al recibir">Efectivo al recibir</option>}
+                {paymentMethods.bankTransfer && <option value="Transferencia bancaria">Transferencia bancaria</option>}
+              </Select>
               <Button
-                colorScheme="blue"
+                colorScheme="green"
                 width="100%"
-                onClick={handlePayment}
-                isLoading={isProcessingPayment}
-                loadingText="Procesando..."
+                onClick={handleWhatsAppRedirect}
                 isDisabled={items.length === 0 || !selectedPaymentMethod}
               >
-                Realizar pedido
+                Realizar pedido por WhatsApp
               </Button>
             </VStack>
           </DrawerFooter>
