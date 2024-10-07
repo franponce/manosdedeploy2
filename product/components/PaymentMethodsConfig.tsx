@@ -21,62 +21,26 @@ const PaymentMethodsConfig: React.FC = () => {
     cashOnDelivery: false,
     bankTransfer: false,
   });
-  const [isLoading, setIsLoading] = useState(false);
   const toast = useToast();
 
   useEffect(() => {
-    const fetchPaymentMethods = async () => {
-      try {
-        const response = await fetch("/api/payment-methods");
-        if (!response.ok) throw new Error("Failed to fetch payment methods");
-        const data = await response.json();
-        setPaymentMethods(data);
-      } catch (error) {
-        console.error("Error fetching payment methods:", error);
-        toast({
-          title: "Error",
-          description: "Failed to fetch payment methods",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-      }
-    };
-
-    fetchPaymentMethods();
-  }, [toast]);
-
-  const handleTogglePaymentMethod = async (method: keyof PaymentMethods) => {
-    setIsLoading(true);
-    try {
-      const updatedMethods = { ...paymentMethods, [method]: !paymentMethods[method] };
-      const response = await fetch("/api/update-payment-methods", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updatedMethods),
-      });
-      if (!response.ok) throw new Error("Failed to update payment methods");
-      const data = await response.json();
-      setPaymentMethods(data);
-      toast({
-        title: "Éxito",
-        description: `Método de pago ${data[method] ? "activado" : "desactivado"}`,
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-    } catch (error) {
-      console.error("Error updating payment methods:", error);
-      toast({
-        title: "Error",
-        description: "No se pudo actualizar los métodos de pago",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    } finally {
-      setIsLoading(false);
+    const storedMethods = localStorage.getItem('paymentMethods');
+    if (storedMethods) {
+      setPaymentMethods(JSON.parse(storedMethods));
     }
+  }, []);
+
+  const handleTogglePaymentMethod = (method: keyof PaymentMethods) => {
+    const updatedMethods = { ...paymentMethods, [method]: !paymentMethods[method] };
+    setPaymentMethods(updatedMethods);
+    localStorage.setItem('paymentMethods', JSON.stringify(updatedMethods));
+    toast({
+      title: "Éxito",
+      description: `Método de pago ${updatedMethods[method] ? "activado" : "desactivado"}`,
+      status: "success",
+      duration: 3000,
+      isClosable: true,
+    });
   };
 
   return (
@@ -86,28 +50,24 @@ const PaymentMethodsConfig: React.FC = () => {
         <Checkbox
           isChecked={paymentMethods.mercadoPago}
           onChange={() => handleTogglePaymentMethod('mercadoPago')}
-          isDisabled={isLoading}
         >
           MercadoPago
         </Checkbox>
         <Checkbox
           isChecked={paymentMethods.cashOnPickup}
           onChange={() => handleTogglePaymentMethod('cashOnPickup')}
-          isDisabled={isLoading}
         >
           Efectivo al retirar
         </Checkbox>
         <Checkbox
           isChecked={paymentMethods.cashOnDelivery}
           onChange={() => handleTogglePaymentMethod('cashOnDelivery')}
-          isDisabled={isLoading}
         >
           Efectivo al recibir
         </Checkbox>
         <Checkbox
           isChecked={paymentMethods.bankTransfer}
           onChange={() => handleTogglePaymentMethod('bankTransfer')}
-          isDisabled={isLoading}
         >
           Transferencia bancaria
         </Checkbox>

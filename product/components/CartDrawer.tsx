@@ -49,19 +49,11 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
   const toast = useToast();
 
   useEffect(() => {
-    const fetchPaymentMethods = async () => {
-      try {
-        const response = await fetch("/api/payment-methods");
-        if (!response.ok) throw new Error("Failed to fetch payment methods");
-        const data = await response.json();
-        setPaymentMethods(data);
-      } catch (error) {
-        console.error("Error fetching payment methods:", error);
-      }
-    };
-
-    fetchPaymentMethods();
-  }, []);
+    const storedMethods = localStorage.getItem('paymentMethods');
+    if (storedMethods) {
+      setPaymentMethods(JSON.parse(storedMethods));
+    }
+  }, [isOpen]); // Re-fetch when drawer opens
 
   const total = useMemo(
     () => parseCurrency(items.reduce((total, item) => total + item.price * item.quantity, 0)),
