@@ -94,7 +94,7 @@ const StoreConfiguration: React.FC = () => {
     <Box as="form" onSubmit={handleSubmit}>
       <VStack spacing={6} align="stretch">
         <Heading as="h3" size="md">Logo de la tienda</Heading>
-        <Image src={localSiteInfo.logoUrl} alt="Logo" maxHeight="100px" />
+        <Image src={localSiteInfo.logoUrl} alt="Logo" maxWidth="200px" maxHeight="100px" objectFit="contain" />
         <FormControl>
           <FormLabel>Cambiar logo</FormLabel>
           <Input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, 'logoUrl')} />
