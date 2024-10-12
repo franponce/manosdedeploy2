@@ -42,11 +42,23 @@ export const DEFAULT_SITE_INFORMATION: SiteInformation = {
     bannerUrl: "/default-banner.jpg"
 };
 
+export interface PaymentMethods {
+  mercadoPago: boolean;
+  cash: boolean;
+  bankTransfer: boolean;
+}
+
+export const DEFAULT_PAYMENT_METHODS: PaymentMethods = {
+  mercadoPago: false,
+  cash: false,
+  bankTransfer: false
+};
+
 export async function getSiteInformation(): Promise<SiteInformation> {
     try {
       const docRef = doc(db, "siteInfo", "main");
       const docSnap = await getDoc(docRef);
-      
+        
       if (docSnap.exists()) {
         return docSnap.data() as SiteInformation;
       }
@@ -65,6 +77,25 @@ export async function uploadImage(imageData: string, type: 'logo' | 'banner'): P
     const storageRef = ref(storage, `${type}/${Date.now()}`);
     await uploadString(storageRef, imageData, 'data_url');
     const downloadURL = await getDownloadURL(storageRef);
-    console.log(`Uploaded ${type} image. URL:`, downloadURL); // Para debugging
+    console.log(`Uploaded ${type} image. URL:`, downloadURL);
     return downloadURL;
+}
+
+export async function getPaymentMethods(): Promise<PaymentMethods> {
+    try {
+        const docRef = doc(db, "config", "paymentMethods");
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+            return docSnap.data() as PaymentMethods;
+        }
+    } catch (error) {
+        console.error('Error fetching payment methods:', error);
+    }
+    return DEFAULT_PAYMENT_METHODS;
+}
+
+export async function updatePaymentMethods(methods: PaymentMethods): Promise<void> {
+    const docRef = doc(db, "config", "paymentMethods");
+    await setDoc(docRef, methods);
 }

@@ -4,43 +4,56 @@ import {
   Heading,
   VStack,
   Checkbox,
+  Button,
   useToast,
 } from "@chakra-ui/react";
-
-interface PaymentMethods {
-  mercadoPago: boolean;
-  cashOnPickup: boolean;
-  cashOnDelivery: boolean;
-  bankTransfer: boolean;
-}
+import { getPaymentMethods, updatePaymentMethods, PaymentMethods } from "../../utils/firebase";
 
 const PaymentMethodsConfig: React.FC = () => {
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethods>({
     mercadoPago: false,
-    cashOnPickup: false,
-    cashOnDelivery: false,
+    cash: false,
     bankTransfer: false,
   });
+  const [isLoading, setIsLoading] = useState(false);
   const toast = useToast();
 
   useEffect(() => {
-    const storedMethods = localStorage.getItem('paymentMethods');
-    if (storedMethods) {
-      setPaymentMethods(JSON.parse(storedMethods));
-    }
+    fetchPaymentMethods();
   }, []);
 
+  const fetchPaymentMethods = async () => {
+    const methods = await getPaymentMethods();
+    setPaymentMethods(methods);
+  };
+
   const handleTogglePaymentMethod = (method: keyof PaymentMethods) => {
-    const updatedMethods = { ...paymentMethods, [method]: !paymentMethods[method] };
-    setPaymentMethods(updatedMethods);
-    localStorage.setItem('paymentMethods', JSON.stringify(updatedMethods));
-    toast({
-      title: "Éxito",
-      description: `Método de pago ${updatedMethods[method] ? "activado" : "desactivado"}`,
-      status: "success",
-      duration: 3000,
-      isClosable: true,
-    });
+    setPaymentMethods(prev => ({ ...prev, [method]: !prev[method] }));
+  };
+
+  const handleSave = async () => {
+    setIsLoading(true);
+    try {
+      await updatePaymentMethods(paymentMethods);
+      toast({
+        title: "Configuración guardada",
+        description: "Los métodos de pago se han actualizado correctamente.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error("Error saving payment methods:", error);
+      toast({
+        title: "Error",
+        description: "No se pudieron guardar los métodos de pago. Por favor, intente de nuevo.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -54,16 +67,10 @@ const PaymentMethodsConfig: React.FC = () => {
           MercadoPago
         </Checkbox>
         <Checkbox
-          isChecked={paymentMethods.cashOnPickup}
-          onChange={() => handleTogglePaymentMethod('cashOnPickup')}
+          isChecked={paymentMethods.cash}
+          onChange={() => handleTogglePaymentMethod('cash')}
         >
-          Efectivo al retirar
-        </Checkbox>
-        <Checkbox
-          isChecked={paymentMethods.cashOnDelivery}
-          onChange={() => handleTogglePaymentMethod('cashOnDelivery')}
-        >
-          Efectivo al recibir
+          Efectivo
         </Checkbox>
         <Checkbox
           isChecked={paymentMethods.bankTransfer}
@@ -71,6 +78,13 @@ const PaymentMethodsConfig: React.FC = () => {
         >
           Transferencia bancaria
         </Checkbox>
+        <Button
+          colorScheme="blue"
+          onClick={handleSave}
+          isLoading={isLoading}
+        >
+          Guardar cambios
+        </Button>
       </VStack>
     </Box>
   );
