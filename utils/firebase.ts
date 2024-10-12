@@ -36,7 +36,7 @@ export const DEFAULT_SITE_INFORMATION: SiteInformation = {
     color: "teal",
     social: [
         { name: "instagram", url: "https://www.hola.com" },
-        { name: "whatsapp", url: "https://wa.me/54929542201999" }
+        { name: "whatsapp", url: "https://wa.me/5492954271140" }
     ],
     logoUrl: "/default-logo.png",
     bannerUrl: "/default-banner.jpg"
