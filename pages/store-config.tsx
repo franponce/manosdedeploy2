@@ -10,8 +10,6 @@ import {
   AccordionIcon,
   Button,
   Icon,
-  Image,
-  Text,
   Flex,
   Container,
 } from '@chakra-ui/react';
@@ -20,11 +18,9 @@ import PaymentMethodsConfig from '../product/components/PaymentMethodsConfig';
 import CustomScripts from '../product/components/CustomScripts';
 import { useRouter } from 'next/router';
 import { FaArrowLeft } from 'react-icons/fa';
-import { useSiteInfo } from '../hooks/useSiteInfo';
 
 const StoreConfigPage: React.FC = () => {
   const router = useRouter();
-  const { siteInfo } = useSiteInfo();
 
   const handleBackToAdmin = () => {
     router.push('/admin');
@@ -41,43 +37,23 @@ const StoreConfigPage: React.FC = () => {
           >
             Volver a la gestión de productos
           </Button>
+          {/* Aquí iría el menú hamburguesa si lo tienes en este componente */}
         </Flex>
 
-        <Flex direction="column" alignItems="center" mb={8}>
-          <Box
-            backgroundColor="white"
-            borderRadius="full"
-            boxShadow="md"
-            boxSize="120px"
-            overflow="hidden"
-            position="relative"
-            mb={4}
-          >
-            <Image
-              src={`${siteInfo?.logoUrl}?${new Date().getTime()}`}
-              alt="Logo"
-              objectFit="cover"
-              width="100%"
-              height="100%"
-              fallback={<Box bg="gray.200" w="100%" h="100%" borderRadius="full" />}
-            />
-          </Box>
-          <Text fontSize="xl" fontWeight="bold" mb={2}>E-commerce</Text>
-          <Heading as="h1" size="2xl" textAlign="center">{siteInfo?.title}</Heading>
-        </Flex>
-
-        <Heading as="h2" size="xl" mb={8} textAlign="center">
+        <Heading as="h1" size="2xl" mb={12} textAlign="center">
           Configuración de la tienda
         </Heading>
 
         <VStack spacing={8} align="stretch">
           <Accordion allowMultiple>
-            <AccordionItem>
+            <AccordionItem border="none" mb={4}>
               <h2>
                 <AccordionButton
-                  _expanded={{ bg: 'gray.100', borderRadius: 'md' }}
-                  borderRadius="md"
-                  p={4}
+                  bg="gray.100"
+                  _hover={{ bg: 'gray.200' }}
+                  _expanded={{ bg: 'gray.200' }}
+                  borderRadius="full"
+                  p={6}
                 >
                   <Box flex="1" textAlign="left">
                     <Heading as="h3" size="lg">
@@ -87,17 +63,19 @@ const StoreConfigPage: React.FC = () => {
                   <AccordionIcon />
                 </AccordionButton>
               </h2>
-              <AccordionPanel pb={4}>
+              <AccordionPanel pt={8} pb={4}>
                 <StoreConfiguration />
               </AccordionPanel>
             </AccordionItem>
 
-            <AccordionItem>
+            <AccordionItem border="none" mb={4}>
               <h2>
                 <AccordionButton
-                  _expanded={{ bg: 'gray.100', borderRadius: 'md' }}
-                  borderRadius="md"
-                  p={4}
+                  bg="gray.100"
+                  _hover={{ bg: 'gray.200' }}
+                  _expanded={{ bg: 'gray.200' }}
+                  borderRadius="full"
+                  p={6}
                 >
                   <Box flex="1" textAlign="left">
                     <Heading as="h3" size="lg">
@@ -107,17 +85,19 @@ const StoreConfigPage: React.FC = () => {
                   <AccordionIcon />
                 </AccordionButton>
               </h2>
-              <AccordionPanel pb={4}>
+              <AccordionPanel pt={8} pb={4}>
                 <PaymentMethodsConfig />
               </AccordionPanel>
             </AccordionItem>
 
-            <AccordionItem>
+            <AccordionItem border="none">
               <h2>
                 <AccordionButton
-                  _expanded={{ bg: 'gray.100', borderRadius: 'md' }}
-                  borderRadius="md"
-                  p={4}
+                  bg="gray.100"
+                  _hover={{ bg: 'gray.200' }}
+                  _expanded={{ bg: 'gray.200' }}
+                  borderRadius="full"
+                  p={6}
                 >
                   <Box flex="1" textAlign="left">
                     <Heading as="h3" size="lg">
@@ -127,7 +107,7 @@ const StoreConfigPage: React.FC = () => {
                   <AccordionIcon />
                 </AccordionButton>
               </h2>
-              <AccordionPanel pb={4}>
+              <AccordionPanel pt={8} pb={4}>
                 <CustomScripts />
               </AccordionPanel>
             </AccordionItem>

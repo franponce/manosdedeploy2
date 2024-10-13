@@ -10,18 +10,11 @@ import {
   Link,
   Box,
   Flex,
-  IconButton,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
-  useDisclosure,
   Image,
   Spinner,
 } from "@chakra-ui/react";
 import { AppProps } from "next/app";
 import { Global, css } from "@emotion/react";
-import NextLink from "next/link";
 import { useRouter } from "next/router";
 import { SWRConfig } from 'swr';
 
@@ -30,17 +23,9 @@ import { useSiteInfo } from '../hooks/useSiteInfo';
 import { auth, logoutUser } from '../utils/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { parseCookies, destroyCookie } from 'nookies';
-
-const HamburgerIcon = () => (
-  <Flex flexDirection="column" justifyContent="space-between" height="24px" width="24px">
-    <Box bg="currentColor" h="2px" w="24px" />
-    <Box bg="currentColor" h="2px" w="24px" />
-    <Box bg="currentColor" h="2px" w="24px" />
-  </Flex>
-);
+import HamburgerMenu from '../product/components/HamburgerMenu';
 
 const MyApp = ({ Component, pageProps }: AppProps) => {
-  const { isOpen, onOpen, onClose } = useDisclosure();
   const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = React.useState(false);
   const [isAdmin, setIsAdmin] = React.useState(false);
@@ -69,7 +54,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
           if (user) {
             setIsLoggedIn(true);
-            setIsAdmin(false);  // Asumimos que los usuarios de Firebase no son admin
+            setIsAdmin(false);
             if (router.pathname === '/admin' && !hasRefreshedBefore && !hasRefreshed) {
               localStorage.setItem('hasRefreshedAdmin', 'true');
               setHasRefreshed(true);
@@ -168,38 +153,11 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
         <Flex alignItems="center" justifyContent="space-between" mb={4}>
           <Heading size="md">Te damos la bienvenida</Heading>
           {isMounted && (
-            <Menu>
-              <MenuButton
-                as={IconButton}
-                aria-label="Options"
-                icon={<HamburgerIcon />}
-                variant="outline"
-              />
-              <MenuList>
-                {isLoggedIn ? (
-                  <>
-                    {isAdmin && (
-                      <>
-                        <NextLink href="/admin" passHref legacyBehavior>
-                          <MenuItem as="a">Panel Administrador</MenuItem>
-                        </NextLink>
-                        <NextLink href="/store-config" passHref legacyBehavior>
-                          <MenuItem as="a">Configuración de la tienda</MenuItem>
-                        </NextLink>
-                        <NextLink href="/diseno" passHref legacyBehavior>
-                          <MenuItem as="a">Diseño</MenuItem>
-                        </NextLink>
-                      </>
-                    )}
-                    <MenuItem onClick={handleLogout}>Cerrar sesión</MenuItem>
-                  </>
-                ) : (
-                  <NextLink href="/login" passHref legacyBehavior>
-                    <MenuItem as="a">Iniciar Sesión</MenuItem>
-                  </NextLink>
-                )}
-              </MenuList>
-            </Menu>
+            <HamburgerMenu
+              isLoggedIn={isLoggedIn}
+              isAdmin={isAdmin}
+              onLogout={handleLogout}
+            />
           )}
         </Flex>
         <Box mb={6} position="relative">
