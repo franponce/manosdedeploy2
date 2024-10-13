@@ -90,7 +90,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
     if (loadedConfig) {
       setAnnouncementBar(JSON.parse(loadedConfig));
     }
-  }, []);
+  }, [router.pathname]); // Añade router.pathname a las dependencias del efecto
 
   const handleLogout = async () => {
     try {
