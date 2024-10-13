@@ -149,31 +149,26 @@ const ProductManagement: React.FC = () => {
 
   return (
     <Box>
-      <VStack spacing={4} align="stretch" mb={8}>
-        <Heading as="h1" size="xl" textAlign={{ base: "center", md: "left" }}>
+      <Flex direction={{ base: "column", md: "row" }} justifyContent="space-between" alignItems="center" mb={8}>
+        <Heading as="h1" size="xl" mb={{ base: 4, md: 0 }}>
           Gestión de productos
         </Heading>
-        <Flex 
-          direction={{ base: "column", md: "row" }} 
-          justify={{ base: "center", md: "space-between" }}
-          align={{ base: "stretch", md: "center" }}
-          gap={4}
-        >
+        <HStack spacing={4}>
           <NextLink href="/" passHref>
-            <Button as="a" leftIcon={<Icon as={FaStore} />} colorScheme="green" width={{ base: "100%", md: "auto" }}>
+            <Button as="a" leftIcon={<Icon as={FaStore} />} colorScheme="green">
               Ir a la tienda
             </Button>
           </NextLink>
-          <Button onClick={handleCreate} colorScheme="blue" width={{ base: "100%", md: "auto" }}>
+          <Button onClick={handleCreate} colorScheme="blue">
             Crear nuevo producto
           </Button>
           <NextLink href="/store-config" passHref>
-            <Button as="a" rightIcon={<Icon as={FaArrowRight} />} colorScheme="gray" width={{ base: "100%", md: "auto" }}>
+            <Button as="a" rightIcon={<Icon as={FaArrowRight} />} colorScheme="gray">
               Ir a la configuración de la tienda
             </Button>
           </NextLink>
-        </Flex>
-      </VStack>
+        </HStack>
+      </Flex>
 
       <InputGroup mb={6}>
         <InputLeftElement pointerEvents="none">
