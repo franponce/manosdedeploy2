@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
   Box,
-  Heading,
   Button,
   Input,
   Text,
@@ -16,13 +15,12 @@ import {
   Icon,
   InputGroup,
   InputLeftElement,
+  Heading,
 } from "@chakra-ui/react";
 import { SearchIcon } from "@chakra-ui/icons";
-import { FaStore, FaArrowRight } from "react-icons/fa";
 import ProductModal from "./ProductModal";
 import { getProducts, createProduct, updateProduct, deleteProduct } from "../../utils/googleSheets";
 import { Product } from "../types";
-import NextLink from "next/link";
 
 const PRODUCT_LIMIT = 30;
 const SYNC_INTERVAL = 30000; // 30 segundos
@@ -149,37 +147,21 @@ const ProductManagement: React.FC = () => {
 
   return (
     <Box>
-      <Flex direction={{ base: "column", md: "row" }} justifyContent="space-between" alignItems="center" mb={8}>
-        <Heading as="h1" size="xl" mb={{ base: 4, md: 0 }}>
-          Gestión de productos
-        </Heading>
-        <HStack spacing={4}>
-          <NextLink href="/" passHref>
-            <Button as="a" leftIcon={<Icon as={FaStore} />} colorScheme="green">
-              Ir a la tienda
-            </Button>
-          </NextLink>
-          <Button onClick={handleCreate} colorScheme="blue">
-            Crear nuevo producto
-          </Button>
-          <NextLink href="/store-config" passHref>
-            <Button as="a" rightIcon={<Icon as={FaArrowRight} />} colorScheme="gray">
-              Ir a la configuración de la tienda
-            </Button>
-          </NextLink>
-        </HStack>
+      <Flex direction="column" mb={6}>
+        <InputGroup mb={4}>
+          <InputLeftElement pointerEvents="none">
+            <SearchIcon color="gray.300" />
+          </InputLeftElement>
+          <Input
+            placeholder="Buscar productos..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </InputGroup>
+        <Button onClick={handleCreate} colorScheme="blue" alignSelf="flex-start">
+          Crear nuevo producto
+        </Button>
       </Flex>
-
-      <InputGroup mb={6}>
-        <InputLeftElement pointerEvents="none">
-          <SearchIcon color="gray.300" />
-        </InputLeftElement>
-        <Input
-          placeholder="Buscar productos..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-      </InputGroup>
 
       {products.length >= PRODUCT_LIMIT - 5 && products.length < PRODUCT_LIMIT && (
         <Box mb={4} p={3} bg="yellow.100" borderRadius="md">
