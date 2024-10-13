@@ -149,8 +149,8 @@ const ProductManagement: React.FC = () => {
 
   return (
     <Box>
-      <Flex direction={{ base: "column", md: "row" }} justifyContent="space-between" alignItems="center" mb={8}>
-        <Heading as="h1" size="xl" mb={{ base: 4, md: 0 }}>
+      <Flex justifyContent="space-between" alignItems="center" mb={8}>
+        <Heading as="h1" size="xl">
           Gestión de productos
         </Heading>
         <HStack spacing={4}>
