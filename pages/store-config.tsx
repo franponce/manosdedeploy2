@@ -20,28 +20,50 @@ import PaymentMethodsConfig from '../product/components/PaymentMethodsConfig';
 import CustomScripts from '../product/components/CustomScripts';
 import { useRouter } from 'next/router';
 import { FaArrowLeft } from 'react-icons/fa';
+import HamburgerMenu from '../product/components/HamburgerMenu';
 import { useSiteInfo } from '../hooks/useSiteInfo';
-import HamburgerMenu from '../product/components/HamburgerMenu'
+import { useAuth } from '../context/AuthContext'; // Asegúrate de que esta importación sea correcta
+import { logoutUser } from '../utils/firebase'; // Asegúrate de que esta importación sea correcta
 
 const StoreConfigPage: React.FC = () => {
   const router = useRouter();
   const { siteInfo } = useSiteInfo();
+  const { isLoggedIn, setIsLoggedIn } = useAuth(); // Asumimos que useAuth proporciona estos valores
 
   const handleBackToAdmin = () => {
     router.push('/admin');
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+      setIsLoggedIn(false);
+      router.push('/');
+    } catch (error) {
+      console.error('Error during logout:', error);
+    }
   };
 
   return (
     <Box>
       <Container maxW="container.xl" p={4}>
         <Flex justifyContent="space-between" alignItems="center" mb={8}>
-          <Button
-            leftIcon={<Icon as={FaArrowLeft} />}
-            onClick={handleBackToAdmin}
-            variant="outline"
-          >
-            Volver a la gestión de productos
-          </Button>
+          <Heading size="md">Te damos la bienvenida</Heading>
+          <Flex alignItems="center">
+            <Button
+              leftIcon={<Icon as={FaArrowLeft} />}
+              onClick={handleBackToAdmin}
+              variant="outline"
+              mr={4}
+            >
+              Volver a la gestión de productos
+            </Button>
+            <HamburgerMenu
+              isLoggedIn={isLoggedIn}
+              isAdmin={true} // Asumimos que si está en esta página, es admin
+              onLogout={handleLogout}
+            />
+          </Flex>
         </Flex>
 
         <Flex direction="column" alignItems="center" mb={8}>
