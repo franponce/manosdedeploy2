@@ -17,11 +17,21 @@ import {
 import { ViewIcon, ViewOffIcon } from '@chakra-ui/icons';
 import { getSiteInformation } from '../utils/firebase';
 
+// Función de autenticación simulada
+const authenticateUser = (username: string, password: string): Promise<boolean> => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(username === 'admin' && password === 'password123');
+    }, 500);  // Simula una llamada a la API
+  });
+};
+
 const LoginPage: React.FC = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [storeName, setStoreName] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const toast = useToast();
 
@@ -35,18 +45,34 @@ const LoginPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Autenticación hardcodeada
-    if (username === 'admin' && password === 'password123') {
-      localStorage.setItem('isLoggedIn', 'true');
-      router.push('/admin');
-    } else {
+    setIsLoading(true);
+    
+    try {
+      const isAuthenticated = await authenticateUser(username, password);
+      if (isAuthenticated) {
+        localStorage.setItem('isLoggedIn', 'true');
+        localStorage.setItem('lastLoginTime', Date.now().toString());
+        router.push('/admin');
+      } else {
+        toast({
+          title: 'Error de autenticación',
+          description: 'Usuario o contraseña incorrectos',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    } catch (error) {
+      console.error('Error durante la autenticación:', error);
       toast({
-        title: 'Error de autenticación',
-        description: 'Usuario o contraseña incorrectos',
+        title: 'Error',
+        description: 'Ocurrió un error durante el inicio de sesión',
         status: 'error',
         duration: 3000,
         isClosable: true,
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -85,7 +111,7 @@ const LoginPage: React.FC = () => {
                 </InputRightElement>
               </InputGroup>
             </FormControl>
-            <Button colorScheme="blue" type="submit" width="full">
+            <Button colorScheme="blue" type="submit" width="full" isLoading={isLoading}>
               Iniciar sesión
             </Button>
           </VStack>

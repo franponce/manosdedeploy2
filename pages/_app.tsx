@@ -76,18 +76,18 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
 
   React.useEffect(() => {
     const handleRouteChange = (url: string) => {
-      if (url === '/admin' && isLoggedIn) {
-        // Forzar un refresh de la página
-        window.location.reload();
+      checkLoginStatus();
+      if (url.startsWith('/admin') && !isLoggedIn) {
+        router.push('/login');
       }
     };
 
-    router.events.on('routeChangeComplete', handleRouteChange);
+    router.events.on('routeChangeStart', handleRouteChange);
 
     return () => {
-      router.events.off('routeChangeComplete', handleRouteChange);
+      router.events.off('routeChangeStart', handleRouteChange);
     };
-  }, [router.events, isLoggedIn]);
+  }, [router, isLoggedIn, checkLoginStatus]);
 
   const handleLogout = () => {
     localStorage.removeItem("isLoggedIn");
