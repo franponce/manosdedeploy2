@@ -24,6 +24,7 @@ import { Global, css } from "@emotion/react";
 import NextLink from "next/link";
 import { useRouter } from "next/router";
 import { SWRConfig } from 'swr';
+import { parseCookies, destroyCookie } from 'nookies';
 
 import theme from "../theme";
 import { useSiteInfo } from '../hooks/useSiteInfo';
@@ -50,10 +51,50 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
   const [announcementBar, setAnnouncementBar] = React.useState<any>(null);
 
   React.useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setIsLoggedIn(!!user);
-      setIsAdmin(!!user && isAdminUser(user));
+    const checkAuthStatus = async () => {
+      const cookies = parseCookies();
+      const authToken = cookies.authToken;
+
+      if (authToken) {
+        if (authToken === 'admin-token') {
+          setIsLoggedIn(true);
+          setIsAdmin(true);
+        } else {
+          try {
+            const user = await auth.currentUser;
+            if (user) {
+              setIsLoggedIn(true);
+              setIsAdmin(isAdminUser(user));
+            } else {
+              // Token exists but no current user, clear the invalid token
+              destroyCookie(null, 'authToken');
+              setIsLoggedIn(false);
+              setIsAdmin(false);
+            }
+          } catch (error) {
+            console.error('Error verifying auth token:', error);
+            destroyCookie(null, 'authToken');
+            setIsLoggedIn(false);
+            setIsAdmin(false);
+          }
+        }
+      } else {
+        setIsLoggedIn(false);
+        setIsAdmin(false);
+      }
       setIsMounted(true);
+    };
+
+    checkAuthStatus();
+
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setIsLoggedIn(true);
+        setIsAdmin(isAdminUser(user));
+      } else {
+        setIsLoggedIn(false);
+        setIsAdmin(false);
+      }
     });
 
     // Fetch custom scripts
@@ -74,6 +115,8 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
   const handleLogout = async () => {
     try {
       await logoutUser();
+      setIsLoggedIn(false);
+      setIsAdmin(false);
       router.push("/");
     } catch (error) {
       console.error('Error during logout:', error);
@@ -140,17 +183,21 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
                 variant="outline"
               />
               <MenuList>
-                {isLoggedIn && isAdmin ? (
+                {isLoggedIn ? (
                   <>
-                    <NextLink href="/admin" passHref legacyBehavior>
-                      <MenuItem as="a">Panel Administrador</MenuItem>
-                    </NextLink>
-                    <NextLink href="/store-config" passHref legacyBehavior>
-                      <MenuItem as="a">Configuración de la tienda</MenuItem>
-                    </NextLink>
-                    <NextLink href="/diseno" passHref legacyBehavior>
-                      <MenuItem as="a">Diseño</MenuItem>
-                    </NextLink>
+                    {isAdmin && (
+                      <>
+                        <NextLink href="/admin" passHref legacyBehavior>
+                          <MenuItem as="a">Panel Administrador</MenuItem>
+                        </NextLink>
+                        <NextLink href="/store-config" passHref legacyBehavior>
+                          <MenuItem as="a">Configuración de la tienda</MenuItem>
+                        </NextLink>
+                        <NextLink href="/diseno" passHref legacyBehavior>
+                          <MenuItem as="a">Diseño</MenuItem>
+                        </NextLink>
+                      </>
+                    )}
                     <MenuItem onClick={handleLogout}>Cerrar sesión</MenuItem>
                   </>
                 ) : (
