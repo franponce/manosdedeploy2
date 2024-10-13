@@ -169,7 +169,7 @@ if (typeof window === 'undefined') {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(product),
       });
-      if (!response.ok) throw new Error('Failed to update product');
+      if (!response.ok) throw new Error('Error al actualizar producto. Revisa las medidas y peso de la imagen que querés cargar');
     },
     createProduct: async (product: Product) => {
       const response = await fetch('/api/products', {
