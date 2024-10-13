@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { Box, Spinner } from '@chakra-ui/react';
-import { auth } from '../../utils/firebase';
+import { auth, isAdminUser } from '../../utils/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 
 const WithAuth = <P extends object>(WrappedComponent: React.ComponentType<P>) => {
@@ -12,7 +12,7 @@ const WithAuth = <P extends object>(WrappedComponent: React.ComponentType<P>) =>
 
     useEffect(() => {
       const unsubscribe = onAuthStateChanged(auth, (user) => {
-        if (user) {
+        if (user && (user.email || isAdminUser(user))) {
           setIsAuthenticated(true);
         } else {
           setIsAuthenticated(false);

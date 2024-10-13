@@ -64,7 +64,7 @@ const LoginPage: React.FC = () => {
   const handleResetPassword = async () => {
     if (!email) {
       toast({
-        title: 'Error',
+        title: 'Esta acción no es posible',
         description: 'Por favor, ingresa tu email para restablecer la contraseña',
         status: 'error',
         duration: 3000,

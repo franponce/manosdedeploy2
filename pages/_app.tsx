@@ -27,7 +27,7 @@ import { SWRConfig } from 'swr';
 
 import theme from "../theme";
 import { useSiteInfo } from '../hooks/useSiteInfo';
-import { auth, logoutUser } from '../utils/firebase';
+import { auth, logoutUser, isAdminUser } from '../utils/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 
 const HamburgerIcon = () => (
@@ -42,6 +42,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = React.useState(false);
+  const [isAdmin, setIsAdmin] = React.useState(false);
   const [isMounted, setIsMounted] = React.useState(false);
   const { siteInfo, isLoading, isError } = useSiteInfo();
   const [bannerError, setBannerError] = React.useState(false);
@@ -51,6 +52,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
   React.useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setIsLoggedIn(!!user);
+      setIsAdmin(!!user && isAdminUser(user));
       setIsMounted(true);
     });
 
@@ -138,7 +140,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
                 variant="outline"
               />
               <MenuList>
-                {isLoggedIn ? (
+                {isLoggedIn && isAdmin ? (
                   <>
                     <NextLink href="/admin" passHref legacyBehavior>
                       <MenuItem as="a">Panel Administrador</MenuItem>
