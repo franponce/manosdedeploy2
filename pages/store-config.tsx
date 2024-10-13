@@ -10,8 +10,6 @@ import {
   AccordionIcon,
   Button,
   Icon,
-  Image,
-  Text,
   Flex,
   Container,
 } from '@chakra-ui/react';
@@ -21,13 +19,29 @@ import CustomScripts from '../product/components/CustomScripts';
 import { useRouter } from 'next/router';
 import { FaArrowLeft } from 'react-icons/fa';
 import HamburgerMenu from '../product/components/HamburgerMenu';
+import { useAuth } from '../context/AuthContext';
+import { logoutUser } from '../utils/firebase'; // Asegúrate de tener esta función implementada
 
 const StoreConfigPage: React.FC = () => {
   const router = useRouter();
+  const { isLoggedIn, setIsLoggedIn } = useAuth();
 
   const handleBackToAdmin = () => {
     router.push('/admin');
   };
+
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+      setIsLoggedIn(false);
+      router.push('/');
+    } catch (error) {
+      console.error('Error during logout:', error);
+    }
+  };
+
+  // Asumimos que si el usuario está en esta página, es admin
+  const isAdmin = true;
 
   return (
     <Box>
@@ -40,7 +54,11 @@ const StoreConfigPage: React.FC = () => {
           >
             Volver a la gestión de productos
           </Button>
-          <HamburgerMenu /> {/* Añadido el menú hamburguesa aquí */}
+          <HamburgerMenu 
+            isLoggedIn={isLoggedIn} 
+            isAdmin={isAdmin} 
+            onLogout={handleLogout}
+          />
         </Flex>
 
         <Heading as="h1" size="2xl" mb={12} textAlign="center">
