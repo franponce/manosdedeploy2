@@ -23,12 +23,23 @@ const PaymentMethodsConfig: React.FC = () => {
   }, []);
 
   const fetchPaymentMethods = async () => {
-    const methods = await getPaymentMethods();
-    setPaymentMethods(methods);
+    try {
+      const methods = await getPaymentMethods();
+      setPaymentMethods(methods);
+    } catch (error) {
+      console.error("Error fetching payment methods:", error);
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar los métodos de pago",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
 
   const handleTogglePaymentMethod = (method: keyof PaymentMethods) => {
-    setPaymentMethods(prev => ({ ...prev, [method]: !prev[method] }));
+    setPaymentMethods((prev: PaymentMethods) => ({ ...prev, [method]: !prev[method] }));
   };
 
   const handleSave = async () => {
@@ -36,8 +47,8 @@ const PaymentMethodsConfig: React.FC = () => {
     try {
       await updatePaymentMethods(paymentMethods);
       toast({
-        title: "Configuración guardada",
-        description: "Los métodos de pago se han actualizado correctamente.",
+        title: "Éxito",
+        description: "Los métodos de pago se han actualizado correctamente",
         status: "success",
         duration: 3000,
         isClosable: true,
@@ -46,7 +57,7 @@ const PaymentMethodsConfig: React.FC = () => {
       console.error("Error saving payment methods:", error);
       toast({
         title: "Error",
-        description: "No se pudieron guardar los métodos de pago. Por favor, intente de nuevo.",
+        description: "No se pudieron guardar los métodos de pago",
         status: "error",
         duration: 3000,
         isClosable: true,

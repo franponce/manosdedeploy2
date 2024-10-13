@@ -1,19 +1,28 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
 import { getStorage, ref, uploadString, getDownloadURL } from "firebase/storage";
+import { 
+  getAuth, 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  sendPasswordResetEmail,
+  signOut,
+  User
+} from "firebase/auth";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyDwcuPITsTK09h8nv--CW0uRWiCWyITjHo",
-    authDomain: "manosdedeploy.firebaseapp.com",
-    projectId: "manosdedeploy",
-    storageBucket: "manosdedeploy.appspot.com",
-    messagingSenderId: "1064025881490",
-    appId: "1:1064025881490:web:ec981224ec63b1ef1a9f4b"
+  apiKey: "AIzaSyDwcuPITsTK09h8nv--CW0uRWiCWyITjHo",
+  authDomain: "manosdedeploy.firebaseapp.com",
+  projectId: "manosdedeploy",
+  storageBucket: "manosdedeploy.appspot.com",
+  messagingSenderId: "1064025881490",
+  appId: "1:1064025881490:web:ec981224ec63b1ef1a9f4b"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage(app);
+const auth = getAuth(app);
 
 export interface SiteInformation {
   title: string;
@@ -28,18 +37,18 @@ export interface SiteInformation {
 }
 
 export const DEFAULT_SITE_INFORMATION: SiteInformation = {
-    title: "Manos de manteca",
-    description: "Envianos tu pedido y a la brevedad te respondemos.",
-    description2: "👉 Nuestro horario de atención es de X a X de X a X hs. Hacemos envíos 🚴‍♀",
-    whatsappCart: "5492954271140",
-    sheet: "https://docs.google.com/spreadsheets/d/e/2PACX-1vReSQMLVR-O0uKqZr28Y9j29RN1YYoaFkb29qVJjofGNZSRUnhCsgoohDDDrsAV0FW4R9xdulrn0aYE/pub?output=csv",
-    color: "teal",
-    social: [
-        { name: "instagram", url: "https://www.hola.com" },
-        { name: "whatsapp", url: "https://wa.me/5492954271140" }
-    ],
-    logoUrl: "/default-logo.png",
-    bannerUrl: "/default-banner.jpg"
+  title: "Manos de manteca",
+  description: "Envianos tu pedido y a la brevedad te respondemos.",
+  description2: "👉 Nuestro horario de atención es de X a X de X a X hs. Hacemos envíos 🚴‍♀",
+  whatsappCart: "5492954271140",
+  sheet: "https://docs.google.com/spreadsheets/d/e/2PACX-1vReSQMLVR-O0uKqZr28Y9j29RN1YYoaFkb29qVJjofGNZSRUnhCsgoohDDDrsAV0FW4R9xdulrn0aYE/pub?output=csv",
+  color: "teal",
+  social: [
+    { name: "instagram", url: "https://www.hola.com" },
+    { name: "whatsapp", url: "https://wa.me/54929542201999" }
+  ],
+  logoUrl: "/default-logo.png",
+  bannerUrl: "/default-banner.jpg"
 };
 
 export interface PaymentMethods {
@@ -48,54 +57,72 @@ export interface PaymentMethods {
   bankTransfer: boolean;
 }
 
-export const DEFAULT_PAYMENT_METHODS: PaymentMethods = {
-  mercadoPago: false,
-  cash: false,
-  bankTransfer: false
+export async function getSiteInformation(): Promise<SiteInformation> {
+  try {
+    const docRef = doc(db, "siteInfo", "main");
+    const docSnap = await getDoc(docRef);
+      
+    if (docSnap.exists()) {
+      return docSnap.data() as SiteInformation;
+    }
+  } catch (error) {
+    console.error('Error fetching site information:', error);
+  }
+  return DEFAULT_SITE_INFORMATION;
+}
+  
+export async function updateSiteInformation(newInfo: Partial<SiteInformation>): Promise<void> {
+  const docRef = doc(db, "siteInfo", "main");
+  await setDoc(docRef, newInfo, { merge: true });
+}
+  
+export async function uploadImage(imageData: string, type: 'logo' | 'banner'): Promise<string> {
+  const storageRef = ref(storage, `${type}/${Date.now()}`);
+  await uploadString(storageRef, imageData, 'data_url');
+  const downloadURL = await getDownloadURL(storageRef);
+  console.log(`Uploaded ${type} image. URL:`, downloadURL);
+  return downloadURL;
+}
+
+export const getPaymentMethods = async (): Promise<PaymentMethods> => {
+  try {
+    const docRef = doc(db, "config", "paymentMethods");
+    const docSnap = await getDoc(docRef);
+    
+    if (docSnap.exists()) {
+      return docSnap.data() as PaymentMethods;
+    }
+  } catch (error) {
+    console.error('Error fetching payment methods:', error);
+  }
+  return { mercadoPago: false, cash: false, bankTransfer: false };
 };
 
-export async function getSiteInformation(): Promise<SiteInformation> {
-    try {
-      const docRef = doc(db, "siteInfo", "main");
-      const docSnap = await getDoc(docRef);
-        
-      if (docSnap.exists()) {
-        return docSnap.data() as SiteInformation;
-      }
-    } catch (error) {
-      console.error('Error fetching site information:', error);
-    }
-    return DEFAULT_SITE_INFORMATION;
-}
-    
-export async function updateSiteInformation(newInfo: Partial<SiteInformation>): Promise<void> {
-    const docRef = doc(db, "siteInfo", "main");
-    await setDoc(docRef, newInfo, { merge: true });
-}
-    
-export async function uploadImage(imageData: string, type: 'logo' | 'banner'): Promise<string> {
-    const storageRef = ref(storage, `${type}/${Date.now()}`);
-    await uploadString(storageRef, imageData, 'data_url');
-    const downloadURL = await getDownloadURL(storageRef);
-    console.log(`Uploaded ${type} image. URL:`, downloadURL);
-    return downloadURL;
-}
+export const updatePaymentMethods = async (methods: PaymentMethods): Promise<void> => {
+  const docRef = doc(db, "config", "paymentMethods");
+  await setDoc(docRef, methods);
+};
 
-export async function getPaymentMethods(): Promise<PaymentMethods> {
-    try {
-        const docRef = doc(db, "config", "paymentMethods");
-        const docSnap = await getDoc(docRef);
-        
-        if (docSnap.exists()) {
-            return docSnap.data() as PaymentMethods;
-        }
-    } catch (error) {
-        console.error('Error fetching payment methods:', error);
-    }
-    return DEFAULT_PAYMENT_METHODS;
-}
+export const registerUser = async (email: string, password: string): Promise<User> => {
+  const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+  return userCredential.user;
+};
 
-export async function updatePaymentMethods(methods: PaymentMethods): Promise<void> {
-    const docRef = doc(db, "config", "paymentMethods");
-    await setDoc(docRef, methods);
-}
+export const loginUser = async (email: string, password: string): Promise<User> => {
+  const userCredential = await signInWithEmailAndPassword(auth, email, password);
+  return userCredential.user;
+};
+
+export const logoutUser = async (): Promise<void> => {
+  await signOut(auth);
+};
+
+export const resetPassword = async (email: string): Promise<void> => {
+  await sendPasswordResetEmail(auth, email);
+};
+
+export const getCurrentUser = (): User | null => {
+  return auth.currentUser;
+};
+
+export { auth, db, storage };

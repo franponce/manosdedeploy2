@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { Box, Spinner } from '@chakra-ui/react';
+import { auth } from '../../utils/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 
 const WithAuth = <P extends object>(WrappedComponent: React.ComponentType<P>) => {
   const AuthComponent: React.FC<P> = (props) => {
@@ -9,23 +11,17 @@ const WithAuth = <P extends object>(WrappedComponent: React.ComponentType<P>) =>
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-      const checkAuth = () => {
-        const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-        const lastLoginTime = localStorage.getItem('lastLoginTime');
-        const currentTime = Date.now();
-        const sessionTimeout = 24 * 60 * 60 * 1000; // 24 horas en milisegundos
-
-        if (isLoggedIn && lastLoginTime && (currentTime - parseInt(lastLoginTime)) < sessionTimeout) {
+      const unsubscribe = onAuthStateChanged(auth, (user) => {
+        if (user) {
           setIsAuthenticated(true);
         } else {
-          localStorage.removeItem('isLoggedIn');
-          localStorage.removeItem('lastLoginTime');
+          setIsAuthenticated(false);
           router.push('/login');
         }
         setIsLoading(false);
-      };
+      });
 
-      checkAuth();
+      return () => unsubscribe();
     }, [router]);
 
     if (isLoading) {

@@ -27,6 +27,8 @@ import { SWRConfig } from 'swr';
 
 import theme from "../theme";
 import { useSiteInfo } from '../hooks/useSiteInfo';
+import { auth, logoutUser } from '../utils/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 
 const HamburgerIcon = () => (
   <Flex flexDirection="column" justifyContent="space-between" height="24px" width="24px">
@@ -46,16 +48,11 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
   const [customScripts, setCustomScripts] = React.useState<string | null>(null);
   const [announcementBar, setAnnouncementBar] = React.useState<any>(null);
 
-  const checkLoginStatus = React.useCallback(() => {
-    const loginStatus = localStorage.getItem("isLoggedIn") === "true";
-    setIsLoggedIn(loginStatus);
-  }, []);
-
   React.useEffect(() => {
-    checkLoginStatus();
-    setIsMounted(true);
-
-    window.addEventListener('storage', checkLoginStatus);
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setIsLoggedIn(!!user);
+      setIsMounted(true);
+    });
 
     // Fetch custom scripts
     fetch('/api/get-scripts')
@@ -69,30 +66,16 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
       setAnnouncementBar(JSON.parse(loadedConfig));
     }
 
-    return () => {
-      window.removeEventListener('storage', checkLoginStatus);
-    };
-  }, [checkLoginStatus]);
+    return () => unsubscribe();
+  }, []);
 
-  React.useEffect(() => {
-    const handleRouteChange = (url: string) => {
-      checkLoginStatus();
-      if (url.startsWith('/admin') && !isLoggedIn) {
-        router.push('/login');
-      }
-    };
-
-    router.events.on('routeChangeStart', handleRouteChange);
-
-    return () => {
-      router.events.off('routeChangeStart', handleRouteChange);
-    };
-  }, [router, isLoggedIn, checkLoginStatus]);
-
-  const handleLogout = () => {
-    localStorage.removeItem("isLoggedIn");
-    setIsLoggedIn(false);
-    router.push("/");
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+      router.push("/");
+    } catch (error) {
+      console.error('Error during logout:', error);
+    }
   };
 
   if (isLoading) return <Box display="flex" justifyContent="center" alignItems="center" height="100vh"><Spinner /></Box>;

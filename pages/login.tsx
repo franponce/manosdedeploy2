@@ -12,22 +12,14 @@ import {
   useToast, 
   InputGroup, 
   InputRightElement,
-  IconButton
+  IconButton,
+  Link
 } from '@chakra-ui/react';
 import { ViewIcon, ViewOffIcon } from '@chakra-ui/icons';
-import { getSiteInformation } from '../utils/firebase';
-
-// Función de autenticación simulada
-const authenticateUser = (username: string, password: string): Promise<boolean> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(username === 'admin' && password === 'password123');
-    }, 500);  // Simula una llamada a la API
-  });
-};
+import { getSiteInformation, loginUser, resetPassword } from '../utils/firebase';
 
 const LoginPage: React.FC = () => {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [storeName, setStoreName] = useState('');
@@ -48,31 +40,52 @@ const LoginPage: React.FC = () => {
     setIsLoading(true);
     
     try {
-      const isAuthenticated = await authenticateUser(username, password);
-      if (isAuthenticated) {
-        localStorage.setItem('isLoggedIn', 'true');
-        localStorage.setItem('lastLoginTime', Date.now().toString());
-        router.push('/admin');
-      } else {
-        toast({
-          title: 'Error de autenticación',
-          description: 'Usuario o contraseña incorrectos',
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        });
-      }
+      await loginUser(email, password);
+      router.push('/admin');
     } catch (error) {
       console.error('Error durante la autenticación:', error);
       toast({
-        title: 'Error',
-        description: 'Ocurrió un error durante el inicio de sesión',
+        title: 'Error de autenticación',
+        description: 'Email o contraseña incorrectos',
         status: 'error',
         duration: 3000,
         isClosable: true,
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!email) {
+      toast({
+        title: 'Error',
+        description: 'Por favor, ingresa tu email para restablecer la contraseña',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    try {
+      await resetPassword(email);
+      toast({
+        title: 'Email enviado',
+        description: 'Se ha enviado un email para restablecer tu contraseña',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('Error al enviar el email de restablecimiento:', error);
+      toast({
+        title: 'Error',
+        description: 'No se pudo enviar el email de restablecimiento',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
     }
   };
 
@@ -86,11 +99,11 @@ const LoginPage: React.FC = () => {
         <form onSubmit={handleSubmit}>
           <VStack spacing={4}>
             <FormControl isRequired>
-              <FormLabel>Usuario</FormLabel>
+              <FormLabel>Email</FormLabel>
               <Input 
-                type="text" 
-                value={username} 
-                onChange={(e) => setUsername(e.target.value)} 
+                type="email" 
+                value={email} 
+                onChange={(e) => setEmail(e.target.value)} 
               />
             </FormControl>
             <FormControl isRequired>
@@ -116,6 +129,9 @@ const LoginPage: React.FC = () => {
             </Button>
           </VStack>
         </form>
+        <Link color="blue.500" onClick={handleResetPassword} textAlign="center">
+          ¿Olvidaste tu contraseña?
+        </Link>
       </VStack>
     </Box>
   );
