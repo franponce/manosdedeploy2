@@ -49,33 +49,44 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
   const [bannerError, setBannerError] = React.useState(false);
   const [customScripts, setCustomScripts] = React.useState<string | null>(null);
   const [announcementBar, setAnnouncementBar] = React.useState<any>(null);
+  const [hasRefreshed, setHasRefreshed] = React.useState(false);
 
   React.useEffect(() => {
     const checkAuthStatus = () => {
       const cookies = parseCookies();
       const authToken = cookies.authToken;
+      const hasRefreshedBefore = localStorage.getItem('hasRefreshedAdmin');
 
       if (authToken === 'admin-token') {
         setIsLoggedIn(true);
         setIsAdmin(true);
-        if (router.pathname === '/admin') window.location.reload();  // Añade esta línea aquí
+        if (router.pathname === '/admin' && !hasRefreshedBefore && !hasRefreshed) {
+          localStorage.setItem('hasRefreshedAdmin', 'true');
+          setHasRefreshed(true);
+          window.location.reload();
+        }
       } else {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
           if (user) {
             setIsLoggedIn(true);
             setIsAdmin(false);  // Asumimos que los usuarios de Firebase no son admin
-            if (router.pathname === '/admin') window.location.reload();  // Y también aquí
+            if (router.pathname === '/admin' && !hasRefreshedBefore && !hasRefreshed) {
+              localStorage.setItem('hasRefreshedAdmin', 'true');
+              setHasRefreshed(true);
+              window.location.reload();
+            }
           } else {
             setIsLoggedIn(false);
             setIsAdmin(false);
             destroyCookie(null, 'authToken');
+            localStorage.removeItem('hasRefreshedAdmin');
           }
         });
-  
+
         return () => unsubscribe();
       }
     };
-  
+
     checkAuthStatus();
     setIsMounted(true);
 
@@ -90,7 +101,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
     if (loadedConfig) {
       setAnnouncementBar(JSON.parse(loadedConfig));
     }
-  }, [router.pathname]); // Añade router.pathname a las dependencias del efecto
+  }, [router.pathname, hasRefreshed]);
 
   const handleLogout = async () => {
     try {
@@ -98,6 +109,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
       setIsLoggedIn(false);
       setIsAdmin(false);
       destroyCookie(null, 'authToken');
+      localStorage.removeItem('hasRefreshedAdmin');
       router.push("/");
     } catch (error) {
       console.error('Error during logout:', error);
