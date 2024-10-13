@@ -10,6 +10,10 @@ import {
   AspectRatio,
   Image,
   HStack,
+  VStack,
+  Flex,
+  Alert,
+  AlertIcon,
 } from "@chakra-ui/react";
 import ProductModal from "./ProductModal";
 import { getProducts, createProduct, updateProduct, deleteProduct } from "../../utils/googleSheets";
@@ -140,25 +144,40 @@ const ProductManagement: React.FC = () => {
 
   return (
     <Box>
-      <Input
-        mb={4}
-        placeholder="Buscar productos..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-      />
+      <Flex direction={{ base: "column", md: "row" }} justify="space-between" align="center" mb={4}>
+        <Input
+          placeholder="Buscar productos..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          mb={{ base: 4, md: 0 }}
+          mr={{ md: 4 }}
+          maxWidth={{ md: "300px" }}
+        />
+        <Button onClick={handleCreate} colorScheme="blue">
+          Crear nuevo producto
+        </Button>
+      </Flex>
+
       {products.length >= PRODUCT_LIMIT - 5 && products.length < PRODUCT_LIMIT && (
-        <Text color="orange.500" mb={4}>
-          Te estás acercando al límite de productos. Tenés {PRODUCT_LIMIT - products.length} productos disponibles.
-        </Text>
+        <Alert status="warning" mb={4}>
+          <AlertIcon />
+          Te estás acercando al límite de productos. Tienes {PRODUCT_LIMIT - products.length} productos disponibles.
+        </Alert>
       )}
       {products.length >= PRODUCT_LIMIT && (
-        <Text color="red.500" mb={4}>
+        <Alert status="error" mb={4}>
+          <AlertIcon />
           Has alcanzado el límite de productos. Contacta con soporte para aumentar tu límite.
-        </Text>
+        </Alert>
       )}
-      <Button onClick={handleCreate} colorScheme="blue" mb={4}>
-        Crear nuevo producto
-      </Button>
+
+      {filteredProducts.length === 0 && (
+        <Alert status="info" mb={4}>
+          <AlertIcon />
+          No se encontraron productos que coincidan con tu búsqueda. Intenta con otros términos o crea un nuevo producto.
+        </Alert>
+      )}
+
       <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
         {filteredProducts.map((product) => (
           <Box key={product.id} borderRadius="lg" borderWidth={1} overflow="hidden">
