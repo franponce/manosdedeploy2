@@ -48,22 +48,18 @@ const StoreConfigPage: React.FC = () => {
     <Box>
       <Container maxW="container.xl" p={4}>
         <Flex justifyContent="space-between" alignItems="center" mb={8}>
-          <Heading size="md">Te damos la bienvenida</Heading>
-          <Flex alignItems="center">
-            <Button
-              leftIcon={<Icon as={FaArrowLeft} />}
-              onClick={handleBackToAdmin}
-              variant="outline"
-              mr={4}
-            >
-              Volver a la gestión de productos
-            </Button>
-            <HamburgerMenu
-              isLoggedIn={isLoggedIn}
-              isAdmin={true} // Asumimos que si está en esta página, es admin
-              onLogout={handleLogout}
-            />
-          </Flex>
+          <Button
+            leftIcon={<Icon as={FaArrowLeft} />}
+            onClick={handleBackToAdmin}
+            variant="outline"
+          >
+            Volver a la gestión de productos
+          </Button>
+          <HamburgerMenu
+            isLoggedIn={isLoggedIn}
+            isAdmin={true} // Asumimos que si está en esta página, es admin
+            onLogout={handleLogout}
+          />
         </Flex>
 
         <Flex direction="column" alignItems="center" mb={8}>
