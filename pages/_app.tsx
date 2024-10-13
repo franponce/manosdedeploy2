@@ -47,8 +47,15 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
   const [announcementBar, setAnnouncementBar] = React.useState<any>(null);
 
   React.useEffect(() => {
-    setIsLoggedIn(localStorage.getItem("isLoggedIn") === "true");
+    const checkLoginStatus = () => {
+      const loginStatus = localStorage.getItem("isLoggedIn") === "true";
+      setIsLoggedIn(loginStatus);
+    };
+
+    checkLoginStatus();
     setIsMounted(true);
+
+    window.addEventListener('storage', checkLoginStatus);
 
     // Fetch custom scripts
     fetch('/api/get-scripts')
@@ -61,6 +68,10 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
     if (loadedConfig) {
       setAnnouncementBar(JSON.parse(loadedConfig));
     }
+
+    return () => {
+      window.removeEventListener('storage', checkLoginStatus);
+    };
   }, []);
 
   const handleLogout = () => {
