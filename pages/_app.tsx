@@ -222,8 +222,8 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
           </Box>
         </Box>
         <Flex
+          direction="column"
           align="center"
-          direction={{ base: "column", sm: "row" }}
           justify="center"
           mb={6}
         >
@@ -231,11 +231,10 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
             backgroundColor="white"
             borderRadius="full"
             boxShadow="md"
-            boxSize={{ base: "100px", sm: "120px" }}
-            marginBottom={{ base: 4, sm: 0 }}
-            marginRight={{ base: 0, sm: 6 }}
+            boxSize="120px"
             overflow="hidden"
             position="relative"
+            mb={4}
           >
             <Image
               src={`${siteInfo?.logoUrl}?${new Date().getTime()}`}
@@ -247,13 +246,15 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
             />
           </Box>
           <Stack
-            align={{ base: "center", sm: "flex-start" }}
+            align="center"
             bg="white"
             borderRadius="md"
             boxShadow="sm"
             p={4}
             spacing={3}
-            textAlign={{ base: "center", sm: "left" }}
+            textAlign="center"
+            width="100%"
+            maxWidth="600px"
           >
             <Heading size="lg">{siteInfo?.title}</Heading>
             <Text color="gray.600" fontSize="md">
@@ -262,7 +263,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
             <Text color="gray.600" fontSize="md">
               {siteInfo?.description2}
             </Text>
-            <Stack direction="row" mt={2} spacing={2}>
+            <Stack direction="row" mt={2} spacing={2} justify="center">
               {siteInfo?.social?.map((social) => (
                 <Link key={social.name} href={social.url} isExternal>
                   <Flex
