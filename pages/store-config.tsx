@@ -20,11 +20,10 @@ import PaymentMethodsConfig from '../product/components/PaymentMethodsConfig';
 import CustomScripts from '../product/components/CustomScripts';
 import { useRouter } from 'next/router';
 import { FaArrowLeft } from 'react-icons/fa';
-import { useSiteInfo } from '../hooks/useSiteInfo';
+import HamburgerMenu from '../product/components/HamburgerMenu';
 
 const StoreConfigPage: React.FC = () => {
   const router = useRouter();
-  const { siteInfo } = useSiteInfo();
 
   const handleBackToAdmin = () => {
     router.push('/admin');
@@ -41,32 +40,10 @@ const StoreConfigPage: React.FC = () => {
           >
             Volver a la gestión de productos
           </Button>
+          <HamburgerMenu /> {/* Añadido el menú hamburguesa aquí */}
         </Flex>
 
-        <Flex direction="column" alignItems="center" mb={8}>
-          <Box
-            backgroundColor="white"
-            borderRadius="full"
-            boxShadow="md"
-            boxSize="120px"
-            overflow="hidden"
-            position="relative"
-            mb={4}
-          >
-            <Image
-              src={`${siteInfo?.logoUrl}?${new Date().getTime()}`}
-              alt="Logo"
-              objectFit="cover"
-              width="100%"
-              height="100%"
-              fallback={<Box bg="gray.200" w="100%" h="100%" borderRadius="full" />}
-            />
-          </Box>
-          <Text fontSize="xl" fontWeight="bold" mb={2}>E-commerce</Text>
-          <Heading as="h1" size="2xl" textAlign="center">{siteInfo?.title}</Heading>
-        </Flex>
-
-        <Heading as="h2" size="xl" mb={8} textAlign="center">
+        <Heading as="h1" size="2xl" mb={12} textAlign="center">
           Configuración de la tienda
         </Heading>
 
