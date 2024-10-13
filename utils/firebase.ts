@@ -9,6 +9,7 @@ import {
   signOut,
   User
 } from "firebase/auth";
+import { setCookie, destroyCookie } from 'nookies';
 
 const firebaseConfig = {
   apiKey: "AIzaSyDwcuPITsTK09h8nv--CW0uRWiCWyITjHo",
@@ -110,16 +111,32 @@ export const registerUser = async (email: string, password: string): Promise<Use
 
 export const loginUser = async (email: string, password: string): Promise<User | null> => {
   if (email === 'admin' && password === 'password123') {
-    // Crear un usuario ficticio para "admin"
-    return {
+    const adminUser = {
       uid: 'admin',
       email: 'admin@example.com',
       displayName: 'Admin',
-      // Añade cualquier otra propiedad necesaria del tipo User
     } as User;
+    
+    setCookie(null, 'authToken', 'admin-token', {
+      maxAge: 30 * 24 * 60 * 60,
+      path: '/',
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+    });
+    
+    return adminUser;
   } else {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      
+      const token = await userCredential.user.getIdToken();
+      setCookie(null, 'authToken', token, {
+        maxAge: 30 * 24 * 60 * 60,
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+      });
+      
       return userCredential.user;
     } catch (error) {
       console.error("Error en el inicio de sesión:", error);
@@ -130,6 +147,7 @@ export const loginUser = async (email: string, password: string): Promise<User |
 
 export const logoutUser = async (): Promise<void> => {
   await signOut(auth);
+  destroyCookie(null, 'authToken', { path: '/' });
 };
 
 export const resetPassword = async (email: string): Promise<void> => {
