@@ -58,22 +58,24 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
       if (authToken === 'admin-token') {
         setIsLoggedIn(true);
         setIsAdmin(true);
+        if (router.pathname === '/admin') window.location.reload();  // Añade esta línea aquí
       } else {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
           if (user) {
             setIsLoggedIn(true);
             setIsAdmin(false);  // Asumimos que los usuarios de Firebase no son admin
+            if (router.pathname === '/admin') window.location.reload();  // Y también aquí
           } else {
             setIsLoggedIn(false);
             setIsAdmin(false);
             destroyCookie(null, 'authToken');
           }
         });
-
+  
         return () => unsubscribe();
       }
     };
-
+  
     checkAuthStatus();
     setIsMounted(true);
 
