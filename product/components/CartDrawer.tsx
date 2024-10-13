@@ -25,7 +25,7 @@ import { CartItem } from '../types';
 import { parseCurrency } from '../../utils/currency';
 import { INFORMATION } from '../../app/constants';
 import { getPaymentMethods, PaymentMethods } from '../../utils/firebase';
-import { FaShoppingCart } from 'react-icons/fa';
+import { FaShoppingCart, FaWhatsapp } from 'react-icons/fa';
 
 interface Props {
   isOpen: boolean;
@@ -94,6 +94,8 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
             </Flex>
           </DrawerHeader>
 
+          <Divider />
+
           <DrawerBody>
             <VStack spacing={4} align="stretch">
               {items.map((item) => (
@@ -146,8 +148,9 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
               width="100%"
               onClick={handleWhatsAppRedirect}
               isDisabled={items.length === 0 || !selectedPaymentMethod}
+              leftIcon={<Icon as={FaWhatsapp} />}
             >
-              Realizar pedido por WhatsApp
+              Enviar pedido por WhatsApp
             </Button>
           </DrawerFooter>
         </DrawerContent>
