@@ -45,13 +45,15 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
   const [bannerError, setBannerError] = React.useState(false);
   const [customScripts, setCustomScripts] = React.useState<string | null>(null);
   const [announcementBar, setAnnouncementBar] = React.useState<any>(null);
+  const [refreshKey, setRefreshKey] = React.useState(0);
+
+  const checkLoginStatus = React.useCallback(() => {
+    const loginStatus = localStorage.getItem("isLoggedIn") === "true";
+    setIsLoggedIn(loginStatus);
+    setRefreshKey(prev => prev + 1); // Forzar re-render
+  }, []);
 
   React.useEffect(() => {
-    const checkLoginStatus = () => {
-      const loginStatus = localStorage.getItem("isLoggedIn") === "true";
-      setIsLoggedIn(loginStatus);
-    };
-
     checkLoginStatus();
     setIsMounted(true);
 
@@ -72,7 +74,21 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
     return () => {
       window.removeEventListener('storage', checkLoginStatus);
     };
-  }, []);
+  }, [checkLoginStatus]);
+
+  React.useEffect(() => {
+    const handleRouteChange = (url: string) => {
+      if (url === '/admin' && isLoggedIn) {
+        checkLoginStatus();
+      }
+    };
+
+    router.events.on('routeChangeComplete', handleRouteChange);
+
+    return () => {
+      router.events.off('routeChangeComplete', handleRouteChange);
+    };
+  }, [router.events, isLoggedIn, checkLoginStatus]);
 
   const handleLogout = () => {
     localStorage.removeItem("isLoggedIn");
@@ -132,7 +148,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
         <Flex alignItems="center" justifyContent="space-between" mb={4}>
           <Heading size="md">Te damos la bienvenida</Heading>
           {isMounted && (
-            <Menu>
+            <Menu key={refreshKey}>
               <MenuButton
                 as={IconButton}
                 aria-label="Options"
