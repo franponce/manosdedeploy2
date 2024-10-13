@@ -19,11 +19,13 @@ import {
   RadioGroup,
   Textarea,
   Divider,
+  Icon,
 } from '@chakra-ui/react';
 import { CartItem } from '../types';
 import { parseCurrency } from '../../utils/currency';
 import { INFORMATION } from '../../app/constants';
 import { getPaymentMethods, PaymentMethods } from '../../utils/firebase';
+import { FaShoppingCart } from 'react-icons/fa';
 
 interface Props {
   isOpen: boolean;
@@ -62,9 +64,9 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
       ? `\n\nVoy a pagar con: ${selectedPaymentMethod}`
       : '';
 
-    const noteInfo = note
-      ? `\n\nAclaración: ${note}`
-      : '';
+    const noteInfo = note.trim()
+      ? `\n\nAclaración: ${note.trim()}`
+      : '\n\nAclaración: Sin aclaración';
 
     const whatsappMessage = encodeURIComponent(
       `¡Hola! Me gustaría realizar el siguiente pedido:\n${items
@@ -85,7 +87,12 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
       <DrawerOverlay>
         <DrawerContent>
           <DrawerCloseButton />
-          <DrawerHeader>Detalles de la compra</DrawerHeader>
+          <DrawerHeader>
+            <Flex align="center">
+              <Icon as={FaShoppingCart} mr={2} />
+              <Text>Tu carrito</Text>
+            </Flex>
+          </DrawerHeader>
 
           <DrawerBody>
             <VStack spacing={4} align="stretch">
@@ -132,7 +139,7 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
             <Divider mb={4} />
             <Flex justify="space-between" width="100%" mb={4}>
               <Text fontWeight="bold">Total:</Text>
-              <Text fontWeight="bold">{total}</Text>
+              <Text fontWeight="bold">{total} ARS</Text>
             </Flex>
             <Button
               colorScheme="green"
