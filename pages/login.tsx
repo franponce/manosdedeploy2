@@ -40,8 +40,13 @@ const LoginPage: React.FC = () => {
     setIsLoading(true);
     
     try {
-      await loginUser(email, password);
-      router.push('/admin');
+      const user = await loginUser(email, password);
+      if (user) {
+        // Si el inicio de sesión es exitoso, redirigir al panel de administración
+        router.push('/admin');
+      } else {
+        throw new Error('Inicio de sesión fallido');
+      }
     } catch (error) {
       console.error('Error durante la autenticación:', error);
       toast({
@@ -69,14 +74,24 @@ const LoginPage: React.FC = () => {
     }
 
     try {
-      await resetPassword(email);
-      toast({
-        title: 'Email enviado',
-        description: 'Se ha enviado un email para restablecer tu contraseña',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      });
+      if (email === 'admin') {
+        toast({
+          title: 'Error',
+          description: 'No se puede restablecer la contraseña para el usuario admin',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+      } else {
+        await resetPassword(email);
+        toast({
+          title: 'Email enviado',
+          description: 'Se ha enviado un email para restablecer tu contraseña',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
+      }
     } catch (error) {
       console.error('Error al enviar el email de restablecimiento:', error);
       toast({
@@ -99,9 +114,9 @@ const LoginPage: React.FC = () => {
         <form onSubmit={handleSubmit}>
           <VStack spacing={4}>
             <FormControl isRequired>
-              <FormLabel>Email</FormLabel>
+              <FormLabel>Email o Usuario</FormLabel>
               <Input 
-                type="email" 
+                type="text" 
                 value={email} 
                 onChange={(e) => setEmail(e.target.value)} 
               />

@@ -108,9 +108,24 @@ export const registerUser = async (email: string, password: string): Promise<Use
   return userCredential.user;
 };
 
-export const loginUser = async (email: string, password: string): Promise<User> => {
-  const userCredential = await signInWithEmailAndPassword(auth, email, password);
-  return userCredential.user;
+export const loginUser = async (email: string, password: string): Promise<User | null> => {
+  if (email === 'admin' && password === 'password123') {
+    // Crear un usuario ficticio para "admin"
+    return {
+      uid: 'admin',
+      email: 'admin@example.com',
+      displayName: 'Admin',
+      // Añade cualquier otra propiedad necesaria del tipo User
+    } as User;
+  } else {
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      return userCredential.user;
+    } catch (error) {
+      console.error("Error en el inicio de sesión:", error);
+      return null;
+    }
+  }
 };
 
 export const logoutUser = async (): Promise<void> => {
@@ -123,6 +138,10 @@ export const resetPassword = async (email: string): Promise<void> => {
 
 export const getCurrentUser = (): User | null => {
   return auth.currentUser;
+};
+
+export const isAdminUser = (user: User | null): boolean => {
+  return user?.uid === 'admin';
 };
 
 export { auth, db, storage };
