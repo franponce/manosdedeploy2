@@ -20,28 +20,15 @@ import PaymentMethodsConfig from '../product/components/PaymentMethodsConfig';
 import CustomScripts from '../product/components/CustomScripts';
 import { useRouter } from 'next/router';
 import { FaArrowLeft } from 'react-icons/fa';
-import HamburgerMenu from '../product/components/HamburgerMenu';
 import { useSiteInfo } from '../hooks/useSiteInfo';
-import { useAuth } from '../context/AuthContext'; // Asegúrate de que esta importación sea correcta
-import { logoutUser } from '../utils/firebase'; // Asegúrate de que esta importación sea correcta
+import HamburgerMenu from '../product/components/HamburgerMenu'
 
 const StoreConfigPage: React.FC = () => {
   const router = useRouter();
   const { siteInfo } = useSiteInfo();
-  const { isLoggedIn, setIsLoggedIn } = useAuth(); // Asumimos que useAuth proporciona estos valores
 
   const handleBackToAdmin = () => {
     router.push('/admin');
-  };
-
-  const handleLogout = async () => {
-    try {
-      await logoutUser();
-      setIsLoggedIn(false);
-      router.push('/');
-    } catch (error) {
-      console.error('Error during logout:', error);
-    }
   };
 
   return (
@@ -55,11 +42,6 @@ const StoreConfigPage: React.FC = () => {
           >
             Volver a la gestión de productos
           </Button>
-          <HamburgerMenu
-            isLoggedIn={isLoggedIn}
-            isAdmin={true} // Asumimos que si está en esta página, es admin
-            onLogout={handleLogout}
-          />
         </Flex>
 
         <Flex direction="column" alignItems="center" mb={8}>
