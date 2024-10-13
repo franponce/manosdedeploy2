@@ -12,9 +12,10 @@ import {
   HStack,
   VStack,
   Flex,
-  Alert,
-  AlertIcon,
+  Center,
+  Icon,
 } from "@chakra-ui/react";
+import { SearchIcon } from "@chakra-ui/icons";
 import ProductModal from "./ProductModal";
 import { getProducts, createProduct, updateProduct, deleteProduct } from "../../utils/googleSheets";
 import { Product } from "../types";
@@ -144,70 +145,87 @@ const ProductManagement: React.FC = () => {
 
   return (
     <Box>
-      <Flex direction={{ base: "column", md: "row" }} justify="space-between" align="center" mb={4}>
-        <Input
-          placeholder="Buscar productos..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          mb={{ base: 4, md: 0 }}
-          mr={{ md: 4 }}
-          maxWidth={{ md: "300px" }}
-        />
+      <Flex direction={{ base: "column", md: "row" }} justify="space-between" align="center" mb={6}>
+        <Box position="relative" width={{ base: "100%", md: "300px" }} mb={{ base: 4, md: 0 }}>
+          <Input
+            placeholder="Buscar productos..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            pr="40px"
+          />
+          <SearchIcon
+            position="absolute"
+            right="14px"
+            top="50%"
+            transform="translateY(-50%)"
+            color="gray.300"
+          />
+        </Box>
         <Button onClick={handleCreate} colorScheme="blue">
           Crear nuevo producto
         </Button>
       </Flex>
 
       {products.length >= PRODUCT_LIMIT - 5 && products.length < PRODUCT_LIMIT && (
-        <Alert status="warning" mb={4}>
-          <AlertIcon />
-          Te estás acercando al límite de productos. Tienes {PRODUCT_LIMIT - products.length} productos disponibles.
-        </Alert>
+        <Box mb={4} p={3} bg="yellow.100" borderRadius="md">
+          <Text color="yellow.800">
+            Te estás acercando al límite de productos. Tienes {PRODUCT_LIMIT - products.length} productos disponibles.
+          </Text>
+        </Box>
       )}
       {products.length >= PRODUCT_LIMIT && (
-        <Alert status="error" mb={4}>
-          <AlertIcon />
-          Has alcanzado el límite de productos. Contacta con soporte para aumentar tu límite.
-        </Alert>
+        <Box mb={4} p={3} bg="red.100" borderRadius="md">
+          <Text color="red.800">
+            Has alcanzado el límite de productos. Contacta con soporte para aumentar tu límite.
+          </Text>
+        </Box>
       )}
 
-      {filteredProducts.length === 0 && (
-        <Alert status="info" mb={4}>
-          <AlertIcon />
-          No se encontraron productos que coincidan con tu búsqueda. Intenta con otros términos o crea un nuevo producto.
-        </Alert>
-      )}
-
-      <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
-        {filteredProducts.map((product) => (
-          <Box key={product.id} borderRadius="lg" borderWidth={1} overflow="hidden">
-            <AspectRatio ratio={1}>
-              <Image
-                src={product.image}
-                alt={product.title}
-                objectFit="cover"
-              />
-            </AspectRatio>
-            <Box p={4}>
-              <Heading as="h3" size="md" noOfLines={2} mb={2}>
-                {product.title}
-              </Heading>
-              <Text noOfLines={3} mb={2}>{product.description}</Text>
-              <Text fontWeight="bold" mb={4}>
-                ${product.price.toFixed(2)}
-              </Text>
-              <HStack spacing={4}>
-                <Button colorScheme="blue" onClick={() => handleEdit(product)}>
-                  Editar
-                </Button>
-                <Button colorScheme="red" onClick={() => handleDelete(product.id)}>
-                  Eliminar
-                </Button>
-              </HStack>
+      {filteredProducts.length === 0 ? (
+        <Center flexDirection="column" p={8} bg="gray.50" borderRadius="lg" boxShadow="sm">
+          <Icon as={SearchIcon} w={12} h={12} color="gray.400" mb={4} />
+          <Heading as="h3" size="md" textAlign="center" mb={2}>
+            No se encontraron productos
+          </Heading>
+          <Text color="gray.600" textAlign="center" maxW="md">
+            No hay productos que coincidan con tu búsqueda. Intenta con otros términos o crea un nuevo producto.
+          </Text>
+          <Button mt={4} colorScheme="blue" onClick={handleCreate}>
+            Crear nuevo producto
+          </Button>
+        </Center>
+      ) : (
+        <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+          {filteredProducts.map((product) => (
+            <Box key={product.id} borderRadius="lg" borderWidth={1} overflow="hidden">
+              <AspectRatio ratio={1}>
+                <Image
+                  src={product.image}
+                  alt={product.title}
+                  objectFit="cover"
+                />
+              </AspectRatio>
+              <Box p={4}>
+                <Heading as="h3" size="md" noOfLines={2} mb={2}>
+                  {product.title}
+                </Heading>
+                <Text noOfLines={3} mb={2}>{product.description}</Text>
+                <Text fontWeight="bold" mb={4}>
+                  ${product.price.toFixed(2)}
+                </Text>
+                <HStack spacing={4}>
+                  <Button colorScheme="blue" onClick={() => handleEdit(product)}>
+                    Editar
+                  </Button>
+                  <Button colorScheme="red" onClick={() => handleDelete(product.id)}>
+                    Eliminar
+                  </Button>
+                </HStack>
+              </Box>
             </Box>
-          </Box>
-        ))}
-      </SimpleGrid>
+          ))}
+        </SimpleGrid>
+      )}
       <ProductModal
         isOpen={isModalOpen}
         onClose={() => {
