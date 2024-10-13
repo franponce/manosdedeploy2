@@ -71,12 +71,12 @@ export async function getSiteInformation(): Promise<SiteInformation> {
   }
   return DEFAULT_SITE_INFORMATION;
 }
-  
+
 export async function updateSiteInformation(newInfo: Partial<SiteInformation>): Promise<void> {
   const docRef = doc(db, "siteInfo", "main");
   await setDoc(docRef, newInfo, { merge: true });
 }
-  
+
 export async function uploadImage(imageData: string, type: 'logo' | 'banner'): Promise<string> {
   const storageRef = ref(storage, `${type}/${Date.now()}`);
   await uploadString(storageRef, imageData, 'data_url');

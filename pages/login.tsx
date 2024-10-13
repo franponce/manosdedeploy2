@@ -42,7 +42,6 @@ const LoginPage: React.FC = () => {
     try {
       const user = await loginUser(email, password);
       if (user) {
-        // Si el inicio de sesión es exitoso, redirigir al panel de administración
         router.push('/admin');
       } else {
         throw new Error('Inicio de sesión fallido');
@@ -64,7 +63,7 @@ const LoginPage: React.FC = () => {
   const handleResetPassword = async () => {
     if (!email) {
       toast({
-        title: 'Esta acción no es posible',
+        title: 'Error',
         description: 'Por favor, ingresa tu email para restablecer la contraseña',
         status: 'error',
         duration: 3000,

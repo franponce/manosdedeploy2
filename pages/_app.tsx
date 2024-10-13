@@ -28,7 +28,7 @@ import { parseCookies, destroyCookie } from 'nookies';
 
 import theme from "../theme";
 import { useSiteInfo } from '../hooks/useSiteInfo';
-import { auth, logoutUser, isAdminUser } from '../utils/firebase';
+import { auth, logoutUser } from '../utils/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 
 const HamburgerIcon = () => (
@@ -51,51 +51,31 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
   const [announcementBar, setAnnouncementBar] = React.useState<any>(null);
 
   React.useEffect(() => {
-    const checkAuthStatus = async () => {
+    const checkAuthStatus = () => {
       const cookies = parseCookies();
       const authToken = cookies.authToken;
 
-      if (authToken) {
-        if (authToken === 'admin-token') {
-          setIsLoggedIn(true);
-          setIsAdmin(true);
-        } else {
-          try {
-            const user = await auth.currentUser;
-            if (user) {
-              setIsLoggedIn(true);
-              setIsAdmin(isAdminUser(user));
-            } else {
-              // Token exists but no current user, clear the invalid token
-              destroyCookie(null, 'authToken');
-              setIsLoggedIn(false);
-              setIsAdmin(false);
-            }
-          } catch (error) {
-            console.error('Error verifying auth token:', error);
-            destroyCookie(null, 'authToken');
+      if (authToken === 'admin-token') {
+        setIsLoggedIn(true);
+        setIsAdmin(true);
+      } else {
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+          if (user) {
+            setIsLoggedIn(true);
+            setIsAdmin(false);  // Asumimos que los usuarios de Firebase no son admin
+          } else {
             setIsLoggedIn(false);
             setIsAdmin(false);
+            destroyCookie(null, 'authToken');
           }
-        }
-      } else {
-        setIsLoggedIn(false);
-        setIsAdmin(false);
+        });
+
+        return () => unsubscribe();
       }
-      setIsMounted(true);
     };
 
     checkAuthStatus();
-
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setIsLoggedIn(true);
-        setIsAdmin(isAdminUser(user));
-      } else {
-        setIsLoggedIn(false);
-        setIsAdmin(false);
-      }
-    });
+    setIsMounted(true);
 
     // Fetch custom scripts
     fetch('/api/get-scripts')
@@ -108,8 +88,6 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
     if (loadedConfig) {
       setAnnouncementBar(JSON.parse(loadedConfig));
     }
-
-    return () => unsubscribe();
   }, []);
 
   const handleLogout = async () => {
@@ -117,6 +95,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
       await logoutUser();
       setIsLoggedIn(false);
       setIsAdmin(false);
+      destroyCookie(null, 'authToken');
       router.push("/");
     } catch (error) {
       console.error('Error during logout:', error);
@@ -208,88 +187,6 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
               </MenuList>
             </Menu>
           )}
-        </Flex>
-        <Box mb={6} position="relative">
-          <Box
-            borderRadius="lg"
-            height={{ md: "300px" }}
-            overflow="hidden"
-            width="100%"
-            position="relative"
-          >
-            <Image
-              src={bannerError ? "/default-banner.jpg" : `${siteInfo?.bannerUrl}?${new Date().getTime()}`}
-              alt="Header image"
-              objectFit="cover"
-              width="100%"
-              height="100%"
-              onError={() => setBannerError(true)}
-              fallback={<Box bg="gray.200" w="100%" h="100%" />}
-            />
-          </Box>
-        </Box>
-        <Flex
-          align="center"
-          direction={{ base: "column", sm: "row" }}
-          justify="center"
-          mb={6}
-        >
-          <Box
-            backgroundColor="white"
-            borderRadius="full"
-            boxShadow="md"
-            boxSize={{ base: "100px", sm: "120px" }}
-            marginBottom={{ base: 4, sm: 0 }}
-            marginRight={{ base: 0, sm: 6 }}
-            overflow="hidden"
-            position="relative"
-          >
-            <Image
-              src={`${siteInfo?.logoUrl}?${new Date().getTime()}`}
-              alt="Avatar"
-              objectFit="cover"
-              width="100%"
-              height="100%"
-              fallback={<Box bg="gray.200" w="100%" h="100%" borderRadius="full" />}
-            />
-          </Box>
-          <Stack
-            align={{ base: "center", sm: "flex-start" }}
-            bg="white"
-            borderRadius="md"
-            boxShadow="sm"
-            p={4}
-            spacing={3}
-            textAlign={{ base: "center", sm: "left" }}
-          >
-            <Heading size="lg">{siteInfo?.title}</Heading>
-            <Text color="gray.600" fontSize="md">
-              {siteInfo?.description}
-            </Text>
-            <Text color="gray.600" fontSize="md">
-              {siteInfo?.description2}
-            </Text>
-            <Stack direction="row" mt={2} spacing={2}>
-              {siteInfo?.social?.map((social) => (
-                <Link key={social.name} href={social.url} isExternal>
-                  <Flex
-                    alignItems="center"
-                    backgroundColor="#df7777"
-                    borderRadius="full"
-                    color="white"
-                    height={8}
-                    justifyContent="center"
-                    width={8}
-                  >
-                    <Image 
-                      alt={`${social.name} icon`}
-                      src={`https://icongr.am/fontawesome/${social.name}.svg?size=20&color=ffffff`}
-                    />
-                  </Flex>
-                </Link>
-              ))}
-            </Stack>
-          </Stack>
         </Flex>
         <Component {...pageProps} />
         <Divider marginY={4} />
