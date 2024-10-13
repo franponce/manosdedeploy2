@@ -45,12 +45,10 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
   const [bannerError, setBannerError] = React.useState(false);
   const [customScripts, setCustomScripts] = React.useState<string | null>(null);
   const [announcementBar, setAnnouncementBar] = React.useState<any>(null);
-  const [refreshKey, setRefreshKey] = React.useState(0);
 
   const checkLoginStatus = React.useCallback(() => {
     const loginStatus = localStorage.getItem("isLoggedIn") === "true";
     setIsLoggedIn(loginStatus);
-    setRefreshKey(prev => prev + 1); // Forzar re-render
   }, []);
 
   React.useEffect(() => {
@@ -79,7 +77,8 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
   React.useEffect(() => {
     const handleRouteChange = (url: string) => {
       if (url === '/admin' && isLoggedIn) {
-        checkLoginStatus();
+        // Forzar un refresh de la página
+        window.location.reload();
       }
     };
 
@@ -88,7 +87,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
     return () => {
       router.events.off('routeChangeComplete', handleRouteChange);
     };
-  }, [router.events, isLoggedIn, checkLoginStatus]);
+  }, [router.events, isLoggedIn]);
 
   const handleLogout = () => {
     localStorage.removeItem("isLoggedIn");
@@ -148,7 +147,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
         <Flex alignItems="center" justifyContent="space-between" mb={4}>
           <Heading size="md">Te damos la bienvenida</Heading>
           {isMounted && (
-            <Menu key={refreshKey}>
+            <Menu>
               <MenuButton
                 as={IconButton}
                 aria-label="Options"
