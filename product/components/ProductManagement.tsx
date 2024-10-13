@@ -36,7 +36,7 @@ const ProductManagement: React.FC = () => {
       console.error("Error fetching products:", error);
       toast({
         title: "Error",
-        description: "Failed to fetch products",
+        description: "Holisss",
         status: "error",
         duration: 3000,
         isClosable: true,
