@@ -187,9 +187,6 @@ const ProductManagement: React.FC = () => {
           <Text color="gray.600" textAlign="center" maxW="md">
             No hay productos que coincidan con tu búsqueda. Intenta con otros términos o crea un nuevo producto.
           </Text>
-          <Button mt={4} colorScheme="blue" onClick={handleCreate}>
-            Crear nuevo producto
-          </Button>
         </Center>
       ) : (
         <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
