@@ -166,7 +166,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
           </Flex>
         </Container>
       </Box>
-      <Box pt="60px"> {/* Ajusta este valor según la altura de tu header fijo */}
+      <Box pt="70px"> {/* Ajusta este valor según la altura de tu header fijo */}
         <Container
           backgroundColor="white"
           borderRadius="sm"
