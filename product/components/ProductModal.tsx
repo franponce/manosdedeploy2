@@ -149,6 +149,17 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
       return;
     }
 
+    if (isScheduled && !scheduledDate) {
+      toast({
+        title: "Error",
+        description: "Por favor, seleccione una fecha y hora para la publicación programada.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
     try {
       await onSubmit({
         ...currentProduct,
@@ -178,7 +189,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>
-          {currentProduct.id ? "Editar Producto" : "Crear nuevo producto"}
+          {currentProduct.id ? "Editar Producto" : "Crear Nuevo Producto"}
         </ModalHeader>
         <ModalCloseButton />
         <ModalBody>
@@ -270,40 +281,35 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
             {isScheduled && (
               <FormControl>
                 <FormLabel>Fecha y hora de publicación</FormLabel>
-                <Popover>
-                  <PopoverTrigger>
-                    <Input
-                      value={scheduledDate ? scheduledDate.toLocaleString() : ""}
-                      isReadOnly
-                      placeholder="Seleccionar fecha y hora"
-                    />
-                  </PopoverTrigger>
-                  <PopoverContent>
-                    <PopoverBody>
-                      <DatePicker
-                        selected={scheduledDate}
-                        onChange={(date: Date | null) => setScheduledDate(date)}
-                        showTimeSelect
-                        dateFormat="Pp"
-                        minDate={new Date()}
-                      />
-                    </PopoverBody>
-                  </PopoverContent>
-                </Popover>
+                <Box border="1px" borderColor="gray.200" borderRadius="md" p={2}>
+                  <DatePicker
+                    selected={scheduledDate}
+                    onChange={(date: Date | null) => setScheduledDate(date)}
+                    showTimeSelect
+                    timeFormat="HH:mm"
+                    timeIntervals={15}
+                    timeCaption="Hora"
+                    dateFormat="dd/MM/yyyy HH:mm"
+                    minDate={new Date()}
+                    placeholderText="Seleccionar fecha y hora"
+                    customInput={<Input />}
+                  />
+                </Box>
               </FormControl>
             )}
           </VStack>
         </ModalBody>
         <ModalFooter>
-          <Button
-            colorScheme="blue"
-            mr={3}
-            onClick={handleSubmit}
-            isLoading={isLoading}
-            isDisabled={isScheduled}
-          >
-            {currentProduct.id ? "Actualizar" : "Crear"}
-          </Button>
+          {!isScheduled && (
+            <Button
+              colorScheme="blue"
+              mr={3}
+              onClick={handleSubmit}
+              isLoading={isLoading}
+            >
+              {currentProduct.id ? "Actualizar" : "Crear"}
+            </Button>
+          )}
           {isScheduled && (
             <Button
               colorScheme="green"
