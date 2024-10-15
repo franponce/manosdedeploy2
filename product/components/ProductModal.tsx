@@ -214,7 +214,16 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
             </InputGroup>
           </FormControl>
             <FormControl>
-              <FormLabel>Imagen (Se optimizará automáticamente a un máximo de 800x800 px y 5MB)</FormLabel>
+              <FormLabel>Imagen</FormLabel>
+              <Text fontSize="sm" color="gray.600" mb={2}>
+                Recomendaciones 😉:
+                <br />
+                • Intenta que tu imagen sea cuadrada.
+                <br />
+                • Las medidas recomendadas son de 800x800 px.
+                <br />
+                • No debe pesar más de 5MB.
+              </Text>
               <Input
                 type="file"
                 accept="image/*"
