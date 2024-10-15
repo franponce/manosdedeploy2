@@ -4,6 +4,7 @@ export interface Product {
   description: string;
   image: string;
   price: number;
+  scheduledPublishDate?: Date | null; 
 }
 
 export interface CartItem extends Product {
