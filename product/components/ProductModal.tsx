@@ -194,26 +194,6 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
               </Text>
             </FormControl>
             <FormControl>
-            <FormLabel>
-              Precio
-              <Tooltip label="Ingrese el precio en pesos argentinos" fontSize="md">
-                <QuestionIcon boxSize={3} ml={1} color="gray.500" />
-              </Tooltip>
-            </FormLabel>
-            <InputGroup>
-              <Input
-                name="price"
-                type="number"
-                step="0.01"
-                value={currentProduct.price}
-                onChange={handleInputChange}
-              />
-              <InputRightAddon>
-                <Box mr={2}>🇦🇷</Box> ARS
-              </InputRightAddon>
-            </InputGroup>
-          </FormControl>
-            <FormControl>
               <FormLabel>Imagen</FormLabel>
               <Text fontSize="sm" color="gray.600" mb={2}>
                 Recomendaciones 😉:
@@ -238,6 +218,26 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                 objectFit="contain"
               />
             )}
+            <FormControl>
+              <FormLabel>
+                Precio
+                <Tooltip label="Ingrese el precio en pesos argentinos" fontSize="md">
+                  <QuestionIcon boxSize={3} ml={1} color="gray.500" />
+                </Tooltip>
+              </FormLabel>
+              <InputGroup>
+                <Input
+                  name="price"
+                  type="number"
+                  step="0.01"
+                  value={currentProduct.price}
+                  onChange={handleInputChange}
+                />
+                <InputRightAddon>
+                  <Box mr={2}>🇦🇷</Box> ARS
+                </InputRightAddon>
+              </InputGroup>
+            </FormControl>
           </VStack>
         </ModalBody>
         <ModalFooter>
