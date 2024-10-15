@@ -16,7 +16,12 @@ import {
   Image,
   useToast,
   Text,
+  Tooltip,
+  InputGroup,
+  InputRightAddon,
+  Box
 } from "@chakra-ui/react";
+import { QuestionIcon } from "@chakra-ui/icons";
 import imageCompression from "browser-image-compression";
 import { Product } from "../types";
 
@@ -189,7 +194,13 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
               </Text>
             </FormControl>
             <FormControl>
-              <FormLabel>Precio</FormLabel>
+            <FormLabel>
+              Precio
+              <Tooltip label="Ingrese el precio en pesos argentinos" fontSize="md">
+                <QuestionIcon boxSize={3} ml={1} color="gray.500" />
+              </Tooltip>
+            </FormLabel>
+            <InputGroup>
               <Input
                 name="price"
                 type="number"
@@ -197,7 +208,11 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                 value={currentProduct.price}
                 onChange={handleInputChange}
               />
-            </FormControl>
+              <InputRightAddon>
+                <Box mr={2}>🇦🇷</Box> ARS
+              </InputRightAddon>
+            </InputGroup>
+          </FormControl>
             <FormControl>
               <FormLabel>Imagen (Se optimizará automáticamente a un máximo de 800x800 px y 5MB)</FormLabel>
               <Input
