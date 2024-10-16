@@ -126,7 +126,7 @@ if (typeof window === 'undefined') {
             product.description, 
             product.image, 
             product.price.toString(),
-            product.scheduledPublishDate ? product.scheduledPublishDate.toISOString() : '',
+            product.scheduledPublishDate ? new Date(product.scheduledPublishDate).toISOString() : '',
             product.isScheduled ? 'TRUE' : 'FALSE'
           ],
         ];

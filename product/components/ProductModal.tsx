@@ -161,12 +161,14 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     }
 
     try {
-      await onSubmit({
+      const productToSubmit: Product = {
         ...currentProduct,
         price,
         isScheduled: isScheduleOpen,
-        scheduledPublishDate: isScheduleOpen ? scheduledDate : null,
-      });
+        scheduledPublishDate: isScheduleOpen && scheduledDate ? scheduledDate : null,
+      };
+
+      await onSubmit(productToSubmit);
       onClose();
     } catch (error) {
       console.error("Error al guardar el producto:", error);

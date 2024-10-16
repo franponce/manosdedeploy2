@@ -16,11 +16,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     case 'POST':
       try {
-        const newProduct = await createProduct(req.body as Product);
+        const productData = req.body as Product;
+        if (productData.scheduledPublishDate) {
+          productData.scheduledPublishDate = new Date(productData.scheduledPublishDate);
+        }
+        const newProduct = await createProduct(productData);
         res.status(201).json(newProduct);
       } catch (error) {
         console.error('Error creating product:', error);
-        res.status(500).json({ error: 'Failed to create product' });
+        res.status(500).json({ error: 'Failed to create product', details: error instanceof Error ? error.message : 'Unknown error' });
       }
       break;
 
