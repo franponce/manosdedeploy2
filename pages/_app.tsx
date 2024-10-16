@@ -229,7 +229,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
             >
               <Heading size="lg">{siteInfo?.title}</Heading>
               <Text color="gray.600" fontSize="md">
-                {siteInfo?.description}
+                {siteInfo?.subtitle}
               </Text>
               <Text color="gray.600" fontSize="md">
                 {siteInfo?.description}

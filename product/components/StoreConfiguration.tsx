@@ -192,13 +192,13 @@ const StoreConfiguration: React.FC = () => {
             </FormControl>
 
             <FormControl>
-              <FormLabel>Descripción principal</FormLabel>
-              <Textarea name="description" value={localSiteInfo.description} onChange={handleInputChange} />
+              <FormLabel>Subtítulo / Call to Action</FormLabel>
+              <Textarea name="subtitle" value={localSiteInfo.subtitle} onChange={handleInputChange} />
             </FormControl>
 
             <FormControl>
-              <FormLabel>Subtítulo / Call to Action</FormLabel>
-              <Textarea name="subtitle" value={localSiteInfo.subtitle} onChange={handleInputChange} />
+              <FormLabel>Descripción principal</FormLabel>
+              <Textarea name="description" value={localSiteInfo.description} onChange={handleInputChange} />
             </FormControl>
           </Box>
         </PersistentTooltip>
