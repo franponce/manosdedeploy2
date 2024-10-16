@@ -8,6 +8,8 @@ const parseProducts = (data: any[]): Product[] => {
   return data.map((product) => ({
     ...product,
     price: Number(product.price),
+    isScheduled: product.isScheduled === 'TRUE',
+    scheduledPublishDate: product.scheduledPublishDate ? new Date(product.scheduledPublishDate) : null,
   }));
 };
 

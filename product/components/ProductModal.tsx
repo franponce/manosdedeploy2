@@ -20,14 +20,10 @@ import {
   InputGroup,
   InputRightAddon,
   Box,
-  Switch,
-  HStack,
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-  PopoverBody,
+  Collapse,
+  useDisclosure,
 } from "@chakra-ui/react";
-import { TimeIcon, LockIcon, QuestionIcon } from "@chakra-ui/icons";
+import { TimeIcon, QuestionIcon } from "@chakra-ui/icons";
 import imageCompression from "browser-image-compression";
 import { Product } from "../types";
 import DatePicker from "react-datepicker";
@@ -48,11 +44,13 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     description: "",
     image: "",
     price: 0,
+    isScheduled: false,
+    scheduledPublishDate: null,
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const toast = useToast();
-  const [isScheduled, setIsScheduled] = useState(false);
   const [scheduledDate, setScheduledDate] = useState<Date | null>(null);
+  const { isOpen: isScheduleOpen, onToggle: toggleSchedule } = useDisclosure();
 
   const MAX_TITLE_LENGTH = 60;
   const MAX_DESCRIPTION_LENGTH = 180;
@@ -71,6 +69,8 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
         description: "",
         image: "",
         price: 0,
+        isScheduled: false,
+        scheduledPublishDate: null,
       });
       setImagePreview(null);
     }
@@ -149,7 +149,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
       return;
     }
 
-    if (isScheduled && !scheduledDate) {
+    if (isScheduleOpen && !scheduledDate) {
       toast({
         title: "Error",
         description: "Por favor, seleccione una fecha y hora para la publicación programada.",
@@ -164,7 +164,8 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
       await onSubmit({
         ...currentProduct,
         price,
-        scheduledPublishDate: isScheduled ? scheduledDate : null,
+        isScheduled: isScheduleOpen,
+        scheduledPublishDate: isScheduleOpen ? scheduledDate : null,
       });
       onClose();
     } catch (error) {
@@ -181,13 +182,13 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setCurrentProduct((prev) => ({ ...prev, [name]: value }));
+    setCurrentProduct(prev => ({ ...prev, [name]: value }));
   };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
-      <ModalContent>
+      <ModalContent maxW={{ base: "90%", md: "500px" }}>
         <ModalHeader>
           {currentProduct.id ? "Editar Producto" : "Crear Nuevo Producto"}
         </ModalHeader>
@@ -263,22 +264,16 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                 </InputRightAddon>
               </InputGroup>
             </FormControl>
-            <FormControl>
-              <HStack justifyContent="space-between">
-                <FormLabel>
-                  <HStack>
-                    <TimeIcon />
-                    <Text>Programar publicación</Text>
-                  </HStack>
-                </FormLabel>
-                <Switch
-                  isChecked={isScheduled}
-                  onChange={(e) => setIsScheduled(e.target.checked)}
-                />
-                <LockIcon />
-              </HStack>
-            </FormControl>
-            {isScheduled && (
+            <Button
+              leftIcon={<TimeIcon />}
+              variant="outline"
+              onClick={toggleSchedule}
+              width="100%"
+              justifyContent="flex-start"
+            >
+              Programar publicación
+            </Button>
+            <Collapse in={isScheduleOpen} animateOpacity>
               <FormControl>
                 <FormLabel>Fecha y hora de publicación</FormLabel>
                 <Box border="1px" borderColor="gray.200" borderRadius="md" p={2}>
@@ -296,30 +291,18 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                   />
                 </Box>
               </FormControl>
-            )}
+            </Collapse>
           </VStack>
         </ModalBody>
         <ModalFooter>
-          {!isScheduled && (
-            <Button
-              colorScheme="blue"
-              mr={3}
-              onClick={handleSubmit}
-              isLoading={isLoading}
-            >
-              {currentProduct.id ? "Actualizar" : "Crear"}
-            </Button>
-          )}
-          {isScheduled && (
-            <Button
-              colorScheme="green"
-              mr={3}
-              onClick={handleSubmit}
-              isLoading={isLoading}
-            >
-              Guardar y publicar más tarde
-            </Button>
-          )}
+          <Button
+            colorScheme={isScheduleOpen ? "green" : "blue"}
+            mr={3}
+            onClick={handleSubmit}
+            isLoading={isLoading}
+          >
+            {isScheduleOpen ? "Guardar y programar" : (currentProduct.id ? "Actualizar" : "Crear")}
+          </Button>
           <Button variant="ghost" onClick={onClose}>
             Cancelar
           </Button>

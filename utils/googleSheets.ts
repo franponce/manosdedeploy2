@@ -32,7 +32,7 @@ async function getAuthClient() {
 if (typeof window === 'undefined') {
   // Esto solo se ejecutará en el servidor
   const SPREADSHEET_ID = process.env.GOOGLE_SHEET_ID;
-  const RANGE = 'A2:E';
+  const RANGE = 'A2:G'; // Extendemos el rango para incluir las nuevas columnas
   const PRODUCT_LIMIT = 30;
 
   googleSheetsApi = {
@@ -65,6 +65,8 @@ if (typeof window === 'undefined') {
             description: row[2],
             image: row[3],
             price: parseFloat(row[4]) || 0,
+            scheduledPublishDate: row[5] ? new Date(row[5]) : null,
+            isScheduled: row[6] === 'TRUE',
           }))
           .filter((product: Product) => product.title && product.title.trim() !== '');
 
@@ -81,12 +83,20 @@ if (typeof window === 'undefined') {
         const sheets = google.sheets({ version: 'v4', auth });
 
         const values = [
-          [product.id, product.title, product.description, product.image, product.price.toString()],
+          [
+            product.id, 
+            product.title, 
+            product.description, 
+            product.image, 
+            product.price.toString(),
+            product.scheduledPublishDate ? product.scheduledPublishDate.toISOString() : '',
+            product.isScheduled ? 'TRUE' : 'FALSE'
+          ],
         ];
 
         await sheets.spreadsheets.values.update({
           spreadsheetId: SPREADSHEET_ID,
-          range: `A${parseInt(product.id) + 1}:E${parseInt(product.id) + 1}`,
+          range: `A${parseInt(product.id) + 1}:G${parseInt(product.id) + 1}`,
           valueInputOption: 'USER_ENTERED',
           requestBody: { values },
         });
@@ -110,7 +120,15 @@ if (typeof window === 'undefined') {
 
         const newId = (Math.max(...currentProducts.map((p: Product) => parseInt(p.id)), 0) + 1).toString();
         const values = [
-          [newId, product.title, product.description, product.image, product.price.toString()],
+          [
+            newId, 
+            product.title, 
+            product.description, 
+            product.image, 
+            product.price.toString(),
+            product.scheduledPublishDate ? product.scheduledPublishDate.toISOString() : '',
+            product.isScheduled ? 'TRUE' : 'FALSE'
+          ],
         ];
 
         await sheets.spreadsheets.values.append({
@@ -135,11 +153,10 @@ if (typeof window === 'undefined') {
         const { google } = await import('googleapis');
         const sheets = google.sheets({ version: 'v4', auth });
 
-        // En lugar de eliminar, vamos a limpiar la fila correspondiente
-        const values = [['', '', '', '', '']];
+        const values = [['', '', '', '', '', '', '']]; // Limpiamos todas las columnas
         await sheets.spreadsheets.values.update({
           spreadsheetId: SPREADSHEET_ID,
-          range: `A${parseInt(id) + 1}:E${parseInt(id) + 1}`,
+          range: `A${parseInt(id) + 1}:G${parseInt(id) + 1}`,
           valueInputOption: 'USER_ENTERED',
           requestBody: { values },
         });

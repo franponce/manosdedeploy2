@@ -24,9 +24,30 @@ interface StoreScreenProps {
 const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts }) => {
   const [cart, setCart] = React.useState<CartItem[]>([]);
   const [isCartOpen, toggleCart] = React.useState<boolean>(false);
-  const { data: products, error } = useSWR<Product[]>('/api/products', fetcher, {
+  const { data: products, error, mutate } = useSWR<Product[]>('/api/products', fetcher, {
     fallbackData: initialProducts,
+    refreshInterval: 60000, // Actualizar cada minuto
   });
+
+  React.useEffect(() => {
+    const checkScheduledProducts = () => {
+      const now = new Date();
+      const updatedProducts = products?.map(product => {
+        if (product.isScheduled && product.scheduledPublishDate && new Date(product.scheduledPublishDate) <= now) {
+          return { ...product, isScheduled: false };
+        }
+        return product;
+      });
+      if (updatedProducts && JSON.stringify(updatedProducts) !== JSON.stringify(products)) {
+        mutate(updatedProducts, false);
+      }
+    };
+
+    checkScheduledProducts();
+    const interval = setInterval(checkScheduledProducts, 60000); // Verificar cada minuto
+
+    return () => clearInterval(interval);
+  }, [products, mutate]);
 
   const total = React.useMemo(
     () => parseCurrency(cart.reduce((total, product) => total + product.price * product.quantity, 0)),
@@ -42,9 +63,9 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts }) => {
   if (error) return <div>Failed to load products</div>;
   if (!products) return <div>Loading...</div>;
 
-  const validProducts = products.filter(product =>
-    product && product.id && product.title && product.image && product.price
-  );
+  const validProducts = products?.filter(product =>
+    product && product.id && product.title && product.image && product.price && !product.isScheduled
+  ) || [];
 
   return (
     <>
