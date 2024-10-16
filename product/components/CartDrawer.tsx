@@ -20,12 +20,17 @@ import {
   Textarea,
   Divider,
   Icon,
+  Input,
+  FormControl,
+  FormLabel,
+  FormErrorMessage,
 } from '@chakra-ui/react';
 import { CartItem } from '../types';
 import { parseCurrency } from '../../utils/currency';
 import { INFORMATION } from '../../app/constants';
 import { getPaymentMethods, PaymentMethods } from '../../utils/firebase';
 import { FaShoppingCart, FaWhatsapp } from 'react-icons/fa';
+import { useSiteInfo } from '../../hooks/useSiteInfo';
 
 interface Props {
   isOpen: boolean;
@@ -43,7 +48,10 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
   });
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('');
   const [note, setNote] = useState<string>('');
+  const [fullName, setFullName] = useState<string>('');
+  const [isFullNameError, setIsFullNameError] = useState<boolean>(false);
   const toast = useToast();
+  const { siteInfo } = useSiteInfo();
 
   useEffect(() => {
     fetchPaymentMethods();
@@ -60,23 +68,28 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
   );
 
   const handleWhatsAppRedirect = () => {
-    const paymentInfo = selectedPaymentMethod 
-      ? `\n\nVoy a pagar con: ${selectedPaymentMethod}`
-      : '';
-
-    const noteInfo = note.trim()
-      ? `\n\nAclaración: ${note.trim()}`
-      : '\n\nAclaración: Sin aclaración';
+    if (!fullName.trim()) {
+      setIsFullNameError(true);
+      return;
+    }
+    setIsFullNameError(false);
 
     const whatsappMessage = encodeURIComponent(
-      `¡Hola! Me gustaría realizar el siguiente pedido:\n${items
+      `*Simple E-commerce | ${siteInfo?.title || 'Tienda'} | Nuevo pedido*\n\n` +
+      `¡Hola! Me gustaría realizar el siguiente pedido:\n\n${items
         .map(
           (item) =>
             `${item.title} (x${item.quantity}) - ${parseCurrency(
               item.price * item.quantity
             )}`
         )
-        .join("\n")}\n\nTotal: ${total}${paymentInfo}${noteInfo}`
+        .join("\n")}\n\n` +
+      `-- \n\n` +
+      `*Detalle de la compra*\n\n` +
+      `Nombre completo: ${fullName}\n` +
+      `Método de pago: ${selectedPaymentMethod}\n` +
+      `Aclaración: ${note.trim() || 'Sin aclaración'}\n` +
+      `*Total: ${total}*`
     );
     const whatsappURL = `https://wa.me/${INFORMATION.whatsappCart}?text=${whatsappMessage}`;
     window.open(whatsappURL, "_blank");
@@ -113,8 +126,18 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
                 </Flex>
               ))}
 
-              <Box mt={6}>
-                <Text fontWeight="bold" mb={2}>¿Cómo vas a abonar tu pedido?</Text>
+              <FormControl isInvalid={isFullNameError} isRequired>
+                <FormLabel>Nombre completo</FormLabel>
+                <Input
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Ingresa tu nombre completo"
+                />
+                <FormErrorMessage>El nombre completo es requerido</FormErrorMessage>
+              </FormControl>
+
+              <FormControl isRequired>
+                <FormLabel>¿Cómo vas a abonar tu pedido?</FormLabel>
                 <RadioGroup onChange={setSelectedPaymentMethod} value={selectedPaymentMethod}>
                   <VStack align="start">
                     {paymentMethods.mercadoPago && <Radio value="MercadoPago">MercadoPago</Radio>}
@@ -122,7 +145,7 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
                     {paymentMethods.bankTransfer && <Radio value="Transferencia bancaria">Transferencia bancaria</Radio>}
                   </VStack>
                 </RadioGroup>
-              </Box>
+              </FormControl>
 
               <Box mt={4}>
                 <Text fontWeight="bold" mb={2}>¿Tienes alguna aclaración para el vendedor?</Text>
@@ -141,13 +164,13 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
             <Divider mb={4} />
             <Flex justify="space-between" width="100%" mb={4}>
               <Text fontWeight="bold">Total:</Text>
-              <Text fontWeight="bold">{total} ARS</Text>
+              <Text fontWeight="bold">{total}</Text>
             </Flex>
             <Button
               colorScheme="green"
               width="100%"
               onClick={handleWhatsAppRedirect}
-              isDisabled={items.length === 0 || !selectedPaymentMethod}
+              isDisabled={items.length === 0 || !selectedPaymentMethod || !fullName.trim()}
               leftIcon={<Icon as={FaWhatsapp} />}
             >
               Enviar pedido por WhatsApp
