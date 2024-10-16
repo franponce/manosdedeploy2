@@ -12,6 +12,7 @@ import {
   useToast,
   Link,
   Text,
+  FormHelperText,
 } from '@chakra-ui/react';
 import { useSiteInfo } from '../../hooks/useSiteInfo';
 import { SiteInformation, updateSiteInformation, uploadImage } from '../../utils/firebase';
@@ -32,7 +33,18 @@ const StoreConfiguration: React.FC = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setLocalSiteInfo(prev => prev ? { ...prev, [name]: value } : null);
+    let newValue = value;
+
+    // Aplicar límites de caracteres
+    if (name === 'title' && value.length > 50) {
+      newValue = value.slice(0, 50);
+    } else if (name === 'subtitle' && value.length > 100) {
+      newValue = value.slice(0, 100);
+    } else if (name === 'description' && value.length > 500) {
+      newValue = value.slice(0, 500);
+    }
+
+    setLocalSiteInfo(prev => prev ? { ...prev, [name]: newValue } : null);
   };
 
   const handleImageUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>, type: 'logoUrl' | 'bannerUrl') => {
@@ -188,17 +200,35 @@ const StoreConfiguration: React.FC = () => {
             <Heading as="h3" size="md">Información de la tienda</Heading>
             <FormControl>
               <FormLabel>Título de la tienda</FormLabel>
-              <Input name="title" value={localSiteInfo.title} onChange={handleInputChange} />
+              <Input 
+                name="title" 
+                value={localSiteInfo.title} 
+                onChange={handleInputChange} 
+                maxLength={50}
+              />
+              <FormHelperText>{localSiteInfo.title.length}/50 caracteres</FormHelperText>
             </FormControl>
 
             <FormControl>
               <FormLabel>Subtítulo / Call to Action</FormLabel>
-              <Textarea name="subtitle" value={localSiteInfo.subtitle} onChange={handleInputChange} />
+              <Textarea 
+                name="subtitle" 
+                value={localSiteInfo.subtitle} 
+                onChange={handleInputChange}
+                maxLength={100}
+              />
+              <FormHelperText>{localSiteInfo.subtitle.length}/100 caracteres</FormHelperText>
             </FormControl>
 
             <FormControl>
               <FormLabel>Descripción principal</FormLabel>
-              <Textarea name="description" value={localSiteInfo.description} onChange={handleInputChange} />
+              <Textarea 
+                name="description" 
+                value={localSiteInfo.description} 
+                onChange={handleInputChange}
+                maxLength={500}
+              />
+              <FormHelperText>{localSiteInfo.description.length}/500 caracteres</FormHelperText>
             </FormControl>
           </Box>
         </PersistentTooltip>

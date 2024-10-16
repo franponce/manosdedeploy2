@@ -101,6 +101,14 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
     }
   };
 
+  const formatDescription = (description: string) => {
+    return description.split('\n').map((paragraph, index) => (
+      <Text key={index} color="gray.600" fontSize="md" textAlign="center">
+        {paragraph}
+      </Text>
+    ));
+  };
+
   if (isLoading) return <Box display="flex" justifyContent="center" alignItems="center" height="100vh"><Spinner /></Box>;
   if (isError) return <Box>Error al cargar la información del sitio</Box>;
 
@@ -231,9 +239,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
               <Text color="gray.600" fontSize="md">
                 {siteInfo?.subtitle}
               </Text>
-              <Text color="gray.600" fontSize="md">
-                {siteInfo?.description}
-              </Text>
+              {formatDescription(siteInfo?.description || '')}
               <Stack direction="row" mt={2} spacing={2} justify="center">
                 {siteInfo?.social?.map((social) => (
                   <Link key={social.name} href={social.url} isExternal>
