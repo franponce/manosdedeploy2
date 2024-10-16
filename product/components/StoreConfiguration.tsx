@@ -1,17 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
+  Box,
   VStack,
+  Heading,
   FormControl,
   FormLabel,
   Input,
-  Button,
-  useToast,
   Textarea,
-  Text,
+  Button,
   Image,
-  Box,
+  useToast,
+  Link,
+  Text,
 } from '@chakra-ui/react';
-import { updateSiteInformation, getSiteInformation, SiteInformation } from '../../utils/firebase';
+import { SiteInformation, updateSiteInformation } from '../../utils/firebase';
+import PersistentTooltip from '../components/PersistentTooltip';
+import imageCompression from 'browser-image-compression';
+
+// Asumiendo que tienes un hook personalizado llamado useSiteInfo
+import { useSiteInfo } from '../../hooks/useSiteInfo';
+
+// Asumiendo que tienes una función uploadImage en utils/firebase
+import { uploadImage } from '../../utils/firebase';
 
 const StoreConfiguration: React.FC = () => {
   const { siteInfo, isLoading, isError, mutate } = useSiteInfo();
@@ -234,4 +244,3 @@ const StoreConfiguration: React.FC = () => {
 };
 
 export default StoreConfiguration;
-
