@@ -27,8 +27,8 @@ const auth = getAuth(app);
 
 export interface SiteInformation {
   title: string;
+  subtitle: string;
   description: string;
-  description2: string;
   whatsappCart: string;
   sheet: string;
   color: string;
@@ -39,8 +39,8 @@ export interface SiteInformation {
 
 export const DEFAULT_SITE_INFORMATION: SiteInformation = {
   title: "Manos de manteca",
-  description: "Envianos tu pedido y a la brevedad te respondemos.",
-  description2: "👉 Nuestro horario de atención es de X a X de X a X hs. Hacemos envíos 🚴‍♀",
+  subtitle: "Envianos tu pedido y a la brevedad te respondemos.",
+  description: "👉 Nuestro horario de atención es de X a X de X a X hs. Hacemos envíos 🚴‍♀",
   whatsappCart: "5492954271140",
   sheet: "https://docs.google.com/spreadsheets/d/e/2PACX-1vReSQMLVR-O0uKqZr28Y9j29RN1YYoaFkb29qVJjofGNZSRUnhCsgoohDDDrsAV0FW4R9xdulrn0aYE/pub?output=csv",
   color: "teal",
@@ -64,7 +64,13 @@ export async function getSiteInformation(): Promise<SiteInformation> {
     const docSnap = await getDoc(docRef);
       
     if (docSnap.exists()) {
-      return docSnap.data() as SiteInformation;
+      const data = docSnap.data();
+      // Manejar la transición de los nombres de campos
+      return {
+        ...data,
+        subtitle: data.description || data.subtitle,  // Usar 'description' si existe, sino 'subtitle'
+        description: data.description2 || data.description,  // Usar 'description2' si existe, sino 'description'
+      } as SiteInformation;
     }
   } catch (error) {
     console.error('Error fetching site information:', error);
@@ -74,7 +80,13 @@ export async function getSiteInformation(): Promise<SiteInformation> {
 
 export async function updateSiteInformation(newInfo: Partial<SiteInformation>): Promise<void> {
   const docRef = doc(db, "siteInfo", "main");
-  await setDoc(docRef, newInfo, { merge: true });
+  // Asegurarse de que los campos se actualicen correctamente
+  const updateData = {
+    ...newInfo,
+    description: newInfo.subtitle,  // Guardar 'subtitle' como 'description' para compatibilidad
+    description2: newInfo.description,  // Guardar 'description' como 'description2' para compatibilidad
+  };
+  await setDoc(docRef, updateData, { merge: true });
 }
 
 export async function uploadImage(imageData: string, type: 'logo' | 'banner'): Promise<string> {

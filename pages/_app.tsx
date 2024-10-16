@@ -232,7 +232,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
                 {siteInfo?.description}
               </Text>
               <Text color="gray.600" fontSize="md">
-                {siteInfo?.description2}
+                {siteInfo?.description}
               </Text>
               <Stack direction="row" mt={2} spacing={2} justify="center">
                 {siteInfo?.social?.map((social) => (
