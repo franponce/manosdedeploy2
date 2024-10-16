@@ -16,6 +16,7 @@ import {
   InputGroup,
   InputLeftElement,
   Heading,
+  Badge,
 } from "@chakra-ui/react";
 import { SearchIcon } from "@chakra-ui/icons";
 import ProductModal from "./ProductModal";
@@ -145,6 +146,10 @@ const ProductManagement: React.FC = () => {
     }
   };
 
+  const isProductScheduled = (product: Product) => {
+    return product.isScheduled && product.scheduledPublishDate && new Date(product.scheduledPublishDate) > new Date();
+  };
+
   return (
     <Box>
       <Flex direction="column" mb={6}>
@@ -191,7 +196,18 @@ const ProductManagement: React.FC = () => {
       ) : (
         <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
           {filteredProducts.map((product) => (
-            <Box key={product.id} borderRadius="lg" borderWidth={1} overflow="hidden">
+            <Box key={product.id} borderRadius="lg" borderWidth={1} overflow="hidden" position="relative">
+              {isProductScheduled(product) && (
+                <Badge 
+                  colorScheme="purple" 
+                  position="absolute" 
+                  top="2" 
+                  left="2" 
+                  zIndex="1"
+                >
+                  Producto programado
+                </Badge>
+              )}
               <AspectRatio ratio={1}>
                 <Image
                   src={product.image}
