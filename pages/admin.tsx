@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Box,
   Heading,
@@ -10,14 +10,53 @@ import {
 import ProductManagement from "../product/components/ProductManagement";
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { FaArrowRight, FaStore } from 'react-icons/fa';
+import { FaArrowRight, FaStore, FaPlus } from 'react-icons/fa';
+import ProductModal from '../product/components/ProductModal';
+import { Product } from "../product/types";
+import { createProduct, updateProduct } from "../utils/googleSheets";
 
 const AdminPage: React.FC = () => {
   const router = useRouter();
   const toast = useToast();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleStoreSettings = () => {
     router.push('/store-config');
+  };
+
+  const handleCreateProduct = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = async (product: Product) => {
+    setIsLoading(true);
+    try {
+      if (product.id) {
+        await updateProduct(product);
+      } else {
+        await createProduct(product);
+      }
+      setIsModalOpen(false);
+      toast({
+        title: "Éxito",
+        description: `Producto ${product.id ? "actualizado" : "creado"} exitosamente.`,
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error("Error saving product:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Error desconocido al guardar el producto",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -47,6 +86,14 @@ const AdminPage: React.FC = () => {
             </Button>
           </Link>
           <Button
+            colorScheme="blue"
+            width={{ base: "full", sm: "auto" }}
+            leftIcon={<Icon as={FaPlus} />}
+            onClick={handleCreateProduct}
+          >
+            Crear nuevo producto
+          </Button>
+          <Button
             colorScheme="gray"
             onClick={handleStoreSettings}
             width={{ base: "full", sm: "auto" }}
@@ -57,7 +104,17 @@ const AdminPage: React.FC = () => {
         </Flex>
       </Flex>
 
-      <ProductManagement />
+      <ProductManagement onCreateProduct={handleCreateProduct} />
+
+      {isModalOpen && (
+        <ProductModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSubmit={handleSubmit}
+          product={null}
+          isLoading={isLoading}
+        />
+      )}
     </Box>
   );
 };

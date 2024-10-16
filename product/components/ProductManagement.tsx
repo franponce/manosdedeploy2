@@ -26,7 +26,11 @@ import { Product } from "../types";
 const PRODUCT_LIMIT = 30;
 const SYNC_INTERVAL = 30000; // 30 segundos
 
-const ProductManagement: React.FC = () => {
+interface ProductManagementProps {
+  onCreateProduct: () => void;
+}
+
+const ProductManagement: React.FC<ProductManagementProps> = ({ onCreateProduct }) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -68,21 +72,6 @@ const ProductManagement: React.FC = () => {
     );
     setFilteredProducts(filtered);
   }, [searchTerm, products]);
-
-  const handleCreate = () => {
-    if (products.length >= PRODUCT_LIMIT) {
-      toast({
-        title: "Límite alcanzado",
-        description: `Has alcanzado el límite de ${PRODUCT_LIMIT} productos. Contacta con soporte para aumentar tu límite.`,
-        status: "warning",
-        duration: 5000,
-        isClosable: true,
-      });
-      return;
-    }
-    setCurrentProduct(null);
-    setIsModalOpen(true);
-  };
 
   const handleEdit = (product: Product) => {
     setCurrentProduct(product);
@@ -163,9 +152,6 @@ const ProductManagement: React.FC = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </InputGroup>
-        <Button onClick={handleCreate} colorScheme="blue" alignSelf="flex-start">
-          Crear nuevo producto
-        </Button>
       </Flex>
 
       {products.length >= PRODUCT_LIMIT - 5 && products.length < PRODUCT_LIMIT && (
