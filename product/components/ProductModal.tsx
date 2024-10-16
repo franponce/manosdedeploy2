@@ -185,6 +185,15 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     setCurrentProduct(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleDateChange = (date: Date | null) => {
+    setScheduledDate(date);
+    setCurrentProduct(prev => ({
+      ...prev,
+      scheduledPublishDate: date,
+      isScheduled: date !== null,
+    }));
+  };
+
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
@@ -271,7 +280,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
               width="100%"
               justifyContent="flex-start"
             >
-              Programar publicación
+              {isScheduleOpen ? "Cancelar programación" : "Programar publicación"}
             </Button>
             <Collapse in={isScheduleOpen} animateOpacity>
               <FormControl>
@@ -279,15 +288,14 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                 <Box border="1px" borderColor="gray.200" borderRadius="md" p={2}>
                   <DatePicker
                     selected={scheduledDate}
-                    onChange={(date: Date | null) => setScheduledDate(date)}
+                    onChange={handleDateChange}
+                    inline
                     showTimeSelect
                     timeFormat="HH:mm"
                     timeIntervals={15}
                     timeCaption="Hora"
                     dateFormat="dd/MM/yyyy HH:mm"
                     minDate={new Date()}
-                    placeholderText="Seleccionar fecha y hora"
-                    customInput={<Input />}
                   />
                 </Box>
               </FormControl>
