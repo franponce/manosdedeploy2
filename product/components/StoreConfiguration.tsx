@@ -26,6 +26,7 @@ const StoreConfiguration: React.FC = () => {
   const toast = useToast();
 
   const MAX_TITLE_LENGTH = 50;
+  const MAX_SUMMARY_LENGTH = 100;
   const MAX_DESCRIPTION_LENGTH = 500;
 
   useEffect(() => {
@@ -37,6 +38,9 @@ const StoreConfiguration: React.FC = () => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     if (name === 'title' && value.length > MAX_TITLE_LENGTH) {
+      return; // No actualizar si excede el límite
+    }
+    if (name === 'description' && value.length > MAX_SUMMARY_LENGTH) {
       return; // No actualizar si excede el límite
     }
     if (name === 'description2' && value.length > MAX_DESCRIPTION_LENGTH) {
@@ -179,21 +183,24 @@ const StoreConfiguration: React.FC = () => {
             <FormLabel>Resumen de la tienda</FormLabel>
             <Text fontSize="sm" color="gray.600" mb={2}>
               Recomendaciones 😉:<br />
-              Cuéntale a tus clientes en una breve oración de qué trata tu tienda. También puedes usar un call to action o slogan.
+              • Cuéntale a tus clientes en una breve oración de qué trata tu tienda. También puedes usar un call to action o slogan.
             </Text>
             <Textarea 
               name="description" 
               value={localSiteInfo.description} 
               onChange={handleInputChange}
-              onKeyDown={handleKeyDown}
+              maxLength={MAX_SUMMARY_LENGTH}
             />
+            <Text fontSize="sm" color="gray.500" mt={1}>
+              {localSiteInfo.description.length}/{MAX_SUMMARY_LENGTH} caracteres
+            </Text>
           </FormControl>
 
           <FormControl mb={4}>
             <FormLabel>Descripción de la tienda</FormLabel>
             <Text fontSize="sm" color="gray.600" mb={2}>
               Recomendaciones 😉:<br />
-              Ingresa información que creas importante que los clientes sepan antes de comprar, como tus horarios de atención, ubicación, envíos, etc.
+              • Ingresa información que creas importante que los clientes sepan antes de comprar, como tus horarios de atención, ubicación, envíos, etc.
             </Text>
             <Textarea 
               name="description2" 
@@ -222,8 +229,8 @@ const StoreConfiguration: React.FC = () => {
             </FormControl>
             <Text fontSize="sm" color="gray.600" mt={2}>
               Recomendaciones 😉:<br />
-              Las medidas recomendadas son de 400x400 px.<br />
-              No debe pesar más de 5MB.
+              • Las medidas recomendadas son de 400x400 px.<br />
+              • No debe pesar más de 5MB.
             </Text>
           </Box>
 
@@ -236,9 +243,9 @@ const StoreConfiguration: React.FC = () => {
             </FormControl>
             <Text fontSize="sm" color="gray.600" mt={2}>
               Recomendaciones 😉:<br />
-              Es la primera imagen que verán los clientes<br />
-              Las medidas recomendadas son de 1920x400 px.<br />
-              No debe pesar más de 5MB.
+              • Es la primera imagen que verán los clientes<br />
+              • Las medidas recomendadas son de 1920x400 px.<br />
+              • No debe pesar más de 5MB.
             </Text>
           </Box>
         </Box>
