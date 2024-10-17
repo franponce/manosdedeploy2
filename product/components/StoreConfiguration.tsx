@@ -12,6 +12,7 @@ import {
   useToast,
   Link,
   Text,
+  Divider,
 } from '@chakra-ui/react';
 import { useSiteInfo } from '../../hooks/useSiteInfo';
 import { SiteInformation, updateSiteInformation, uploadImage } from '../../utils/firebase';
@@ -129,80 +130,58 @@ const StoreConfiguration: React.FC = () => {
   return (
     <Box as="form" onSubmit={handleSubmit}>
       <VStack spacing={6} align="stretch">
-        <PersistentTooltip 
-          label={
-            <span>
-              Sacale todo el provecho a tu banner siguiendo estos{' '}
-              <Link href="https://tudominio.com/faqs#banner-tips" color="blue.600" isExternal>
-                tips
-              </Link>
-            </span>
-          }
-          duration={7000}
-        >
-          <Box>
-            <Heading as="h3" size="md">Banner de la tienda</Heading>
-            <Text fontSize="sm" color="gray.600" mb={2}>Recomendado: 1920x400 px, máx 5MB</Text>
-            <Image src={localSiteInfo.bannerUrl} alt="Banner" maxHeight="200px" />
-            <FormControl>
-              <FormLabel>Cambiar banner</FormLabel>
-              <Input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, 'bannerUrl')} />
-            </FormControl>
-          </Box>
-        </PersistentTooltip>
+        <Box>
+          <Heading as="h3" size="md" mb={4}>Información de la tienda</Heading>
+          <FormControl mb={4}>
+            <FormLabel>Nombre</FormLabel>
+            <Input name="title" value={localSiteInfo.title} onChange={handleInputChange} />
+          </FormControl>
 
-        <PersistentTooltip 
-          label={
-            <span>
-              Optimiza tu logo con estos{' '}
-              <Link href="https://tudominio.com/faqs#logo-tips" color="blue.600" isExternal>
-                consejos
-              </Link>
-            </span>
-          }
-          duration={7000}
-        >
-          <Box>
-            <Heading as="h3" size="md">Logo de la tienda</Heading>
-            <Text fontSize="sm" color="gray.600" mb={2}>Recomendado: 400x400 px, máx 5MB</Text>
-            <Image src={localSiteInfo.logoUrl} alt="Logo" maxWidth="200px" maxHeight="100px" objectFit="contain" />
+          <FormControl mb={4}>
+            <FormLabel>Resumen de la tienda</FormLabel>
+            <Textarea name="description" value={localSiteInfo.description} onChange={handleInputChange} />
+          </FormControl>
+
+          <FormControl mb={4}>
+            <FormLabel>Descripción de la tienda</FormLabel>
+            <Textarea name="description2" value={localSiteInfo.description2} onChange={handleInputChange} />
+          </FormControl>
+        </Box>
+
+        <Divider my={6} />
+
+        <Box>
+          <Heading as="h3" size="md" mb={4}>Imágenes de la tienda</Heading>
+          
+          <Box mb={6}>
+            <Heading as="h4" size="sm" mb={2}>Imagen de perfil</Heading>
+            <Image src={localSiteInfo.logoUrl} alt="Logo" maxWidth="200px" maxHeight="100px" objectFit="contain" mb={2} />
             <FormControl>
               <FormLabel>Cambiar logo</FormLabel>
               <Input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, 'logoUrl')} />
             </FormControl>
+            <Text fontSize="sm" color="gray.600" mt={2}>
+              Recomendaciones 😉:<br />
+              Las medidas recomendadas son de 400x400 px.<br />
+              No debe pesar más de 5MB.
+            </Text>
           </Box>
-        </PersistentTooltip>
 
-        <PersistentTooltip 
-          label={
-            <span>
-              Mejora la información de tu tienda con estas{' '}
-              <Link href="https://tudominio.com/faqs#store-info-tips" color="blue.600" isExternal>
-                recomendaciones
-              </Link>
-            </span>
-          }
-          duration={7000}
-        >
-          <Box>
-            <Heading as="h3" size="md">Información de la tienda</Heading>
+          <Box mb={6}>
+            <Heading as="h4" size="sm" mb={2}>Banner</Heading>
+            <Image src={localSiteInfo.bannerUrl} alt="Banner" maxHeight="200px" mb={2} />
             <FormControl>
-              <FormLabel>Nombre de la tienda</FormLabel>
-              <Input name="title" value={localSiteInfo.title} onChange={handleInputChange} />
+              <FormLabel>Cambiar banner</FormLabel>
+              <Input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, 'bannerUrl')} />
             </FormControl>
-
-            <FormControl>
-              <FormLabel>Resumen de la tienda</FormLabel>
-              </FormLabel>
-              <Textarea name="description" value={localSiteInfo.description} onChange={handleInputChange} />
-            </FormControl>
-
-            <FormControl>
-              <FormLabel>Descripción de la tienda</FormLabel>
-              <Textarea name="description2" value={localSiteInfo.description2} onChange={handleInputChange} />
-            </FormControl>
+            <Text fontSize="sm" color="gray.600" mt={2}>
+              Recomendaciones 😉:<br />
+              Es la primera imagen que verán los clientes<br />
+              Las medidas recomendadas son de 1920x400 px.<br />
+              No debe pesar más de 5MB.
+            </Text>
           </Box>
-        </PersistentTooltip>
+        </Box>
 
         <Button type="submit" colorScheme="blue" isLoading={isSubmitting}>
           Guardar cambios
