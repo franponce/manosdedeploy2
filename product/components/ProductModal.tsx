@@ -290,46 +290,47 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
             </Button>
             <Collapse in={isScheduleOpen} animateOpacity>
               <FormControl>
-                <FormLabel>Fecha y hora de publicación</FormLabel>
-                <Center>
-                  <Box 
-                    border="1px" 
-                    borderColor="gray.200" 
-                    borderRadius="md" 
-                    p={2}
-                    overflowX="auto"
-                    maxWidth="100%"
-                  >
-                    <Flex 
-                      direction={{ base: "column", sm: "row" }} 
-                      alignItems="center"
-                      justifyContent="center"
-                      gap={4}
-                    >
-                      <Box>
-                        <DatePicker
-                          selected={scheduledDate}
-                          onChange={handleDateChange}
-                          dateFormat="dd/MM/yyyy"
-                          minDate={new Date()}
-                          inline
-                        />
-                      </Box>
-                      <Box>
-                        <DatePicker
-                          selected={scheduledDate}
-                          onChange={handleDateChange}
-                          showTimeSelect
-                          showTimeSelectOnly
-                          timeIntervals={15}
-                          timeCaption="Hora"
-                          dateFormat="HH:mm"
-                          inline
-                        />
-                      </Box>
-                    </Flex>
-                  </Box>
+                <Center mb={4}>
+                  <Text fontWeight="bold">Fecha y hora de publicación</Text>
                 </Center>
+                <Box 
+                  border="1px" 
+                  borderColor="gray.200" 
+                  borderRadius="md" 
+                  p={2}
+                  overflowX="auto"
+                  maxWidth="100%"
+                >
+                  <Flex 
+                    direction="row"
+                    alignItems="center"
+                    justifyContent="center"
+                    gap={4}
+                    flexWrap="nowrap"
+                  >
+                    <Box flexShrink={0}>
+                      <DatePicker
+                        selected={scheduledDate}
+                        onChange={handleDateChange}
+                        dateFormat="dd/MM/yyyy"
+                        minDate={new Date()}
+                        inline
+                      />
+                    </Box>
+                    <Box flexShrink={0}>
+                      <DatePicker
+                        selected={scheduledDate}
+                        onChange={handleDateChange}
+                        showTimeSelect
+                        showTimeSelectOnly
+                        timeIntervals={15}
+                        timeCaption="Hora"
+                        dateFormat="HH:mm"
+                        inline
+                      />
+                    </Box>
+                  </Flex>
+                </Box>
               </FormControl>
             </Collapse>
           </VStack>
