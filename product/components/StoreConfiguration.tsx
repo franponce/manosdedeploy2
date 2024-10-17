@@ -187,17 +187,18 @@ const StoreConfiguration: React.FC = () => {
           <Box>
             <Heading as="h3" size="md">Información de la tienda</Heading>
             <FormControl>
-              <FormLabel>Título de la tienda</FormLabel>
+              <FormLabel>Nombre de la tienda</FormLabel>
               <Input name="title" value={localSiteInfo.title} onChange={handleInputChange} />
             </FormControl>
 
             <FormControl>
-              <FormLabel>Descripción principal</FormLabel>
+              <FormLabel>Resumen de la tienda</FormLabel>
+              </FormLabel>
               <Textarea name="description" value={localSiteInfo.description} onChange={handleInputChange} />
             </FormControl>
 
             <FormControl>
-              <FormLabel>Descripción secundaria</FormLabel>
+              <FormLabel>Descripción de la tienda</FormLabel>
               <Textarea name="description2" value={localSiteInfo.description2} onChange={handleInputChange} />
             </FormControl>
           </Box>
