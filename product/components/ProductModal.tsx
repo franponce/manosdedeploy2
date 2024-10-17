@@ -22,6 +22,7 @@ import {
   Box,
   Collapse,
   useDisclosure,
+  useMediaQuery,
 } from "@chakra-ui/react";
 import { TimeIcon, QuestionIcon } from "@chakra-ui/icons";
 import imageCompression from "browser-image-compression";
@@ -51,6 +52,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
   const toast = useToast();
   const [scheduledDate, setScheduledDate] = useState<Date | null>(null);
   const { isOpen: isScheduleOpen, onToggle: toggleSchedule } = useDisclosure();
+  const [isMobile] = useMediaQuery("(max-width: 48em)");
 
   const MAX_TITLE_LENGTH = 60;
   const MAX_DESCRIPTION_LENGTH = 180;
@@ -291,13 +293,21 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                   <DatePicker
                     selected={scheduledDate}
                     onChange={handleDateChange}
-                    inline
                     showTimeSelect
                     timeFormat="HH:mm"
                     timeIntervals={15}
                     timeCaption="Hora"
                     dateFormat="dd/MM/yyyy HH:mm"
                     minDate={new Date()}
+                    inline={!isMobile}
+                    customInput={
+                      isMobile ? (
+                        <Input 
+                          value={scheduledDate ? scheduledDate.toLocaleString() : ''} 
+                          readOnly 
+                        />
+                      ) : undefined
+                    }
                   />
                 </Box>
               </FormControl>
