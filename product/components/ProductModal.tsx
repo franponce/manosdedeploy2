@@ -24,6 +24,7 @@ import {
   useDisclosure,
   useMediaQuery,
   Flex,
+  Center,
 } from "@chakra-ui/react";
 import { TimeIcon, QuestionIcon } from "@chakra-ui/icons";
 import imageCompression from "browser-image-compression";
@@ -202,7 +203,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
-      <ModalContent maxW={{ base: "95%", md: "500px" }}>
+      <ModalContent maxW={{ base: "95%", sm: "600px" }}>
         <ModalHeader>
           {currentProduct.id ? "Editar Producto" : "Crear Nuevo Producto"}
         </ModalHeader>
@@ -290,37 +291,45 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
             <Collapse in={isScheduleOpen} animateOpacity>
               <FormControl>
                 <FormLabel>Fecha y hora de publicación</FormLabel>
-                <Box 
-                  border="1px" 
-                  borderColor="gray.200" 
-                  borderRadius="md" 
-                  p={2}
-                  overflowX="auto"
-                >
-                  <Flex direction={{ base: "column", md: "row" }} alignItems="center">
-                    <Box flex="1" minWidth="240px" mb={{ base: 4, md: 0 }}>
-                      <DatePicker
-                        selected={scheduledDate}
-                        onChange={handleDateChange}
-                        dateFormat="dd/MM/yyyy"
-                        minDate={new Date()}
-                        inline
-                      />
-                    </Box>
-                    <Box flex="1" minWidth="240px">
-                      <DatePicker
-                        selected={scheduledDate}
-                        onChange={handleDateChange}
-                        showTimeSelect
-                        showTimeSelectOnly
-                        timeIntervals={15}
-                        timeCaption="Hora"
-                        dateFormat="HH:mm"
-                        inline
-                      />
-                    </Box>
-                  </Flex>
-                </Box>
+                <Center>
+                  <Box 
+                    border="1px" 
+                    borderColor="gray.200" 
+                    borderRadius="md" 
+                    p={2}
+                    overflowX="auto"
+                    maxWidth="100%"
+                  >
+                    <Flex 
+                      direction={{ base: "column", sm: "row" }} 
+                      alignItems="center"
+                      justifyContent="center"
+                      gap={4}
+                    >
+                      <Box>
+                        <DatePicker
+                          selected={scheduledDate}
+                          onChange={handleDateChange}
+                          dateFormat="dd/MM/yyyy"
+                          minDate={new Date()}
+                          inline
+                        />
+                      </Box>
+                      <Box>
+                        <DatePicker
+                          selected={scheduledDate}
+                          onChange={handleDateChange}
+                          showTimeSelect
+                          showTimeSelectOnly
+                          timeIntervals={15}
+                          timeCaption="Hora"
+                          dateFormat="HH:mm"
+                          inline
+                        />
+                      </Box>
+                    </Flex>
+                  </Box>
+                </Center>
               </FormControl>
             </Collapse>
           </VStack>
