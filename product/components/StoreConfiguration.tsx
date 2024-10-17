@@ -25,6 +25,8 @@ const StoreConfiguration: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const toast = useToast();
 
+  const MAX_DESCRIPTION_LENGTH = 500;
+
   useEffect(() => {
     if (siteInfo) {
       setLocalSiteInfo(siteInfo);
@@ -33,7 +35,25 @@ const StoreConfiguration: React.FC = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    if (name === 'description2' && value.length > MAX_DESCRIPTION_LENGTH) {
+      return; // No actualizar si excede el límite
+    }
     setLocalSiteInfo(prev => prev ? { ...prev, [name]: value } : null);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const textarea = e.currentTarget;
+      const { selectionStart, selectionEnd } = textarea;
+      const value = textarea.value;
+      const newValue = value.substring(0, selectionStart) + '\n' + value.substring(selectionEnd);
+      setLocalSiteInfo(prev => prev ? { ...prev, description2: newValue } : null);
+      // Establecer la posición del cursor después del salto de línea
+      setTimeout(() => {
+        textarea.selectionStart = textarea.selectionEnd = selectionStart + 1;
+      }, 0);
+    }
   };
 
   const handleImageUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>, type: 'logoUrl' | 'bannerUrl') => {
@@ -144,7 +164,16 @@ const StoreConfiguration: React.FC = () => {
 
           <FormControl mb={4}>
             <FormLabel>Descripción de la tienda</FormLabel>
-            <Textarea name="description2" value={localSiteInfo.description2} onChange={handleInputChange} />
+            <Textarea 
+              name="description2" 
+              value={localSiteInfo.description2} 
+              onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
+              maxLength={MAX_DESCRIPTION_LENGTH}
+            />
+            <Text fontSize="sm" color="gray.500" mt={1}>
+              {localSiteInfo.description2.length}/{MAX_DESCRIPTION_LENGTH} caracteres
+            </Text>
           </FormControl>
         </Box>
 
