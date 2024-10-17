@@ -228,12 +228,8 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
               maxWidth="600px"
             >
               <Heading size="lg">{siteInfo?.title}</Heading>
-              <Text color="gray.600" fontSize="md">
-                {siteInfo?.description}
-              </Text>
-              <Text color="gray.600" fontSize="md">
-                {siteInfo?.description2}
-              </Text>
+              <Text color="gray.600" fontSize="md" dangerouslySetInnerHTML={{ __html: siteInfo?.description || '' }} />
+              <Text color="gray.600" fontSize="md" dangerouslySetInnerHTML={{ __html: siteInfo?.description2 || '' }} />
               <Stack direction="row" mt={2} spacing={2} justify="center">
                 {siteInfo?.social?.map((social) => (
                   <Link key={social.name} href={social.url} isExternal>

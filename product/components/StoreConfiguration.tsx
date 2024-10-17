@@ -25,6 +25,7 @@ const StoreConfiguration: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const toast = useToast();
 
+  const MAX_TITLE_LENGTH = 50;
   const MAX_DESCRIPTION_LENGTH = 500;
 
   useEffect(() => {
@@ -35,6 +36,9 @@ const StoreConfiguration: React.FC = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    if (name === 'title' && value.length > MAX_TITLE_LENGTH) {
+      return; // No actualizar si excede el límite
+    }
     if (name === 'description2' && value.length > MAX_DESCRIPTION_LENGTH) {
       return; // No actualizar si excede el límite
     }
@@ -48,7 +52,7 @@ const StoreConfiguration: React.FC = () => {
       const { selectionStart, selectionEnd } = textarea;
       const value = textarea.value;
       const newValue = value.substring(0, selectionStart) + '\n' + value.substring(selectionEnd);
-      setLocalSiteInfo(prev => prev ? { ...prev, description2: newValue } : null);
+      setLocalSiteInfo(prev => prev ? { ...prev, [textarea.name]: newValue } : null);
       // Establecer la posición del cursor después del salto de línea
       setTimeout(() => {
         textarea.selectionStart = textarea.selectionEnd = selectionStart + 1;
@@ -120,8 +124,14 @@ const StoreConfiguration: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      await updateSiteInformation(localSiteInfo);
-      await mutate(localSiteInfo);
+      // Reemplazar los saltos de línea con <br> antes de guardar
+      const updatedSiteInfo = {
+        ...localSiteInfo,
+        description: localSiteInfo.description.replace(/\n/g, '<br>'),
+        description2: localSiteInfo.description2.replace(/\n/g, '<br>')
+      };
+      await updateSiteInformation(updatedSiteInfo);
+      await mutate(updatedSiteInfo);
       toast({
         title: "Configuración actualizada",
         description: "La información de la tienda se ha actualizado correctamente.",
@@ -154,16 +164,37 @@ const StoreConfiguration: React.FC = () => {
           <Heading as="h3" size="md" mb={4}>Información de la tienda</Heading>
           <FormControl mb={4}>
             <FormLabel>Nombre</FormLabel>
-            <Input name="title" value={localSiteInfo.title} onChange={handleInputChange} />
+            <Input 
+              name="title" 
+              value={localSiteInfo.title} 
+              onChange={handleInputChange}
+              maxLength={MAX_TITLE_LENGTH}
+            />
+            <Text fontSize="sm" color="gray.500" mt={1}>
+              {localSiteInfo.title.length}/{MAX_TITLE_LENGTH} caracteres
+            </Text>
           </FormControl>
 
           <FormControl mb={4}>
             <FormLabel>Resumen de la tienda</FormLabel>
-            <Textarea name="description" value={localSiteInfo.description} onChange={handleInputChange} />
+            <Text fontSize="sm" color="gray.600" mb={2}>
+              Recomendaciones 😉:<br />
+              Cuéntale a tus clientes en una breve oración de qué trata tu tienda. También puedes usar un call to action o slogan.
+            </Text>
+            <Textarea 
+              name="description" 
+              value={localSiteInfo.description} 
+              onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
+            />
           </FormControl>
 
           <FormControl mb={4}>
             <FormLabel>Descripción de la tienda</FormLabel>
+            <Text fontSize="sm" color="gray.600" mb={2}>
+              Recomendaciones 😉:<br />
+              Ingresa información que creas importante que los clientes sepan antes de comprar, como tus horarios de atención, ubicación, envíos, etc.
+            </Text>
             <Textarea 
               name="description2" 
               value={localSiteInfo.description2} 
