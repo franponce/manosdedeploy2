@@ -81,7 +81,7 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
           (item) =>
             `${item.title} (x${item.quantity}) - ${parseCurrency(
               item.price * item.quantity
-            )} ${item.currency}`
+            )} ${siteInfo?.currency}`
         )
         .join("\n")}\n\n` +
       `-- \n\n` +
@@ -89,7 +89,7 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
       `Nombre completo: ${fullName}\n` +
       `Método de pago: ${selectedPaymentMethod}\n` +
       `Aclaración: ${note.trim() || 'Sin aclaración'}\n` +
-      `*Total: ${total}*`
+      `*Total: ${total} ${siteInfo?.currency}*`
     );
     const whatsappURL = `https://wa.me/${INFORMATION.whatsappCart}?text=${whatsappMessage}`;
     window.open(whatsappURL, "_blank");
@@ -117,7 +117,7 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
                     <Image src={item.image} alt={item.title} boxSize="50px" objectFit="cover" mr={2} />
                     <Box flex={1}>
                       <Text fontWeight="bold">{item.title}</Text>
-                      <Text>{parseCurrency(item.price)} {item.currency}</Text>
+                      <Text>{parseCurrency(item.price)} {siteInfo?.currency}</Text>
                     </Box>
                     <HStack>
                       <Button size="sm" onClick={() => onDecrement(item)}>-</Button>
@@ -172,7 +172,7 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
             <Divider mb={4} />
             <Flex justify="space-between" width="100%" mb={4}>
               <Text fontWeight="bold">Total:</Text>
-              <Text fontWeight="bold">{total}</Text>
+              <Text fontWeight="bold">{total} {siteInfo?.currency}</Text>
             </Flex>
             <Button
               colorScheme="green"

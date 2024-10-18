@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, Image, Text, Button, Stack, AspectRatio } from '@chakra-ui/react';
 import { Product } from '../types';
 import { parseCurrency } from '../../utils/currency';
+import { useSiteInfo } from '../../hooks/useSiteInfo';
 
 interface Props {
   product: Product;
@@ -9,6 +10,8 @@ interface Props {
 }
 
 const ProductCard: React.FC<Props> = ({ product, onAdd }) => {
+  const { siteInfo } = useSiteInfo();
+
   if (!product) {
     return null; // O puedes retornar un componente de fallback
   }
@@ -30,7 +33,7 @@ const ProductCard: React.FC<Props> = ({ product, onAdd }) => {
           </Text>
           <Text noOfLines={3}>{product.description || 'No description available'}</Text>
           <Text fontWeight="bold" fontSize="xl">
-            {parseCurrency(product.price || 0)}
+            {parseCurrency(product.price || 0)} {siteInfo?.currency}
           </Text>
           <Button colorScheme="blue" onClick={() => onAdd(product)}>
             Agregar al carrito
