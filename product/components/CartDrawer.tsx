@@ -29,7 +29,7 @@ import { CartItem } from '../types';
 import { parseCurrency } from '../../utils/currency';
 import { INFORMATION } from '../../app/constants';
 import { getPaymentMethods, PaymentMethods } from '../../utils/firebase';
-import { FaShoppingCart, FaWhatsapp } from 'react-icons/fa';
+import { FaArrowLeft, FaShoppingCart, FaWhatsapp } from 'react-icons/fa';
 import { useSiteInfo } from '@/hooks/useSiteInfo';
 
 interface Props {
@@ -111,52 +111,60 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
 
           <DrawerBody>
             <VStack spacing={4} align="stretch">
-              {items.map((item) => (
-                <Flex key={item.id} justify="space-between" align="center">
-                  <Image src={item.image} alt={item.title} boxSize="50px" objectFit="cover" mr={2} />
-                  <Box flex={1}>
-                    <Text fontWeight="bold">{item.title}</Text>
-                    <Text>{parseCurrency(item.price)}</Text>
+              {items.length > 0 ? (
+                items.map((item) => (
+                  <Flex key={item.id} justify="space-between" align="center">
+                    <Image src={item.image} alt={item.title} boxSize="50px" objectFit="cover" mr={2} />
+                    <Box flex={1}>
+                      <Text fontWeight="bold">{item.title}</Text>
+                      <Text>{parseCurrency(item.price)}</Text>
+                    </Box>
+                    <HStack>
+                      <Button size="sm" onClick={() => onDecrement(item)}>-</Button>
+                      <Text>{item.quantity}</Text>
+                      <Button size="sm" onClick={() => onIncrement(item)}>+</Button>
+                    </HStack>
+                  </Flex>
+                ))
+              ) : (
+                <Text textAlign="center">Tu carrito está vacío</Text>
+              )}
+
+              {items.length > 0 && (
+                <>
+                  <FormControl isInvalid={isFullNameError} isRequired>
+                    <FormLabel>Nombre completo</FormLabel>
+                    <Input
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      placeholder="Ingresa tu nombre completo"
+                    />
+                    <FormErrorMessage>El nombre completo es requerido</FormErrorMessage>
+                  </FormControl>
+
+                  <FormControl isRequired>
+                    <FormLabel>¿Cómo vas a abonar tu pedido?</FormLabel>
+                    <RadioGroup onChange={setSelectedPaymentMethod} value={selectedPaymentMethod}>
+                      <VStack align="start">
+                        {paymentMethods.mercadoPago && <Radio value="MercadoPago">MercadoPago</Radio>}
+                        {paymentMethods.cash && <Radio value="Efectivo">Efectivo</Radio>}
+                        {paymentMethods.bankTransfer && <Radio value="Transferencia bancaria">Transferencia bancaria</Radio>}
+                      </VStack>
+                    </RadioGroup>
+                  </FormControl>
+
+                  <Box mt={4}>
+                    <Text fontWeight="bold" mb={2}>¿Tienes alguna aclaración para el vendedor?</Text>
+                    <Textarea
+                      value={note}
+                      onChange={(e) => setNote(e.target.value)}
+                      placeholder="Escribe tu mensaje aquí (máximo 180 caracteres)"
+                      maxLength={180}
+                    />
+                    <Text fontSize="sm" textAlign="right">{note.length}/180</Text>
                   </Box>
-                  <HStack>
-                    <Button size="sm" onClick={() => onDecrement(item)}>-</Button>
-                    <Text>{item.quantity}</Text>
-                    <Button size="sm" onClick={() => onIncrement(item)}>+</Button>
-                  </HStack>
-                </Flex>
-              ))}
-
-              <FormControl isInvalid={isFullNameError} isRequired>
-                <FormLabel>Nombre completo</FormLabel>
-                <Input
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Ingresa tu nombre completo"
-                />
-                <FormErrorMessage>El nombre completo es requerido</FormErrorMessage>
-              </FormControl>
-
-              <FormControl isRequired>
-                <FormLabel>¿Cómo vas a abonar tu pedido?</FormLabel>
-                <RadioGroup onChange={setSelectedPaymentMethod} value={selectedPaymentMethod}>
-                  <VStack align="start">
-                    {paymentMethods.mercadoPago && <Radio value="MercadoPago">MercadoPago</Radio>}
-                    {paymentMethods.cash && <Radio value="Efectivo">Efectivo</Radio>}
-                    {paymentMethods.bankTransfer && <Radio value="Transferencia bancaria">Transferencia bancaria</Radio>}
-                  </VStack>
-                </RadioGroup>
-              </FormControl>
-
-              <Box mt={4}>
-                <Text fontWeight="bold" mb={2}>¿Tienes alguna aclaración para el vendedor?</Text>
-                <Textarea
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  placeholder="Escribe tu mensaje aquí (máximo 180 caracteres)"
-                  maxLength={180}
-                />
-                <Text fontSize="sm" textAlign="right">{note.length}/180</Text>
-              </Box>
+                </>
+              )}
             </VStack>
           </DrawerBody>
 
@@ -172,8 +180,17 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
               onClick={handleWhatsAppRedirect}
               isDisabled={items.length === 0 || !selectedPaymentMethod || !fullName.trim()}
               leftIcon={<Icon as={FaWhatsapp} />}
+              mb={2}
             >
               Enviar pedido por WhatsApp
+            </Button>
+            <Button
+              variant="outline"
+              width="100%"
+              onClick={onClose}
+              leftIcon={<Icon as={FaArrowLeft} />}
+            >
+              Seguir comprando
             </Button>
           </DrawerFooter>
         </DrawerContent>
