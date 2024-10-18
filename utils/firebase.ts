@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
-import { getStorage, ref, uploadString, getDownloadURL } from "firebase/storage";
+import { getStorage, ref, uploadString, getDownloadURL, uploadBytes } from "firebase/storage";
 import { 
   getAuth, 
   createUserWithEmailAndPassword, 
@@ -83,13 +83,13 @@ export async function updateSiteInformation(newInfo: Partial<SiteInformation>): 
   await setDoc(docRef, newInfo, { merge: true });
 }
 
-export async function uploadImage(imageData: string, type: 'logo' | 'banner'): Promise<string> {
+export const uploadImage = async (file: File, type: 'logo' | 'banner'): Promise<string> => {
   const storageRef = ref(storage, `${type}/${Date.now()}`);
-  await uploadString(storageRef, imageData, 'data_url');
+  await uploadBytes(storageRef, file);
   const downloadURL = await getDownloadURL(storageRef);
   console.log(`Uploaded ${type} image. URL:`, downloadURL);
   return downloadURL;
-}
+};
 
 export const getPaymentMethods = async (): Promise<PaymentMethods> => {
   try {

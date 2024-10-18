@@ -22,8 +22,12 @@ import {
   NumberInputField,
   NumberInputStepper,
   NumberIncrementStepper,
-  NumberDecrementStepper,
   Select,
+  Accordion,
+  AccordionItem,
+  AccordionButton,
+  AccordionPanel,
+  AccordionIcon,
 } from '@chakra-ui/react';
 import { useSiteInfo } from '@/hooks/useSiteInfo';
 import { SiteInformation, updateSiteInformation, uploadImage } from '../../utils/firebase';
@@ -36,81 +40,15 @@ const StoreConfiguration: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const toast = useToast();
 
-  const MAX_TITLE_LENGTH = 50;
-  const MAX_SUMMARY_LENGTH = 100;
-  const MAX_DESCRIPTION_LENGTH = 500;
-
-  const [exchangeRates, setExchangeRates] = useState<{[key: string]: number}>({});
-  const [storeCurrency, setStoreCurrency] = useState('');
-  const [isEditing, setIsEditing] = useState(false);
-
   useEffect(() => {
     if (siteInfo) {
       setLocalSiteInfo(siteInfo);
-      setExchangeRates(siteInfo.exchangeRates || {});
-      setStoreCurrency(siteInfo.currency || '');
     }
   }, [siteInfo]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    if (name === 'title' && value.length > MAX_TITLE_LENGTH) {
-      return; // No actualizar si excede el límite
-    }
-    if (name === 'description' && value.length > MAX_SUMMARY_LENGTH) {
-      return; // No actualizar si excede el límite
-    }
-    if (name === 'description2' && value.length > MAX_DESCRIPTION_LENGTH) {
-      return; // No actualizar si excede el límite
-    }
-    setLocalSiteInfo((prev: SiteInformation | null) => prev ? { ...prev, [name]: value } : null);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      const textarea = e.currentTarget;
-      const { selectionStart, selectionEnd } = textarea;
-      const value = textarea.value;
-      const newValue = value.substring(0, selectionStart) + '\n' + value.substring(selectionEnd);
-      setLocalSiteInfo((prev: SiteInformation | null) => prev ? { ...prev, [textarea.name]: newValue } : null);
-      // Establecer la posición del cursor después del salto de línea
-      setTimeout(() => {
-        textarea.selectionStart = textarea.selectionEnd = selectionStart + 1;
-      }, 0);
-    }
-  };
-
-  const handleCurrencyChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setStoreCurrency(event.target.value);
-    setIsEditing(true);
-  };
-
-  const handleExchangeRateChange = (currency: string, value: number) => {
-    setExchangeRates(prev => ({ ...prev, [currency]: value }));
-  };
-
-  const fetchExchangeRates = async () => {
-    try {
-      const response = await fetch('https://api.exchangerate-api.com/v4/latest/ARS');
-      const data = await response.json();
-      const newRates: {[key: string]: number} = {};
-      Object.entries(data.rates).forEach(([code, rate]) => {
-        if (code !== 'ARS') {
-          newRates[code] = 1 / Number(rate);
-        }
-      });
-      setExchangeRates(newRates);
-    } catch (error) {
-      console.error('Error fetching exchange rates:', error);
-      toast({
-        title: "Error",
-        description: "No se pudieron obtener las tasas de cambio actualizadas.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    }
+    setLocalSiteInfo(prev => prev ? { ...prev, [name]: value } : null);
   };
 
   const handleImageUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>, type: 'logoUrl' | 'bannerUrl') => {
@@ -118,43 +56,18 @@ const StoreConfiguration: React.FC = () => {
     if (!file) return;
 
     try {
-      const img = await createImageBitmap(file);
-      
       const options = {
-        maxSizeMB: 5,
-        maxWidthOrHeight: type === 'logoUrl' ? 400 : 1920,
+        maxSizeMB: 1,
+        maxWidthOrHeight: 1920,
         useWebWorker: true,
       };
-
       const compressedFile = await imageCompression(file, options);
-      
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      
-      let newWidth = img.width;
-      let newHeight = img.height;
-      const targetWidth = type === 'logoUrl' ? 400 : 1920;
-      const targetHeight = type === 'logoUrl' ? 400 : 400;
-
-      if (newWidth > targetWidth || newHeight > targetHeight) {
-        const ratio = Math.min(targetWidth / newWidth, targetHeight / newHeight);
-        newWidth *= ratio;
-        newHeight *= ratio;
-      }
-      
-      canvas.width = newWidth;
-      canvas.height = newHeight;
-      
-      ctx?.drawImage(img, 0, 0, newWidth, newHeight);
-      
-      const base64 = canvas.toDataURL('image/jpeg', 0.7);
-      
-      const url = await uploadImage(base64, type === 'logoUrl' ? 'logo' : 'banner');
-      setLocalSiteInfo((prev: SiteInformation | null) => prev ? { ...prev, [type]: url } : null);
+      const url = await uploadImage(compressedFile, type === 'logoUrl' ? 'logo' : 'banner');
+      setLocalSiteInfo(prev => prev ? { ...prev, [type]: url } : null);
 
       toast({
         title: "Imagen cargada",
-        description: "La imagen se ha procesado y optimizado correctamente.",
+        description: "La imagen se ha procesado y cargado correctamente.",
         status: "success",
         duration: 3000,
         isClosable: true,
@@ -177,15 +90,8 @@ const StoreConfiguration: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      const updatedSiteInfo = {
-        ...localSiteInfo,
-        description: localSiteInfo.description.replace(/\n/g, '<br>'),
-        description2: localSiteInfo.description2.replace(/\n/g, '<br>'),
-        exchangeRates,
-        currency: storeCurrency,
-      };
-      await updateSiteInformation(updatedSiteInfo);
-      await mutate(updatedSiteInfo);
+      await updateSiteInformation(localSiteInfo);
+      await mutate(localSiteInfo);
       toast({
         title: "Configuración actualizada",
         description: "La información de la tienda se ha actualizado correctamente.",
@@ -193,7 +99,6 @@ const StoreConfiguration: React.FC = () => {
         duration: 3000,
         isClosable: true,
       });
-      setIsEditing(false);
     } catch (error) {
       console.error('Error updating site information:', error);
       toast({
@@ -208,19 +113,6 @@ const StoreConfiguration: React.FC = () => {
     }
   };
 
-  const handleSaveChanges = async () => {
-    try {
-      // Aquí deberías implementar la lógica para guardar los cambios
-      // Por ejemplo, una llamada a la API para actualizar la moneda de la tienda
-      // await updateStoreCurrency(storeCurrency);
-      setIsEditing(false);
-      // Mostrar mensaje de éxito
-    } catch (error) {
-      // Manejar error
-      console.error('Error al guardar los cambios:', error);
-    }
-  };
-
   if (isLoading) return <Box>Cargando...</Box>;
   if (isError) return <Box>Error al cargar la información de la tienda</Box>;
   if (!localSiteInfo) return null;
@@ -228,145 +120,74 @@ const StoreConfiguration: React.FC = () => {
   return (
     <Box as="form" onSubmit={handleSubmit}>
       <VStack spacing={6} align="stretch">
-        <Box>
-          <Heading as="h3" size="md" mb={4}>Información de la tienda</Heading>
-          <FormControl mb={4}>
-            <FormLabel>Nombre</FormLabel>
-            <Input 
-              name="title" 
-              value={localSiteInfo.title} 
-              onChange={handleInputChange}
-              maxLength={MAX_TITLE_LENGTH}
-            />
-            <Text fontSize="sm" color="gray.500" mt={1}>
-              {localSiteInfo.title.length}/{MAX_TITLE_LENGTH} caracteres
-            </Text>
-          </FormControl>
+        <Accordion allowMultiple defaultIndex={[0, 1, 2]}>
+          <AccordionItem>
+            <AccordionButton>
+              <Box flex="1" textAlign="left">
+                <Heading as="h3" size="md">Información de la tienda</Heading>
+              </Box>
+              <AccordionIcon />
+            </AccordionButton>
+            <AccordionPanel pb={4}>
+              <FormControl mb={4}>
+                <FormLabel>Nombre de la tienda</FormLabel>
+                <Input name="title" value={localSiteInfo.title} onChange={handleInputChange} />
+              </FormControl>
+              <FormControl mb={4}>
+                <FormLabel>Descripción corta</FormLabel>
+                <Textarea name="description" value={localSiteInfo.description} onChange={handleInputChange} />
+              </FormControl>
+              <FormControl mb={4}>
+                <FormLabel>Descripción larga</FormLabel>
+                <Textarea name="description2" value={localSiteInfo.description2} onChange={handleInputChange} />
+              </FormControl>
+              <FormControl mb={4}>
+                <FormLabel>Logo</FormLabel>
+                <Input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, 'logoUrl')} />
+                {localSiteInfo.logoUrl && <Image src={localSiteInfo.logoUrl} alt="Logo" maxWidth="200px" mt={2} />}
+              </FormControl>
+              <FormControl mb={4}>
+                <FormLabel>Banner</FormLabel>
+                <Input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, 'bannerUrl')} />
+                {localSiteInfo.bannerUrl && <Image src={localSiteInfo.bannerUrl} alt="Banner" maxWidth="400px" mt={2} />}
+              </FormControl>
+            </AccordionPanel>
+          </AccordionItem>
 
-          <FormControl mb={4}>
-            <FormLabel>Resumen de la tienda</FormLabel>
-            <Text fontSize="sm" color="gray.600" mb={2}>
-              Recomendaciones 😉:<br />
-              • Cuéntale a tus clientes en una breve oración de qué trata tu tienda. También puedes usar un call to action o slogan.
-            </Text>
-            <Textarea 
-              name="description" 
-              value={localSiteInfo.description} 
-              onChange={handleInputChange}
-              maxLength={MAX_SUMMARY_LENGTH}
-            />
-            <Text fontSize="sm" color="gray.500" mt={1}>
-              {localSiteInfo.description.length}/{MAX_SUMMARY_LENGTH} caracteres
-            </Text>
-          </FormControl>
+          <AccordionItem>
+            <AccordionButton>
+              <Box flex="1" textAlign="left">
+                <Heading as="h3" size="md">Moneda de la tienda</Heading>
+              </Box>
+              <AccordionIcon />
+            </AccordionButton>
+            <AccordionPanel pb={4}>
+              <FormControl>
+                <FormLabel>Selecciona la moneda principal</FormLabel>
+                <Select name="currency" value={localSiteInfo.currency} onChange={handleInputChange}>
+                  {currencies.map(currency => (
+                    <option key={currency.code} value={currency.code}>
+                      {currency.code} - {currency.name}
+                    </option>
+                  ))}
+                </Select>
+              </FormControl>
+            </AccordionPanel>
+          </AccordionItem>
 
-          <FormControl mb={4}>
-            <FormLabel>Descripción de la tienda</FormLabel>
-            <Text fontSize="sm" color="gray.600" mb={2}>
-              Recomendaciones 😉:<br />
-              • Ingresa información que creas importante que los clientes sepan antes de comprar, como tus horarios de atención, ubicación, envíos, etc.
-            </Text>
-            <Textarea 
-              name="description2" 
-              value={localSiteInfo.description2} 
-              onChange={handleInputChange}
-              onKeyDown={handleKeyDown}
-              maxLength={MAX_DESCRIPTION_LENGTH}
-            />
-            <Text fontSize="sm" color="gray.500" mt={1}>
-              {localSiteInfo.description2.length}/{MAX_DESCRIPTION_LENGTH} caracteres
-            </Text>
-          </FormControl>
-        </Box>
-
-        <Divider my={6} />
-
-        <FormControl>
-          <FormLabel>Moneda de la tienda</FormLabel>
-          <Select value={storeCurrency} onChange={handleCurrencyChange}>
-            <option value="USD">USD - Dólar estadounidense</option>
-            <option value="EUR">EUR - Euro</option>
-            <option value="GBP">GBP - Libra esterlina</option>
-            {/* Añade más opciones de moneda según sea necesario */}
-          </Select>
-        </FormControl>
-
-        {isEditing && (
-          <Button mt={4} colorScheme="blue" onClick={handleSaveChanges}>
-            Guardar cambios
-          </Button>
-        )}
-
-        <Box>
-          <Heading as="h4" size="md" mb={2}>Tasas de cambio</Heading>
-          <Button onClick={fetchExchangeRates} mb={4}>Actualizar tasas de cambio</Button>
-          <Table variant="simple">
-            <Thead>
-              <Tr>
-                <Th>Moneda</Th>
-                <Th>Tasa de cambio (respecto a {storeCurrency})</Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {currencies.map((currency) => (
-                currency.code !== storeCurrency && (
-                  <Tr key={currency.code}>
-                    <Td>{currency.symbol} {currency.code}</Td>
-                    <Td>
-                      <NumberInput
-                        value={exchangeRates[currency.code] || 0}
-                        onChange={(_, value) => handleExchangeRateChange(currency.code, value)}
-                        min={0}
-                        step={0.0001}
-                      >
-                        <NumberInputField />
-                        <NumberInputStepper>
-                          <NumberIncrementStepper />
-                          <NumberDecrementStepper />
-                        </NumberInputStepper>
-                      </NumberInput>
-                    </Td>
-                  </Tr>
-                )
-              ))}
-            </Tbody>
-          </Table>
-        </Box>
-
-        <Divider my={6} />
-
-        <Box>
-          <Heading as="h3" size="md" mb={4}>Imágenes de la tienda</Heading>
-          
-          <Box mb={6}>
-            <Heading as="h4" size="sm" mb={2}>Imagen de perfil</Heading>
-            <Image src={localSiteInfo.logoUrl} alt="Logo" maxWidth="200px" maxHeight="100px" objectFit="contain" mb={2} />
-            <FormControl>
-              <FormLabel>Cambiar logo</FormLabel>
-              <Input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, 'logoUrl')} />
-            </FormControl>
-            <Text fontSize="sm" color="gray.600" mt={2}>
-              Recomendaciones 😉:<br />
-              • Las medidas recomendadas son de 400x400 px.<br />
-              • No debe pesar más de 5MB.
-            </Text>
-          </Box>
-
-          <Box mb={6}>
-            <Heading as="h4" size="sm" mb={2}>Banner</Heading>
-            <Image src={localSiteInfo.bannerUrl} alt="Banner" maxHeight="200px" mb={2} />
-            <FormControl>
-              <FormLabel>Cambiar banner</FormLabel>
-              <Input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, 'bannerUrl')} />
-            </FormControl>
-            <Text fontSize="sm" color="gray.600" mt={2}>
-              Recomendaciones 😉:<br />
-              • Es la primera imagen que verán los clientes<br />
-              • Las medidas recomendadas son de 1920x400 px.<br />
-              • No debe pesar más de 5MB.
-            </Text>
-          </Box>
-        </Box>
+          <AccordionItem>
+            <AccordionButton>
+              <Box flex="1" textAlign="left">
+                <Heading as="h3" size="md">Configuración de métodos de pago</Heading>
+              </Box>
+              <AccordionIcon />
+            </AccordionButton>
+            <AccordionPanel pb={4}>
+              {/* Aquí puedes agregar la configuración de métodos de pago */}
+              <Text>Configuración de métodos de pago pendiente de implementar.</Text>
+            </AccordionPanel>
+          </AccordionItem>
+        </Accordion>
 
         <Button type="submit" colorScheme="blue" isLoading={isSubmitting}>
           Guardar cambios
