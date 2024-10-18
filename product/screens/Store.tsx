@@ -115,7 +115,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts }) => {
                     paddingX={2}
                     paddingY={1}
                   >
-                    {quantity} items
+                    {quantity} {quantity === 1 ? "item" : "items"}
                   </Text>
                 </Stack>
                 <Text fontSize="md" lineHeight={6}>
