@@ -13,11 +13,24 @@ import {
   Link,
   Text,
   Divider,
+  Select,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
+  NumberIncrementStepper,
+  NumberDecrementStepper,
 } from '@chakra-ui/react';
 import { useSiteInfo } from '../../hooks/useSiteInfo';
 import { SiteInformation, updateSiteInformation, uploadImage } from '../../utils/firebase';
 import PersistentTooltip from '../components/PersistentTooltip';
 import imageCompression from "browser-image-compression";
+import { currencies } from '@/utils/currencies';
 
 const StoreConfiguration: React.FC = () => {
   const { siteInfo, isLoading, isError, mutate } = useSiteInfo();
@@ -29,9 +42,14 @@ const StoreConfiguration: React.FC = () => {
   const MAX_SUMMARY_LENGTH = 100;
   const MAX_DESCRIPTION_LENGTH = 500;
 
+  const [exchangeRates, setExchangeRates] = useState<{[key: string]: number}>(
+    localSiteInfo?.exchangeRates || {}
+  );
+
   useEffect(() => {
     if (siteInfo) {
       setLocalSiteInfo(siteInfo);
+      setExchangeRates(siteInfo.exchangeRates || {});
     }
   }, [siteInfo]);
 
@@ -61,6 +79,38 @@ const StoreConfiguration: React.FC = () => {
       setTimeout(() => {
         textarea.selectionStart = textarea.selectionEnd = selectionStart + 1;
       }, 0);
+    }
+  };
+
+  const handleCurrencyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newCurrency = e.target.value;
+    setLocalSiteInfo(prev => prev ? { ...prev, currency: newCurrency } : null);
+  };
+
+  const handleExchangeRateChange = (currency: string, value: number) => {
+    setExchangeRates(prev => ({ ...prev, [currency]: value }));
+  };
+
+  const fetchExchangeRates = async () => {
+    try {
+      const response = await fetch('https://api.exchangerate-api.com/v4/latest/ARS');
+      const data = await response.json();
+      const newRates: {[key: string]: number} = {};
+      Object.entries(data.rates).forEach(([code, rate]) => {
+        if (code !== 'ARS') {
+          newRates[code] = 1 / Number(rate);
+        }
+      });
+      setExchangeRates(newRates);
+    } catch (error) {
+      console.error('Error fetching exchange rates:', error);
+      toast({
+        title: "Error",
+        description: "No se pudieron obtener las tasas de cambio actualizadas.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
     }
   };
 
@@ -128,11 +178,11 @@ const StoreConfiguration: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      // Reemplazar los saltos de línea con <br> antes de guardar
       const updatedSiteInfo = {
         ...localSiteInfo,
         description: localSiteInfo.description.replace(/\n/g, '<br>'),
-        description2: localSiteInfo.description2.replace(/\n/g, '<br>')
+        description2: localSiteInfo.description2.replace(/\n/g, '<br>'),
+        exchangeRates,
       };
       await updateSiteInformation(updatedSiteInfo);
       await mutate(updatedSiteInfo);
@@ -213,6 +263,59 @@ const StoreConfiguration: React.FC = () => {
               {localSiteInfo.description2.length}/{MAX_DESCRIPTION_LENGTH} caracteres
             </Text>
           </FormControl>
+        </Box>
+
+        <Divider my={6} />
+
+        <FormControl>
+          <FormLabel>Moneda de la tienda</FormLabel>
+          <Select
+            name="currency"
+            value={localSiteInfo?.currency || 'ARS'}
+            onChange={handleCurrencyChange}
+          >
+            {currencies?.map((currency: { code: string; symbol: string }) => (
+              <option key={currency.code} value={currency.code}>
+                {currency.symbol} {currency.code}
+              </option>
+            ))}
+          </Select>
+        </FormControl>
+
+        <Box>
+          <Heading as="h4" size="md" mb={2}>Tasas de cambio</Heading>
+          <Button onClick={fetchExchangeRates} mb={4}>Actualizar tasas de cambio</Button>
+          <Table variant="simple">
+            <Thead>
+              <Tr>
+                <Th>Moneda</Th>
+                <Th>Tasa de cambio (respecto a {localSiteInfo?.currency})</Th>
+              </Tr>
+            </Thead>
+            <Tbody>
+              {currencies.map((currency) => (
+                currency.code !== localSiteInfo?.currency && (
+                  <Tr key={currency.code}>
+                    <Td>{currency.symbol} {currency.code}</Td>
+                    <Td>
+                      <NumberInput
+                        value={exchangeRates[currency.code] || 0}
+                        onChange={(_, value) => handleExchangeRateChange(currency.code, value)}
+                        min={0}
+                        step={0.0001}
+                      >
+                        <NumberInputField />
+                        <NumberInputStepper>
+                          <NumberIncrementStepper />
+                          <NumberDecrementStepper />
+                        </NumberInputStepper>
+                      </NumberInput>
+                    </Td>
+                  </Tr>
+                )
+              ))}
+            </Tbody>
+          </Table>
         </Box>
 
         <Divider my={6} />

@@ -33,6 +33,7 @@ import { Product } from "../types";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { currencies } from "../../utils/currencies";
+import { useSiteInfo } from "@/hooks/useSiteInfo";
 
 interface ProductModalProps {
   isOpen: boolean;
@@ -58,6 +59,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
   const [scheduledDate, setScheduledDate] = useState<Date | null>(null);
   const { isOpen: isScheduleOpen, onToggle: toggleSchedule } = useDisclosure();
   const [isMobile] = useMediaQuery("(max-width: 48em)");
+  const { siteInfo } = useSiteInfo();
 
   const MAX_TITLE_LENGTH = 60;
   const MAX_DESCRIPTION_LENGTH = 180;
@@ -264,33 +266,14 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
               />
             )}
             <FormControl>
-              <FormLabel>
-                Precio y Moneda
-                <Tooltip label="Seleccione la moneda y ingrese el precio" fontSize="md">
-                  <QuestionIcon boxSize={3} ml={1} color="gray.500" />
-                </Tooltip>
-              </FormLabel>
-              <Flex>
-                <Input
-                  name="price"
-                  type="number"
-                  step="0.01"
-                  value={currentProduct.price}
-                  onChange={handleInputChange}
-                  mr={2}
-                />
-                <Select
-                  name="currency"
-                  value={currentProduct.currency}
-                  onChange={handleInputChange}
-                >
-                  {currencies.map((currency) => (
-                    <option key={currency.code} value={currency.code}>
-                      {currency.symbol}
-                    </option>
-                  ))}
-                </Select>
-              </Flex>
+              <FormLabel>Precio ({siteInfo?.currency})</FormLabel>
+              <Input
+                name="price"
+                type="number"
+                step="0.01"
+                value={currentProduct.price}
+                onChange={handleInputChange}
+              />
             </FormControl>
             <Button
               leftIcon={<TimeIcon />}

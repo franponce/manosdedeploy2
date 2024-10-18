@@ -35,6 +35,10 @@ export interface SiteInformation {
   social: Array<{ name: string; url: string }>;
   logoUrl: string;
   bannerUrl: string;
+  currency: string;
+  exchangeRates: {
+    [key: string]: number;
+  };
 }
 
 export const DEFAULT_SITE_INFORMATION: SiteInformation = {
@@ -49,7 +53,9 @@ export const DEFAULT_SITE_INFORMATION: SiteInformation = {
     { name: "whatsapp", url: "https://wa.me/54929542201999" }
   ],
   logoUrl: "/default-logo.png",
-  bannerUrl: "/default-banner.jpg"
+  bannerUrl: "/default-banner.jpg",
+  currency: 'ARS',
+  exchangeRates: {},
 };
 
 export interface PaymentMethods {
