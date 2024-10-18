@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Heading,
@@ -14,6 +14,8 @@ import {
   Text,
   Flex,
   Container,
+  Select,
+  useToast,
 } from '@chakra-ui/react';
 import StoreConfiguration from '../product/components/StoreConfiguration';
 import PaymentMethodsConfig from '../product/components/PaymentMethodsConfig';
@@ -21,14 +23,38 @@ import CustomScripts from '../product/components/CustomScripts';
 import { useRouter } from 'next/router';
 import { FaArrowLeft } from 'react-icons/fa';
 import { useSiteInfo } from '../hooks/useSiteInfo';
-import HamburgerMenu from '../product/components/HamburgerMenu'
+import { updateSiteInfo } from '../utils/firebase';
 
 const StoreConfigPage: React.FC = () => {
   const router = useRouter();
-  const { siteInfo } = useSiteInfo();
+  const { siteInfo, mutate } = useSiteInfo();
+  const [currency, setCurrency] = useState(siteInfo?.currency || 'ARS');
+  const toast = useToast();
 
   const handleBackToAdmin = () => {
     router.push('/admin');
+  };
+
+  const handleCurrencyChange = async () => {
+    try {
+      await updateSiteInfo({ ...siteInfo, currency });
+      mutate();
+      toast({
+        title: "Moneda actualizada",
+        description: "La moneda de la tienda ha sido actualizada exitosamente.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar la moneda de la tienda.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
 
   return (
@@ -110,6 +136,37 @@ const StoreConfigPage: React.FC = () => {
               </h2>
               <AccordionPanel pb={4}>
                 <PaymentMethodsConfig />
+              </AccordionPanel>
+            </AccordionItem>
+
+            <AccordionItem>
+              <h2>
+                <AccordionButton
+                  _expanded={{ bg: 'gray.100', borderRadius: 'md' }}
+                  borderRadius="md"
+                  p={4}
+                >
+                  <Box flex="1" textAlign="left">
+                    <Heading as="h3" size="lg">
+                      Moneda de la tienda
+                    </Heading>
+                  </Box>
+                  <AccordionIcon />
+                </AccordionButton>
+              </h2>
+              <AccordionPanel pb={4}>
+                <Flex direction="column" align="stretch">
+                  <Select
+                    value={currency}
+                    onChange={(e) => setCurrency(e.target.value)}
+                    mb={4}
+                  >
+                    <option value="ARS">ARS - Peso Argentino</option>
+                  </Select>
+                  <Button colorScheme="blue" onClick={handleCurrencyChange}>
+                    Guardar cambios
+                  </Button>
+                </Flex>
               </AccordionPanel>
             </AccordionItem>
 

@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
+import { getFirestore, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { getStorage, ref, uploadString, getDownloadURL, uploadBytes } from "firebase/storage";
 import { 
   getAuth, 
@@ -78,10 +78,10 @@ export async function getSiteInformation(): Promise<SiteInformation> {
   return DEFAULT_SITE_INFORMATION;
 }
 
-export async function updateSiteInformation(newInfo: Partial<SiteInformation>): Promise<void> {
-  const docRef = doc(db, "siteInfo", "main");
-  await setDoc(docRef, newInfo, { merge: true });
-}
+export const updateSiteInfo = async (siteInfo: Partial<SiteInformation>): Promise<void> => {
+  const siteInfoRef = doc(db, 'siteInfo', 'main');
+  await updateDoc(siteInfoRef, siteInfo);
+};
 
 export const uploadImage = async (file: File, type: 'logo' | 'banner'): Promise<string> => {
   const storageRef = ref(storage, `${type}/${Date.now()}`);
