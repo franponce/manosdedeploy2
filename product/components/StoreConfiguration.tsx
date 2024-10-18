@@ -247,21 +247,6 @@ const StoreConfiguration: React.FC = () => {
           </Text>
         </FormControl>
 
-        <FormControl>
-          <FormLabel>Moneda de la tienda</FormLabel>
-          <Select
-            name="currency"
-            value={localSiteInfo.currency || ''}
-            onChange={handleInputChange}
-          >
-            {Object.entries(currencies).map(([code, currency]) => (
-              <option key={code} value={code}>
-                {code} - {currency.name}
-              </option>
-            ))}
-          </Select>
-        </FormControl>
-
         <Button type="submit" colorScheme="blue" isLoading={isSubmitting}>
           Guardar cambios
         </Button>
