@@ -24,6 +24,7 @@ import { useRouter } from 'next/router';
 import { FaArrowLeft } from 'react-icons/fa';
 import { useSiteInfo } from '../hooks/useSiteInfo';
 import { updateSiteInfo } from '../utils/firebase';
+import { currencies } from '@/utils/currencies';
 
 const StoreConfigPage: React.FC = () => {
   const router = useRouter();
@@ -161,7 +162,11 @@ const StoreConfigPage: React.FC = () => {
                     onChange={(e) => setCurrency(e.target.value)}
                     mb={4}
                   >
-                    <option value="ARS">ARS - Peso Argentino</option>
+                    {Object.entries(currencies).map(([code, currency]) => (
+                      <option key={code} value={code}>
+                        {code} - {currency.name}
+                      </option>
+                    ))}
                   </Select>
                   <Button colorScheme="blue" onClick={handleCurrencyChange}>
                     Guardar cambios
