@@ -9,11 +9,9 @@ import {
   Textarea,
   Button,
   Image,
-  useToast,
-  Link,
   Text,
+  useToast,
   Divider,
-  Select,
   Table,
   Thead,
   Tbody,
@@ -25,11 +23,11 @@ import {
   NumberInputStepper,
   NumberIncrementStepper,
   NumberDecrementStepper,
+  Select,
 } from '@chakra-ui/react';
-import { useSiteInfo } from '../../hooks/useSiteInfo';
+import { useSiteInfo } from '@/hooks/useSiteInfo';
 import { SiteInformation, updateSiteInformation, uploadImage } from '../../utils/firebase';
-import PersistentTooltip from '../components/PersistentTooltip';
-import imageCompression from "browser-image-compression";
+import imageCompression from 'browser-image-compression';
 import { currencies } from '@/utils/currencies';
 
 const StoreConfiguration: React.FC = () => {
@@ -42,14 +40,15 @@ const StoreConfiguration: React.FC = () => {
   const MAX_SUMMARY_LENGTH = 100;
   const MAX_DESCRIPTION_LENGTH = 500;
 
-  const [exchangeRates, setExchangeRates] = useState<{[key: string]: number}>(
-    localSiteInfo?.exchangeRates || {}
-  );
+  const [exchangeRates, setExchangeRates] = useState<{[key: string]: number}>({});
+  const [storeCurrency, setStoreCurrency] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     if (siteInfo) {
       setLocalSiteInfo(siteInfo);
       setExchangeRates(siteInfo.exchangeRates || {});
+      setStoreCurrency(siteInfo.currency || '');
     }
   }, [siteInfo]);
 
@@ -64,7 +63,7 @@ const StoreConfiguration: React.FC = () => {
     if (name === 'description2' && value.length > MAX_DESCRIPTION_LENGTH) {
       return; // No actualizar si excede el límite
     }
-    setLocalSiteInfo(prev => prev ? { ...prev, [name]: value } : null);
+    setLocalSiteInfo((prev: SiteInformation | null) => prev ? { ...prev, [name]: value } : null);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -74,7 +73,7 @@ const StoreConfiguration: React.FC = () => {
       const { selectionStart, selectionEnd } = textarea;
       const value = textarea.value;
       const newValue = value.substring(0, selectionStart) + '\n' + value.substring(selectionEnd);
-      setLocalSiteInfo(prev => prev ? { ...prev, [textarea.name]: newValue } : null);
+      setLocalSiteInfo((prev: SiteInformation | null) => prev ? { ...prev, [textarea.name]: newValue } : null);
       // Establecer la posición del cursor después del salto de línea
       setTimeout(() => {
         textarea.selectionStart = textarea.selectionEnd = selectionStart + 1;
@@ -82,9 +81,9 @@ const StoreConfiguration: React.FC = () => {
     }
   };
 
-  const handleCurrencyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newCurrency = e.target.value;
-    setLocalSiteInfo(prev => prev ? { ...prev, currency: newCurrency } : null);
+  const handleCurrencyChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setStoreCurrency(event.target.value);
+    setIsEditing(true);
   };
 
   const handleExchangeRateChange = (currency: string, value: number) => {
@@ -151,7 +150,7 @@ const StoreConfiguration: React.FC = () => {
       const base64 = canvas.toDataURL('image/jpeg', 0.7);
       
       const url = await uploadImage(base64, type === 'logoUrl' ? 'logo' : 'banner');
-      setLocalSiteInfo(prev => prev ? { ...prev, [type]: url } : null);
+      setLocalSiteInfo((prev: SiteInformation | null) => prev ? { ...prev, [type]: url } : null);
 
       toast({
         title: "Imagen cargada",
@@ -183,6 +182,7 @@ const StoreConfiguration: React.FC = () => {
         description: localSiteInfo.description.replace(/\n/g, '<br>'),
         description2: localSiteInfo.description2.replace(/\n/g, '<br>'),
         exchangeRates,
+        currency: storeCurrency,
       };
       await updateSiteInformation(updatedSiteInfo);
       await mutate(updatedSiteInfo);
@@ -193,6 +193,7 @@ const StoreConfiguration: React.FC = () => {
         duration: 3000,
         isClosable: true,
       });
+      setIsEditing(false);
     } catch (error) {
       console.error('Error updating site information:', error);
       toast({
@@ -204,6 +205,19 @@ const StoreConfiguration: React.FC = () => {
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleSaveChanges = async () => {
+    try {
+      // Aquí deberías implementar la lógica para guardar los cambios
+      // Por ejemplo, una llamada a la API para actualizar la moneda de la tienda
+      // await updateStoreCurrency(storeCurrency);
+      setIsEditing(false);
+      // Mostrar mensaje de éxito
+    } catch (error) {
+      // Manejar error
+      console.error('Error al guardar los cambios:', error);
     }
   };
 
@@ -269,18 +283,19 @@ const StoreConfiguration: React.FC = () => {
 
         <FormControl>
           <FormLabel>Moneda de la tienda</FormLabel>
-          <Select
-            name="currency"
-            value={localSiteInfo?.currency || 'ARS'}
-            onChange={handleCurrencyChange}
-          >
-            {currencies?.map((currency: { code: string; symbol: string }) => (
-              <option key={currency.code} value={currency.code}>
-                {currency.symbol} {currency.code}
-              </option>
-            ))}
+          <Select value={storeCurrency} onChange={handleCurrencyChange}>
+            <option value="USD">USD - Dólar estadounidense</option>
+            <option value="EUR">EUR - Euro</option>
+            <option value="GBP">GBP - Libra esterlina</option>
+            {/* Añade más opciones de moneda según sea necesario */}
           </Select>
         </FormControl>
+
+        {isEditing && (
+          <Button mt={4} colorScheme="blue" onClick={handleSaveChanges}>
+            Guardar cambios
+          </Button>
+        )}
 
         <Box>
           <Heading as="h4" size="md" mb={2}>Tasas de cambio</Heading>
@@ -289,12 +304,12 @@ const StoreConfiguration: React.FC = () => {
             <Thead>
               <Tr>
                 <Th>Moneda</Th>
-                <Th>Tasa de cambio (respecto a {localSiteInfo?.currency})</Th>
+                <Th>Tasa de cambio (respecto a {storeCurrency})</Th>
               </Tr>
             </Thead>
             <Tbody>
               {currencies.map((currency) => (
-                currency.code !== localSiteInfo?.currency && (
+                currency.code !== storeCurrency && (
                   <Tr key={currency.code}>
                     <Td>{currency.symbol} {currency.code}</Td>
                     <Td>
