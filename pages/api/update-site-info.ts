@@ -1,11 +1,11 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { updateSiteInformation, SiteInformation } from '../../utils/firebase';
+import { updateSiteInfo, SiteInformation } from '../../utils/firebase';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
     try {
       const newInfo: Partial<SiteInformation> = req.body;
-      await updateSiteInformation(newInfo);
+      await updateSiteInfo(newInfo);
       res.status(200).json({ message: 'Site information updated successfully' });
     } catch (error) {
       console.error('Error updating site information:', error);
