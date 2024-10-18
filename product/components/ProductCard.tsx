@@ -30,7 +30,7 @@ const ProductCard: React.FC<Props> = ({ product, onAdd }) => {
           </Text>
           <Text noOfLines={3}>{product.description || 'No description available'}</Text>
           <Text fontWeight="bold" fontSize="xl">
-            {parseCurrency(product.price || 0)}
+            {parseCurrency(product.price || 0)} {product.currency}
           </Text>
           <Button colorScheme="blue" onClick={() => onAdd(product)}>
             Agregar al carrito

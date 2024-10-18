@@ -63,12 +63,13 @@ if (typeof window === 'undefined') {
             id: row[0],
             title: row[1],
             description: row[2],
+            currency: 'USD', 
             image: row[3],
             price: parseFloat(row[4]) || 0,
             scheduledPublishDate: row[5] ? new Date(row[5]) : null,
             isScheduled: row[6] === 'TRUE',
           }))
-          .filter((product: Product) => product.title && product.title.trim() !== '');
+          .filter((product) => product.title && product.title.trim() !== '');
 
       } catch (error) {
         console.error('Error fetching products from Google Sheets:', error);

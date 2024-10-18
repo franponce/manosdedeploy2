@@ -25,12 +25,14 @@ import {
   useMediaQuery,
   Flex,
   Center,
+  Select,
 } from "@chakra-ui/react";
 import { TimeIcon, QuestionIcon } from "@chakra-ui/icons";
 import imageCompression from "browser-image-compression";
 import { Product } from "../types";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { currencies } from "../../utils/currencies";
 
 interface ProductModalProps {
   isOpen: boolean;
@@ -47,6 +49,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     description: "",
     image: "",
     price: 0,
+    currency: "ARS",
     isScheduled: false,
     scheduledPublishDate: null,
   });
@@ -73,6 +76,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
         description: "",
         image: "",
         price: 0,
+        currency: "ARS",
         isScheduled: false,
         scheduledPublishDate: null,
       });
@@ -186,7 +190,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setCurrentProduct(prev => ({ ...prev, [name]: value }));
   };
@@ -261,23 +265,32 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
             )}
             <FormControl>
               <FormLabel>
-                Precio
-                <Tooltip label="Ingrese el precio en pesos argentinos" fontSize="md">
+                Precio y Moneda
+                <Tooltip label="Seleccione la moneda y ingrese el precio" fontSize="md">
                   <QuestionIcon boxSize={3} ml={1} color="gray.500" />
                 </Tooltip>
               </FormLabel>
-              <InputGroup>
+              <Flex>
                 <Input
                   name="price"
                   type="number"
                   step="0.01"
                   value={currentProduct.price}
                   onChange={handleInputChange}
+                  mr={2}
                 />
-                <InputRightAddon>
-                  <Box mr={2}>🇦🇷</Box> ARS
-                </InputRightAddon>
-              </InputGroup>
+                <Select
+                  name="currency"
+                  value={currentProduct.currency}
+                  onChange={handleInputChange}
+                >
+                  {currencies.map((currency) => (
+                    <option key={currency.code} value={currency.code}>
+                      {currency.symbol}
+                    </option>
+                  ))}
+                </Select>
+              </Flex>
             </FormControl>
             <Button
               leftIcon={<TimeIcon />}

@@ -81,7 +81,7 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
           (item) =>
             `${item.title} (x${item.quantity}) - ${parseCurrency(
               item.price * item.quantity
-            )}`
+            )} ${item.currency}`
         )
         .join("\n")}\n\n` +
       `-- \n\n` +
@@ -117,7 +117,7 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
                     <Image src={item.image} alt={item.title} boxSize="50px" objectFit="cover" mr={2} />
                     <Box flex={1}>
                       <Text fontWeight="bold">{item.title}</Text>
-                      <Text>{parseCurrency(item.price)}</Text>
+                      <Text>{parseCurrency(item.price)} {item.currency}</Text>
                     </Box>
                     <HStack>
                       <Button size="sm" onClick={() => onDecrement(item)}>-</Button>
