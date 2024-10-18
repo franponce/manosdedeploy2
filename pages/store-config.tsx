@@ -21,15 +21,16 @@ import StoreConfiguration from '../product/components/StoreConfiguration';
 import PaymentMethodsConfig from '../product/components/PaymentMethodsConfig';
 import CustomScripts from '../product/components/CustomScripts';
 import { useRouter } from 'next/router';
-import { FaArrowLeft } from 'react-icons/fa';
+import { FaArrowLeft, FaFlag } from 'react-icons/fa';
 import { useSiteInfo } from '../hooks/useSiteInfo';
 import { updateSiteInfo } from '../utils/firebase';
 import { currencies } from '@/utils/currencies';
 
+
 const StoreConfigPage: React.FC = () => {
   const router = useRouter();
   const { siteInfo, mutate } = useSiteInfo();
-  const [currency, setCurrency] = useState(siteInfo?.currency || 'ARS');
+  const [currency, setCurrency] = useState('ARS');
   const toast = useToast();
 
   const handleBackToAdmin = () => {
@@ -56,6 +57,12 @@ const StoreConfigPage: React.FC = () => {
         isClosable: true,
       });
     }
+  };
+
+  // Modificamos el objeto currencies para incluir ARS al principio y agregar la bandera
+  const modifiedCurrencies = {
+    ARS: { name: 'Peso Argentino', symbol: '$', flag: '🇦🇷' },
+    ...currencies
   };
 
   return (
@@ -162,11 +169,16 @@ const StoreConfigPage: React.FC = () => {
                     onChange={(e) => setCurrency(e.target.value)}
                     mb={4}
                   >
-                    {Object.entries(currencies).map(([code, currency]) => (
-                      <option key={code} value={code}>
-                        {code} - {currency.name}
-                      </option>
-                    ))}
+                    {Object.entries(modifiedCurrencies).map(([code, currency]) => {
+                      if (typeof currency === 'object' && 'flag' in currency && 'name' in currency) {
+                        return (
+                          <option key={code} value={code}>
+                            {currency.flag || <FaFlag />} {code} - {currency.name}
+                          </option>
+                        );
+                      }
+                      return null;
+                    })}
                   </Select>
                   <Button colorScheme="blue" onClick={handleCurrencyChange}>
                     Guardar cambios
