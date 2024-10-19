@@ -23,7 +23,7 @@ import CustomScripts from '../product/components/CustomScripts';
 import { useRouter } from 'next/router';
 import { FaArrowLeft, FaFlag } from 'react-icons/fa';
 import { useSiteInfo } from '../hooks/useSiteInfo';
-import { updateSiteInfo } from '../utils/firebase';
+import { auth, updateSiteInfo } from '../utils/firebase';
 import { currencies } from '@/utils/currencies';
 
 const StoreConfigPage: React.FC = () => {
@@ -32,12 +32,27 @@ const StoreConfigPage: React.FC = () => {
   const [currency, setCurrency] = useState('ARS');
   const [isSubmittingCurrency, setIsSubmittingCurrency] = useState(false);
   const toast = useToast();
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     if (siteInfo && siteInfo.currency) {
       setCurrency(siteInfo.currency);
     }
   }, [siteInfo]);
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        // Verificar si el usuario es admin (puedes ajustar esta lógica según tu implementación)
+        const isAdminUser = user.email === 'admin@example.com' || localStorage.getItem('authToken') === 'admin-token';
+        setIsAdmin(isAdminUser);
+      } else {
+        router.push('/login');
+      }
+    });
+
+    return () => unsubscribe();
+  }, [router]);
 
   const handleBackToAdmin = () => {
     router.push('/admin');
@@ -76,6 +91,8 @@ const StoreConfigPage: React.FC = () => {
     EUR: { name: 'Euro', symbol: '€', flag: '🇪🇺' },
     ...currencies
   };
+
+  if (!siteInfo) return null;
 
   return (
     <Box>
@@ -204,25 +221,27 @@ const StoreConfigPage: React.FC = () => {
               </AccordionPanel>
             </AccordionItem>
 
-            <AccordionItem>
-              <h2>
-                <AccordionButton
-                  _expanded={{ bg: 'gray.100', borderRadius: 'md' }}
-                  borderRadius="md"
-                  p={4}
-                >
-                  <Box flex="1" textAlign="left">
-                    <Heading as="h3" size="lg">
-                      Scripts personalizados
-                    </Heading>
-                  </Box>
-                  <AccordionIcon />
-                </AccordionButton>
-              </h2>
-              <AccordionPanel pb={4}>
-                <CustomScripts />
-              </AccordionPanel>
-            </AccordionItem>
+            {isAdmin && (
+              <AccordionItem>
+                <h2>
+                  <AccordionButton
+                    _expanded={{ bg: 'gray.100', borderRadius: 'md' }}
+                    borderRadius="md"
+                    p={4}
+                  >
+                    <Box flex="1" textAlign="left">
+                      <Heading as="h3" size="lg">
+                        Scripts personalizados
+                      </Heading>
+                    </Box>
+                    <AccordionIcon />
+                  </AccordionButton>
+                </h2>
+                <AccordionPanel pb={4}>
+                  <CustomScripts />
+                </AccordionPanel>
+              </AccordionItem>
+            )}
           </Accordion>
         </VStack>
       </Container>
