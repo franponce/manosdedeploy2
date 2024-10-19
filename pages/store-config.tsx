@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Box,
   Heading,
@@ -33,6 +33,12 @@ const StoreConfigPage: React.FC = () => {
   const [currency, setCurrency] = useState('ARS');
   const toast = useToast();
 
+  useEffect(() => {
+    if (siteInfo && siteInfo.currency) {
+      setCurrency(siteInfo.currency);
+    }
+  }, [siteInfo]);
+
   const handleBackToAdmin = () => {
     router.push('/admin');
   };
@@ -59,7 +65,6 @@ const StoreConfigPage: React.FC = () => {
     }
   };
 
-  // Modificamos el objeto currencies para incluir las monedas solicitadas
   const modifiedCurrencies = {
     ARS: { name: 'Peso Argentino', symbol: '$', flag: '🇦🇷' },
     PEN: { name: 'Sol Peruano', symbol: 'S/', flag: '🇵🇪' },
