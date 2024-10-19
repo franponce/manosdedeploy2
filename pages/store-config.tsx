@@ -59,9 +59,13 @@ const StoreConfigPage: React.FC = () => {
     }
   };
 
-  // Modificamos el objeto currencies para incluir ARS al principio y agregar la bandera
+  // Modificamos el objeto currencies para incluir las monedas solicitadas
   const modifiedCurrencies = {
     ARS: { name: 'Peso Argentino', symbol: '$', flag: '🇦🇷' },
+    PEN: { name: 'Sol Peruano', symbol: 'S/', flag: '🇵🇪' },
+    USD: { name: 'Dólar Estadounidense', symbol: '$', flag: '🇺🇸' },
+    BRL: { name: 'Real Brasileño', symbol: 'R$', flag: '🇧🇷' },
+    EUR: { name: 'Euro', symbol: '€', flag: '🇪🇺' },
     ...currencies
   };
 
