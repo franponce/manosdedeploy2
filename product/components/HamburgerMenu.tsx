@@ -36,19 +36,15 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ isLoggedIn, isAdmin, onLo
       <MenuList>
         {isLoggedIn ? (
           <>
-            {isAdmin && (
-              <>
-                <NextLink href="/admin" passHref legacyBehavior>
-                  <MenuItem as="a">Panel Administrador</MenuItem>
-                </NextLink>
-                <NextLink href="/store-config" passHref legacyBehavior>
-                  <MenuItem as="a">Configuración de la tienda</MenuItem>
-                </NextLink>
-                <NextLink href="/diseno" passHref legacyBehavior>
-                  <MenuItem as="a">Diseño</MenuItem>
-                </NextLink>
-              </>
-            )}
+            <NextLink href="/admin" passHref legacyBehavior>
+              <MenuItem as="a">Panel Administrador</MenuItem>
+            </NextLink>
+            <NextLink href="/store-config" passHref legacyBehavior>
+              <MenuItem as="a">Configuración de la tienda</MenuItem>
+            </NextLink>
+            <NextLink href="/diseno" passHref legacyBehavior>
+              <MenuItem as="a">Diseño</MenuItem>
+            </NextLink>
             <MenuItem onClick={onLogout}>Cerrar sesión</MenuItem>
           </>
         ) : (

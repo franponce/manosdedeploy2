@@ -95,7 +95,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
       setIsAdmin(false);
       destroyCookie(null, 'authToken');
       localStorage.removeItem('hasRefreshedAdmin');
-      router.push("/");
+      router.push("/login");
     } catch (error) {
       console.error('Error during logout:', error);
     }

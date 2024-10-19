@@ -25,6 +25,7 @@ import { FaArrowLeft, FaFlag } from 'react-icons/fa';
 import { useSiteInfo } from '../hooks/useSiteInfo';
 import { auth, updateSiteInfo } from '../utils/firebase';
 import { currencies } from '@/utils/currencies';
+import { parseCookies } from 'nookies';
 
 const StoreConfigPage: React.FC = () => {
   const router = useRouter();
@@ -33,6 +34,7 @@ const StoreConfigPage: React.FC = () => {
   const [isSubmittingCurrency, setIsSubmittingCurrency] = useState(false);
   const toast = useToast();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     if (siteInfo && siteInfo.currency) {
@@ -41,17 +43,23 @@ const StoreConfigPage: React.FC = () => {
   }, [siteInfo]);
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      if (user) {
-        // Verificar si el usuario es admin (puedes ajustar esta lógica según tu implementación)
-        const isAdminUser = user.email === 'admin@example.com' || localStorage.getItem('authToken') === 'admin-token';
-        setIsAdmin(isAdminUser);
-      } else {
-        router.push('/login');
-      }
-    });
+    const cookies = parseCookies();
+    const authToken = cookies.authToken;
 
-    return () => unsubscribe();
+    if (authToken === 'admin-token') {
+      setIsAdmin(true);
+      setIsLoggedIn(true);
+    } else {
+      const unsubscribe = auth.onAuthStateChanged((user) => {
+        if (user) {
+          setIsLoggedIn(true);
+        } else {
+          router.push('/login');
+        }
+      });
+
+      return () => unsubscribe();
+    }
   }, [router]);
 
   const handleBackToAdmin = () => {
@@ -92,7 +100,7 @@ const StoreConfigPage: React.FC = () => {
     ...currencies
   };
 
-  if (!siteInfo) return null;
+  if (!siteInfo || !isLoggedIn) return null;
 
   return (
     <Box>
@@ -138,11 +146,7 @@ const StoreConfigPage: React.FC = () => {
           <Accordion allowMultiple>
             <AccordionItem>
               <h2>
-                <AccordionButton
-                  _expanded={{ bg: 'gray.100', borderRadius: 'md' }}
-                  borderRadius="md"
-                  p={4}
-                >
+                <AccordionButton>
                   <Box flex="1" textAlign="left">
                     <Heading as="h3" size="lg">
                       Información de la tienda
@@ -158,11 +162,7 @@ const StoreConfigPage: React.FC = () => {
 
             <AccordionItem>
               <h2>
-                <AccordionButton
-                  _expanded={{ bg: 'gray.100', borderRadius: 'md' }}
-                  borderRadius="md"
-                  p={4}
-                >
+                <AccordionButton>
                   <Box flex="1" textAlign="left">
                     <Heading as="h3" size="lg">
                       Configuración de métodos de pago
@@ -178,11 +178,7 @@ const StoreConfigPage: React.FC = () => {
 
             <AccordionItem>
               <h2>
-                <AccordionButton
-                  _expanded={{ bg: 'gray.100', borderRadius: 'md' }}
-                  borderRadius="md"
-                  p={4}
-                >
+                <AccordionButton>
                   <Box flex="1" textAlign="left">
                     <Heading as="h3" size="lg">
                       Moneda de la tienda
@@ -224,11 +220,7 @@ const StoreConfigPage: React.FC = () => {
             {isAdmin && (
               <AccordionItem>
                 <h2>
-                  <AccordionButton
-                    _expanded={{ bg: 'gray.100', borderRadius: 'md' }}
-                    borderRadius="md"
-                    p={4}
-                  >
+                  <AccordionButton>
                     <Box flex="1" textAlign="left">
                       <Heading as="h3" size="lg">
                         Scripts personalizados
