@@ -44,7 +44,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts }) => {
           title: "Carrito recuperado",
           description: "Hemos recuperado los productos de tu carrito anterior.",
           status: "info",
-          duration: 5000,
+          duration: 4000,
           isClosable: true,
           position: "bottom-right",
         });
