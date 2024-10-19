@@ -26,11 +26,11 @@ import { useSiteInfo } from '../hooks/useSiteInfo';
 import { updateSiteInfo } from '../utils/firebase';
 import { currencies } from '@/utils/currencies';
 
-
 const StoreConfigPage: React.FC = () => {
   const router = useRouter();
   const { siteInfo, mutate } = useSiteInfo();
   const [currency, setCurrency] = useState('ARS');
+  const [isSubmittingCurrency, setIsSubmittingCurrency] = useState(false);
   const toast = useToast();
 
   useEffect(() => {
@@ -44,6 +44,7 @@ const StoreConfigPage: React.FC = () => {
   };
 
   const handleCurrencyChange = async () => {
+    setIsSubmittingCurrency(true);
     try {
       await updateSiteInfo({ ...siteInfo, currency });
       mutate();
@@ -62,6 +63,8 @@ const StoreConfigPage: React.FC = () => {
         duration: 3000,
         isClosable: true,
       });
+    } finally {
+      setIsSubmittingCurrency(false);
     }
   };
 
@@ -189,7 +192,12 @@ const StoreConfigPage: React.FC = () => {
                       return null;
                     })}
                   </Select>
-                  <Button colorScheme="blue" onClick={handleCurrencyChange}>
+                  <Button 
+                    colorScheme="blue" 
+                    onClick={handleCurrencyChange}
+                    isLoading={isSubmittingCurrency}
+                    loadingText="Guardando..."
+                  >
                     Guardar cambios
                   </Button>
                 </Flex>
