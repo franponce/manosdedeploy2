@@ -17,7 +17,7 @@ import { AppProps } from "next/app";
 import { Global, css } from "@emotion/react";
 import { useRouter } from "next/router";
 import { SWRConfig } from 'swr';
-
+import NextLink from 'next/link';
 import theme from "../theme";
 import { useSiteInfo } from '../hooks/useSiteInfo';
 import { auth, logoutUser } from '../utils/firebase';
@@ -30,6 +30,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
   const [isLoggedIn, setIsLoggedIn] = React.useState(false);
   const [isAdmin, setIsAdmin] = React.useState(false);
   const [isMounted, setIsMounted] = React.useState(false);
+  const [userName, setUserName] = React.useState('');
   const { siteInfo, isLoading, isError } = useSiteInfo();
   const [bannerError, setBannerError] = React.useState(false);
   const [customScripts, setCustomScripts] = React.useState<string | null>(null);
@@ -45,6 +46,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
       if (authToken === 'admin-token') {
         setIsLoggedIn(true);
         setIsAdmin(true);
+        setUserName('Admin');
         if (router.pathname === '/admin' && !hasRefreshedBefore && !hasRefreshed) {
           localStorage.setItem('hasRefreshedAdmin', 'true');
           setHasRefreshed(true);
@@ -55,6 +57,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
           if (user) {
             setIsLoggedIn(true);
             setIsAdmin(false);
+            setUserName(user.displayName || 'Usuario');
             if (router.pathname === '/admin' && !hasRefreshedBefore && !hasRefreshed) {
               localStorage.setItem('hasRefreshedAdmin', 'true');
               setHasRefreshed(true);
@@ -63,6 +66,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
           } else {
             setIsLoggedIn(false);
             setIsAdmin(false);
+            setUserName('');
             destroyCookie(null, 'authToken');
             localStorage.removeItem('hasRefreshedAdmin');
           }
@@ -99,6 +103,17 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
     } catch (error) {
       console.error('Error during logout:', error);
     }
+  };
+
+  const getWelcomeMessage = () => {
+    if (router.pathname === '/admin') {
+      if (isAdmin) {
+        return `Qué lindo verte de nuevo por acá, Admin`;
+      } else if (isLoggedIn) {
+        return `Qué lindo verte de nuevo por acá, ${userName}`;
+      }
+    }
+    return 'Te damos la bienvenida';
   };
 
   if (isLoading) return <Box display="flex" justifyContent="center" alignItems="center" height="100vh"><Spinner /></Box>;
@@ -155,7 +170,11 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
       >
         <Container maxWidth="container.xl" padding={4}>
           <Flex alignItems="center" justifyContent="space-between">
-            <Heading size="md">Te damos la bienvenida</Heading>
+            <NextLink href="/" legacyBehavior>
+              <Heading as="a" size="md" cursor="pointer">
+                {getWelcomeMessage()}
+              </Heading>
+            </NextLink>
             {isMounted && (
               <HamburgerMenu
                 isLoggedIn={isLoggedIn}
