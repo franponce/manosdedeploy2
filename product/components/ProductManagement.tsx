@@ -111,9 +111,8 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onCreateProduct }
       } else {
         await createProduct(product);
       }
-      await fetchProducts();
+      await fetchProducts(); // Actualiza la lista de productos después de una actualización exitosa
       setIsModalOpen(false);
-      setCurrentProduct(null);
       toast({
         title: "Éxito",
         description: `Producto ${product.id ? "actualizado" : "creado"} exitosamente.`,

@@ -92,13 +92,14 @@ if (typeof window === 'undefined') {
             product.image, 
             product.price.toString(),
             product.scheduledPublishDate ? product.scheduledPublishDate.toISOString() : '',
-            product.isScheduled ? 'TRUE' : 'FALSE'
+            product.isScheduled ? 'TRUE' : 'FALSE',
+            product.stock.toString(), // Asegúrate de que el stock se incluya aquí
           ],
         ];
 
         await sheets.spreadsheets.values.update({
           spreadsheetId: SPREADSHEET_ID,
-          range: `A${parseInt(product.id) + 1}:G${parseInt(product.id) + 1}`,
+          range: `A${parseInt(product.id) + 1}:H${parseInt(product.id) + 1}`,
           valueInputOption: 'USER_ENTERED',
           requestBody: { values },
         });

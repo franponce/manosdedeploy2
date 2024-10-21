@@ -128,7 +128,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts }) => {
               sm: "repeat(auto-fill, minmax(280px, 1fr))",
             }}
           >
-            {validProducts.map((product) => (
+            {products?.map((product) => (
               <ProductCard
                 key={product.id}
                 product={product}
