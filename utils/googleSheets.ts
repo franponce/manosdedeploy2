@@ -68,7 +68,7 @@ if (typeof window === 'undefined') {
             price: parseFloat(row[4]) || 0,
             scheduledPublishDate: row[5] ? new Date(row[5]) : null,
             isScheduled: row[6] === 'TRUE',
-            stock: parseInt(row[7]) || 0, // Asegúrate de que este campo esté incluido
+            stock: parseInt(row[7]) || 0,
           }))
           .filter((product) => product.title && product.title.trim() !== '');
 

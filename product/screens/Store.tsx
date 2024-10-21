@@ -25,13 +25,15 @@ interface StoreScreenProps {
 const CART_STORAGE_KEY = 'simple-ecommerce-cart';
 const CART_EXPIRY_TIME = 24 * 60 * 60 * 1000; // 24 horas en milisegundos
 
+const REFRESH_INTERVAL = 10000; // 10 segundos
+
 const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts }) => {
   const [cart, setCart] = React.useState<CartItem[]>([]);
   const toast = useToast();
   const [isCartOpen, toggleCart] = React.useState<boolean>(false);
   const { data: products, error, mutate } = useSWR<Product[]>('/api/products', fetcher, {
     fallbackData: initialProducts,
-    refreshInterval: 60000, // Actualizar cada minuto
+    refreshInterval: REFRESH_INTERVAL,
   });
 
   React.useEffect(() => {

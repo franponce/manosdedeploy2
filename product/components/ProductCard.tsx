@@ -35,6 +35,9 @@ const ProductCard: React.FC<Props> = ({ product, onAdd }) => {
           <Text fontWeight="bold" fontSize="xl">
             {parseCurrency(product.price || 0)} {siteInfo?.currency}
           </Text>
+          <Text fontWeight="bold">
+            Stock: {product.stock > 0 ? product.stock : "Sin stock"}
+          </Text>
           <Button 
             colorScheme="blue" 
             onClick={() => onAdd(product)}

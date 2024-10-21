@@ -73,9 +73,29 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onCreateProduct }
     setFilteredProducts(filtered);
   }, [searchTerm, products]);
 
-  const handleEdit = (product: Product) => {
+  const handleEdit = async (product: Product) => {
     setCurrentProduct(product);
     setIsModalOpen(true);
+    try {
+      await updateProduct(product);
+      await fetchProducts(); // Refrescar los productos después de la actualización
+      toast({
+        title: "Éxito",
+        description: `Producto actualizado exitosamente.`,
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error("Error updating product:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Error desconocido al guardar el producto",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
 
   const handleDelete = async (id: string) => {
