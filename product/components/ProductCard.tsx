@@ -35,8 +35,12 @@ const ProductCard: React.FC<Props> = ({ product, onAdd }) => {
           <Text fontWeight="bold" fontSize="xl">
             {parseCurrency(product.price || 0)} {siteInfo?.currency}
           </Text>
-          <Button colorScheme="blue" onClick={() => onAdd(product)}>
-            Agregar al carrito
+          <Button 
+            colorScheme="blue" 
+            onClick={() => onAdd(product)}
+            isDisabled={product.stock <= 0}
+          >
+            {product.stock > 0 ? "Agregar al carrito" : "Sin stock"}
           </Button>
         </Stack>
       </Box>

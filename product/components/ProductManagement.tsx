@@ -206,8 +206,11 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onCreateProduct }
                   {product.title}
                 </Heading>
                 <Text noOfLines={3} mb={2}>{product.description}</Text>
-                <Text fontWeight="bold" mb={4}>
+                <Text fontWeight="bold" mb={2}>
                   ${product.price.toFixed(2)}
+                </Text>
+                <Text fontWeight="bold" mb={2}>
+                  Stock: {product.stock > 0 ? product.stock : "Sin stock"}
                 </Text>
                 <HStack spacing={4}>
                   <Button colorScheme="blue" onClick={() => handleEdit(product)}>

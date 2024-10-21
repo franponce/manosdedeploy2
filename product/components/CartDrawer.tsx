@@ -31,6 +31,7 @@ import { INFORMATION } from '../../app/constants';
 import { getPaymentMethods, PaymentMethods } from '../../utils/firebase';
 import { FaArrowLeft, FaShoppingCart, FaWhatsapp } from 'react-icons/fa';
 import { useSiteInfo } from '@/hooks/useSiteInfo';
+import { updateProduct } from '@/utils/googleSheets';
 
 interface Props {
   isOpen: boolean;
@@ -67,7 +68,7 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
     [items]
   );
 
-  const handleWhatsAppRedirect = () => {
+  const handleWhatsAppRedirect = async () => {
     if (!fullName.trim()) {
       setIsFullNameError(true);
       return;
@@ -93,6 +94,23 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
     );
     const whatsappURL = `https://wa.me/${INFORMATION.whatsappCart}?text=${whatsappMessage}`;
     window.open(whatsappURL, "_blank");
+
+    // Descontar stock
+    for (const item of items) {
+      try {
+        const updatedProduct = { ...item, stock: item.stock - item.quantity };
+        await updateProduct(updatedProduct);
+      } catch (error) {
+        console.error("Error al actualizar el stock:", error);
+        toast({
+          title: "Error",
+          description: "No se pudo actualizar el stock del producto.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    }
   };
 
   return (

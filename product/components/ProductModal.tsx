@@ -53,6 +53,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     currency: "ARS",
     isScheduled: false,
     scheduledPublishDate: null,
+    stock: 0,
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const toast = useToast();
@@ -81,6 +82,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
         currency: "ARS",
         isScheduled: false,
         scheduledPublishDate: null,
+        stock: 0,
       });
       setImagePreview(null);
     }
@@ -272,6 +274,15 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                 type="number"
                 step="0.01"
                 value={currentProduct.price}
+                onChange={handleInputChange}
+              />
+            </FormControl>
+            <FormControl>
+              <FormLabel>Stock</FormLabel>
+              <Input
+                name="stock"
+                type="number"
+                value={currentProduct.stock}
                 onChange={handleInputChange}
               />
             </FormControl>
