@@ -1,4 +1,4 @@
-import * as React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Button,
   Flex,
@@ -119,6 +119,12 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts }) => {
     product && product.id && product.title && product.image && product.price && !product.isScheduled
   ) || [];
 
+  const handleAddToCart = (product: Product) => {
+    if (product.stock > 0) {
+      handleEditCart(product, "increment");
+    }
+  };
+
   return (
     <>
       <Stack spacing={6}>
@@ -134,7 +140,8 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts }) => {
               <ProductCard
                 key={product.id}
                 product={product}
-                onAdd={(product) => handleEditCart(product, "increment")}
+                onAddToCart={() => handleAddToCart(product)}
+                isOutOfStock={product.stock <= 0}
               />
             ))}
           </Grid>

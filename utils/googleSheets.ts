@@ -86,10 +86,10 @@ if (typeof window === 'undefined') {
 
         const values = [
           [
-            product.id, 
-            product.title, 
-            product.description, 
-            product.image, 
+            product.id,
+            product.title,
+            product.description,
+            product.image,
             product.price.toString(),
             product.scheduledPublishDate ? product.scheduledPublishDate.toISOString() : '',
             product.isScheduled ? 'TRUE' : 'FALSE',

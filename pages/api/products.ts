@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { getProducts, createProduct, updateProduct, deleteProduct } from '../../utils/googleSheets';
+import { getProducts, updateProduct, createProduct, deleteProduct } from '../../utils/googleSheets';
 import { Product } from '../../product/types';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -21,7 +21,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           productData.scheduledPublishDate = new Date(productData.scheduledPublishDate);
         }
         const newProduct = await createProduct(productData);
-        res.status(201).json(newProduct);
+        const updatedProducts = await getProducts(); // Obtener la lista actualizada de productos
+        res.status(201).json(updatedProducts);
       } catch (error) {
         console.error('Error creating product:', error);
         res.status(500).json({ error: 'Failed to create product', details: error instanceof Error ? error.message : 'Unknown error' });
@@ -31,7 +32,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     case 'PUT':
       try {
         await updateProduct(req.body as Product);
-        res.status(200).json({ message: 'Product updated successfully' });
+        const updatedProducts = await getProducts(); // Obtener la lista actualizada de productos
+        res.status(200).json(updatedProducts);
       } catch (error) {
         console.error('Error updating product:', error);
         res.status(500).json({ error: 'Error al actualizar producto. Revisa las medidas y peso de la imagen que querés cargar' });
@@ -46,7 +48,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           return;
         }
         await deleteProduct(id);
-        res.status(200).json({ message: 'Product deleted successfully' });
+        const updatedProducts = await getProducts(); // Obtener la lista actualizada de productos
+        res.status(200).json(updatedProducts);
       } catch (error) {
         console.error('Error deleting product:', error);
         res.status(500).json({ error: 'Failed to delete product' });

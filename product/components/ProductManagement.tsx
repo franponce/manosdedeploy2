@@ -48,7 +48,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onCreateProduct }
       console.error("Error fetching products:", error);
       toast({
         title: "Error",
-        description: "Failed to fetch products",
+        description: "No se pudieron cargar los productos",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -81,7 +81,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onCreateProduct }
       await fetchProducts(); // Refrescar los productos después de la actualización
       toast({
         title: "Éxito",
-        description: `Producto actualizado exitosamente.`,
+        description: "Producto actualizado correctamente",
         status: "success",
         duration: 3000,
         isClosable: true,
@@ -90,7 +90,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onCreateProduct }
       console.error("Error updating product:", error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Error desconocido al guardar el producto",
+        description: "No se pudo actualizar el producto",
         status: "error",
         duration: 3000,
         isClosable: true,

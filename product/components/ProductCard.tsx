@@ -1,51 +1,30 @@
 import React from 'react';
-import { Box, Image, Text, Button, Stack, AspectRatio } from '@chakra-ui/react';
+import { Box, Image, Text, Button } from '@chakra-ui/react';
 import { Product } from '../types';
-import { parseCurrency } from '../../utils/currency';
-import { useSiteInfo } from '../../hooks/useSiteInfo';
 
 interface Props {
   product: Product;
-  onAdd: (product: Product) => void;
+  onAddToCart: () => void;
+  isOutOfStock: boolean;
 }
 
-const ProductCard: React.FC<Props> = ({ product, onAdd }) => {
-  const { siteInfo } = useSiteInfo();
-
-  if (!product) {
-    return null; // O puedes retornar un componente de fallback
-  }
-
+const ProductCard: React.FC<Props> = ({ product, onAddToCart, isOutOfStock }) => {
   return (
     <Box borderWidth={1} borderRadius="lg" overflow="hidden">
-      <AspectRatio ratio={1}>
-        <Image 
-          src={product.image || 'https://via.placeholder.com/500'} 
-          alt={product.title || 'Product image'} 
-          objectFit="cover" 
-          fallbackSrc="https://via.placeholder.com/500"
-        />
-      </AspectRatio>
+      <Image src={product.image} alt={product.title} />
       <Box p={4}>
-        <Stack spacing={2}>
-          <Text fontWeight="bold" fontSize="lg" noOfLines={2}>
-            {product.title || 'Untitled Product'}
-          </Text>
-          <Text noOfLines={3}>{product.description || 'No description available'}</Text>
-          <Text fontWeight="bold" fontSize="xl">
-            {parseCurrency(product.price || 0)} {siteInfo?.currency}
-          </Text>
-          <Text fontWeight="bold">
-            Stock: {product.stock > 0 ? product.stock : "Sin stock"}
-          </Text>
-          <Button 
-            colorScheme="blue" 
-            onClick={() => onAdd(product)}
-            isDisabled={product.stock <= 0}
-          >
-            {product.stock > 0 ? "Agregar al carrito" : "Sin stock"}
-          </Button>
-        </Stack>
+        <Text fontWeight="bold">{product.title}</Text>
+        <Text>{product.description}</Text>
+        <Text fontWeight="bold">Precio: ${product.price}</Text>
+        <Text>Stock: {product.stock}</Text>
+        <Button
+          onClick={() => onAddToCart()}
+          isDisabled={isOutOfStock}
+          mt={2}
+          colorScheme="blue"
+        >
+          {isOutOfStock ? "Sin stock" : "Agregar al carrito"}
+        </Button>
       </Box>
     </Box>
   );
