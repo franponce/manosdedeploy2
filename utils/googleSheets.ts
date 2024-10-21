@@ -59,7 +59,7 @@ if (typeof window === 'undefined') {
         }
 
         return rows
-          .map((row: any[]) => ({
+          .map((row: any[]): Product => ({
             id: row[0],
             title: row[1],
             description: row[2],
@@ -68,6 +68,7 @@ if (typeof window === 'undefined') {
             price: parseFloat(row[4]) || 0,
             scheduledPublishDate: row[5] ? new Date(row[5]) : null,
             isScheduled: row[6] === 'TRUE',
+            stock: parseInt(row[7]) || 0, // Asegúrate de que este campo esté incluido
           }))
           .filter((product) => product.title && product.title.trim() !== '');
 
@@ -216,4 +217,3 @@ export const {
   deleteProduct,
   getProductCount,
 } = googleSheetsApi;
-
