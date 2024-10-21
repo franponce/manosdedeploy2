@@ -8,7 +8,9 @@ interface Props {
   isOutOfStock: boolean;
 }
 
-const ProductCard: React.FC<Props> = ({ product, onAddToCart, isOutOfStock }) => {
+const ProductCard: React.FC<Props> = ({ product, onAddToCart }) => {
+  const isOutOfStock = product.stock <= 0;
+
   return (
     <Box borderWidth={1} borderRadius="lg" overflow="hidden">
       <Image src={product.image} alt={product.title} />
@@ -18,7 +20,7 @@ const ProductCard: React.FC<Props> = ({ product, onAddToCart, isOutOfStock }) =>
         <Text fontWeight="bold">Precio: ${product.price}</Text>
         <Text>Stock: {product.stock}</Text>
         <Button
-          onClick={() => onAddToCart()}
+          onClick={onAddToCart}
           isDisabled={isOutOfStock}
           mt={2}
           colorScheme="blue"

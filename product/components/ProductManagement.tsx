@@ -1,260 +1,44 @@
-import React, { useState, useEffect, useCallback } from "react";
-import {
-  Box,
-  Button,
-  Input,
-  Text,
-  SimpleGrid,
-  useToast,
-  AspectRatio,
-  Image,
-  HStack,
-  VStack,
-  Flex,
-  Center,
-  Icon,
-  InputGroup,
-  InputLeftElement,
-  Heading,
-  Badge,
-} from "@chakra-ui/react";
-import { SearchIcon } from "@chakra-ui/icons";
-import ProductModal from "./ProductModal";
-import { getProducts, createProduct, updateProduct, deleteProduct } from "../../utils/googleSheets";
-import { Product } from "../types";
-
-const PRODUCT_LIMIT = 30;
-const SYNC_INTERVAL = 30000; // 30 segundos
+import React from 'react';
+import { Box, Grid, Text, Button, Image, VStack, HStack } from '@chakra-ui/react';
+import { Product } from '../types';
 
 interface ProductManagementProps {
+  products?: Product[];
+  onEditProduct?: (product: Product) => void;
+  onDeleteProduct?: (productId: string) => void;
   onCreateProduct: () => void;
 }
 
-const ProductManagement: React.FC<ProductManagementProps> = ({ onCreateProduct }) => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const toast = useToast();
-
-  const fetchProducts = useCallback(async () => {
-    try {
-      const fetchedProducts = await getProducts();
-      setProducts(fetchedProducts);
-      setFilteredProducts(fetchedProducts);
-    } catch (error) {
-      console.error("Error fetching products:", error);
-      toast({
-        title: "Error",
-        description: "No se pudieron cargar los productos",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    }
-  }, [toast]);
-
-  useEffect(() => {
-    fetchProducts();
-    const intervalId = setInterval(fetchProducts, SYNC_INTERVAL);
-    return () => clearInterval(intervalId);
-  }, [fetchProducts]);
-
-  useEffect(() => {
-    const lowercasedTerm = searchTerm.toLowerCase();
-    const filtered = products.filter(
-      (product) =>
-        product.title.toLowerCase().includes(lowercasedTerm) ||
-        product.description.toLowerCase().includes(lowercasedTerm) ||
-        product.price.toString().includes(lowercasedTerm)
-    );
-    setFilteredProducts(filtered);
-  }, [searchTerm, products]);
-
-  const handleEdit = async (product: Product) => {
-    setCurrentProduct(product);
-    setIsModalOpen(true);
-    try {
-      await updateProduct(product);
-      await fetchProducts(); // Refrescar los productos después de la actualización
-      toast({
-        title: "Éxito",
-        description: "Producto actualizado correctamente",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-    } catch (error) {
-      console.error("Error updating product:", error);
-      toast({
-        title: "Error",
-        description: "No se pudo actualizar el producto",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    if (window.confirm("¿Estás seguro de que quieres eliminar este producto?")) {
-      try {
-        await deleteProduct(id);
-        await fetchProducts();
-        toast({
-          title: "Producto eliminado",
-          description: "El producto ha sido eliminado exitosamente.",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
-      } catch (error) {
-        console.error("Error deleting product:", error);
-        toast({
-          title: "Error",
-          description: "Failed to delete product",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-      }
-    }
-  };
-
-  const handleSubmit = async (product: Product) => {
-    setIsLoading(true);
-    try {
-      if (product.id) {
-        await updateProduct(product);
-      } else {
-        await createProduct(product);
-      }
-      await fetchProducts(); // Actualiza la lista de productos después de una actualización exitosa
-      setIsModalOpen(false);
-      toast({
-        title: "Éxito",
-        description: `Producto ${product.id ? "actualizado" : "creado"} exitosamente.`,
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-    } catch (error) {
-      console.error("Error saving product:", error);
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Error desconocido al guardar el producto",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const isProductScheduled = (product: Product) => {
-    return product.isScheduled && product.scheduledPublishDate && new Date(product.scheduledPublishDate) > new Date();
-  };
-
+const ProductManagement: React.FC<ProductManagementProps> = ({
+  products,
+  onEditProduct,
+  onDeleteProduct,
+  onCreateProduct
+}) => {
   return (
-    <Box>
-      <Flex direction="column" mb={6}>
-        <InputGroup mb={4}>
-          <InputLeftElement pointerEvents="none">
-            <SearchIcon color="gray.300" />
-          </InputLeftElement>
-          <Input
-            placeholder="Buscar productos..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </InputGroup>
-      </Flex>
-
-      {products.length >= PRODUCT_LIMIT - 5 && products.length < PRODUCT_LIMIT && (
-        <Box mb={4} p={3} bg="yellow.100" borderRadius="md">
-          <Text color="yellow.800">
-            Te estás acercando al límite de productos. Tienes {PRODUCT_LIMIT - products.length} productos disponibles.
-          </Text>
+    <Grid templateColumns="repeat(auto-fill, minmax(250px, 1fr))" gap={6}>
+      {products?.map((product) => (
+        <Box key={product.id} borderWidth={1} borderRadius="lg" overflow="hidden">
+          <Image src={product.image} alt={product.title} />
+          <VStack p={4} align="start" spacing={2}>
+            <Text fontWeight="bold">{product.title}</Text>
+            <Text>Precio: ${product.price}</Text>
+            <Text>Stock: {product.stock}</Text>
+            <HStack spacing={2}>
+              <Button size="sm" onClick={() => onEditProduct && onEditProduct(product)}>
+                Editar
+              </Button>
+              <Button size="sm" colorScheme="red" onClick={() => onDeleteProduct && onDeleteProduct(product.id)}>
+                Eliminar
+              </Button>
+            </HStack>
+          </VStack>
         </Box>
-      )}
-      {products.length >= PRODUCT_LIMIT && (
-        <Box mb={4} p={3} bg="red.100" borderRadius="md">
-          <Text color="red.800">
-            Has alcanzado el límite de productos. Contacta con soporte para aumentar tu límite.
-          </Text>
-        </Box>
-      )}
-
-      {filteredProducts.length === 0 ? (
-        <Center flexDirection="column" p={8} bg="gray.50" borderRadius="lg" boxShadow="sm">
-          <Icon as={SearchIcon} w={12} h={12} color="gray.400" mb={4} />
-          <Heading as="h3" size="md" textAlign="center" mb={2}>
-            No se encontraron productos
-          </Heading>
-          <Text color="gray.600" textAlign="center" maxW="md">
-            No hay productos que coincidan con tu búsqueda. Intenta con otros términos o crea un nuevo producto.
-          </Text>
-        </Center>
-      ) : (
-        <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
-          {filteredProducts.map((product) => (
-            <Box key={product.id} borderRadius="lg" borderWidth={1} overflow="hidden" position="relative">
-              {isProductScheduled(product) && (
-                <Badge 
-                  colorScheme="purple" 
-                  position="absolute" 
-                  top="2" 
-                  left="2" 
-                  zIndex="1"
-                >
-                  Producto programado
-                </Badge>
-              )}
-              <AspectRatio ratio={1}>
-                <Image
-                  src={product.image}
-                  alt={product.title}
-                  objectFit="cover"
-                />
-              </AspectRatio>
-              <Box p={4}>
-                <Heading as="h3" size="md" noOfLines={2} mb={2}>
-                  {product.title}
-                </Heading>
-                <Text noOfLines={3} mb={2}>{product.description}</Text>
-                <Text fontWeight="bold" mb={2}>
-                  ${product.price.toFixed(2)}
-                </Text>
-                <Text fontWeight="bold" mb={2}>
-                  Stock: {product.stock > 0 ? product.stock : "Sin stock"}
-                </Text>
-                <HStack spacing={4}>
-                  <Button colorScheme="blue" onClick={() => handleEdit(product)}>
-                    Editar
-                  </Button>
-                  <Button colorScheme="red" onClick={() => handleDelete(product.id)}>
-                    Eliminar
-                  </Button>
-                </HStack>
-              </Box>
-            </Box>
-          ))}
-        </SimpleGrid>
-      )}
-      <ProductModal
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setCurrentProduct(null);
-        }}
-        onSubmit={handleSubmit}
-        product={currentProduct}
-        isLoading={isLoading}
-      />
-    </Box>
+      ))}
+      <Button onClick={onCreateProduct} colorScheme="blue">
+        Crear nuevo producto
+      </Button>
+    </Grid>
   );
 };
 

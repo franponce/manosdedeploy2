@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Heading,
@@ -13,20 +13,71 @@ import { useRouter } from 'next/router';
 import { FaArrowRight, FaStore, FaPlus } from 'react-icons/fa';
 import ProductModal from '../product/components/ProductModal';
 import { Product } from "../product/types";
-import { createProduct, updateProduct } from "../utils/googleSheets";
+import { createProduct, updateProduct, getProducts, deleteProduct } from "../utils/googleSheets";
 
 const AdminPage: React.FC = () => {
   const router = useRouter();
   const toast = useToast();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const fetchedProducts = await getProducts();
+      setProducts(fetchedProducts);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar los productos",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
 
   const handleStoreSettings = () => {
     router.push('/store-config');
   };
 
   const handleCreateProduct = () => {
+    setEditingProduct(null);
     setIsModalOpen(true);
+  };
+
+  const handleEditProduct = (product: Product) => {
+    setEditingProduct(product);
+    setIsModalOpen(true);
+  };
+
+  const handleDeleteProduct = async (productId: string) => {
+    try {
+      await deleteProduct(productId);
+      await fetchProducts();
+      toast({
+        title: "Éxito",
+        description: "Producto eliminado exitosamente.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo eliminar el producto",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
 
   const handleSubmit = async (product: Product) => {
@@ -37,6 +88,7 @@ const AdminPage: React.FC = () => {
       } else {
         await createProduct(product);
       }
+      await fetchProducts();
       setIsModalOpen(false);
       toast({
         title: "Éxito",
@@ -104,14 +156,19 @@ const AdminPage: React.FC = () => {
         </Flex>
       </Flex>
 
-      <ProductManagement onCreateProduct={handleCreateProduct} />
+      <ProductManagement
+        products={products}
+        onEditProduct={handleEditProduct}
+        onDeleteProduct={handleDeleteProduct} onCreateProduct={function (): void {
+          throw new Error("Function not implemented.");
+        } }      />
 
       {isModalOpen && (
         <ProductModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           onSubmit={handleSubmit}
-          product={null}
+          product={editingProduct}
           isLoading={isLoading}
         />
       )}

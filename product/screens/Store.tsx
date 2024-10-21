@@ -120,7 +120,20 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts }) => {
   ) || [];
 
   const handleAddToCart = (product: Product) => {
-    if (product.stock > 0) {
+    const itemInCart = cart.find(item => item.id === product.id);
+    if (itemInCart) {
+      if (itemInCart.quantity < product.stock) {
+        handleEditCart(product, "increment");
+      } else {
+        toast({
+          title: "Stock insuficiente",
+          description: "No hay más unidades disponibles de este producto.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    } else if (product.stock > 0) {
       handleEditCart(product, "increment");
     }
   };
