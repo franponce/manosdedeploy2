@@ -18,7 +18,7 @@ import {
   Heading,
   Badge,
 } from "@chakra-ui/react";
-import { SearchIcon } from "@chakra-ui/icons";
+import { ChevronDownIcon, ChevronUpIcon, SearchIcon } from "@chakra-ui/icons";
 import { FaTrash, FaArrowsAlt } from "react-icons/fa";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import ProductModal from "./ProductModal";
@@ -141,31 +141,31 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onCreateProduct }
     return product.isScheduled && product.scheduledPublishDate && new Date(product.scheduledPublishDate) > new Date();
   };
 
-  const onDragEnd = async (result: any) => {
-    if (!result.destination) {
+  const moveProduct = async (index: number, direction: 'up' | 'down') => {
+    if ((direction === 'up' && index === 0) || (direction === 'down' && index === filteredProducts.length - 1)) {
       return;
     }
 
-    const items = Array.from(filteredProducts);
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
+    const newProducts = [...filteredProducts];
+    const swapIndex = direction === 'up' ? index - 1 : index + 1;
+    [newProducts[index], newProducts[swapIndex]] = [newProducts[swapIndex], newProducts[index]];
 
-    const updatedItems = items.map((item, index) => ({
-      ...item,
-      order: index + 1,
-    }));
+    // Actualizar el orden
+    newProducts.forEach((product, i) => {
+      product.order = i + 1;
+    });
 
-    setFilteredProducts(updatedItems);
+    setFilteredProducts(newProducts);
     setProducts(prevProducts => 
       prevProducts.map(product => {
-        const updatedProduct = updatedItems.find(item => item.id === product.id);
+        const updatedProduct = newProducts.find(p => p.id === product.id);
         return updatedProduct ? updatedProduct : product;
       })
     );
 
     // Actualizar el orden en la base de datos
     try {
-      await Promise.all(updatedItems.map(product => updateProduct(product)));
+      await Promise.all(newProducts.map(product => updateProduct(product)));
       toast({
         title: "Orden actualizado",
         description: "El orden de los productos ha sido actualizado exitosamente.",
@@ -226,83 +226,73 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onCreateProduct }
           </Text>
         </Center>
       ) : (
-        <DragDropContext onDragEnd={onDragEnd}>
-          <Droppable droppableId="products">
-            {(provided) => (
-              <SimpleGrid
-                columns={{ base: 1, md: 2, lg: 3 }}
-                spacing={6}
-                {...provided.droppableProps}
-                ref={provided.innerRef}
-              >
-                {filteredProducts.map((product, index) => (
-                  <Draggable key={product.id} draggableId={product.id} index={index}>
-                    {(provided) => (
-                      <Box
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        borderRadius="lg"
-                        borderWidth={1}
-                        overflow="hidden"
-                        position="relative"
-                      >
-                        {isProductScheduled(product) && (
-                          <Badge 
-                            colorScheme="purple" 
-                            position="absolute" 
-                            top="2" 
-                            left="2" 
-                            zIndex="1"
-                          >
-                            Producto programado
-                          </Badge>
-                        )}
-                        <AspectRatio ratio={1}>
-                          <Image
-                            src={product.image}
-                            alt={product.title}
-                            objectFit="cover"
-                          />
-                        </AspectRatio>
-                        <Box p={4}>
-                          <Heading as="h3" size="md" noOfLines={2} mb={2}>
-                            {product.title}
-                          </Heading>
-                          <Text noOfLines={3} mb={2}>{product.description}</Text>
-                          <Text fontWeight="bold" mb={4}>
-                            ${product.price.toFixed(2)}
-                          </Text>
-                          <HStack spacing={4}>
-                            <Button 
-                              colorScheme="red" 
-                              onClick={() => handleDelete(product.id)}
-                              leftIcon={<Icon as={FaTrash} />}
-                            >
-                              Eliminar
-                            </Button>
-                            <Button colorScheme="blue" onClick={() => handleEdit(product)}>
-                              Editar
-                            </Button>
-                          </HStack>
-                        </Box>
-                        <Flex
-                          {...provided.dragHandleProps}
-                          justifyContent="center"
-                          alignItems="center"
-                          bg="gray.100"
-                          p={2}
-                        >
-                          <Icon as={FaArrowsAlt} />
-                        </Flex>
-                      </Box>
-                    )}
-                  </Draggable>
-                ))}
-                {provided.placeholder}
-              </SimpleGrid>
-            )}
-          </Droppable>
-        </DragDropContext>
+        <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+          {filteredProducts.map((product, index) => (
+            <Box
+              key={product.id}
+              borderRadius="lg"
+              borderWidth={1}
+              overflow="hidden"
+              position="relative"
+            >
+              {isProductScheduled(product) && (
+                <Badge 
+                  colorScheme="purple" 
+                  position="absolute" 
+                  top="2" 
+                  left="2" 
+                  zIndex="1"
+                >
+                  Producto programado
+                </Badge>
+              )}
+              <AspectRatio ratio={1}>
+                <Image
+                  src={product.image}
+                  alt={product.title}
+                  objectFit="cover"
+                />
+              </AspectRatio>
+              <Box p={4}>
+                <Heading as="h3" size="md" noOfLines={2} mb={2}>
+                  {product.title}
+                </Heading>
+                <Text noOfLines={3} mb={2}>{product.description}</Text>
+                <Text fontWeight="bold" mb={4}>
+                  ${product.price.toFixed(2)}
+                </Text>
+                <HStack spacing={4}>
+                  <Button 
+                    colorScheme="red" 
+                    onClick={() => handleDelete(product.id)}
+                    leftIcon={<Icon as={FaTrash} />}
+                  >
+                    Eliminar
+                  </Button>
+                  <Button colorScheme="blue" onClick={() => handleEdit(product)}>
+                    Editar
+                  </Button>
+                </HStack>
+                <HStack mt={2} spacing={2}>
+                  <Button
+                    size="sm"
+                    onClick={() => moveProduct(index, 'up')}
+                    isDisabled={index === 0}
+                  >
+                    <ChevronUpIcon />
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => moveProduct(index, 'down')}
+                    isDisabled={index === filteredProducts.length - 1}
+                  >
+                    <ChevronDownIcon />
+                  </Button>
+                </HStack>
+              </Box>
+            </Box>
+          ))}
+        </SimpleGrid>
       )}
       <ProductModal
         isOpen={isModalOpen}
