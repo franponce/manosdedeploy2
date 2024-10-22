@@ -165,7 +165,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onCreateProduct }
 
     // Actualizar el orden en la base de datos
     try {
-      await Promise.all(newProducts.map(product => updateProduct(product)));
+      await Promise.all(newProducts.map(product => updateProduct({ id: product.id, order: product.order })));
       toast({
         title: "Orden actualizado",
         description: "El orden de los productos ha sido actualizado exitosamente.",

@@ -79,28 +79,39 @@ if (typeof window === 'undefined') {
       }
     },
 
-    updateProduct: async (product: Product): Promise<void> => {
+    updateProduct: async (product: Partial<Product>): Promise<void> => {
       try {
         const auth = await getAuthClient();
         const { google } = await import('googleapis');
         const sheets = google.sheets({ version: 'v4', auth });
 
-        const values = [
-          [
-            product.id, 
-            product.title, 
-            product.description, 
-            product.image, 
-            product.price.toString(),
-            product.scheduledPublishDate ? product.scheduledPublishDate.toISOString() : '',
-            product.isScheduled ? 'TRUE' : 'FALSE',
-            product.order.toString(),
-          ],
-        ];
+        let values: any[][] = [];
+        let range: string;
+
+        if ('order' in product) {
+          // Si estamos actualizando el orden, solo actualizamos ese campo
+          values = [[product.order]];
+          range = `H${parseInt(product.id!) + 1}`;
+        } else {
+          // Si estamos actualizando otros campos, mantenemos la lógica original
+          values = [
+            [
+              product.id, 
+              product.title, 
+              product.description, 
+              product.image,
+              product.price?.toString(),
+              product.scheduledPublishDate ? product.scheduledPublishDate.toISOString() : '',
+              product.isScheduled ? 'TRUE' : 'FALSE',
+              product.order?.toString(),
+            ],
+          ];
+          range = `A${parseInt(product.id!) + 1}:H${parseInt(product.id!) + 1}`;
+        }
 
         await sheets.spreadsheets.values.update({
           spreadsheetId: SPREADSHEET_ID,
-          range: `A${parseInt(product.id) + 1}:H${parseInt(product.id) + 1}`,
+          range: range,
           valueInputOption: 'USER_ENTERED',
           requestBody: { values },
         });
