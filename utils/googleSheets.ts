@@ -94,7 +94,7 @@ if (typeof window === 'undefined') {
             product.price.toString(),
             product.scheduledPublishDate ? product.scheduledPublishDate.toISOString() : '',
             product.isScheduled ? 'TRUE' : 'FALSE',
-            product.order.toString(), // Nuevo campo
+            product.order.toString(),
           ],
         ];
 
