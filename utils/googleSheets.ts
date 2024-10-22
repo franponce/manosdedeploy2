@@ -59,7 +59,7 @@ if (typeof window === 'undefined') {
         }
 
         return rows
-          .map((row: any[]) => ({
+          .map((row: any[], index: number) => ({
             id: row[0],
             title: row[1],
             description: row[2],
@@ -68,8 +68,10 @@ if (typeof window === 'undefined') {
             price: parseFloat(row[4]) || 0,
             scheduledPublishDate: row[5] ? new Date(row[5]) : null,
             isScheduled: row[6] === 'TRUE',
+            order: parseInt(row[7]) || index + 1, // Nuevo campo, si no existe, usa el índice + 1
           }))
-          .filter((product) => product.title && product.title.trim() !== '');
+          .filter((product) => product.title && product.title.trim() !== '')
+          .sort((a, b) => a.order - b.order); // Ordenar los productos por el campo 'order'
 
       } catch (error) {
         console.error('Error fetching products from Google Sheets:', error);
@@ -91,13 +93,14 @@ if (typeof window === 'undefined') {
             product.image, 
             product.price.toString(),
             product.scheduledPublishDate ? product.scheduledPublishDate.toISOString() : '',
-            product.isScheduled ? 'TRUE' : 'FALSE'
+            product.isScheduled ? 'TRUE' : 'FALSE',
+            product.order.toString(), // Nuevo campo
           ],
         ];
 
         await sheets.spreadsheets.values.update({
           spreadsheetId: SPREADSHEET_ID,
-          range: `A${parseInt(product.id) + 1}:G${parseInt(product.id) + 1}`,
+          range: `A${parseInt(product.id) + 1}:H${parseInt(product.id) + 1}`,
           valueInputOption: 'USER_ENTERED',
           requestBody: { values },
         });
@@ -120,6 +123,7 @@ if (typeof window === 'undefined') {
         const sheets = google.sheets({ version: 'v4', auth });
 
         const newId = (Math.max(...currentProducts.map((p: Product) => parseInt(p.id)), 0) + 1).toString();
+        const newOrder = currentProducts.length + 1;
         const values = [
           [
             newId, 
@@ -128,7 +132,8 @@ if (typeof window === 'undefined') {
             product.image, 
             product.price.toString(),
             product.scheduledPublishDate ? new Date(product.scheduledPublishDate).toISOString() : '',
-            product.isScheduled ? 'TRUE' : 'FALSE'
+            product.isScheduled ? 'TRUE' : 'FALSE',
+            newOrder.toString(), // Nuevo campo
           ],
         ];
 
@@ -216,4 +221,3 @@ export const {
   deleteProduct,
   getProductCount,
 } = googleSheetsApi;
-

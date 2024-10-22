@@ -115,7 +115,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts }) => {
 
   const validProducts = products?.filter(product =>
     product && product.id && product.title && product.image && product.price && !product.isScheduled
-  ) || [];
+  ).sort((a, b) => a.order - b.order) || [];
 
   return (
     <>

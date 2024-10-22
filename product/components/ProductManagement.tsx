@@ -19,7 +19,8 @@ import {
   Badge,
 } from "@chakra-ui/react";
 import { SearchIcon } from "@chakra-ui/icons";
-import { FaTrash } from "react-icons/fa";
+import { FaTrash, FaArrowsAlt } from "react-icons/fa";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import ProductModal from "./ProductModal";
 import { getProducts, createProduct, updateProduct, deleteProduct } from "../../utils/googleSheets";
 import { Product } from "../types";
@@ -140,6 +141,50 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onCreateProduct }
     return product.isScheduled && product.scheduledPublishDate && new Date(product.scheduledPublishDate) > new Date();
   };
 
+  const onDragEnd = async (result: any) => {
+    if (!result.destination) {
+      return;
+    }
+
+    const items = Array.from(filteredProducts);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+
+    const updatedItems = items.map((item, index) => ({
+      ...item,
+      order: index + 1,
+    }));
+
+    setFilteredProducts(updatedItems);
+    setProducts(prevProducts => 
+      prevProducts.map(product => {
+        const updatedProduct = updatedItems.find(item => item.id === product.id);
+        return updatedProduct ? updatedProduct : product;
+      })
+    );
+
+    // Actualizar el orden en la base de datos
+    try {
+      await Promise.all(updatedItems.map(product => updateProduct(product)));
+      toast({
+        title: "Orden actualizado",
+        description: "El orden de los productos ha sido actualizado exitosamente.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('Error updating product order:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar el orden de los productos.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
   return (
     <Box>
       <Flex direction="column" mb={6}>
@@ -181,51 +226,83 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onCreateProduct }
           </Text>
         </Center>
       ) : (
-        <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
-          {filteredProducts.map((product) => (
-            <Box key={product.id} borderRadius="lg" borderWidth={1} overflow="hidden" position="relative">
-              {isProductScheduled(product) && (
-                <Badge 
-                  colorScheme="purple" 
-                  position="absolute" 
-                  top="2" 
-                  left="2" 
-                  zIndex="1"
-                >
-                  Producto programado
-                </Badge>
-              )}
-              <AspectRatio ratio={1}>
-                <Image
-                  src={product.image}
-                  alt={product.title}
-                  objectFit="cover"
-                />
-              </AspectRatio>
-              <Box p={4}>
-                <Heading as="h3" size="md" noOfLines={2} mb={2}>
-                  {product.title}
-                </Heading>
-                <Text noOfLines={3} mb={2}>{product.description}</Text>
-                <Text fontWeight="bold" mb={4}>
-                  ${product.price.toFixed(2)}
-                </Text>
-                <HStack spacing={4}>
-                  <Button 
-                    colorScheme="red" 
-                    onClick={() => handleDelete(product.id)}
-                    leftIcon={<Icon as={FaTrash} />}
-                  >
-                    Eliminar
-                  </Button>
-                  <Button colorScheme="blue" onClick={() => handleEdit(product)}>
-                    Editar
-                  </Button>
-                </HStack>
-              </Box>
-            </Box>
-          ))}
-        </SimpleGrid>
+        <DragDropContext onDragEnd={onDragEnd}>
+          <Droppable droppableId="products">
+            {(provided) => (
+              <SimpleGrid
+                columns={{ base: 1, md: 2, lg: 3 }}
+                spacing={6}
+                {...provided.droppableProps}
+                ref={provided.innerRef}
+              >
+                {filteredProducts.map((product, index) => (
+                  <Draggable key={product.id} draggableId={product.id} index={index}>
+                    {(provided) => (
+                      <Box
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        borderRadius="lg"
+                        borderWidth={1}
+                        overflow="hidden"
+                        position="relative"
+                      >
+                        {isProductScheduled(product) && (
+                          <Badge 
+                            colorScheme="purple" 
+                            position="absolute" 
+                            top="2" 
+                            left="2" 
+                            zIndex="1"
+                          >
+                            Producto programado
+                          </Badge>
+                        )}
+                        <AspectRatio ratio={1}>
+                          <Image
+                            src={product.image}
+                            alt={product.title}
+                            objectFit="cover"
+                          />
+                        </AspectRatio>
+                        <Box p={4}>
+                          <Heading as="h3" size="md" noOfLines={2} mb={2}>
+                            {product.title}
+                          </Heading>
+                          <Text noOfLines={3} mb={2}>{product.description}</Text>
+                          <Text fontWeight="bold" mb={4}>
+                            ${product.price.toFixed(2)}
+                          </Text>
+                          <HStack spacing={4}>
+                            <Button 
+                              colorScheme="red" 
+                              onClick={() => handleDelete(product.id)}
+                              leftIcon={<Icon as={FaTrash} />}
+                            >
+                              Eliminar
+                            </Button>
+                            <Button colorScheme="blue" onClick={() => handleEdit(product)}>
+                              Editar
+                            </Button>
+                          </HStack>
+                        </Box>
+                        <Flex
+                          {...provided.dragHandleProps}
+                          justifyContent="center"
+                          alignItems="center"
+                          bg="gray.100"
+                          p={2}
+                        >
+                          <Icon as={FaArrowsAlt} />
+                        </Flex>
+                      </Box>
+                    )}
+                  </Draggable>
+                ))}
+                {provided.placeholder}
+              </SimpleGrid>
+            )}
+          </Droppable>
+        </DragDropContext>
       )}
       <ProductModal
         isOpen={isModalOpen}
