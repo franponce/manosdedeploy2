@@ -19,6 +19,7 @@ import {
   Badge,
 } from "@chakra-ui/react";
 import { SearchIcon } from "@chakra-ui/icons";
+import { FaTrash } from "react-icons/fa";
 import ProductModal from "./ProductModal";
 import { getProducts, createProduct, updateProduct, deleteProduct } from "../../utils/googleSheets";
 import { Product } from "../types";
@@ -210,11 +211,15 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onCreateProduct }
                   ${product.price.toFixed(2)}
                 </Text>
                 <HStack spacing={4}>
+                  <Button 
+                    colorScheme="red" 
+                    onClick={() => handleDelete(product.id)}
+                    leftIcon={<Icon as={FaTrash} />}
+                  >
+                    Eliminar
+                  </Button>
                   <Button colorScheme="blue" onClick={() => handleEdit(product)}>
                     Editar
-                  </Button>
-                  <Button colorScheme="red" onClick={() => handleDelete(product.id)}>
-                    Eliminar
                   </Button>
                 </HStack>
               </Box>
