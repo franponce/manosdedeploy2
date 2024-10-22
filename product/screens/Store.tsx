@@ -14,7 +14,7 @@ import ProductCard from "../components/ProductCard";
 import CartDrawer from "../components/CartDrawer";
 import { editCart } from "../selectors";
 import { parseCurrency } from "../../utils/currency";
-import useSWR from 'swr';
+import useSWR, { mutate } from 'swr';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -29,7 +29,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts }) => {
   const [cart, setCart] = React.useState<CartItem[]>([]);
   const toast = useToast();
   const [isCartOpen, toggleCart] = React.useState<boolean>(false);
-  const { data: products, error, mutate } = useSWR<Product[]>('/api/products', fetcher, {
+  const { data: products, error, isLoading } = useSWR<Product[]>('/api/products', fetcher, {
     fallbackData: initialProducts,
     refreshInterval: 60000, // Actualizar cada minuto
   });
@@ -120,7 +120,19 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts }) => {
   return (
     <>
       <Stack spacing={6}>
-        {validProducts.length ? (
+        {isLoading ? (
+          <Grid
+            gridGap={8}
+            templateColumns={{
+              base: "repeat(auto-fill, minmax(240px, 1fr))",
+              sm: "repeat(auto-fill, minmax(280px, 1fr))",
+            }}
+          >
+            {Array.from({ length: 6 }).map((_, index) => (
+              <ProductCard key={index} product={{} as Product} onAdd={() => {}} isLoading={true} />
+            ))}
+          </Grid>
+        ) : validProducts.length ? (
           <Grid
             gridGap={8}
             templateColumns={{
@@ -133,6 +145,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts }) => {
                 key={product.id}
                 product={product}
                 onAdd={(product) => handleEditCart(product, "increment")}
+                isLoading={false}
               />
             ))}
           </Grid>
