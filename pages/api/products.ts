@@ -30,7 +30,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     case 'PUT':
       try {
+        console.log('Received product for update:', req.body);
         await updateProduct(req.body as Product);
+        console.log('Product updated successfully');
         res.status(200).json({ message: 'Product updated successfully' });
       } catch (error) {
         console.error('Error updating product:', error);
