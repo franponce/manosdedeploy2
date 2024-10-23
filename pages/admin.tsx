@@ -20,12 +20,19 @@ const AdminPage: React.FC = () => {
   const toast = useToast();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
 
   const handleStoreSettings = () => {
     router.push('/store-config');
   };
 
   const handleCreateProduct = () => {
+    setCurrentProduct(null);
+    setIsModalOpen(true);
+  };
+
+  const handleEditProduct = (product: Product) => {
+    setCurrentProduct(product);
     setIsModalOpen(true);
   };
 
@@ -60,26 +67,18 @@ const AdminPage: React.FC = () => {
   };
 
   return (
-    <Box margin="auto" maxWidth="1200px" padding={4}>
-      <Flex
-        direction={{ base: "column", md: "row" }}
-        justifyContent="space-between"
-        alignItems={{ base: "stretch", md: "center" }}
-        mb={8}
-        gap={4}
-      >
-        <Heading as="h1" size="xl" mb={{ base: 4, md: 0 }}>
-          Gestión de productos
+    <Box margin="auto" maxWidth="1200px" padding={8}>
+      <Flex justifyContent="space-between" alignItems="center" mb={8}>
+        <Heading as="h1" size="xl">
+          Panel de administración
         </Heading>
-        <Flex
-          direction={{ base: "column", sm: "row" }}
-          gap={4}
-        >
+        <Flex>
           <Link href="/" passHref>
             <Button
               as="a"
-              colorScheme="green"
-              width={{ base: "full", sm: "auto" }}
+              colorScheme="teal"
+              variant="outline"
+              mr={4}
               leftIcon={<Icon as={FaStore} />}
             >
               Ir a la tienda
@@ -87,7 +86,6 @@ const AdminPage: React.FC = () => {
           </Link>
           <Button
             colorScheme="blue"
-            width={{ base: "full", sm: "auto" }}
             leftIcon={<Icon as={FaPlus} />}
             onClick={handleCreateProduct}
           >
@@ -96,22 +94,25 @@ const AdminPage: React.FC = () => {
           <Button
             colorScheme="gray"
             onClick={handleStoreSettings}
-            width={{ base: "full", sm: "auto" }}
+            ml={4}
             rightIcon={<Icon as={FaArrowRight} />}
           >
-            Ir a la configuración de la tienda
+            Configuración de la tienda
           </Button>
         </Flex>
       </Flex>
 
-      <ProductManagement onCreateProduct={handleCreateProduct} />
+      <ProductManagement 
+        onCreateProduct={handleCreateProduct} 
+        onEditProduct={handleEditProduct}
+      />
 
       {isModalOpen && (
         <ProductModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           onSubmit={handleSubmit}
-          product={null}
+          product={currentProduct}
           isLoading={isLoading}
         />
       )}
