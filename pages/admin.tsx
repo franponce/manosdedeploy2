@@ -70,7 +70,7 @@ const AdminPage: React.FC = () => {
     <Box margin="auto" maxWidth="1200px" padding={8}>
       <Flex justifyContent="space-between" alignItems="center" mb={8}>
         <Heading as="h1" size="xl">
-          Panel de administración
+          Gestión de productos
         </Heading>
         <Flex>
           <Link href="/" passHref>
