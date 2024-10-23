@@ -24,6 +24,7 @@ interface StoreScreenProps {
 
 const CART_STORAGE_KEY = 'simple-ecommerce-cart';
 const CART_EXPIRY_TIME = 24 * 60 * 60 * 1000; // 24 horas en milisegundos
+const PRODUCTS_PER_PAGE = 12;
 
 const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts }) => {
   const [cart, setCart] = React.useState<CartItem[]>([]);
@@ -33,6 +34,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts }) => {
     fallbackData: initialProducts,
     refreshInterval: 60000, // Actualizar cada minuto
   });
+  const [currentPage, setCurrentPage] = React.useState(1);
 
   React.useEffect(() => {
     // Cargar el carrito desde localStorage cuando el componente se monta
@@ -110,10 +112,16 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts }) => {
     return { savedCart: null, wasRecovered: false };
   }
 
+  const indexOfLastProduct = currentPage * PRODUCTS_PER_PAGE;
+  const indexOfFirstProduct = indexOfLastProduct - PRODUCTS_PER_PAGE;
+  const currentProducts = products ? products.slice(indexOfFirstProduct, indexOfLastProduct) : [];
+
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+
   if (error) return <div>Failed to load products</div>;
   if (!products) return <div>Loading...</div>;
 
-  const validProducts = products?.filter(product =>
+  const validProducts = currentProducts.filter(product =>
     product && product.id && product.title && product.image && product.price && !product.isScheduled
   ) || [];
 
@@ -128,27 +136,41 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts }) => {
               sm: "repeat(auto-fill, minmax(280px, 1fr))",
             }}
           >
-            {Array.from({ length: 6 }).map((_, index) => (
+            {Array.from({ length: PRODUCTS_PER_PAGE }).map((_, index) => (
               <ProductCard key={index} product={{} as Product} onAdd={() => {}} isLoading={true} />
             ))}
           </Grid>
         ) : validProducts.length ? (
-          <Grid
-            gridGap={8}
-            templateColumns={{
-              base: "repeat(auto-fill, minmax(240px, 1fr))",
-              sm: "repeat(auto-fill, minmax(280px, 1fr))",
-            }}
-          >
-            {validProducts.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                onAdd={(product) => handleEditCart(product, "increment")}
-                isLoading={false}
-              />
-            ))}
-          </Grid>
+          <>
+            <Grid
+              gridGap={8}
+              templateColumns={{
+                base: "repeat(auto-fill, minmax(240px, 1fr))",
+                sm: "repeat(auto-fill, minmax(280px, 1fr))",
+              }}
+            >
+              {validProducts.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  onAdd={(product) => handleEditCart(product, "increment")}
+                  isLoading={false}
+                />
+              ))}
+            </Grid>
+            <Flex justifyContent="center" mt={4}>
+              {Array.from({ length: Math.ceil(products.length / PRODUCTS_PER_PAGE) }, (_, i) => (
+                <Button
+                  key={i}
+                  mx={1}
+                  onClick={() => paginate(i + 1)}
+                  colorScheme={currentPage === i + 1 ? "blue" : "gray"}
+                >
+                  {i + 1}
+                </Button>
+              ))}
+            </Flex>
+          </>
         ) : (
           <Text color="gray.500" fontSize="lg" margin="auto">
             No hay productos cargados todavía, esperemos que pronto :/
