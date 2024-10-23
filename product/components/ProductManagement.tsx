@@ -1,42 +1,147 @@
-import React, { useState, useEffect } from "react";
-import { Box, SimpleGrid, Button, Flex, Input, IconButton, VStack } from "@chakra-ui/react";
-import { SearchIcon, DeleteIcon, EditIcon } from "@chakra-ui/icons";
-import ProductCard from "./ProductCard";
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  Box,
+  Button,
+  Input,
+  Text,
+  SimpleGrid,
+  useToast,
+  AspectRatio,
+  Image,
+  HStack,
+  VStack,
+  Flex,
+  Center,
+  Icon,
+  InputGroup,
+  InputLeftElement,
+  Heading,
+  Badge,
+} from "@chakra-ui/react";
+import { SearchIcon } from "@chakra-ui/icons";
+import { FaTrash } from "react-icons/fa";
+import ProductModal from "./ProductModal";
+import { getProducts, createProduct, updateProduct, deleteProduct } from "../../utils/googleSheets";
 import { Product } from "../types";
-import { getProducts, deleteProduct } from "../../utils/googleSheets";
 
+const PRODUCT_LIMIT = 30;
+const SYNC_INTERVAL = 30000; // 30 segundos
 const PRODUCTS_PER_PAGE = 12;
 
-const ProductManagement: React.FC<{ onCreateProduct: () => void, onEditProduct: (product: Product) => void }> = ({ onCreateProduct, onEditProduct }) => {
+interface ProductManagementProps {
+  onCreateProduct: () => void;
+}
+
+const ProductManagement: React.FC<ProductManagementProps> = ({ onCreateProduct }) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const toast = useToast();
+
+  const fetchProducts = useCallback(async () => {
+    try {
+      const fetchedProducts = await getProducts();
+      setProducts(fetchedProducts);
+      setFilteredProducts(fetchedProducts);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch products",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  }, [toast]);
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      setIsLoading(true);
-      try {
-        const fetchedProducts = await getProducts();
-        setProducts(fetchedProducts);
-        setFilteredProducts(fetchedProducts);
-      } catch (error) {
-        console.error("Error fetching products:", error);
-      }
-      setIsLoading(false);
-    };
-
     fetchProducts();
-  }, []);
+    const intervalId = setInterval(fetchProducts, SYNC_INTERVAL);
+    return () => clearInterval(intervalId);
+  }, [fetchProducts]);
 
   useEffect(() => {
-    const results = products.filter(product =>
-      product.title.toLowerCase().includes(searchTerm.toLowerCase())
+    const lowercasedTerm = searchTerm.toLowerCase();
+    const filtered = products.filter(
+      (product) =>
+        product.title.toLowerCase().includes(lowercasedTerm) ||
+        product.description.toLowerCase().includes(lowercasedTerm) ||
+        product.price.toString().includes(lowercasedTerm)
     );
-    setFilteredProducts(results);
+    setFilteredProducts(filtered);
     setCurrentPage(1);
   }, [searchTerm, products]);
+
+  const handleEdit = (product: Product) => {
+    setCurrentProduct(product);
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm("¿Estás seguro de que quieres eliminar este producto?")) {
+      try {
+        await deleteProduct(id);
+        await fetchProducts();
+        toast({
+          title: "Producto eliminado",
+          description: "El producto ha sido eliminado exitosamente.",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+      } catch (error) {
+        console.error("Error deleting product:", error);
+        toast({
+          title: "Error",
+          description: "Failed to delete product",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    }
+  };
+
+  const handleSubmit = async (product: Product) => {
+    setIsLoading(true);
+    try {
+      if (product.id) {
+        await updateProduct(product);
+      } else {
+        await createProduct(product);
+      }
+      await fetchProducts();
+      setIsModalOpen(false);
+      setCurrentProduct(null);
+      toast({
+        title: "Éxito",
+        description: `Producto ${product.id ? "actualizado" : "creado"} exitosamente.`,
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error("Error saving product:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Error desconocido al guardar el producto",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const isProductScheduled = (product: Product) => {
+    return product.isScheduled && product.scheduledPublishDate && new Date(product.scheduledPublishDate) > new Date();
+  };
 
   const indexOfLastProduct = currentPage * PRODUCTS_PER_PAGE;
   const indexOfFirstProduct = indexOfLastProduct - PRODUCTS_PER_PAGE;
@@ -44,65 +149,118 @@ const ProductManagement: React.FC<{ onCreateProduct: () => void, onEditProduct: 
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
-  const handleDelete = async (productId: string) => {
-    if (window.confirm("¿Estás seguro de que quieres eliminar este producto?")) {
-      try {
-        await deleteProduct(productId);
-        setProducts(products.filter(product => product.id !== productId));
-      } catch (error) {
-        console.error("Error deleting product:", error);
-      }
-    }
-  };
-
   return (
-    <VStack spacing={4}>
-      <Flex width="100%" mb={4}>
-        <Input
-          placeholder="Buscar productos..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          mr={2}
-        />
-        <IconButton
-          aria-label="Search products"
-          icon={<SearchIcon />}
-          onClick={() => {/* Implementar búsqueda si es necesario */}}
-        />
+    <Box>
+      <Flex direction="column" mb={6}>
+        <InputGroup mb={4}>
+          <InputLeftElement pointerEvents="none">
+            <SearchIcon color="gray.300" />
+          </InputLeftElement>
+          <Input
+            placeholder="Buscar productos..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </InputGroup>
       </Flex>
-      <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6} mb={6}>
-        {currentProducts.map((product) => (
-          <Box key={product.id} position="relative">
-            <ProductCard product={product} onAdd={() => {}} isLoading={isLoading} />
-            <Flex position="absolute" top={2} right={2}>
-              <IconButton
-                aria-label="Edit product"
-                icon={<EditIcon />}
-                onClick={() => onEditProduct(product)}
-                mr={2}
-              />
-              <IconButton
-                aria-label="Delete product"
-                icon={<DeleteIcon />}
-                onClick={() => handleDelete(product.id)}
-              />
-            </Flex>
-          </Box>
-        ))}
-      </SimpleGrid>
-      <Flex justifyContent="center" mt={4}>
-        {Array.from({ length: Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE) }, (_, i) => (
-          <Button
-            key={i}
-            mx={1}
-            onClick={() => paginate(i + 1)}
-            colorScheme={currentPage === i + 1 ? "blue" : "gray"}
-          >
-            {i + 1}
-          </Button>
-        ))}
-      </Flex>
-    </VStack>
+
+      {products.length >= PRODUCT_LIMIT - 5 && products.length < PRODUCT_LIMIT && (
+        <Box mb={4} p={3} bg="yellow.100" borderRadius="md">
+          <Text color="yellow.800">
+            Te estás acercando al límite de productos. Tienes {PRODUCT_LIMIT - products.length} productos disponibles.
+          </Text>
+        </Box>
+      )}
+      {products.length >= PRODUCT_LIMIT && (
+        <Box mb={4} p={3} bg="red.100" borderRadius="md">
+          <Text color="red.800">
+            Has alcanzado el límite de productos. Contacta con soporte para aumentar tu límite.
+          </Text>
+        </Box>
+      )}
+
+      {filteredProducts.length === 0 ? (
+        <Center flexDirection="column" p={8} bg="gray.50" borderRadius="lg" boxShadow="sm">
+          <Icon as={SearchIcon} w={12} h={12} color="gray.400" mb={4} />
+          <Heading as="h3" size="md" textAlign="center" mb={2}>
+            No se encontraron productos
+          </Heading>
+          <Text color="gray.600" textAlign="center" maxW="md">
+            No hay productos que coincidan con tu búsqueda. Intenta con otros términos o crea un nuevo producto.
+          </Text>
+        </Center>
+      ) : (
+        <VStack spacing={6}>
+          <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+            {currentProducts.map((product) => (
+              <Box key={product.id} borderRadius="lg" borderWidth={1} overflow="hidden" position="relative">
+                {isProductScheduled(product) && (
+                  <Badge 
+                    colorScheme="purple" 
+                    position="absolute" 
+                    top="2" 
+                    left="2" 
+                    zIndex="1"
+                  >
+                    Producto programado
+                  </Badge>
+                )}
+                <AspectRatio ratio={1}>
+                  <Image
+                    src={product.image}
+                    alt={product.title}
+                    objectFit="cover"
+                  />
+                </AspectRatio>
+                <Box p={4}>
+                  <Heading as="h3" size="md" noOfLines={2} mb={2}>
+                    {product.title}
+                  </Heading>
+                  <Text noOfLines={3} mb={2}>{product.description}</Text>
+                  <Text fontWeight="bold" mb={4}>
+                    ${product.price.toFixed(2)}
+                  </Text>
+                  <HStack spacing={4}>
+                    <Button 
+                      colorScheme="red" 
+                      onClick={() => handleDelete(product.id)}
+                      leftIcon={<Icon as={FaTrash} />}
+                    >
+                      Eliminar
+                    </Button>
+                    <Button colorScheme="blue" onClick={() => handleEdit(product)}>
+                      Editar
+                    </Button>
+                  </HStack>
+                </Box>
+              </Box>
+            ))}
+          </SimpleGrid>
+          <Flex justifyContent="center" mt={4}>
+            {Array.from({ length: Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE) }, (_, i) => (
+              <Button
+                key={i}
+                mx={1}
+                onClick={() => paginate(i + 1)}
+                colorScheme={currentPage === i + 1 ? "blue" : "gray"}
+              >
+                {i + 1}
+              </Button>
+            ))}
+          </Flex>
+        </VStack>
+      )}
+      <ProductModal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setCurrentProduct(null);
+        }}
+        onSubmit={handleSubmit}
+        product={currentProduct}
+        isLoading={isLoading}
+      />
+    </Box>
   );
 };
 
