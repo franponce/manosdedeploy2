@@ -30,9 +30,10 @@ const PRODUCTS_PER_PAGE = 12;
 
 interface ProductManagementProps {
   onCreateProduct: () => void;
+  onEditProduct: (product: Product) => void;
 }
 
-const ProductManagement: React.FC<ProductManagementProps> = ({ onCreateProduct }) => {
+const ProductManagement: React.FC<ProductManagementProps> = ({ onCreateProduct, onEditProduct }) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -78,8 +79,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onCreateProduct }
   }, [searchTerm, products]);
 
   const handleEdit = (product: Product) => {
-    setCurrentProduct(product);
-    setIsModalOpen(true);
+    onEditProduct(product);
   };
 
   const handleDelete = async (id: string) => {
