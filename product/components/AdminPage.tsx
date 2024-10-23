@@ -18,8 +18,14 @@ import { createProduct, updateProduct } from "../../utils/googleSheets";
 const AdminPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
 
   const handleCreateProduct = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleEditProduct = (product: Product) => {
+    setCurrentProduct(product);
     setIsModalOpen(true);
   };
 
@@ -61,7 +67,10 @@ const AdminPage: React.FC = () => {
               </AccordionButton>
             </h2>
             <AccordionPanel pb={4}>
-              <ProductManagement onCreateProduct={handleCreateProduct} />
+              <ProductManagement 
+                onCreateProduct={handleCreateProduct} 
+                onEditProduct={handleEditProduct}
+              />
             </AccordionPanel>
           </AccordionItem>
 
@@ -88,7 +97,7 @@ const AdminPage: React.FC = () => {
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           onSubmit={handleSubmit}
-          product={null}
+          product={currentProduct}
           isLoading={isLoading}
         />
       )}
