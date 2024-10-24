@@ -8,9 +8,16 @@ import {
   AccordionButton,
   AccordionPanel,
   AccordionIcon,
+  Button,
+  Flex,
+  Icon,
+  useToast,
 } from "@chakra-ui/react";
-import ProductManagement from "../components/ProductManagement";
-import CustomScripts from "../components/CustomScripts";
+import { FaArrowRight, FaStore, FaPlus } from 'react-icons/fa';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
+import ProductManagement from "./ProductManagement";
+import CustomScripts from "./CustomScripts";
 import ProductModal from "./ProductModal";
 import { Product } from "../types";
 import { createProduct, updateProduct } from "../../utils/googleSheets";
@@ -18,6 +25,12 @@ import { createProduct, updateProduct } from "../../utils/googleSheets";
 const AdminPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+  const toast = useToast();
+
+  const handleStoreSettings = () => {
+    router.push('/store-config');
+  };
 
   const handleCreateProduct = () => {
     setIsModalOpen(true);
@@ -32,10 +45,22 @@ const AdminPage: React.FC = () => {
         await createProduct(product);
       }
       setIsModalOpen(false);
-      // Aquí podrías añadir un toast de éxito si lo deseas
+      toast({
+        title: "Éxito",
+        description: `Producto ${product.id ? "actualizado" : "creado"} exitosamente.`,
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
     } catch (error) {
       console.error("Error saving product:", error);
-      // Aquí podrías añadir un toast de error si lo deseas
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Error desconocido al guardar el producto",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -47,8 +72,40 @@ const AdminPage: React.FC = () => {
         Panel de administración
       </Heading>
 
+      <Flex
+        direction={{ base: "column", md: "row" }}
+        justifyContent="space-between"
+        alignItems={{ base: "stretch", md: "center" }}
+        mb={8}
+        gap={4}
+      >
+        <Link href="/" passHref>
+          <Button
+            as="a"
+            colorScheme="green"
+            leftIcon={<Icon as={FaStore} />}
+          >
+            Ir a la tienda
+          </Button>
+        </Link>
+        <Button
+          colorScheme="blue"
+          leftIcon={<Icon as={FaPlus} />}
+          onClick={handleCreateProduct}
+        >
+          Crear nuevo producto
+        </Button>
+        <Button
+          colorScheme="gray"
+          onClick={handleStoreSettings}
+          rightIcon={<Icon as={FaArrowRight} />}
+        >
+          Ir a la configuración de la tienda
+        </Button>
+      </Flex>
+
       <VStack spacing={8} align="stretch">
-        <Accordion allowMultiple>
+        <Accordion allowMultiple defaultIndex={[0]}>
           <AccordionItem>
             <h2>
               <AccordionButton>
