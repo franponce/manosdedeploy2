@@ -1,8 +1,15 @@
-import React from 'react';
-import { Box, Image, Text, Button, Stack, AspectRatio, Skeleton, SkeletonText } from '@chakra-ui/react';
+import React, { useState } from 'react';
+import {
+  Button,
+  Stack,
+  Text,
+  Image,
+  Flex,
+  Box,
+  AspectRatio,
+} from '@chakra-ui/react';
 import { Product } from '../types';
 import { parseCurrency } from '../../utils/currency';
-import { useSiteInfo } from '../../hooks/useSiteInfo';
 
 interface Props {
   product: Product;
@@ -11,52 +18,66 @@ interface Props {
 }
 
 const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading }) => {
-  const { siteInfo } = useSiteInfo();
+  const [isExpanded, setIsExpanded] = useState(false);
 
-  if (!product && !isLoading) {
-    return null;
+  const truncateDescription = (description: string, maxLength: number) => {
+    if (description.length <= maxLength) return description;
+    return description.substring(0, maxLength).trim() + '...';
+  };
+
+  const toggleDescription = () => {
+    setIsExpanded(!isExpanded);
+  };
+
+  if (isLoading) {
+    return (
+      <Stack spacing={3} borderWidth={1} borderRadius="md" padding={4}>
+        <AspectRatio ratio={1}>
+          <Box bg="gray.100" />
+        </AspectRatio>
+        <Box bg="gray.100" height={6} width="70%" />
+        <Box bg="gray.100" height={4} width="40%" />
+        <Box bg="gray.100" height={10} width="100%" />
+      </Stack>
+    );
   }
 
   return (
-    <Box borderWidth={1} borderRadius="lg" overflow="hidden">
+    <Stack spacing={3} borderWidth={1} borderRadius="md" padding={4}>
       <AspectRatio ratio={1}>
-        {isLoading ? (
-          <Skeleton />
-        ) : (
-          <Image 
-            src={product.image || 'https://via.placeholder.com/500'} 
-            alt={product.title || 'Product image'} 
-            objectFit="cover" 
-            fallbackSrc="https://via.placeholder.com/500"
-          />
-        )}
+        <Image src={product.image} alt={product.title} objectFit="cover" />
       </AspectRatio>
-      <Box p={4}>
-        <Stack spacing={2}>
-          {isLoading ? (
-            <>
-              <SkeletonText noOfLines={2} spacing="4" />
-              <SkeletonText noOfLines={3} spacing="4" />
-              <Skeleton height="24px" />
-              <Skeleton height="40px" />
-            </>
-          ) : (
-            <>
-              <Text fontWeight="bold" fontSize="lg" noOfLines={2}>
-                {product.title || 'Untitled Product'}
-              </Text>
-              <Text noOfLines={3}>{product.description || 'No description available'}</Text>
-              <Text fontWeight="bold" fontSize="xl">
-                {parseCurrency(product.price || 0)} {siteInfo?.currency}
-              </Text>
-              <Button colorScheme="blue" onClick={() => onAdd(product)}>
-                Agregar al carrito
-              </Button>
-            </>
-          )}
-        </Stack>
+      <Text fontWeight="semibold">{product.title}</Text>
+      <Box>
+        <Text fontSize="sm" color="gray.600">
+          {isExpanded ? product.description : truncateDescription(product.description, 150)}
+        </Text>
+        {product.description.length > 150 && (
+          <Button
+            size="sm"
+            variant="link"
+            color="blue.500"
+            onClick={toggleDescription}
+            mt={1}
+          >
+            {isExpanded ? "Ver menos" : "Ver más"}
+          </Button>
+        )}
       </Box>
-    </Box>
+      <Flex alignItems="center" justifyContent="space-between">
+        <Text fontSize="sm" fontWeight="500">
+          {parseCurrency(product.price)}
+        </Text>
+        <Button
+          colorScheme="primary"
+          variant="outline"
+          size="sm"
+          onClick={() => onAdd(product)}
+        >
+          Agregar
+        </Button>
+      </Flex>
+    </Stack>
   );
 };
 
