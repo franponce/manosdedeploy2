@@ -234,3 +234,4 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts }) => {
 };
 
 export default StoreScreen;
+
