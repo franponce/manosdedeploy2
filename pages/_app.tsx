@@ -124,7 +124,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
       <Global
         styles={css`
           * {
-            font-family: "Jost", sans-serif !important;
+            /*font-family: "Jost", sans-serif !important;*/
           }
         `}
       />
