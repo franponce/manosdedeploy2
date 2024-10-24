@@ -16,8 +16,8 @@ import ProductCard from "../components/ProductCard";
 import CartDrawer from "../components/CartDrawer";
 import { editCart } from "../selectors";
 import { parseCurrency } from "../../utils/currency";
-import useSWR from 'swr';
-import { getCustomScripts } from "../../utils/googleSheets"; // Asegúrate de que esta función exista
+import useSWR, { mutate } from 'swr';
+import CustomScripts from "../components/CustomScripts";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -140,29 +140,11 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts }) => {
     return { savedCart: null, wasRecovered: false };
   }
 
-  React.useEffect(() => {
-    const loadAndApplyScripts = async () => {
-      try {
-        const scripts = await getCustomScripts();
-        scripts.forEach(script => {
-          if (script.isActive) {
-            const scriptElement = document.createElement('script');
-            scriptElement.textContent = script.content;
-            document.body.appendChild(scriptElement);
-          }
-        });
-      } catch (error) {
-        console.error("Error al cargar los scripts personalizados:", error);
-      }
-    };
-
-    loadAndApplyScripts();
-  }, []);
-
   if (error) return <div>Failed to load products</div>;
 
   return (
     <>
+      <CustomScripts />
       <Stack spacing={6}>
         {isLoading ? (
           <Grid
