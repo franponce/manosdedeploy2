@@ -8,6 +8,7 @@ import {
   AspectRatio,
   Skeleton,
   SkeletonText,
+  useMediaQuery,
 } from '@chakra-ui/react';
 import { Product } from '../types';
 import { parseCurrency } from '../../utils/currency';
@@ -21,19 +22,54 @@ interface Props {
 
 const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading }) => {
   const { siteInfo } = useSiteInfo();
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const [isTitleExpanded, setIsTitleExpanded] = useState(false);
+  const [isMobile] = useMediaQuery("(max-width: 48em)");
 
   if (!product && !isLoading) {
     return null;
   }
 
-  const truncateDescription = (description: string, maxLength: number) => {
-    if (description.length <= maxLength) return description;
-    return description.substring(0, maxLength).trim() + '...';
+  const truncateText = (text: string, maxLength: number) => {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength).trim() + '...';
   };
 
   const toggleDescription = () => {
-    setIsExpanded(!isExpanded);
+    setIsDescriptionExpanded(!isDescriptionExpanded);
+  };
+
+  const toggleTitle = () => {
+    if (!isMobile) {
+      setIsTitleExpanded(!isTitleExpanded);
+    }
+  };
+
+  const renderTitle = () => {
+    if (isMobile) {
+      return (
+        <Text fontWeight="bold" fontSize="lg" noOfLines={2}>
+          {product.title || 'Untitled Product'}
+        </Text>
+      );
+    } else {
+      return (
+        <Box
+          onMouseEnter={() => setIsTitleExpanded(true)}
+          onMouseLeave={() => setIsTitleExpanded(false)}
+          onClick={toggleTitle}
+          cursor="pointer"
+        >
+          <Text 
+            fontWeight="bold" 
+            fontSize="lg" 
+            noOfLines={isTitleExpanded ? undefined : 2}
+          >
+            {product.title || 'Untitled Product'}
+          </Text>
+        </Box>
+      );
+    }
   };
 
   return (
@@ -61,14 +97,12 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading }) => {
             </>
           ) : (
             <>
-              <Text fontWeight="bold" fontSize="lg" noOfLines={2}>
-                {product.title || 'Untitled Product'}
-              </Text>
+              {renderTitle()}
               <Box>
-                <Text noOfLines={isExpanded ? undefined : 3}>
-                  {isExpanded 
+                <Text noOfLines={isDescriptionExpanded ? undefined : 3}>
+                  {isDescriptionExpanded 
                     ? product.description || 'No description available'
-                    : truncateDescription(product.description || 'No description available', 150)
+                    : truncateText(product.description || 'No description available', 150)
                   }
                 </Text>
                 {(product.description?.length || 0) > 150 && (
@@ -79,7 +113,7 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading }) => {
                     onClick={toggleDescription}
                     mt={1}
                   >
-                    {isExpanded ? "Ver menos" : "Ver más"}
+                    {isDescriptionExpanded ? "Ver menos" : "Ver más"}
                   </Button>
                 )}
               </Box>
