@@ -172,7 +172,15 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onCreateProduct }
     return product.isScheduled && product.scheduledPublishDate && new Date(product.scheduledPublishDate) > new Date();
   };
 
+  const [expandedTitles, setExpandedTitles] = useState<{ [key: string]: boolean }>({});
   const [expandedDescriptions, setExpandedDescriptions] = useState<{ [key: string]: boolean }>({});
+
+  const toggleTitle = (productId: string) => {
+    setExpandedTitles(prev => ({
+      ...prev,
+      [productId]: !prev[productId]
+    }));
+  };
 
   const toggleDescription = (productId: string) => {
     setExpandedDescriptions(prev => ({
@@ -181,9 +189,9 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onCreateProduct }
     }));
   };
 
-  const truncateDescription = (description: string, maxLength: number) => {
-    if (description.length <= maxLength) return description;
-    return description.substring(0, maxLength).trim() + '...';
+  const truncateText = (text: string, maxLength: number) => {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength).trim() + '...';
   };
 
   return (
@@ -256,18 +264,48 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onCreateProduct }
                 />
               </AspectRatio>
               <Box p={4}>
-                <Heading as="h3" size="md" noOfLines={2} mb={2}>
-                  {product.title}
-                </Heading>
                 <Box mb={2}>
-                  <Text>
-                    {expandedDescriptions[product.id]
-                      ? product.description
-                      : truncateDescription(product.description, 150)}
+                  <Text
+                    fontWeight="bold"
+                    fontSize="lg"
+                    noOfLines={expandedTitles[product.id] ? undefined : 2}
+                    onClick={() => toggleTitle(product.id)}
+                    cursor="pointer"
+                  >
+                    {product.title}
                   </Text>
+                  {product.title.length > 50 && (
+                    <Button
+                      size="xs"
+                      variant="link"
+                      color="blue.500"
+                      onClick={() => toggleTitle(product.id)}
+                      mt={1}
+                    >
+                      {expandedTitles[product.id] ? "Ver menos" : "Ver título completo"}
+                    </Button>
+                  )}
+                </Box>
+                <Box mb={2}>
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: expandedDescriptions[product.id]
+                        ? product.description
+                        : truncateText(product.description, 150)
+                    }}
+                    style={{
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      display: '-webkit-box',
+                      WebkitLineClamp: expandedDescriptions[product.id] ? 'unset' : 3,
+                      WebkitBoxOrient: 'vertical',
+                      lineHeight: '1.5em',
+                      maxHeight: expandedDescriptions[product.id] ? 'none' : '4.5em',
+                    }}
+                  />
                   {product.description.length > 150 && (
                     <Button
-                      size="sm"
+                      size="xs"
                       variant="link"
                       color="blue.500"
                       onClick={() => toggleDescription(product.id)}
