@@ -142,7 +142,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onCreateProduct }
       setCurrentProduct(null);
       
       // Actualizar la caché de SWR con el nuevo producto
-      mutate('/api/products', async (currentData) => {
+      mutate('/api/products', async (currentData: any) => {
         const updatedProducts = currentData ? [...currentData, product] : [product];
         return updatedProducts;
       }, false);
@@ -172,9 +172,18 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onCreateProduct }
     return product.isScheduled && product.scheduledPublishDate && new Date(product.scheduledPublishDate) > new Date();
   };
 
+  const [expandedDescriptions, setExpandedDescriptions] = useState<{ [key: string]: boolean }>({});
+
+  const toggleDescription = (productId: string) => {
+    setExpandedDescriptions(prev => ({
+      ...prev,
+      [productId]: !prev[productId]
+    }));
+  };
+
   const truncateDescription = (description: string, maxLength: number) => {
     if (description.length <= maxLength) return description;
-    return `${description.substring(0, maxLength)}...`;
+    return description.substring(0, maxLength).trim() + '...';
   };
 
   return (
@@ -250,16 +259,24 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onCreateProduct }
                 <Heading as="h3" size="md" noOfLines={2} mb={2}>
                   {product.title}
                 </Heading>
-                <Tooltip label={product.description} placement="bottom" hasArrow>
-                  <Text noOfLines={3} mb={2}>
-                    {truncateDescription(product.description, 150)}
-                    {product.description.length > 150 && (
-                      <Text as="span" color="blue.500" ml={1} cursor="pointer">
-                        Ver más
-                      </Text>
-                    )}
+                <Box mb={2}>
+                  <Text>
+                    {expandedDescriptions[product.id]
+                      ? product.description
+                      : truncateDescription(product.description, 150)}
                   </Text>
-                </Tooltip>
+                  {product.description.length > 150 && (
+                    <Button
+                      size="sm"
+                      variant="link"
+                      color="blue.500"
+                      onClick={() => toggleDescription(product.id)}
+                      mt={1}
+                    >
+                      {expandedDescriptions[product.id] ? "Ver menos" : "Ver más"}
+                    </Button>
+                  )}
+                </Box>
                 <Text fontWeight="bold" mb={4}>
                   ${product.price.toFixed(2)}
                 </Text>
