@@ -9,13 +9,6 @@ import {
   Skeleton,
   SkeletonText,
   useMediaQuery,
-  useDisclosure,
-  ModalBody,
-  ModalCloseButton,
-  ModalHeader,
-  ModalContent,
-  Modal,
-  ModalOverlay,
 } from '@chakra-ui/react';
 import { Product } from '../types';
 import { parseCurrency } from '../../utils/currency';
@@ -30,75 +23,26 @@ interface Props {
 const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading }) => {
   const { siteInfo } = useSiteInfo();
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
-  const [isTitleExpanded, setIsTitleExpanded] = useState(false);
   const [isMobile] = useMediaQuery("(max-width: 48em)");
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const [isTitleTruncated, setIsTitleTruncated] = useState(false);
 
   if (!product && !isLoading) {
     return null;
   }
 
-  const truncateText = (text: string, maxLength: number) => {
-    if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength).trim() + '...';
-  };
-
   const toggleDescription = () => {
     setIsDescriptionExpanded(!isDescriptionExpanded);
   };
 
-  const toggleTitle = () => {
-    if (!isMobile) {
-      setIsTitleExpanded(!isTitleExpanded);
-    }
-  };
-
-  const handleTitleRef = (node: HTMLParagraphElement | null) => {
-    if (node) {
-      setIsTitleTruncated(node.scrollHeight > node.clientHeight);
-    }
-  };
-
   const renderTitle = () => {
-    if (isMobile) {
-      return (
-        <Box>
-          <Text
-            ref={handleTitleRef}
-            fontWeight="bold"
-            fontSize="lg"
-            noOfLines={2}
-            onClick={isTitleTruncated ? onOpen : undefined}
-            cursor={isTitleTruncated ? "pointer" : "default"}
-          >
-            {product.title || 'Untitled Product'}
-          </Text>
-          {isTitleTruncated && (
-            <Text fontSize="xs" color="blue.500" mt={1} onClick={onOpen} cursor="pointer">
-              Ver título completo
-            </Text>
-          )}
-        </Box>
-      );
-    } else {
-      return (
-        <Box
-          onMouseEnter={() => setIsTitleExpanded(true)}
-          onMouseLeave={() => setIsTitleExpanded(false)}
-          onClick={toggleTitle}
-          cursor="pointer"
-        >
-          <Text 
-            fontWeight="bold" 
-            fontSize="lg" 
-            noOfLines={isTitleExpanded ? undefined : 2}
-          >
-            {product.title || 'Untitled Product'}
-          </Text>
-        </Box>
-      );
-    }
+    return (
+      <Text
+        fontWeight="bold"
+        fontSize="lg"
+        noOfLines={isMobile ? undefined : 2}
+      >
+        {product.title || 'Untitled Product'}
+      </Text>
+    );
   };
 
   const renderDescription = () => {
@@ -112,9 +56,11 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading }) => {
             display: '-webkit-box',
             WebkitLineClamp: isDescriptionExpanded ? 'unset' : 3,
             WebkitBoxOrient: 'vertical',
+            lineHeight: '1.5em',
+            maxHeight: isDescriptionExpanded ? 'none' : '4.5em', // 3 líneas
           }}
         />
-        {(product.description?.length || 0) > 150 && (
+        {product.description && product.description.length > 150 && (
           <Button
             size="xs"
             variant="link"
@@ -166,16 +112,6 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading }) => {
           )}
         </Stack>
       </Box>
-      <Modal isOpen={isOpen} onClose={onClose} isCentered>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Título del producto</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody pb={6}>
-            <Text fontSize="lg">{product.title}</Text>
-          </ModalBody>
-        </ModalContent>
-      </Modal>
     </Box>
   );
 };
