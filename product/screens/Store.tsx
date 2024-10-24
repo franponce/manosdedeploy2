@@ -179,7 +179,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts }) => {
           </Grid>
         ) : (
           <Text color="gray.500" fontSize="lg" margin="auto">
-            No hay productos cargados todavía, esperemos que pronto :/
+            No hay productos cargados todavía, esperemos que pronto 😔
           </Text>
         )}
         {isLoading && (
