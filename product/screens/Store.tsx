@@ -12,6 +12,7 @@ import {
   Spinner,
 } from "@chakra-ui/react";
 import { CartItem, Product } from "../types";
+import CustomScripts from "./CustomScripts";
 import ProductCard from "../components/ProductCard";
 import CartDrawer from "../components/CartDrawer";
 import { editCart } from "../selectors";
