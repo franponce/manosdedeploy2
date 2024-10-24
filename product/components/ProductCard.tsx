@@ -101,6 +101,34 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading }) => {
     }
   };
 
+  const renderDescription = () => {
+    return (
+      <Box>
+        <div
+          dangerouslySetInnerHTML={{ __html: product.description || 'No description available' }}
+          style={{
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            display: '-webkit-box',
+            WebkitLineClamp: isDescriptionExpanded ? 'unset' : 3,
+            WebkitBoxOrient: 'vertical',
+          }}
+        />
+        {(product.description?.length || 0) > 150 && (
+          <Button
+            size="xs"
+            variant="link"
+            color="blue.500"
+            onClick={toggleDescription}
+            mt={1}
+          >
+            {isDescriptionExpanded ? "Ver menos" : "Ver más"}
+          </Button>
+        )}
+      </Box>
+    );
+  };
+
   return (
     <Box borderWidth={1} borderRadius="lg" overflow="hidden">
       <AspectRatio ratio={1}>
@@ -127,25 +155,7 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading }) => {
           ) : (
             <>
               {renderTitle()}
-              <Box>
-                <Text noOfLines={isDescriptionExpanded ? undefined : 3}>
-                  {isDescriptionExpanded 
-                    ? product.description || 'No description available'
-                    : truncateText(product.description || 'No description available', 150)
-                  }
-                </Text>
-                {(product.description?.length || 0) > 150 && (
-                  <Button
-                    size="xs"
-                    variant="link"
-                    color="blue.500"
-                    onClick={toggleDescription}
-                    mt={1}
-                  >
-                    {isDescriptionExpanded ? "Ver menos" : "Ver más"}
-                  </Button>
-                )}
-              </Box>
+              {renderDescription()}
               <Text fontWeight="bold" fontSize="xl">
                 {parseCurrency(product.price || 0)} {siteInfo?.currency}
               </Text>

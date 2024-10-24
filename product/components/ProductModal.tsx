@@ -12,28 +12,26 @@ import {
   FormControl,
   FormLabel,
   Input,
-  Textarea,
   Image,
   useToast,
   Text,
-  Tooltip,
-  InputGroup,
-  InputRightAddon,
   Box,
   Collapse,
   useDisclosure,
   useMediaQuery,
   Flex,
   Center,
-  Select,
 } from "@chakra-ui/react";
-import { TimeIcon, QuestionIcon } from "@chakra-ui/icons";
+import { TimeIcon } from "@chakra-ui/icons";
 import imageCompression from "browser-image-compression";
 import { Product } from "../types";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { currencies } from "../../utils/currencies";
 import { useSiteInfo } from "@/hooks/useSiteInfo";
+import dynamic from 'next/dynamic';
+import 'react-quill/dist/quill.snow.css';
+
+const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 
 interface ProductModalProps {
   isOpen: boolean;
@@ -60,6 +58,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
   const { isOpen: isScheduleOpen, onToggle: toggleSchedule } = useDisclosure();
   const [isMobile] = useMediaQuery("(max-width: 48em)");
   const { siteInfo } = useSiteInfo();
+  const [description, setDescription] = useState('');
 
   const MAX_TITLE_LENGTH = 60;
   const MAX_DESCRIPTION_LENGTH = 300;
@@ -71,6 +70,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     if (product) {
       setCurrentProduct(product);
       setImagePreview(product.image);
+      setDescription(product.description || '');
     } else {
       setCurrentProduct({
         id: "",
@@ -83,6 +83,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
         scheduledPublishDate: null,
       });
       setImagePreview(null);
+      setDescription('');
     }
   }, [product]);
 
@@ -173,6 +174,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     try {
       const productToSubmit: Product = {
         ...currentProduct,
+        description: description,
         price,
         isScheduled: isScheduleOpen,
         scheduledPublishDate: isScheduleOpen && scheduledDate ? scheduledDate : null,
@@ -206,6 +208,19 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     }));
   };
 
+  const modules = {
+    toolbar: [
+      ['bold', 'italic', 'underline'],
+      [{'list': 'ordered'}, {'list': 'bullet'}],
+      ['clean'],
+      ['emoji'],
+    ],
+  };
+
+  const formats = [
+    'bold', 'italic', 'underline', 'list', 'bullet', 'emoji'
+  ];
+
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
@@ -230,15 +245,14 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
             </FormControl>
             <FormControl>
               <FormLabel>Descripción</FormLabel>
-              <Textarea
-                name="description"
-                value={currentProduct.description}
-                onChange={handleInputChange}
-                maxLength={MAX_DESCRIPTION_LENGTH}
-              />
-              <Text fontSize="sm" color="gray.500">
-                {`${currentProduct.description.length}/${MAX_DESCRIPTION_LENGTH}`}
-              </Text>
+              <Box border="1px" borderColor="gray.200" borderRadius="md">
+                <ReactQuill
+                  value={description}
+                  onChange={setDescription}
+                  modules={modules}
+                  formats={formats}
+                />
+              </Box>
             </FormControl>
             <FormControl>
               <FormLabel>Imagen</FormLabel>
