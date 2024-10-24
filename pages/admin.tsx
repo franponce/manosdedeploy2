@@ -76,7 +76,7 @@ const AdminPage: React.FC = () => {
           <Link href="/" passHref>
             <Button
               as="a"
-              colorScheme="teal"
+              colorScheme="green"
               variant="outline"
               mr={4}
               leftIcon={<Icon as={FaStore} />}
@@ -86,6 +86,7 @@ const AdminPage: React.FC = () => {
           </Link>
           <Button
             colorScheme="blue"
+            width={{ base: "full", sm: "auto" }}
             leftIcon={<Icon as={FaPlus} />}
             onClick={handleCreateProduct}
           >
