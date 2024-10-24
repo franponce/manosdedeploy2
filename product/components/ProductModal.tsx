@@ -213,13 +213,18 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
       ['bold', 'italic', 'underline'],
       [{'list': 'ordered'}, {'list': 'bullet'}],
       ['clean'],
-      ['emoji'],
     ],
   };
 
   const formats = [
-    'bold', 'italic', 'underline', 'list', 'bullet', 'emoji'
+    'bold', 'italic', 'underline', 'list', 'bullet'
   ];
+
+  const handleDescriptionChange = (content: string) => {
+    if (content.length <= MAX_DESCRIPTION_LENGTH) {
+      setDescription(content);
+    }
+  };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -248,11 +253,14 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
               <Box border="1px" borderColor="gray.200" borderRadius="md">
                 <ReactQuill
                   value={description}
-                  onChange={setDescription}
+                  onChange={handleDescriptionChange}
                   modules={modules}
                   formats={formats}
                 />
               </Box>
+              <Text fontSize="sm" color="gray.500" mt={1}>
+                {`${description.length}/${MAX_DESCRIPTION_LENGTH}`}
+              </Text>
             </FormControl>
             <FormControl>
               <FormLabel>Imagen</FormLabel>
