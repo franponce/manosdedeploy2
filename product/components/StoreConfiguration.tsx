@@ -46,7 +46,10 @@ const StoreConfiguration: React.FC = () => {
 
   useEffect(() => {
     if (siteInfo) {
-      setLocalSiteInfo(siteInfo);
+      setLocalSiteInfo({
+        ...siteInfo,
+        description2: siteInfo.description2.replace(/<br>/g, '\n')
+      });
     }
   }, [siteInfo]);
 
@@ -142,7 +145,7 @@ const StoreConfiguration: React.FC = () => {
     try {
       const updatedSiteInfo = {
         ...localSiteInfo,
-        description: localSiteInfo.description.replace(/\n/g, '<br>'),
+        description: localSiteInfo.description,
         description2: localSiteInfo.description2.replace(/\n/g, '<br>')
       };
       await updateSiteInfo(updatedSiteInfo);
@@ -210,14 +213,15 @@ const StoreConfiguration: React.FC = () => {
           <FormLabel>Descripción de la tienda</FormLabel>
           <Text fontSize="sm" color="gray.600" mb={2}>
             Recomendaciones 😉:<br />
-            • Ingresa información que creas importante que los clientes sepan antes de comprar, como tus horarios de atención, ubicación, envíos, etc.
+            • Ingresa información que creas importante que los clientes sepan antes de comprar, como tus horarios de atención, ubicación, envíos, etc.<br />
+            • Puedes usar saltos de línea para organizar mejor tu texto.
           </Text>
           <Textarea 
             name="description2" 
             value={localSiteInfo.description2} 
             onChange={handleInputChange}
-            onKeyDown={handleKeyDown}
             maxLength={MAX_DESCRIPTION_LENGTH}
+            rows={6}
           />
           <Text fontSize="sm" color="gray.500" mt={1}>
             {localSiteInfo.description2.length}/{MAX_DESCRIPTION_LENGTH} caracteres
