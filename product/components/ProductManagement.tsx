@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   Box,
   Button,
@@ -17,6 +17,7 @@ import {
   InputLeftElement,
   Heading,
   Badge,
+  Spinner,
 } from "@chakra-ui/react";
 import { SearchIcon } from "@chakra-ui/icons";
 import { FaTrash } from "react-icons/fa";
@@ -34,10 +35,25 @@ interface ProductManagementProps {
 const ProductManagement: React.FC<ProductManagementProps> = ({ onCreateProduct }) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const observer = useRef<IntersectionObserver | null>(null);
+  const lastProductElementRef = useCallback((node: HTMLDivElement | null) => {
+    if (isLoading) return;
+    if (observer.current) observer.current.disconnect();
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore) {
+        setPage(prevPage => prevPage + 1);
+      }
+    });
+    if (node) observer.current.observe(node);
+  }, [isLoading, hasMore]);
+
   const toast = useToast();
 
   const fetchProducts = useCallback(async () => {
@@ -72,7 +88,15 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onCreateProduct }
         product.price.toString().includes(lowercasedTerm)
     );
     setFilteredProducts(filtered);
+    setPage(1);
+    setHasMore(true);
   }, [searchTerm, products]);
+
+  useEffect(() => {
+    const PRODUCTS_PER_PAGE = 10; // Definir PRODUCTS_PER_PAGE como una constante
+    setDisplayedProducts(filteredProducts.slice(0, page * PRODUCTS_PER_PAGE));
+    setHasMore(page * PRODUCTS_PER_PAGE < filteredProducts.length);
+  }, [filteredProducts, page]);
 
   const handleEdit = (product: Product) => {
     setCurrentProduct(product);
@@ -170,7 +194,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onCreateProduct }
         </Box>
       )}
 
-      {filteredProducts.length === 0 ? (
+      {displayedProducts.length === 0 ? (
         <Center flexDirection="column" p={8} bg="gray.50" borderRadius="lg" boxShadow="sm">
           <Icon as={SearchIcon} w={12} h={12} color="gray.400" mb={4} />
           <Heading as="h3" size="md" textAlign="center" mb={2}>
@@ -182,8 +206,15 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onCreateProduct }
         </Center>
       ) : (
         <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
-          {filteredProducts.map((product) => (
-            <Box key={product.id} borderRadius="lg" borderWidth={1} overflow="hidden" position="relative">
+          {displayedProducts.map((product, index) => (
+            <Box
+              key={product.id}
+              ref={index === displayedProducts.length - 1 ? lastProductElementRef : null}
+              borderRadius="lg"
+              borderWidth={1}
+              overflow="hidden"
+              position="relative"
+            >
               {isProductScheduled(product) && (
                 <Badge 
                   colorScheme="purple" 
@@ -226,6 +257,11 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onCreateProduct }
             </Box>
           ))}
         </SimpleGrid>
+      )}
+      {isLoading && (
+        <Center mt={4}>
+          <Spinner size="xl" />
+        </Center>
       )}
       <ProductModal
         isOpen={isModalOpen}

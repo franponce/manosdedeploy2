@@ -8,6 +8,8 @@ import {
   Box,
   Heading,
   useToast,
+  Center,
+  Spinner,
 } from "@chakra-ui/react";
 import { CartItem, Product } from "../types";
 import ProductCard from "../components/ProductCard";
@@ -17,6 +19,8 @@ import { parseCurrency } from "../../utils/currency";
 import useSWR, { mutate } from 'swr';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
+
+const PRODUCTS_PER_PAGE = 12;
 
 interface StoreScreenProps {
   initialProducts: Product[];
@@ -29,10 +33,25 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts }) => {
   const [cart, setCart] = React.useState<CartItem[]>([]);
   const toast = useToast();
   const [isCartOpen, toggleCart] = React.useState<boolean>(false);
+  const [page, setPage] = React.useState(1);
+  const [displayedProducts, setDisplayedProducts] = React.useState<Product[]>([]);
+  const [hasMore, setHasMore] = React.useState(true);
+  const observer = React.useRef<IntersectionObserver | null>(null);
   const { data: products, error, isLoading } = useSWR<Product[]>('/api/products', fetcher, {
     fallbackData: initialProducts,
     refreshInterval: 60000, // Actualizar cada minuto
   });
+
+  const lastProductElementRef = React.useCallback((node: HTMLDivElement | null) => {
+    if (isLoading) return;
+    if (observer.current) observer.current.disconnect();
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore) {
+        setPage(prevPage => prevPage + 1);
+      }
+    });
+    if (node) observer.current.observe(node);
+  }, [isLoading, hasMore]);
 
   React.useEffect(() => {
     // Cargar el carrito desde localStorage cuando el componente se monta
@@ -77,6 +96,16 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts }) => {
     return () => clearInterval(interval);
   }, [products, mutate]);
 
+  React.useEffect(() => {
+    if (products) {
+      const validProducts = products.filter(product =>
+        product && product.id && product.title && product.image && product.price && !product.isScheduled
+      );
+      setDisplayedProducts(validProducts.slice(0, page * PRODUCTS_PER_PAGE));
+      setHasMore(page * PRODUCTS_PER_PAGE < validProducts.length);
+    }
+  }, [products, page]);
+
   const total = React.useMemo(
     () => parseCurrency(cart.reduce((total, product) => total + product.price * product.quantity, 0)),
     [cart]
@@ -111,11 +140,6 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts }) => {
   }
 
   if (error) return <div>Failed to load products</div>;
-  if (!products) return <div>Loading...</div>;
-
-  const validProducts = products?.filter(product =>
-    product && product.id && product.title && product.image && product.price && !product.isScheduled
-  ) || [];
 
   return (
     <>
@@ -132,7 +156,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts }) => {
               <ProductCard key={index} product={{} as Product} onAdd={() => {}} isLoading={true} />
             ))}
           </Grid>
-        ) : validProducts.length ? (
+        ) : displayedProducts.length ? (
           <Grid
             gridGap={8}
             templateColumns={{
@@ -140,19 +164,28 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts }) => {
               sm: "repeat(auto-fill, minmax(280px, 1fr))",
             }}
           >
-            {validProducts.map((product) => (
-              <ProductCard
+            {displayedProducts.map((product, index) => (
+              <Box
                 key={product.id}
-                product={product}
-                onAdd={(product) => handleEditCart(product, "increment")}
-                isLoading={false}
-              />
+                ref={index === displayedProducts.length - 1 ? lastProductElementRef : null}
+              >
+                <ProductCard
+                  product={product}
+                  onAdd={(product) => handleEditCart(product, "increment")}
+                  isLoading={false}
+                />
+              </Box>
             ))}
           </Grid>
         ) : (
           <Text color="gray.500" fontSize="lg" margin="auto">
             No hay productos cargados todavía, esperemos que pronto :/
           </Text>
+        )}
+        {isLoading && (
+          <Center mt={4}>
+            <Spinner size="xl" />
+          </Center>
         )}
         {Boolean(cart.length) && (
           <Flex alignItems="center" bottom={4} justifyContent="center" position="sticky">
