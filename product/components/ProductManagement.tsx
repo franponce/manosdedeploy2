@@ -26,7 +26,7 @@ import { Product } from "../types";
 
 const PRODUCT_LIMIT = 30;
 const SYNC_INTERVAL = 30000; // 30 segundos
-const PRODUCTS_PER_PAGE = 12;
+const PRODUCTS_PER_PAGE = 9;
 
 interface ProductManagementProps {
   onCreateProduct: () => void;

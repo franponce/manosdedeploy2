@@ -6,6 +6,9 @@ import {
   Flex,
   Icon,
   useToast,
+  VStack,
+  HStack,
+  useBreakpointValue,
 } from "@chakra-ui/react";
 import ProductManagement from "../product/components/ProductManagement";
 import Link from 'next/link';
@@ -21,6 +24,8 @@ const AdminPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
+
+  const isMobile = useBreakpointValue({ base: true, md: false });
 
   const handleStoreSettings = () => {
     router.push('/store-config');
@@ -67,56 +72,84 @@ const AdminPage: React.FC = () => {
   };
 
   return (
-    <Box margin="auto" maxWidth="1200px" padding={8}>
-      <Flex justifyContent="space-between" alignItems="center" mb={8}>
+    <Box margin="auto" maxWidth="1200px" padding={4}>
+      <VStack spacing={4} align="stretch">
         <Heading as="h1" size="xl">
           Gestión de productos
         </Heading>
-        <Flex>
-          <Link href="/" passHref>
+        
+        {isMobile ? (
+          <VStack spacing={2} width="100%">
+            <Link href="/" passHref>
+              <Button
+                as="a"
+                colorScheme="green"
+                width="100%"
+                leftIcon={<Icon as={FaStore} />}
+              >
+                Ir a la tienda
+              </Button>
+            </Link>
             <Button
-              as="a"
-              colorScheme="green"
-              width={{ base: "full", sm: "auto" }}
-              mr={4}
-              leftIcon={<Icon as={FaStore} />}
+              colorScheme="blue"
+              width="100%"
+              leftIcon={<Icon as={FaPlus} />}
+              onClick={handleCreateProduct}
             >
-              Ir a la tienda
+              Crear nuevo producto
             </Button>
-          </Link>
-          <Button
-            colorScheme="blue"
-            width={{ base: "full", sm: "auto" }}
-            leftIcon={<Icon as={FaPlus} />}
-            onClick={handleCreateProduct}
-          >
-            Crear nuevo producto
-          </Button>
-          <Button
-            colorScheme="gray"
-            onClick={handleStoreSettings}
-            ml={4}
-            rightIcon={<Icon as={FaArrowRight} />}
-          >
-            Configuración de la tienda
-          </Button>
-        </Flex>
-      </Flex>
+            <Button
+              colorScheme="gray"
+              width="100%"
+              onClick={handleStoreSettings}
+              rightIcon={<Icon as={FaArrowRight} />}
+            >
+              Configuración de la tienda
+            </Button>
+          </VStack>
+        ) : (
+          <HStack spacing={4} justifyContent="flex-end">
+            <Link href="/" passHref>
+              <Button
+                as="a"
+                colorScheme="green"
+                leftIcon={<Icon as={FaStore} />}
+              >
+                Ir a la tienda
+              </Button>
+            </Link>
+            <Button
+              colorScheme="blue"
+              leftIcon={<Icon as={FaPlus} />}
+              onClick={handleCreateProduct}
+            >
+              Crear nuevo producto
+            </Button>
+            <Button
+              colorScheme="gray"
+              onClick={handleStoreSettings}
+              rightIcon={<Icon as={FaArrowRight} />}
+            >
+              Configuración de la tienda
+            </Button>
+          </HStack>
+        )}
 
-      <ProductManagement 
-        onCreateProduct={handleCreateProduct} 
-        onEditProduct={handleEditProduct}
-      />
-
-      {isModalOpen && (
-        <ProductModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          onSubmit={handleSubmit}
-          product={currentProduct}
-          isLoading={isLoading}
+        <ProductManagement 
+          onCreateProduct={handleCreateProduct} 
+          onEditProduct={handleEditProduct}
         />
-      )}
+
+        {isModalOpen && (
+          <ProductModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            onSubmit={handleSubmit}
+            product={currentProduct}
+            isLoading={isLoading}
+          />
+        )}
+      </VStack>
     </Box>
   );
 };
