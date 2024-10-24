@@ -9,6 +9,13 @@ import {
   Skeleton,
   SkeletonText,
   useMediaQuery,
+  useDisclosure,
+  ModalBody,
+  ModalCloseButton,
+  ModalHeader,
+  ModalContent,
+  Modal,
+  ModalOverlay,
 } from '@chakra-ui/react';
 import { Product } from '../types';
 import { parseCurrency } from '../../utils/currency';
@@ -25,6 +32,8 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading }) => {
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [isTitleExpanded, setIsTitleExpanded] = useState(false);
   const [isMobile] = useMediaQuery("(max-width: 48em)");
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [isTitleTruncated, setIsTitleTruncated] = useState(false);
 
   if (!product && !isLoading) {
     return null;
@@ -45,12 +54,32 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading }) => {
     }
   };
 
+  const handleTitleRef = (node: HTMLParagraphElement | null) => {
+    if (node) {
+      setIsTitleTruncated(node.scrollHeight > node.clientHeight);
+    }
+  };
+
   const renderTitle = () => {
     if (isMobile) {
       return (
-        <Text fontWeight="bold" fontSize="lg" noOfLines={2}>
-          {product.title || 'Untitled Product'}
-        </Text>
+        <Box>
+          <Text
+            ref={handleTitleRef}
+            fontWeight="bold"
+            fontSize="lg"
+            noOfLines={2}
+            onClick={isTitleTruncated ? onOpen : undefined}
+            cursor={isTitleTruncated ? "pointer" : "default"}
+          >
+            {product.title || 'Untitled Product'}
+          </Text>
+          {isTitleTruncated && (
+            <Text fontSize="xs" color="blue.500" mt={1} onClick={onOpen} cursor="pointer">
+              Ver título completo
+            </Text>
+          )}
+        </Box>
       );
     } else {
       return (
@@ -127,6 +156,16 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading }) => {
           )}
         </Stack>
       </Box>
+      <Modal isOpen={isOpen} onClose={onClose} isCentered>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Título del producto</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody pb={6}>
+            <Text fontSize="lg">{product.title}</Text>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 };
