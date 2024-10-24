@@ -17,7 +17,6 @@ import CartDrawer from "../components/CartDrawer";
 import { editCart } from "../selectors";
 import { parseCurrency } from "../../utils/currency";
 import useSWR, { mutate } from 'swr';
-import CustomScripts from "../components/CustomScripts";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -144,7 +143,6 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts }) => {
 
   return (
     <>
-      <CustomScripts />
       <Stack spacing={6}>
         {isLoading ? (
           <Grid
