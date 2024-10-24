@@ -263,18 +263,6 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                 {`${description.replace(/<[^>]*>/g, '').length}/${MAX_DESCRIPTION_LENGTH}`}
               </Text>
             </FormControl>
-            <Box>
-              <Text fontWeight="bold" mb={2}>Vista previa de la descripción:</Text>
-              <Box
-                dangerouslySetInnerHTML={{ __html: description }}
-                border="1px"
-                borderColor="gray.200"
-                borderRadius="md"
-                p={2}
-                maxHeight="200px"
-                overflowY="auto"
-              />
-            </Box>
             <FormControl>
               <FormLabel>Imagen</FormLabel>
               <Text fontSize="sm" color="gray.600" mb={2}>
