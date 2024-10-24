@@ -62,7 +62,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
   const { siteInfo } = useSiteInfo();
 
   const MAX_TITLE_LENGTH = 60;
-  const MAX_DESCRIPTION_LENGTH = 180;
+  const MAX_DESCRIPTION_LENGTH = 300;
   const MAX_IMAGE_SIZE_MB = 5;
   const TARGET_WIDTH = 800;
   const TARGET_HEIGHT = 800;

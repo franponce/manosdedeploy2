@@ -18,6 +18,7 @@ import {
   Heading,
   Badge,
   Spinner,
+  Tooltip,
 } from "@chakra-ui/react";
 import { SearchIcon } from "@chakra-ui/icons";
 import { FaTrash } from "react-icons/fa";
@@ -171,6 +172,11 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onCreateProduct }
     return product.isScheduled && product.scheduledPublishDate && new Date(product.scheduledPublishDate) > new Date();
   };
 
+  const truncateDescription = (description: string, maxLength: number) => {
+    if (description.length <= maxLength) return description;
+    return `${description.substring(0, maxLength)}...`;
+  };
+
   return (
     <Box>
       <Flex direction="column" mb={6}>
@@ -244,7 +250,16 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onCreateProduct }
                 <Heading as="h3" size="md" noOfLines={2} mb={2}>
                   {product.title}
                 </Heading>
-                <Text noOfLines={3} mb={2}>{product.description}</Text>
+                <Tooltip label={product.description} placement="bottom" hasArrow>
+                  <Text noOfLines={3} mb={2}>
+                    {truncateDescription(product.description, 150)}
+                    {product.description.length > 150 && (
+                      <Text as="span" color="blue.500" ml={1} cursor="pointer">
+                        Ver más
+                      </Text>
+                    )}
+                  </Text>
+                </Tooltip>
                 <Text fontWeight="bold" mb={4}>
                   ${product.price.toFixed(2)}
                 </Text>
