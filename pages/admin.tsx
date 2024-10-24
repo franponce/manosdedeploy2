@@ -77,7 +77,7 @@ const AdminPage: React.FC = () => {
             <Button
               as="a"
               colorScheme="green"
-              variant="outline"
+              width={{ base: "full", sm: "auto" }}
               mr={4}
               leftIcon={<Icon as={FaStore} />}
             >
