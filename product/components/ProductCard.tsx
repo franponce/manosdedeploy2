@@ -24,6 +24,7 @@ interface Props {
 const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading }) => {
   const { siteInfo } = useSiteInfo();
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const [isTitleExpanded, setIsTitleExpanded] = useState(false);
   const [isMobile] = useMediaQuery("(max-width: 48em)");
 
   if (!product && !isLoading) {
@@ -34,29 +35,48 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading }) => {
     setIsDescriptionExpanded(!isDescriptionExpanded);
   };
 
+  const toggleTitle = () => {
+    setIsTitleExpanded(!isTitleExpanded);
+  };
+
   const renderTitle = () => {
     if (isMobile) {
       return (
-        <Text
-          fontWeight="bold"
-          fontSize="lg"
-          noOfLines={2}
-        >
-          {product.title || 'Untitled Product'}
-        </Text>
-      );
-    } else {
-      return (
-        <Tooltip label={product.title || 'Untitled Product'} placement="top" hasArrow>
+        <Box>
           <Text
             fontWeight="bold"
             fontSize="lg"
-            noOfLines={2}
-            cursor="pointer"
+            noOfLines={isTitleExpanded ? undefined : 2}
           >
             {product.title || 'Untitled Product'}
           </Text>
-        </Tooltip>
+          {product.title && product.title.length > 50 && (
+            <Button
+              size="xs"
+              variant="link"
+              color="blue.500"
+              onClick={toggleTitle}
+              mt={1}
+            >
+              {isTitleExpanded ? "Ver menos" : "Ver título completo"}
+            </Button>
+          )}
+        </Box>
+      );
+    } else {
+      return (
+        <Box
+          onMouseEnter={() => setIsTitleExpanded(true)}
+          onMouseLeave={() => setIsTitleExpanded(false)}
+        >
+          <Text
+            fontWeight="bold"
+            fontSize="lg"
+            noOfLines={isTitleExpanded ? undefined : 2}
+          >
+            {product.title || 'Untitled Product'}
+          </Text>
+        </Box>
       );
     }
   };
