@@ -9,6 +9,7 @@ import {
   Skeleton,
   SkeletonText,
   useMediaQuery,
+  Tooltip,
 } from '@chakra-ui/react';
 import { Product } from '../types';
 import { parseCurrency } from '../../utils/currency';
@@ -34,15 +35,30 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading }) => {
   };
 
   const renderTitle = () => {
-    return (
-      <Text
-        fontWeight="bold"
-        fontSize="lg"
-        noOfLines={isMobile ? undefined : 2}
-      >
-        {product.title || 'Untitled Product'}
-      </Text>
-    );
+    if (isMobile) {
+      return (
+        <Text
+          fontWeight="bold"
+          fontSize="lg"
+          noOfLines={2}
+        >
+          {product.title || 'Untitled Product'}
+        </Text>
+      );
+    } else {
+      return (
+        <Tooltip label={product.title || 'Untitled Product'} placement="top" hasArrow>
+          <Text
+            fontWeight="bold"
+            fontSize="lg"
+            noOfLines={2}
+            cursor="pointer"
+          >
+            {product.title || 'Untitled Product'}
+          </Text>
+        </Tooltip>
+      );
+    }
   };
 
   const renderDescription = () => {
