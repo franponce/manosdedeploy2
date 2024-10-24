@@ -24,6 +24,7 @@ import { FaTrash } from "react-icons/fa";
 import ProductModal from "./ProductModal";
 import { getProducts, createProduct, updateProduct, deleteProduct } from "../../utils/googleSheets";
 import { Product } from "../types";
+import useSWR, { mutate } from 'swr';
 
 const PRODUCT_LIMIT = 30;
 const SYNC_INTERVAL = 30000; // 30 segundos
@@ -136,9 +137,15 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onCreateProduct }
       } else {
         await createProduct(product);
       }
-      await fetchProducts();
       setIsModalOpen(false);
       setCurrentProduct(null);
+      
+      // Actualizar la caché de SWR con el nuevo producto
+      mutate('/api/products', async (currentData) => {
+        const updatedProducts = currentData ? [...currentData, product] : [product];
+        return updatedProducts;
+      }, false);
+
       toast({
         title: "Éxito",
         description: `Producto ${product.id ? "actualizado" : "creado"} exitosamente.`,
