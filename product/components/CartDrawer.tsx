@@ -24,6 +24,7 @@ import {
   FormLabel,
   FormErrorMessage,
   Input,
+  RequiredIndicator,
 } from '@chakra-ui/react';
 import { CartItem } from '../types';
 import { parseCurrency } from '../../utils/currency';
@@ -158,8 +159,11 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
 
               <Divider />
 
-              <FormControl isInvalid={isFullNameError}>
-                <FormLabel>Nombre completo</FormLabel>
+              <FormControl isInvalid={isFullNameError} isRequired>
+                <FormLabel>
+                  Nombre completo
+                  <RequiredIndicator />
+                </FormLabel>
                 <Input
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
@@ -170,8 +174,11 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
                 )}
               </FormControl>
 
-              <FormControl>
-                <FormLabel>Método de pago</FormLabel>
+              <FormControl isRequired>
+                <FormLabel>
+                  Método de pago
+                  <RequiredIndicator />
+                </FormLabel>
                 <RadioGroup onChange={setSelectedPaymentMethod} value={selectedPaymentMethod}>
                   <VStack align="start">
                     {paymentMethods.mercadoPago && (
