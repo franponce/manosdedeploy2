@@ -50,6 +50,7 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
   const [note, setNote] = useState<string>('');
   const [fullName, setFullName] = useState<string>('');
   const [isFullNameError, setIsFullNameError] = useState<boolean>(false);
+  const [expandedTitles, setExpandedTitles] = useState<{ [key: string]: boolean }>({});
   const toast = useToast();
   const { siteInfo } = useSiteInfo();
 
@@ -95,6 +96,42 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
     window.open(whatsappURL, "_blank");
   };
 
+  const toggleTitle = (productId: string) => {
+    setExpandedTitles(prev => ({
+      ...prev,
+      [productId]: !prev[productId]
+    }));
+  };
+
+  const renderTitle = (item: CartItem) => {
+    const isExpanded = expandedTitles[item.id];
+
+    return (
+      <Box>
+        <Text
+          fontWeight="bold"
+          fontSize="sm"
+          lineHeight="short"
+          noOfLines={isExpanded ? undefined : 2}
+          mb={isExpanded ? 1 : 0}
+        >
+          {item.title}
+        </Text>
+        {item.title.length > 50 && (
+          <Button
+            size="xs"
+            variant="link"
+            color="blue.500"
+            onClick={() => toggleTitle(item.id)}
+            mt={1}
+          >
+            {isExpanded ? "Ver menos" : "Ver más"}
+          </Button>
+        )}
+      </Box>
+    );
+  };
+
   return (
     <Drawer isOpen={isOpen} placement="right" onClose={onClose} size="md">
       <DrawerOverlay>
@@ -113,11 +150,11 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
             <VStack spacing={4} align="stretch">
               {items.length > 0 ? (
                 items.map((item) => (
-                  <Flex key={item.id} justify="space-between" align="center">
+                  <Flex key={item.id} justify="space-between" align="flex-start">
                     <Image src={item.image} alt={item.title} boxSize="50px" objectFit="cover" mr={2} />
                     <Box flex={1}>
-                      <Text fontWeight="bold">{item.title}</Text>
-                      <Text>{parseCurrency(item.price)} {siteInfo?.currency}</Text>
+                      {renderTitle(item)}
+                      <Text fontSize="sm">{parseCurrency(item.price)} {siteInfo?.currency}</Text>
                     </Box>
                     <HStack>
                       <Button size="sm" onClick={() => onDecrement(item)}>-</Button>
