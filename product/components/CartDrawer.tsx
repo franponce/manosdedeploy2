@@ -141,7 +141,7 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
                       mr={2} 
                       flexShrink={0}
                     />
-                    <Box flex={1} minWidth={0}> {/* minWidth={0} es importante para que el texto se ajuste correctamente */}
+                    <Box flex={1} minWidth={0}>
                       {renderTitle(item)}
                       <Text fontSize="sm">{parseCurrency(item.price)} {siteInfo?.currency}</Text>
                     </Box>
@@ -155,6 +155,46 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
               ) : (
                 <Text textAlign="center">Tu carrito está vacío</Text>
               )}
+
+              <Divider />
+
+              <FormControl isInvalid={isFullNameError}>
+                <FormLabel>Nombre completo</FormLabel>
+                <Input
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Ingresa tu nombre completo"
+                />
+                {isFullNameError && (
+                  <FormErrorMessage>El nombre completo es requerido</FormErrorMessage>
+                )}
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>Método de pago</FormLabel>
+                <RadioGroup onChange={setSelectedPaymentMethod} value={selectedPaymentMethod}>
+                  <VStack align="start">
+                    {paymentMethods.mercadoPago && (
+                      <Radio value="MercadoPago">MercadoPago</Radio>
+                    )}
+                    {paymentMethods.cash && (
+                      <Radio value="Efectivo">Efectivo</Radio>
+                    )}
+                    {paymentMethods.bankTransfer && (
+                      <Radio value="Transferencia bancaria">Transferencia bancaria</Radio>
+                    )}
+                  </VStack>
+                </RadioGroup>
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>Aclaración (opcional)</FormLabel>
+                <Textarea
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  placeholder="Agrega una aclaración si lo deseas"
+                />
+              </FormControl>
             </VStack>
           </DrawerBody>
 
