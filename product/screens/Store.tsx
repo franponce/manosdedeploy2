@@ -17,6 +17,8 @@ import CartDrawer from "../components/CartDrawer";
 import { editCart } from "../selectors";
 import { parseCurrency } from "../../utils/currency";
 import useSWR, { mutate } from 'swr';
+import PreviewBanner from "../../components/PreviewBanner";
+import { useAuth } from "../../hooks/useAuth";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -41,6 +43,8 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts }) => {
     fallbackData: initialProducts,
     refreshInterval: 60000, // Actualizar cada minuto
   });
+
+  const { user, loading } = useAuth(); // Usa el nuevo hook
 
   const lastProductElementRef = React.useCallback((node: HTMLDivElement | null) => {
     if (isLoading) return;
@@ -139,10 +143,19 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts }) => {
     return { savedCart: null, wasRecovered: false };
   }
 
+  if (loading) {
+    return (
+      <Center height="100vh">
+        <Spinner size="xl" />
+      </Center>
+    );
+  }
+
   if (error) return <div>Failed to load products</div>;
 
   return (
     <>
+      {user && <PreviewBanner />} {/* Muestra el banner solo si hay un usuario autenticado */}
       <Stack spacing={6}>
         {isLoading ? (
           <Grid

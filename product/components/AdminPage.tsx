@@ -14,7 +14,6 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { FaArrowRight, FaStore, FaPlus } from 'react-icons/fa';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
 import ProductManagement from "./ProductManagement";
 import CustomScripts from "./CustomScripts";
@@ -79,15 +78,13 @@ const AdminPage: React.FC = () => {
         mb={8}
         gap={4}
       >
-        <Link href="/" passHref>
-          <Button
-            as="a"
-            colorScheme="green"
-            leftIcon={<Icon as={FaStore} />}
-          >
-            Ir a la tienda
-          </Button>
-        </Link>
+        <Button
+          colorScheme="green"
+          leftIcon={<Icon as={FaStore} />}
+          onClick={() => router.push('/')}
+        >
+          Ir a la tienda
+        </Button>
         <Button
           colorScheme="blue"
           leftIcon={<Icon as={FaPlus} />}
