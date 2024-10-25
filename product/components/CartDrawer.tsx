@@ -50,7 +50,6 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
   const [note, setNote] = useState<string>('');
   const [fullName, setFullName] = useState<string>('');
   const [isFullNameError, setIsFullNameError] = useState<boolean>(false);
-  const [expandedTitles, setExpandedTitles] = useState<{ [key: string]: boolean }>({});
   const toast = useToast();
   const { siteInfo } = useSiteInfo();
 
@@ -94,13 +93,6 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
     );
     const whatsappURL = `https://wa.me/${INFORMATION.whatsappCart}?text=${whatsappMessage}`;
     window.open(whatsappURL, "_blank");
-  };
-
-  const toggleTitle = (productId: string) => {
-    setExpandedTitles(prev => ({
-      ...prev,
-      [productId]: !prev[productId]
-    }));
   };
 
   const renderTitle = (item: CartItem) => {
