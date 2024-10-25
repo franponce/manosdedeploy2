@@ -104,31 +104,21 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
   };
 
   const renderTitle = (item: CartItem) => {
-    const isExpanded = expandedTitles[item.id];
-
     return (
-      <Box>
-        <Text
-          fontWeight="bold"
-          fontSize="sm"
-          lineHeight="short"
-          noOfLines={isExpanded ? undefined : 2}
-          mb={isExpanded ? 1 : 0}
-        >
-          {item.title}
-        </Text>
-        {item.title.length > 50 && (
-          <Button
-            size="xs"
-            variant="link"
-            color="blue.500"
-            onClick={() => toggleTitle(item.id)}
-            mt={1}
-          >
-            {isExpanded ? "Ver menos" : "Ver más"}
-          </Button>
-        )}
-      </Box>
+      <Text
+        fontWeight="bold"
+        fontSize="sm"
+        lineHeight="short"
+        overflow="hidden"
+        textOverflow="ellipsis"
+        style={{
+          display: '-webkit-box',
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: 'vertical',
+        }}
+      >
+        {item.title}
+      </Text>
     );
   };
 
@@ -151,12 +141,19 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
               {items.length > 0 ? (
                 items.map((item) => (
                   <Flex key={item.id} justify="space-between" align="flex-start">
-                    <Image src={item.image} alt={item.title} boxSize="50px" objectFit="cover" mr={2} />
-                    <Box flex={1}>
+                    <Image 
+                      src={item.image} 
+                      alt={item.title} 
+                      boxSize="50px" 
+                      objectFit="cover" 
+                      mr={2} 
+                      flexShrink={0}
+                    />
+                    <Box flex={1} minWidth={0}> {/* minWidth={0} es importante para que el texto se ajuste correctamente */}
                       {renderTitle(item)}
                       <Text fontSize="sm">{parseCurrency(item.price)} {siteInfo?.currency}</Text>
                     </Box>
-                    <HStack>
+                    <HStack flexShrink={0}>
                       <Button size="sm" onClick={() => onDecrement(item)}>-</Button>
                       <Text>{item.quantity}</Text>
                       <Button size="sm" onClick={() => onIncrement(item)}>+</Button>
@@ -165,42 +162,6 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
                 ))
               ) : (
                 <Text textAlign="center">Tu carrito está vacío</Text>
-              )}
-
-              {items.length > 0 && (
-                <>
-                  <FormControl isInvalid={isFullNameError} isRequired>
-                    <FormLabel>Nombre completo</FormLabel>
-                    <Input
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      placeholder="Ingresa tu nombre completo"
-                    />
-                    <FormErrorMessage>El nombre completo es requerido</FormErrorMessage>
-                  </FormControl>
-
-                  <FormControl isRequired>
-                    <FormLabel>¿Cómo vas a abonar tu pedido?</FormLabel>
-                    <RadioGroup onChange={setSelectedPaymentMethod} value={selectedPaymentMethod}>
-                      <VStack align="start">
-                        {paymentMethods.mercadoPago && <Radio value="MercadoPago">MercadoPago</Radio>}
-                        {paymentMethods.cash && <Radio value="Efectivo">Efectivo</Radio>}
-                        {paymentMethods.bankTransfer && <Radio value="Transferencia bancaria">Transferencia bancaria</Radio>}
-                      </VStack>
-                    </RadioGroup>
-                  </FormControl>
-
-                  <Box mt={4}>
-                    <Text fontWeight="bold" mb={2}>¿Tienes alguna aclaración para el vendedor?</Text>
-                    <Textarea
-                      value={note}
-                      onChange={(e) => setNote(e.target.value)}
-                      placeholder="Escribe tu mensaje aquí (máximo 180 caracteres)"
-                      maxLength={180}
-                    />
-                    <Text fontSize="sm" textAlign="right">{note.length}/180</Text>
-                  </Box>
-                </>
               )}
             </VStack>
           </DrawerBody>
