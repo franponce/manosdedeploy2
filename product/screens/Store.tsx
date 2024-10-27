@@ -176,7 +176,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
             Aún no hay productos en esta categoría
           </Heading>
           <Text color="gray.600" textAlign="center" maxW="md">
-            Estamos trabajando para agregar nuevos productos. ¡Vuelve pronto!
+            Estamos trabajando para agregar nuevos productos. ¡Te invitamos a seguir navegando!
           </Text>
         </Center>
       );
