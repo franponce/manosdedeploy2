@@ -1,0 +1,11 @@
+@keyframes thinking {
+    0% { transform: rotate(0deg); }
+    25% { transform: rotate(-20deg); }
+    75% { transform: rotate(20deg); }
+    100% { transform: rotate(0deg); }
+  }
+  
+  .thinking-emoji {
+    display: inline-block;
+    animation: thinking 2s ease-in-out infinite;
+  }

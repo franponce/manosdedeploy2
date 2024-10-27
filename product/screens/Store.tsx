@@ -12,7 +12,11 @@ import {
   Spinner,
   Input,
   Select,
+  InputGroup,
+  InputLeftElement,
+  Icon,
 } from "@chakra-ui/react";
+import { SearchIcon } from "@chakra-ui/icons";
 import { CartItem, Product, Category } from "../types";
 import ProductCard from "../components/ProductCard";
 import CartDrawer from "../components/CartDrawer";
@@ -160,11 +164,16 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
     <>
       <Stack spacing={6}>
         <Flex direction={{ base: "column", md: "row" }} gap={4}>
-          <Input
-            placeholder="Buscar productos..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+          <InputGroup>
+            <InputLeftElement pointerEvents="none">
+              <Icon as={SearchIcon} color="gray.300" />
+            </InputLeftElement>
+            <Input
+              placeholder="Buscar productos..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </InputGroup>
           <Select
             placeholder="Todas las categorías"
             value={selectedCategory}
@@ -212,9 +221,24 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
             ))}
           </Grid>
         ) : (
-          <Text color="gray.500" fontSize="lg" margin="auto">
-            No hay productos cargados todavía, esperemos que pronto 😔
-          </Text>
+          <Center flexDirection="column" p={8} bg="gray.50" borderRadius="lg" boxShadow="sm">
+            <Box 
+              as="span" 
+              fontSize="6xl" 
+              mb={4} 
+              role="img" 
+              aria-label="Buscando"
+              className="thinking-emoji"
+            >
+              🔍
+            </Box>
+            <Heading as="h3" size="md" textAlign="center" mb={2}>
+              No se encontraron productos
+            </Heading>
+            <Text color="gray.600" textAlign="center" maxW="md">
+              que coincidan con tu búsqueda. Intenta con otros términos.
+            </Text>
+          </Center>
         )}
         {isLoading && (
           <Center mt={4}>

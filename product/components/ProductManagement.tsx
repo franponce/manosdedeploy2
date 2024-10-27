@@ -242,7 +242,7 @@ const ProductManagement: React.FC<{ onCreateProduct: () => void }> = ({ onCreate
             No se encontraron productos
           </Heading>
           <Text color="gray.600" textAlign="center" maxW="md">
-            No hay productos que coincidan con tu búsqueda. Intenta con otros términos o crea un nuevo producto.
+             que coincidan con tu búsqueda. Intenta con otros términos o crea un nuevo producto.
           </Text>
         </Center>
       ) : (
