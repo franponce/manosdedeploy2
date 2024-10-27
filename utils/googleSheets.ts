@@ -81,6 +81,7 @@ if (typeof window === 'undefined') {
 
     updateProduct: async (product: Product): Promise<void> => {
       try {
+        console.log('Updating product:', product);
         const auth = await getAuthClient();
         const { google } = await import('googleapis');
         const sheets = google.sheets({ version: 'v4', auth });
@@ -94,13 +95,13 @@ if (typeof window === 'undefined') {
             product.price.toString(),
             product.scheduledPublishDate ? product.scheduledPublishDate.toISOString() : '',
             product.isScheduled ? 'TRUE' : 'FALSE',
-            product.categoryId // Añadimos el categoryId
+            product.categoryId 
           ],
         ];
 
         await sheets.spreadsheets.values.update({
           spreadsheetId: SPREADSHEET_ID,
-          range: `Products!A${parseInt(product.id) + 1}:H${parseInt(product.id) + 1}`,
+          range: `La Libre Web - Catálogo online rev 2021 - products!A${parseInt(product.id) + 1}:H${parseInt(product.id) + 1}`,
           valueInputOption: 'USER_ENTERED',
           requestBody: { values },
         });
@@ -132,7 +133,7 @@ if (typeof window === 'undefined') {
             product.price.toString(),
             product.scheduledPublishDate ? new Date(product.scheduledPublishDate).toISOString() : '',
             product.isScheduled ? 'TRUE' : 'FALSE',
-            product.categoryId // Añadimos el categoryId
+            product.categoryId 
           ],
         ];
 
@@ -184,7 +185,7 @@ if (typeof window === 'undefined') {
 
       const response = await sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
-        range: CATEGORY_RANGE,
+        range: 'Categories!A1:B', // Cambiamos esto para incluir desde A1
       });
 
       const rows = response.data.values;
@@ -210,7 +211,7 @@ if (typeof window === 'undefined') {
 
       await sheets.spreadsheets.values.append({
         spreadsheetId: SPREADSHEET_ID,
-        range: CATEGORY_RANGE,
+        range: 'Categories!A1:B', // Cambiamos esto para empezar desde A1
         valueInputOption: 'USER_ENTERED',
         insertDataOption: 'INSERT_ROWS',
         requestBody: { values },

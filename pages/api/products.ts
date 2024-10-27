@@ -34,7 +34,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         res.status(200).json({ message: 'Product updated successfully' });
       } catch (error) {
         console.error('Error updating product:', error);
-        res.status(500).json({ error: 'Error al actualizar producto. Revisa las medidas y peso de la imagen que querés cargar' });
+        res.status(500).json({ 
+          error: 'Error al actualizar producto', 
+          details: error instanceof Error ? error.message : 'Unknown error' 
+        });
       }
       break;
 
