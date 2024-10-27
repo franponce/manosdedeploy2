@@ -158,6 +158,61 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
     return { savedCart: null, wasRecovered: false };
   }
 
+  const NoProductsFound = () => {
+    if (selectedCategory && !searchTerm) {
+      return (
+        <Center flexDirection="column" p={8} bg="gray.50" borderRadius="lg" boxShadow="sm">
+          <Box 
+            as="span" 
+            fontSize="6xl" 
+            mb={4} 
+            role="img" 
+            aria-label="Categoría vacía"
+            className="empty-category-emoji"
+          >
+            📦
+          </Box>
+          <Heading as="h3" size="md" textAlign="center" mb={2}>
+            Aún no hay productos en esta categoría
+          </Heading>
+          <Text color="gray.600" textAlign="center" maxW="md">
+            Estamos trabajando para agregar nuevos productos. ¡Vuelve pronto!
+          </Text>
+        </Center>
+      );
+    } else {
+      return (
+        <Center flexDirection="column" p={8} bg="gray.50" borderRadius="lg" boxShadow="sm">
+          <Box 
+            as="span" 
+            fontSize="6xl" 
+            mb={4} 
+            role="img" 
+            aria-label="Buscando"
+            className="thinking-emoji"
+          >
+            🔍
+          </Box>
+          <Heading as="h3" size="md" textAlign="center" mb={2}>
+            No se encontraron productos
+          </Heading>
+          <Text color="gray.600" textAlign="center" maxW="md">
+            que coincidan con tu búsqueda. Intenta con otros términos o categorías.
+          </Text>
+          {searchTerm && (
+            <Button 
+              mt={4} 
+              colorScheme="blue" 
+              onClick={() => setSearchTerm("")}
+            >
+              Limpiar búsqueda
+            </Button>
+          )}
+        </Center>
+      );
+    }
+  };
+
   if (error) return <div>Failed to load products</div>;
 
   return (
@@ -221,24 +276,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
             ))}
           </Grid>
         ) : (
-          <Center flexDirection="column" p={8} bg="gray.50" borderRadius="lg" boxShadow="sm">
-            <Box 
-              as="span" 
-              fontSize="6xl" 
-              mb={4} 
-              role="img" 
-              aria-label="Buscando"
-              className="thinking-emoji"
-            >
-              🔍
-            </Box>
-            <Heading as="h3" size="md" textAlign="center" mb={2}>
-              No se encontraron productos
-            </Heading>
-            <Text color="gray.600" textAlign="center" maxW="md">
-              que coincidan con tu búsqueda. Intenta con otros términos.
-            </Text>
-          </Center>
+          <NoProductsFound />
         )}
         {isLoading && (
           <Center mt={4}>
