@@ -10,8 +10,10 @@ import {
   useToast,
   Center,
   Spinner,
+  Input,
+  Select,
 } from "@chakra-ui/react";
-import { CartItem, Product } from "../types";
+import { CartItem, Product, Category } from "../types";
 import ProductCard from "../components/ProductCard";
 import CartDrawer from "../components/CartDrawer";
 import { editCart } from "../selectors";
@@ -24,12 +26,13 @@ const PRODUCTS_PER_PAGE = 12;
 
 interface StoreScreenProps {
   initialProducts: Product[];
+  initialCategories: Category[];
 }
 
 const CART_STORAGE_KEY = 'simple-ecommerce-cart';
 const CART_EXPIRY_TIME = 24 * 60 * 60 * 1000; // 24 horas en milisegundos
 
-const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts }) => {
+const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCategories }) => {
   const [cart, setCart] = React.useState<CartItem[]>([]);
   const toast = useToast();
   const [isCartOpen, toggleCart] = React.useState<boolean>(false);
@@ -41,6 +44,12 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts }) => {
     fallbackData: initialProducts,
     refreshInterval: 60000, // Actualizar cada minuto
   });
+  const { data: categories } = useSWR<Category[]>('/api/categories', fetcher, {
+    fallbackData: initialCategories,
+    refreshInterval: 60000,
+  });
+  const [searchTerm, setSearchTerm] = React.useState("");
+  const [selectedCategory, setSelectedCategory] = React.useState("");
 
   const lastProductElementRef = React.useCallback((node: HTMLDivElement | null) => {
     if (isLoading) return;
@@ -98,13 +107,19 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts }) => {
 
   React.useEffect(() => {
     if (products) {
-      const validProducts = products.filter(product =>
-        product && product.id && product.title && product.image && product.price && !product.isScheduled
+      let filteredProducts = products.filter(product =>
+        product && product.id && product.title && product.image && product.price && !product.isScheduled &&
+        product.title.toLowerCase().includes(searchTerm.toLowerCase())
       );
-      setDisplayedProducts(validProducts.slice(0, page * PRODUCTS_PER_PAGE));
-      setHasMore(page * PRODUCTS_PER_PAGE < validProducts.length);
+
+      if (selectedCategory) {
+        filteredProducts = filteredProducts.filter(product => product.categoryId === selectedCategory);
+      }
+
+      setDisplayedProducts(filteredProducts.slice(0, page * PRODUCTS_PER_PAGE));
+      setHasMore(page * PRODUCTS_PER_PAGE < filteredProducts.length);
     }
-  }, [products, page]);
+  }, [products, page, searchTerm, selectedCategory]);
 
   const total = React.useMemo(
     () => parseCurrency(cart.reduce((total, product) => total + product.price * product.quantity, 0)),
@@ -144,6 +159,25 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts }) => {
   return (
     <>
       <Stack spacing={6}>
+        <Flex direction={{ base: "column", md: "row" }} gap={4}>
+          <Input
+            placeholder="Buscar productos..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <Select
+            placeholder="Todas las categorías"
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+          >
+            {categories?.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </Select>
+        </Flex>
+
         {isLoading ? (
           <Grid
             gridGap={8}

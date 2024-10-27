@@ -1,37 +1,25 @@
-import { GetStaticProps } from 'next';
-import { Product } from '../product/types';
-import api from '../product/api';
+import { GetServerSideProps } from 'next';
 import StoreScreen from '../product/screens/Store';
-import { getSiteInformation, SiteInformation } from '../utils/firebase';
+import { Product, Category } from '../product/types';
+import { getProducts, getCategories } from '../utils/googleSheets';
 
-interface IndexRouteProps {
-  initialProducts: Product[];
+interface HomeProps {
+  products: Product[];
+  categories: Category[];
 }
 
-const IndexRoute: React.FC<IndexRouteProps> = ({ initialProducts }) => {
-  return <StoreScreen initialProducts={initialProducts} />;
-};
-
-export const getStaticProps: GetStaticProps = async () => {
+export const getServerSideProps: GetServerSideProps<HomeProps> = async () => {
   try {
-    const products = await api.list();
-    const siteInfo = await getSiteInformation();
-
-    return {
-      props: {
-        initialProducts: products,
-      },
-      revalidate: 60, // Revalidar cada minuto
-    };
+    const [products, categories] = await Promise.all([getProducts(), getCategories()]);
+    return { props: { products, categories } };
   } catch (error) {
     console.error('Error fetching data:', error);
-    return {
-      props: {
-        initialProducts: [],
-      },
-      revalidate: 60,
-    };
+    return { props: { products: [], categories: [] } };
   }
 };
 
-export default IndexRoute;
+const Home: React.FC<HomeProps> = ({ products, categories }) => {
+  return <StoreScreen initialProducts={products} initialCategories={categories} />;
+};
+
+export default Home;

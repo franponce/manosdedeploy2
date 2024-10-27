@@ -21,15 +21,20 @@ import {
   useMediaQuery,
   Flex,
   Center,
+  NumberInput,
+  NumberInputField,
+  Textarea,
+  Select,
 } from "@chakra-ui/react";
 import { TimeIcon } from "@chakra-ui/icons";
 import imageCompression from "browser-image-compression";
-import { Product } from "../types";
+import { Product, Category } from "../types";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useSiteInfo } from "@/hooks/useSiteInfo";
 import dynamic from 'next/dynamic';
 import 'react-quill/dist/quill.snow.css';
+import { createCategory } from "../../utils/googleSheets";
 
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 
@@ -39,9 +44,10 @@ interface ProductModalProps {
   onSubmit: (product: Product) => Promise<void>;
   product: Product | null;
   isLoading: boolean;
+  categories: Category[];
 }
 
-const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, product, isLoading }) => {
+const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, product, isLoading, categories }) => {
   const [currentProduct, setCurrentProduct] = useState<Product>({
     id: "",
     title: "",
@@ -51,6 +57,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     currency: "ARS",
     isScheduled: false,
     scheduledPublishDate: null,
+    categoryId: "",
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const toast = useToast();
@@ -59,6 +66,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
   const [isMobile] = useMediaQuery("(max-width: 48em)");
   const { siteInfo } = useSiteInfo();
   const [description, setDescription] = useState('');
+  const [newCategoryName, setNewCategoryName] = useState("");
 
   const MAX_TITLE_LENGTH = 60;
   const MAX_DESCRIPTION_LENGTH = 300;
@@ -81,6 +89,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
         currency: "ARS",
         isScheduled: false,
         scheduledPublishDate: null,
+        categoryId: "",
       });
       setImagePreview(null);
       setDescription('');
@@ -227,6 +236,31 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     }
   };
 
+  const handleCreateCategory = async () => {
+    if (!newCategoryName.trim()) return;
+    try {
+      const newCategory = await createCategory({ name: newCategoryName });
+      setCurrentProduct({ ...currentProduct, categoryId: newCategory.id });
+      setNewCategoryName("");
+      toast({
+        title: "Categoría creada",
+        description: "La nueva categoría se ha creado y seleccionado.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error("Error creating category:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo crear la categoría.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
@@ -297,6 +331,32 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                 value={currentProduct.price}
                 onChange={handleInputChange}
               />
+            </FormControl>
+            <FormControl>
+              <FormLabel>Categoría</FormLabel>
+              <Select
+                name="categoryId"
+                value={currentProduct.categoryId}
+                onChange={handleInputChange}
+              >
+                <option value="">Sin categoría</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl>
+              <FormLabel>Nueva categoría</FormLabel>
+              <Input
+                value={newCategoryName}
+                onChange={(e) => setNewCategoryName(e.target.value)}
+                placeholder="Nombre de la nueva categoría"
+              />
+              <Button mt={2} onClick={handleCreateCategory}>
+                Crear y seleccionar categoría
+              </Button>
             </FormControl>
             <Button
               leftIcon={<TimeIcon />}

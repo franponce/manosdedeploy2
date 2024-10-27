@@ -146,8 +146,7 @@ const AdminPage: React.FC = () => {
           onClose={() => setIsModalOpen(false)}
           onSubmit={handleSubmit}
           product={null}
-          isLoading={isLoading}
-        />
+          isLoading={isLoading} categories={[]}        />
       )}
     </Box>
   );

@@ -1,17 +1,18 @@
 import * as React from "react";
 import { GetStaticPaths, GetStaticProps } from "next";
 
-import { Product } from "../product/types";
+import { Product, Category } from "../product/types";
 import api from "../product/api";
 import StoreScreen from "../product/screens/Store";
 import { getSiteInformation, SiteInformation } from "../utils/firebase";
 
 interface Props {
   initialProducts: Product[];
+  initialCategories: Category[];
 }
 
-const MockRoute: React.FC<Props> = ({ initialProducts }) => {
-  return <StoreScreen initialProducts={initialProducts} />;
+const MockRoute: React.FC<Props> = ({ initialProducts, initialCategories }) => {
+  return <StoreScreen initialProducts={initialProducts} initialCategories={initialCategories} />;
 };
 
 export const getStaticProps: GetStaticProps = async (context) => {
@@ -45,6 +46,7 @@ export const getStaticProps: GetStaticProps = async (context) => {
   return {
     props: {
       initialProducts: products,
+      initialCategories: [], // Por ahora, pasamos un array vacío
     },
     revalidate: 10,
   };

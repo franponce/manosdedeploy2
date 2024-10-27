@@ -1,4 +1,5 @@
-import { Product } from '../product/types';
+import { Category, Product } from '../product/types';
+// Eliminamos la importación de Category ya que no existe el módulo
 
 let googleSheetsApi: any;
 
@@ -217,3 +218,14 @@ export const {
   getProductCount,
 } = googleSheetsApi;
 
+export async function getCategories(): Promise<Category[]> {
+  // Implementa la lógica para obtener las categorías de Google Sheets
+  // Por ahora, retornemos un array vacío
+  return [];
+}
+
+export async function createCategory(category: { name: string }): Promise<Category> {
+  // Implementa la lógica para crear una categoría en Google Sheets
+  // Por ahora, retornemos una categoría mock
+  return { id: Date.now().toString(), name: category.name };
+}

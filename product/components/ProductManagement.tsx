@@ -23,18 +23,14 @@ import {
 import { SearchIcon } from "@chakra-ui/icons";
 import { FaTrash } from "react-icons/fa";
 import ProductModal from "./ProductModal";
-import { getProducts, createProduct, updateProduct, deleteProduct } from "../../utils/googleSheets";
-import { Product } from "../types";
+import { getProducts, createProduct, updateProduct, deleteProduct, getCategories } from "../../utils/googleSheets";
+import { Product, Category } from "../types";
 import useSWR, { mutate } from 'swr';
 
 const PRODUCT_LIMIT = 30;
 const SYNC_INTERVAL = 30000; // 30 segundos
 
-interface ProductManagementProps {
-  onCreateProduct: () => void;
-}
-
-const ProductManagement: React.FC<ProductManagementProps> = ({ onCreateProduct }) => {
+const ProductManagement: React.FC<{ onCreateProduct: () => void }> = ({ onCreateProduct }) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
@@ -57,6 +53,21 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onCreateProduct }
   }, [isLoading, hasMore]);
 
   const toast = useToast();
+
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const fetchedCategories = await getCategories();
+      setCategories(fetchedCategories);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    }
+  };
 
   const fetchProducts = useCallback(async () => {
     try {
@@ -349,6 +360,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onCreateProduct }
         onSubmit={handleSubmit}
         product={currentProduct}
         isLoading={isLoading}
+        categories={categories}
       />
     </Box>
   );
