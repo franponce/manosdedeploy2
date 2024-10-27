@@ -33,7 +33,8 @@ async function getAuthClient() {
 if (typeof window === 'undefined') {
   // Esto solo se ejecutará en el servidor
   const SPREADSHEET_ID = process.env.GOOGLE_SHEET_ID;
-  const RANGE = 'A2:G'; // Extendemos el rango para incluir las nuevas columnas
+  const PRODUCT_RANGE = 'La Libre Web - Catálogo online rev 2021 - products!A2:H';
+  const CATEGORY_RANGE = 'Categories!A2:B'; // Nuevo rango para las categorías
   const PRODUCT_LIMIT = 30;
 
   googleSheetsApi = {
@@ -49,7 +50,7 @@ if (typeof window === 'undefined') {
 
         const response = await sheets.spreadsheets.values.get({
           spreadsheetId: SPREADSHEET_ID,
-          range: RANGE,
+          range: PRODUCT_RANGE,
         });
 
         console.log('Spreadsheet data fetched');
@@ -69,9 +70,9 @@ if (typeof window === 'undefined') {
             price: parseFloat(row[4]) || 0,
             scheduledPublishDate: row[5] ? new Date(row[5]) : null,
             isScheduled: row[6] === 'TRUE',
+            categoryId: row[7] || '', // Añadimos el categoryId
           }))
           .filter((product) => product.title && product.title.trim() !== '');
-
       } catch (error) {
         console.error('Error fetching products from Google Sheets:', error);
         throw error;
@@ -92,13 +93,14 @@ if (typeof window === 'undefined') {
             product.image, 
             product.price.toString(),
             product.scheduledPublishDate ? product.scheduledPublishDate.toISOString() : '',
-            product.isScheduled ? 'TRUE' : 'FALSE'
+            product.isScheduled ? 'TRUE' : 'FALSE',
+            product.categoryId // Añadimos el categoryId
           ],
         ];
 
         await sheets.spreadsheets.values.update({
           spreadsheetId: SPREADSHEET_ID,
-          range: `A${parseInt(product.id) + 1}:G${parseInt(product.id) + 1}`,
+          range: `Products!A${parseInt(product.id) + 1}:H${parseInt(product.id) + 1}`,
           valueInputOption: 'USER_ENTERED',
           requestBody: { values },
         });
@@ -129,13 +131,14 @@ if (typeof window === 'undefined') {
             product.image, 
             product.price.toString(),
             product.scheduledPublishDate ? new Date(product.scheduledPublishDate).toISOString() : '',
-            product.isScheduled ? 'TRUE' : 'FALSE'
+            product.isScheduled ? 'TRUE' : 'FALSE',
+            product.categoryId // Añadimos el categoryId
           ],
         ];
 
         await sheets.spreadsheets.values.append({
           spreadsheetId: SPREADSHEET_ID,
-          range: RANGE,
+          range: PRODUCT_RANGE,
           valueInputOption: 'USER_ENTERED',
           insertDataOption: 'INSERT_ROWS',
           requestBody: { values },
@@ -173,6 +176,48 @@ if (typeof window === 'undefined') {
       const products = await googleSheetsApi.getProducts();
       return products.length;
     },
+
+    getCategories: async (): Promise<Category[]> => {
+      const auth = await getAuthClient();
+      const { google } = await import('googleapis');
+      const sheets = google.sheets({ version: 'v4', auth });
+
+      const response = await sheets.spreadsheets.values.get({
+        spreadsheetId: SPREADSHEET_ID,
+        range: CATEGORY_RANGE,
+      });
+
+      const rows = response.data.values;
+      if (!rows || rows.length === 0) {
+        return [];
+      }
+
+      return rows.map((row: any[]) => ({
+        id: row[0],
+        name: row[1],
+      }));
+    },
+
+    createCategory: async (category: { name: string }): Promise<Category> => {
+      const auth = await getAuthClient();
+      const { google } = await import('googleapis');
+      const sheets = google.sheets({ version: 'v4', auth });
+
+      const categories = await googleSheetsApi.getCategories();
+      const newId = (Math.max(...categories.map((c: { id: string; }) => parseInt(c.id)), 0) + 1).toString();
+
+      const values = [[newId, category.name]];
+
+      await sheets.spreadsheets.values.append({
+        spreadsheetId: SPREADSHEET_ID,
+        range: CATEGORY_RANGE,
+        valueInputOption: 'USER_ENTERED',
+        insertDataOption: 'INSERT_ROWS',
+        requestBody: { values },
+      });
+
+      return { id: newId, name: category.name };
+    },
   };
 } else {
   // Esto se ejecutará en el cliente
@@ -207,6 +252,20 @@ if (typeof window === 'undefined') {
       const products = await googleSheetsApi.getProducts();
       return products.length;
     },
+    getCategories: async () => {
+      const response = await fetch('/api/categories');
+      if (!response.ok) throw new Error('Failed to fetch categories');
+      return response.json();
+    },
+    createCategory: async (category: { name: string }) => {
+      const response = await fetch('/api/categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(category),
+      });
+      if (!response.ok) throw new Error('Failed to create category');
+      return response.json();
+    },
   };
 }
 
@@ -216,16 +275,6 @@ export const {
   createProduct,
   deleteProduct,
   getProductCount,
+  getCategories,
+  createCategory,
 } = googleSheetsApi;
-
-export async function getCategories(): Promise<Category[]> {
-  // Implementa la lógica para obtener las categorías de Google Sheets
-  // Por ahora, retornemos un array vacío
-  return [];
-}
-
-export async function createCategory(category: { name: string }): Promise<Category> {
-  // Implementa la lógica para crear una categoría en Google Sheets
-  // Por ahora, retornemos una categoría mock
-  return { id: Date.now().toString(), name: category.name };
-}
