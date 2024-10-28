@@ -19,6 +19,8 @@ import {
   Badge,
   Spinner,
   Tooltip,
+  Table,
+  Select,
 } from "@chakra-ui/react";
 import { SearchIcon } from "@chakra-ui/icons";
 import { FaTrash } from "react-icons/fa";
@@ -30,17 +32,87 @@ import useSWR, { mutate } from 'swr';
 const PRODUCT_LIMIT = 30;
 const SYNC_INTERVAL = 30000; // 30 segundos
 
-const ProductManagement: React.FC<{ onCreateProduct: () => void }> = ({ onCreateProduct }) => {
+interface ProductManagementProps {
+  onCreateProduct: () => void;
+  searchTerm: string;
+  selectedCategory: string;
+}
+
+const ProductManagement: React.FC<ProductManagementProps> = ({ 
+  onCreateProduct, 
+  searchTerm, 
+  selectedCategory 
+}) => {
   const [products, setProducts] = useState<Product[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [expandedDescriptions, setExpandedDescriptions] = useState<{ [key: string]: boolean }>({});
   const observer = useRef<IntersectionObserver | null>(null);
+
+  // Efecto para filtrar productos basado en búsqueda y categoría
+  useEffect(() => {
+    const filtered = products.filter(product => {
+      const matchesSearch = 
+        product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.price.toString().includes(searchTerm.toLowerCase());
+      const matchesCategory = !selectedCategory || product.categoryId === selectedCategory;
+      return matchesSearch && matchesCategory;
+    });
+    
+    setDisplayedProducts(filtered);
+    setPage(1);
+    setHasMore(true);
+  }, [searchTerm, selectedCategory, products]);
+
+  const NoProductsFound = () => {
+    if (selectedCategory && !searchTerm) {
+      return (
+        <Center flexDirection="column" p={8} bg="gray.50" borderRadius="lg" boxShadow="sm">
+          <Box 
+            as="span" 
+            fontSize="6xl" 
+            mb={4} 
+            role="img" 
+            aria-label="Categoría vacía"
+          >
+            📦
+          </Box>
+          <Heading as="h3" size="md" textAlign="center" mb={2}>
+            Aún no hay productos en esta categoría
+          </Heading>
+          <Text color="gray.600" textAlign="center" maxW="md">
+            Puedes crear nuevos productos usando el botón "Crear nuevo producto"
+          </Text>
+        </Center>
+      );
+    }
+    
+    return (
+      <Center flexDirection="column" p={8} bg="gray.50" borderRadius="lg" boxShadow="sm">
+        <Box 
+          as="span" 
+          fontSize="6xl" 
+          mb={4} 
+          role="img" 
+          aria-label="Buscando"
+        >
+          🔍
+        </Box>
+        <Heading as="h3" size="md" textAlign="center" mb={2}>
+          No se encontraron productos
+        </Heading>
+        <Text color="gray.600" textAlign="center" maxW="md">
+          que coincidan con tu búsqueda. Intenta con otros términos o categorías.
+        </Text>
+      </Center>
+    );
+  };
+
   const lastProductElementRef = useCallback((node: HTMLDivElement | null) => {
     if (isLoading) return;
     if (observer.current) observer.current.disconnect();
@@ -73,7 +145,6 @@ const ProductManagement: React.FC<{ onCreateProduct: () => void }> = ({ onCreate
     try {
       const fetchedProducts = await getProducts();
       setProducts(fetchedProducts);
-      setFilteredProducts(fetchedProducts);
     } catch (error) {
       console.error("Error fetching products:", error);
       toast({
@@ -91,25 +162,6 @@ const ProductManagement: React.FC<{ onCreateProduct: () => void }> = ({ onCreate
     const intervalId = setInterval(fetchProducts, SYNC_INTERVAL);
     return () => clearInterval(intervalId);
   }, [fetchProducts]);
-
-  useEffect(() => {
-    const lowercasedTerm = searchTerm.toLowerCase();
-    const filtered = products.filter(
-      (product) =>
-        product.title.toLowerCase().includes(lowercasedTerm) ||
-        product.description.toLowerCase().includes(lowercasedTerm) ||
-        product.price.toString().includes(lowercasedTerm)
-    );
-    setFilteredProducts(filtered);
-    setPage(1);
-    setHasMore(true);
-  }, [searchTerm, products]);
-
-  useEffect(() => {
-    const PRODUCTS_PER_PAGE = 10; // Definir PRODUCTS_PER_PAGE como una constante
-    setDisplayedProducts(filteredProducts.slice(0, page * PRODUCTS_PER_PAGE));
-    setHasMore(page * PRODUCTS_PER_PAGE < filteredProducts.length);
-  }, [filteredProducts, page]);
 
   const handleEdit = (product: Product) => {
     setCurrentProduct(product);
@@ -184,7 +236,6 @@ const ProductManagement: React.FC<{ onCreateProduct: () => void }> = ({ onCreate
   };
 
   const [expandedTitles, setExpandedTitles] = useState<{ [key: string]: boolean }>({});
-  const [expandedDescriptions, setExpandedDescriptions] = useState<{ [key: string]: boolean }>({});
 
   const toggleTitle = (productId: string) => {
     setExpandedTitles(prev => ({
@@ -207,19 +258,6 @@ const ProductManagement: React.FC<{ onCreateProduct: () => void }> = ({ onCreate
 
   return (
     <Box>
-      <Flex direction="column" mb={6}>
-        <InputGroup mb={4}>
-          <InputLeftElement pointerEvents="none">
-            <SearchIcon color="gray.300" />
-          </InputLeftElement>
-          <Input
-            placeholder="Buscar productos..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </InputGroup>
-      </Flex>
-
       {products.length >= PRODUCT_LIMIT - 5 && products.length < PRODUCT_LIMIT && (
         <Box mb={4} p={3} bg="yellow.100" borderRadius="md">
           <Text color="yellow.800">
@@ -235,17 +273,11 @@ const ProductManagement: React.FC<{ onCreateProduct: () => void }> = ({ onCreate
         </Box>
       )}
 
-      {displayedProducts.length === 0 ? (
-        <Center flexDirection="column" p={8} bg="gray.50" borderRadius="lg" boxShadow="sm">
-          <Icon as={SearchIcon} w={12} h={12} color="gray.400" mb={4} />
-          <Heading as="h3" size="md" textAlign="center" mb={2}>
-            No se encontraron productos
-          </Heading>
-          <Text color="gray.600" textAlign="center" maxW="md">
-             que coincidan con tu búsqueda. Intenta con otros términos o crea un nuevo producto.
-          </Text>
+      {isLoading ? (
+        <Center p={8}>
+          <Spinner size="xl" />
         </Center>
-      ) : (
+      ) : displayedProducts.length ? (
         <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
           {displayedProducts.map((product, index) => (
             <Box
@@ -345,6 +377,8 @@ const ProductManagement: React.FC<{ onCreateProduct: () => void }> = ({ onCreate
             </Box>
           ))}
         </SimpleGrid>
+      ) : (
+        <NoProductsFound />
       )}
       {isLoading && (
         <Center mt={4}>

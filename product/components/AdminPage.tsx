@@ -118,7 +118,7 @@ const AdminPage: React.FC = () => {
               </AccordionButton>
             </h2>
             <AccordionPanel pb={4}>
-              <ProductManagement onCreateProduct={handleCreateProduct} />
+              <ProductManagement onCreateProduct={handleCreateProduct} searchTerm={""} selectedCategory={""} />
             </AccordionPanel>
           </AccordionItem>
 

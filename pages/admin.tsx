@@ -6,6 +6,12 @@ import {
   Flex,
   Icon,
   useToast,
+  InputGroup,
+  Input,
+  InputLeftElement,
+  Select,
+  Center,
+  Spinner,
 } from "@chakra-ui/react";
 import ProductManagement from "../product/components/ProductManagement";
 import Link from 'next/link';
@@ -14,12 +20,27 @@ import { FaArrowRight, FaStore, FaPlus } from 'react-icons/fa';
 import ProductModal from '../product/components/ProductModal';
 import { Product } from "../product/types";
 import { createProduct, updateProduct } from "../utils/googleSheets";
+import { Category } from "../product/types";
+import { getCategories } from "../utils/googleSheets";
+import useSWR from 'swr';
+import { SearchIcon } from "@chakra-ui/icons";
 
 const AdminPage: React.FC = () => {
   const router = useRouter();
   const toast = useToast();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = React.useState("");
+  const [selectedCategory, setSelectedCategory] = React.useState("");
+  const { data: categories } = useSWR<Category[]>('/api/categories', async () => {
+    const response = await fetch('/api/categories');
+    if (!response.ok) {
+      throw new Error('Error fetching categories');
+    }
+    return response.json();
+  }, {
+    refreshInterval: 60000,
+  });
 
   const handleStoreSettings = () => {
     router.push('/store-config');
@@ -104,7 +125,35 @@ const AdminPage: React.FC = () => {
         </Flex>
       </Flex>
 
-      <ProductManagement onCreateProduct={handleCreateProduct} />
+      <Flex direction={{ base: "column", md: "row" }} gap={4} mb={6}>
+        <InputGroup>
+          <InputLeftElement pointerEvents="none">
+            <Icon as={SearchIcon} color="gray.300" />
+          </InputLeftElement>
+          <Input
+            placeholder="Buscar productos..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </InputGroup>
+        <Select
+          placeholder="Todas las categorías"
+          value={selectedCategory}
+          onChange={(e) => setSelectedCategory(e.target.value)}
+        >
+          {categories?.map((category) => (
+            <option key={category.id} value={category.id}>
+              {category.name}
+            </option>
+          ))}
+        </Select>
+      </Flex>
+
+      <ProductManagement 
+        onCreateProduct={handleCreateProduct} 
+        searchTerm={searchTerm}
+        selectedCategory={selectedCategory}
+      />
 
       {isModalOpen && (
         <ProductModal
