@@ -159,16 +159,58 @@ if (typeof window === 'undefined') {
         const { google } = await import('googleapis');
         const sheets = google.sheets({ version: 'v4', auth });
 
-        const values = [['', '', '', '', '', '', '']]; // Limpiamos todas las columnas
-        await sheets.spreadsheets.values.update({
+        // 1. Obtener el índice real de la fila
+        const rowIndex = parseInt(id) + 1;
+
+        // 2. Eliminar la fila usando batchUpdate
+        await sheets.spreadsheets.batchUpdate({
           spreadsheetId: SPREADSHEET_ID,
-          range: `A${parseInt(id) + 1}:G${parseInt(id) + 1}`,
-          valueInputOption: 'USER_ENTERED',
-          requestBody: { values },
+          requestBody: {
+            requests: [{
+              deleteDimension: {
+                range: {
+                  sheetId: 0, // ID de la hoja, normalmente 0 para la primera hoja
+                  dimension: 'ROWS',
+                  startIndex: rowIndex - 1,
+                  endIndex: rowIndex
+                }
+              }
+            }]
+          }
         });
-        console.log('Product deleted successfully');
+
+        // 3. Obtener todos los productos restantes
+        const response = await sheets.spreadsheets.values.get({
+          spreadsheetId: SPREADSHEET_ID,
+          range: PRODUCT_RANGE,
+        });
+
+        const rows = response.data.values || [];
+
+        // 4. Actualizar los IDs de los productos restantes
+        const updates = rows.map((row, index) => {
+          const newId = (index + 1).toString();
+          return [
+            newId,
+            ...row.slice(1)
+          ];
+        });
+
+        // 5. Actualizar todas las filas con los nuevos IDs
+        if (updates.length > 0) {
+          await sheets.spreadsheets.values.update({
+            spreadsheetId: SPREADSHEET_ID,
+            range: PRODUCT_RANGE,
+            valueInputOption: 'RAW',
+            requestBody: {
+              values: updates
+            }
+          });
+        }
+
+        console.log('Producto eliminado y referencias actualizadas exitosamente');
       } catch (error) {
-        console.error('Error deleting product from Google Sheets:', error);
+        console.error('Error al eliminar producto de Google Sheets:', error);
         throw error;
       }
     },

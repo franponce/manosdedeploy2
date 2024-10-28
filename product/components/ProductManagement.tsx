@@ -171,8 +171,13 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
   const handleDelete = async (id: string) => {
     if (window.confirm("¿Estás seguro de que quieres eliminar este producto?")) {
       try {
+        setIsLoading(true);
         await deleteProduct(id);
+        
+        // Actualizar la caché de SWR y el estado local
+        await mutate('/api/products');
         await fetchProducts();
+        
         toast({
           title: "Producto eliminado",
           description: "El producto ha sido eliminado exitosamente.",
@@ -181,14 +186,16 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
           isClosable: true,
         });
       } catch (error) {
-        console.error("Error deleting product:", error);
+        console.error("Error al eliminar producto:", error);
         toast({
           title: "Error",
-          description: "Failed to delete product",
+          description: "No se pudo eliminar el producto",
           status: "error",
           duration: 3000,
           isClosable: true,
         });
+      } finally {
+        setIsLoading(false);
       }
     }
   };
