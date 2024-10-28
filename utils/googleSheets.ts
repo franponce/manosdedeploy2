@@ -159,27 +159,41 @@ if (typeof window === 'undefined') {
         const { google } = await import('googleapis');
         const sheets = google.sheets({ version: 'v4', auth });
 
-        // 1. Obtener el índice real de la fila
+        // 1. Obtener información de la hoja de cálculo
+        const spreadsheet = await sheets.spreadsheets.get({
+          spreadsheetId: SPREADSHEET_ID,
+        });
+
+        // 2. Encontrar el sheetId correcto
+        const sheet = spreadsheet.data.sheets?.find(
+          s => s.properties?.title === 'La Libre Web - Catálogo online rev 2021 - products'
+        );
+
+        if (!sheet || !sheet.properties?.sheetId) {
+          throw new Error('No se pudo encontrar la hoja de productos');
+        }
+
+        const sheetId = sheet.properties.sheetId;
         const rowIndex = parseInt(id) + 1;
 
-        // 2. Eliminar la fila usando batchUpdate
+        // 3. Eliminar la fila
         await sheets.spreadsheets.batchUpdate({
           spreadsheetId: SPREADSHEET_ID,
           requestBody: {
             requests: [{
               deleteDimension: {
                 range: {
-                  sheetId: 0, // ID de la hoja, normalmente 0 para la primera hoja
+                  sheetId: sheetId,
                   dimension: 'ROWS',
-                  startIndex: rowIndex - 1,
-                  endIndex: rowIndex
+                  startIndex: rowIndex,
+                  endIndex: rowIndex + 1
                 }
               }
             }]
           }
         });
 
-        // 3. Obtener todos los productos restantes
+        // 4. Obtener productos restantes y actualizar IDs
         const response = await sheets.spreadsheets.values.get({
           spreadsheetId: SPREADSHEET_ID,
           range: PRODUCT_RANGE,
@@ -187,7 +201,7 @@ if (typeof window === 'undefined') {
 
         const rows = response.data.values || [];
 
-        // 4. Actualizar los IDs de los productos restantes
+        // 5. Actualizar los IDs
         const updates = rows.map((row, index) => {
           const newId = (index + 1).toString();
           return [
@@ -196,7 +210,7 @@ if (typeof window === 'undefined') {
           ];
         });
 
-        // 5. Actualizar todas las filas con los nuevos IDs
+        // 6. Actualizar la hoja con los nuevos IDs
         if (updates.length > 0) {
           await sheets.spreadsheets.values.update({
             spreadsheetId: SPREADSHEET_ID,
