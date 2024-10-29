@@ -21,8 +21,10 @@ import {
   VStack,
   Alert,
   AlertIcon,
+  Badge,
+  Tooltip,
 } from '@chakra-ui/react';
-import { DeleteIcon, AddIcon } from '@chakra-ui/icons';
+import { DeleteIcon, AddIcon, InfoIcon } from '@chakra-ui/icons';
 import { Category } from '../types';
 import { deleteCategory, createCategory } from '../../utils/googleSheets';
 import { mutate } from 'swr';
@@ -105,11 +107,16 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl">
       <ModalOverlay />
-      <ModalContent>
-        <ModalHeader>Gestionar Categorías</ModalHeader>
+      <ModalContent maxW="800px">
+        <ModalHeader>
+          <Text fontSize="2xl">Gestionar Categorías</Text>
+          <Text fontSize="sm" color="gray.500">
+            {categories.length} de {CATEGORY_LIMIT} categorías creadas
+          </Text>
+        </ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          <VStack spacing={4} pb={4}>
+          <VStack spacing={6} pb={4}>
             {categories.length >= CATEGORY_LIMIT && (
               <Alert status="warning">
                 <AlertIcon />
@@ -117,29 +124,42 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
               </Alert>
             )}
             
-            <Box width="100%">
+            <Box width="100%" overflowX="auto">
               <Table variant="simple">
                 <Thead>
                   <Tr>
                     <Th>ID</Th>
                     <Th>Nombre</Th>
+                    <Th>Productos</Th>
                     <Th>Acciones</Th>
                   </Tr>
                 </Thead>
                 <Tbody>
                   {categories.map((category) => (
                     <Tr key={category.id}>
-                      <Td>{category.id}</Td>
+                      <Td>
+                        <Badge colorScheme="purple">{category.id}</Badge>
+                      </Td>
                       <Td>{category.name}</Td>
                       <Td>
-                        <IconButton
-                          aria-label="Eliminar categoría"
-                          icon={<DeleteIcon />}
-                          colorScheme="red"
-                          size="sm"
-                          onClick={() => handleDeleteCategory(category.id)}
-                          isLoading={isLoading}
-                        />
+                        <Tooltip label="Cantidad de productos en esta categoría">
+                          <Badge colorScheme="blue">
+                            {/* Aquí podrías agregar la cantidad de productos si tienes acceso a esa información */}
+                            0 productos
+                          </Badge>
+                        </Tooltip>
+                      </Td>
+                      <Td>
+                        <Tooltip label="Eliminar categoría">
+                          <IconButton
+                            aria-label="Eliminar categoría"
+                            icon={<DeleteIcon />}
+                            colorScheme="red"
+                            size="sm"
+                            onClick={() => handleDeleteCategory(category.id)}
+                            isLoading={isLoading}
+                          />
+                        </Tooltip>
                       </Td>
                     </Tr>
                   ))}
@@ -149,7 +169,7 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
 
             {categories.length < CATEGORY_LIMIT && (
               <Box width="100%" pt={4}>
-                <Text mb={2}>Crear nueva categoría</Text>
+                <Text mb={2} fontWeight="bold">Crear nueva categoría</Text>
                 <Box display="flex" gap={2}>
                   <Input
                     value={newCategoryName}
