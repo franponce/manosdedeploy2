@@ -377,20 +377,21 @@ if (typeof window === 'undefined') {
       const { google } = await import('googleapis');
       const sheets = google.sheets({ version: 'v4', auth });
 
-      const response = await sheets.spreadsheets.values.get({
-        spreadsheetId: SPREADSHEET_ID,
-        range: 'Categories!A1:B', // Cambiamos esto para incluir desde A1
-      });
+      try {
+        const response = await sheets.spreadsheets.values.get({
+          spreadsheetId: SPREADSHEET_ID,
+          range: 'Categories!A2:B', // Cambiado de A1:B a A2:B para omitir los encabezados
+        });
 
-      const rows = response.data.values;
-      if (!rows || rows.length === 0) {
-        return [];
+        const rows = response.data.values || [];
+        return rows.map((row) => ({
+          id: row[0],
+          name: row[1],
+        }));
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+        throw error;
       }
-
-      return rows.map((row: any[]) => ({
-        id: row[0],
-        name: row[1],
-      }));
     },
 
     createCategory: async (category: { name: string }): Promise<Category> => {
