@@ -38,14 +38,24 @@ if (typeof window === 'undefined') {
   const PRODUCT_LIMIT = 30;
 
   const formatLocalDateTime = (date: Date): string => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const seconds = String(date.getSeconds()).padStart(2, '0');
-    
-    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    try {
+      // Asegurarnos que date es un objeto Date válido
+      const validDate = new Date(date);
+      
+      // Formatear cada componente de la fecha
+      const year = validDate.getFullYear();
+      const month = String(validDate.getMonth() + 1).padStart(2, '0');
+      const day = String(validDate.getDate()).padStart(2, '0');
+      const hours = String(validDate.getHours()).padStart(2, '0');
+      const minutes = String(validDate.getMinutes()).padStart(2, '0');
+      const seconds = String(validDate.getSeconds()).padStart(2, '0');
+      
+      // Retornar en formato YYYY-MM-DD HH:mm:ss
+      return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return ''; // Retornar string vacío si hay error
+    }
   };
 
   googleSheetsApi = {
