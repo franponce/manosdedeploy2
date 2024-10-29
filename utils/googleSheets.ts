@@ -37,6 +37,17 @@ if (typeof window === 'undefined') {
   const CATEGORY_RANGE = 'Categories!A2:B'; // Nuevo rango para las categorías
   const PRODUCT_LIMIT = 30;
 
+  const formatLocalDateTime = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  };
+
   googleSheetsApi = {
     getProducts: async (): Promise<Product[]> => {
       try {
@@ -68,7 +79,7 @@ if (typeof window === 'undefined') {
             currency: 'USD', 
             image: row[3],
             price: parseFloat(row[4]) || 0,
-            scheduledPublishDate: row[5] ? new Date(row[5]) : null,
+            scheduledPublishDate: row[5] ? new Date(row[5].replace(' ', 'T')) : null,
             isScheduled: row[6] === 'TRUE',
             categoryId: row[7] || '', // Añadimos el categoryId
           }))
@@ -93,7 +104,7 @@ if (typeof window === 'undefined') {
             product.description, 
             product.image, 
             product.price.toString(),
-            product.scheduledPublishDate ? product.scheduledPublishDate.toISOString() : '',
+            product.scheduledPublishDate ? formatLocalDateTime(product.scheduledPublishDate) : '',
             product.isScheduled ? 'TRUE' : 'FALSE',
             product.categoryId 
           ],
@@ -131,7 +142,7 @@ if (typeof window === 'undefined') {
             product.description, 
             product.image, 
             product.price.toString(),
-            product.scheduledPublishDate ? new Date(product.scheduledPublishDate).toISOString() : '',
+            product.scheduledPublishDate ? formatLocalDateTime(product.scheduledPublishDate) : '',
             product.isScheduled ? 'TRUE' : 'FALSE',
             product.categoryId 
           ],
