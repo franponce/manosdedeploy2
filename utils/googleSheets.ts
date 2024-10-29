@@ -242,6 +242,18 @@ if (typeof window === 'undefined') {
         const { google } = await import('googleapis');
         const sheets = google.sheets({ version: 'v4', auth });
 
+        // Primero, obtener la información de la hoja
+        const spreadsheet = await sheets.spreadsheets.get({
+          spreadsheetId: SPREADSHEET_ID,
+        });
+
+        // Obtener el sheetId de la primera hoja (o la hoja específica que uses)
+        const sheetId = spreadsheet.data.sheets?.[0].properties?.sheetId;
+
+        if (!sheetId) {
+          throw new Error('No se pudo encontrar el ID de la hoja');
+        }
+
         const response = await sheets.spreadsheets.values.get({
           spreadsheetId: SPREADSHEET_ID,
           range: PRODUCT_RANGE
@@ -260,14 +272,14 @@ if (typeof window === 'undefined') {
         const adjustedIndex = rowIndex - 2;
         console.log(`Eliminando producto en índice ${adjustedIndex} (fila ${rowIndex})`);
         
-        // Eliminar la fila usando el método batchUpdate
+        // Eliminar la fila usando el método batchUpdate con el sheetId correcto
         await sheets.spreadsheets.batchUpdate({
           spreadsheetId: SPREADSHEET_ID,
           requestBody: {
             requests: [{
               deleteDimension: {
                 range: {
-                  sheetId: 0, // ID de la hoja, 0 para la primera hoja
+                  sheetId: sheetId,
                   dimension: 'ROWS',
                   startIndex: rowIndex - 1, // -1 porque las filas son 0-based
                   endIndex: rowIndex // No incluye este índice
