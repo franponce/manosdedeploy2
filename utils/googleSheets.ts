@@ -54,6 +54,52 @@ if (typeof window === 'undefined') {
     }
   };
 
+  const compressImage = (base64Image: string): string => {
+    // Si la imagen ya es menor que el límite, retornarla sin cambios
+    if (base64Image.length <= 50000) return base64Image;
+
+    // Extraer el tipo de imagen y los datos
+    const [header, data] = base64Image.split(',');
+    const quality = 0.7; // Ajustar este valor según necesidad
+
+    // Crear una imagen temporal
+    const img = new Image();
+    img.src = base64Image;
+
+    // Crear un canvas para la compresión
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Establecer dimensiones máximas
+    const MAX_WIDTH = 800;
+    const MAX_HEIGHT = 600;
+    
+    let width = img.width;
+    let height = img.height;
+
+    // Calcular nuevas dimensiones manteniendo la proporción
+    if (width > height) {
+      if (width > MAX_WIDTH) {
+        height *= MAX_WIDTH / width;
+        width = MAX_WIDTH;
+      }
+    } else {
+      if (height > MAX_HEIGHT) {
+        width *= MAX_HEIGHT / height;
+        height = MAX_HEIGHT;
+      }
+    }
+
+    canvas.width = width;
+    canvas.height = height;
+    
+    // Dibujar la imagen redimensionada
+    ctx?.drawImage(img, 0, 0, width, height);
+    
+    // Retornar la imagen comprimida
+    return canvas.toDataURL('image/jpeg', quality);
+  };
+
   googleSheetsApi = {
     getProducts: async (): Promise<Product[]> => {
       try {
@@ -131,9 +177,21 @@ if (typeof window === 'undefined') {
 
     createProduct: async (product: Product): Promise<string> => {
       try {
-        // Validar tamaño de imagen
-        if (product.image && product.image.length > 50000) {
-          throw new Error('La imagen es demasiado grande. Por favor, reduce su tamaño.');
+        let imageToSave = product.image;
+
+        // Comprimir imagen si es necesario
+        if (imageToSave && imageToSave.length > 50000) {
+          try {
+            imageToSave = await compressImage(imageToSave);
+            
+            // Si aún después de comprimir es muy grande
+            if (imageToSave.length > 50000) {
+              throw new Error('La imagen sigue siendo demasiado grande después de la compresión. Por favor, usa una imagen más pequeña.');
+            }
+          } catch (error) {
+            console.error('Error comprimiendo imagen:', error);
+            throw new Error('Error comprimiendo imagen. Por favor, intenta nuevamente.');
+          }
         }
 
         const auth = await getAuthClient();
@@ -153,7 +211,7 @@ if (typeof window === 'undefined') {
             newId,
             product.title,
             product.description,
-            product.image,
+            imageToSave,
             product.price.toString(),
             scheduledDate,
             product.isScheduled ? 'TRUE' : 'FALSE',

@@ -100,43 +100,53 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (file.size > MAX_IMAGE_SIZE_MB * 1024 * 1024) {
+      toast({
+        title: "Error",
+        description: `La imagen no debe superar los ${MAX_IMAGE_SIZE_MB}MB`,
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
     try {
       const img = await createImageBitmap(file);
-      
-      const options = {
-        maxSizeMB: MAX_IMAGE_SIZE_MB,
-        maxWidthOrHeight: Math.max(TARGET_WIDTH, TARGET_HEIGHT),
-        useWebWorker: true,
-      };
-
-      const compressedFile = await imageCompression(file, options);
-      
-      // Crear un canvas para redimensionar la imagen si es necesario
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       
-      // Calcular las nuevas dimensiones manteniendo la proporción
       let newWidth = img.width;
       let newHeight = img.height;
+      
       if (newWidth > TARGET_WIDTH || newHeight > TARGET_HEIGHT) {
         const ratio = Math.min(TARGET_WIDTH / newWidth, TARGET_HEIGHT / newHeight);
-        newWidth *= ratio;
-        newHeight *= ratio;
+        newWidth = Math.floor(newWidth * ratio);
+        newHeight = Math.floor(newHeight * ratio);
       }
       
       canvas.width = newWidth;
       canvas.height = newHeight;
-      
       ctx?.drawImage(img, 0, 0, newWidth, newHeight);
       
-      const base64 = canvas.toDataURL('image/jpeg', 0.7); // Ajusta la calidad si es necesario
+      let quality = 0.8;
+      let base64 = canvas.toDataURL('image/jpeg', quality);
       
+      while (base64.length > 45000 && quality > 0.1) {
+        quality -= 0.1;
+        base64 = canvas.toDataURL('image/jpeg', quality);
+      }
+
+      if (base64.length > 45000) {
+        throw new Error('La imagen es demasiado grande incluso después de la compresión');
+      }
+
       setImagePreview(base64);
       setCurrentProduct((prev) => ({ ...prev, image: base64 }));
 
       toast({
         title: "Imagen cargada",
-        description: `La imagen se ha procesado y optimizado correctamente. Tamaño final: ${(compressedFile.size / (1024 * 1024)).toFixed(2)}MB`,
+        description: `Imagen procesada correctamente (${(base64.length / 1024).toFixed(2)}KB)`,
         status: "success",
         duration: 3000,
         isClosable: true,
@@ -145,7 +155,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
       console.error("Error processing image:", error);
       toast({
         title: "Error",
-        description: "No se pudo procesar la imagen. Por favor, intenta de nuevo.",
+        description: "No se pudo procesar la imagen. Intenta con una imagen más pequeña o de menor calidad.",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -157,11 +167,22 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     e.preventDefault();
     if (!currentProduct) return;
 
+    if (!currentProduct.title.trim()) {
+      toast({
+        title: "Error",
+        description: "El título es obligatorio",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
     const price = parseFloat(currentProduct.price.toString());
     if (isNaN(price) || price <= 0) {
       toast({
         title: "Error",
-        description: "Por favor, ingrese un precio válido mayor que 0.",
+        description: "Por favor, ingrese un precio válido mayor que 0",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -172,7 +193,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     if (isScheduleOpen && !scheduledDate) {
       toast({
         title: "Error",
-        description: "Por favor, seleccione una fecha y hora para la publicación programada.",
+        description: "Por favor, seleccione una fecha y hora para la publicación programada",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -195,7 +216,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
       console.error("Error al guardar el producto:", error);
       toast({
         title: "Error",
-        description: "No se pudo guardar el producto. Por favor, intente de nuevo.",
+        description: error instanceof Error ? error.message : "No se pudo guardar el producto",
         status: "error",
         duration: 3000,
         isClosable: true,
