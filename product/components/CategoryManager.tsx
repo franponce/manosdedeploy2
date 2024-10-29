@@ -24,7 +24,7 @@ import {
   Badge,
   Tooltip,
 } from '@chakra-ui/react';
-import { DeleteIcon, AddIcon, InfoIcon } from '@chakra-ui/icons';
+import { DeleteIcon, AddIcon } from '@chakra-ui/icons';
 import { Category } from '../types';
 import { deleteCategory, createCategory } from '../../utils/googleSheets';
 import { mutate } from 'swr';
@@ -81,7 +81,7 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
   };
 
   const handleDeleteCategory = async (categoryId: string) => {
-    if (!window.confirm('¿Estás seguro de eliminar esta categoría?')) return;
+    if (!window.confirm('¿Estás seguro de que deseas eliminar esta categoría?')) return;
 
     setIsLoading(true);
     try {
@@ -107,7 +107,7 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl">
       <ModalOverlay />
-      <ModalContent maxW="800px">
+      <ModalContent>
         <ModalHeader>
           <Text fontSize="2xl">Gestionar Categorías</Text>
           <Text fontSize="sm" color="gray.500">
@@ -124,13 +124,12 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
               </Alert>
             )}
             
-            <Box width="100%" overflowX="auto">
+            <Box width="100%">
               <Table variant="simple">
                 <Thead>
                   <Tr>
                     <Th>ID</Th>
                     <Th>Nombre</Th>
-                    <Th>Productos</Th>
                     <Th>Acciones</Th>
                   </Tr>
                 </Thead>
@@ -141,14 +140,6 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
                         <Badge colorScheme="purple">{category.id}</Badge>
                       </Td>
                       <Td>{category.name}</Td>
-                      <Td>
-                        <Tooltip label="Cantidad de productos en esta categoría">
-                          <Badge colorScheme="blue">
-                            {/* Aquí podrías agregar la cantidad de productos si tienes acceso a esa información */}
-                            0 productos
-                          </Badge>
-                        </Tooltip>
-                      </Td>
                       <Td>
                         <Tooltip label="Eliminar categoría">
                           <IconButton
