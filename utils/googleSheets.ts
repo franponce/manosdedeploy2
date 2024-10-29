@@ -116,7 +116,9 @@ if (typeof window === 'undefined') {
       if (!rows) return;
 
       const now = new Date();
-      const updates = [];
+      const updates: {
+        range: string; values: string[][]; // Limpiar fecha y establecer isScheduled a FALSE
+      }[] = [];
 
       rows.forEach((row, index) => {
         if (row[6] === 'TRUE' && row[5]) { // isScheduled y scheduledPublishDate
