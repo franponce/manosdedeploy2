@@ -136,6 +136,10 @@ if (typeof window === 'undefined') {
           throw new Error('La imagen es demasiado grande. Por favor, reduce su tamaño.');
         }
 
+        const auth = await getAuthClient();
+        const { google } = await import('googleapis');
+        const sheets = google.sheets({ version: 'v4', auth });
+
         const currentProducts = await googleSheetsApi.getProducts();
         const newId = (Math.max(...currentProducts.map((p: Product) => parseInt(p.id)), 0) + 1).toString();
 
@@ -167,7 +171,6 @@ if (typeof window === 'undefined') {
           requestBody: { values },
         });
 
-        console.log('Product created successfully');
         return newId;
       } catch (error) {
         console.error('Error in createProduct:', error);
