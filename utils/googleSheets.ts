@@ -137,7 +137,7 @@ if (typeof window === 'undefined') {
         }
 
         const currentProducts = await googleSheetsApi.getProducts();
-        const newId = (Math.max(...currentProducts.map(p => parseInt(p.id)), 0) + 1).toString();
+        const newId = (Math.max(...currentProducts.map((p: Product) => parseInt(p.id)), 0) + 1).toString();
 
         // Formatear fecha correctamente
         const scheduledDate = product.scheduledPublishDate 
