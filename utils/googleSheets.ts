@@ -39,22 +39,18 @@ if (typeof window === 'undefined') {
 
   const formatLocalDateTime = (date: Date): string => {
     try {
-      // Asegurarnos que date es un objeto Date válido
-      const validDate = new Date(date);
-      
-      // Formatear cada componente de la fecha
-      const year = validDate.getFullYear();
-      const month = String(validDate.getMonth() + 1).padStart(2, '0');
-      const day = String(validDate.getDate()).padStart(2, '0');
-      const hours = String(validDate.getHours()).padStart(2, '0');
-      const minutes = String(validDate.getMinutes()).padStart(2, '0');
-      const seconds = String(validDate.getSeconds()).padStart(2, '0');
-      
-      // Retornar en formato YYYY-MM-DD HH:mm:ss
-      return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+      return date.toLocaleString('es-AR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      }).replace(',', '');
     } catch (error) {
       console.error('Error formatting date:', error);
-      return ''; // Retornar string vacío si hay error
+      return '';
     }
   };
 
@@ -135,41 +131,30 @@ if (typeof window === 'undefined') {
 
     createProduct: async (product: Product): Promise<string> => {
       try {
-        console.log('Starting createProduct with:', product);
-        
-        const currentProducts = await googleSheetsApi.getProducts();
-        console.log('Current products count:', currentProducts.length);
-
-        if (currentProducts.length >= PRODUCT_LIMIT) {
-          throw new Error(`Product limit of ${PRODUCT_LIMIT} reached`);
+        // Validar tamaño de imagen
+        if (product.image && product.image.length > 50000) {
+          throw new Error('La imagen es demasiado grande. Por favor, reduce su tamaño.');
         }
 
-        const auth = await getAuthClient();
-        console.log('Auth client obtained');
+        const currentProducts = await googleSheetsApi.getProducts();
+        const newId = (Math.max(...currentProducts.map(p => parseInt(p.id)), 0) + 1).toString();
 
-        const { google } = await import('googleapis');
-        const sheets = google.sheets({ version: 'v4', auth });
-
-        const newId = (Math.max(...currentProducts.map((p: Product) => parseInt(p.id)), 0) + 1).toString();
-        console.log('Generated new ID:', newId);
-
-        // Log the date formatting
+        // Formatear fecha correctamente
         const scheduledDate = product.scheduledPublishDate 
-          ? formatLocalDateTime(product.scheduledPublishDate) 
+          ? formatLocalDateTime(new Date(product.scheduledPublishDate))
           : '';
-        console.log('Formatted scheduled date:', scheduledDate);
 
         const values = [
           [
-            newId, 
-            product.title, 
-            product.description, 
-            product.image, 
+            newId,
+            product.title,
+            product.description,
+            product.image,
             product.price.toString(),
             scheduledDate,
             product.isScheduled ? 'TRUE' : 'FALSE',
-            product.categoryId 
-          ],
+            product.categoryId || ''
+          ]
         ];
 
         console.log('Prepared values for sheet:', values);
