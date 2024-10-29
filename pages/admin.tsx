@@ -165,12 +165,12 @@ const AdminPage: React.FC = () => {
           categories={categories || []}
         />
       )}
-
-      <CategoryManager
-        categories={categories}
-        isOpen={isCategoryManagerOpen}
-        onClose={() => setIsCategoryManagerOpen(false)}
-      />
+      {isCategoryManagerOpen && (
+        <CategoryManager
+          isOpen={isCategoryManagerOpen}
+          onClose={() => setIsCategoryManagerOpen(false)}
+        />
+      )}
     </Box>
   );
 };

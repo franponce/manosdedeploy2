@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
 import { Stack, HStack, Heading, Button } from '@chakra-ui/react';
 import { CategoryManager } from '../components/CategoryManager';
-import { Category } from '../types';
-import { deleteCategory, createCategory } from '../../utils/googleSheets';
-import useSWR, { mutate } from 'swr';
+import { useCategories } from '../../hooks/useCategories';
 
 const AdminScreen = () => {
-  const { data: categories = [] } = useSWR<Category[]>('/api/categories');
   const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
+  const { categories } = useCategories();
 
   return (
     <>
@@ -21,11 +19,9 @@ const AdminScreen = () => {
             Gestionar Categorías
           </Button>
         </HStack>
-        {/* ... resto del código */}
       </Stack>
 
       <CategoryManager 
-        categories={categories}
         isOpen={isCategoryManagerOpen}
         onClose={() => setIsCategoryManagerOpen(false)}
       />

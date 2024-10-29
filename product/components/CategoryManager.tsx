@@ -28,23 +28,23 @@ import { DeleteIcon, AddIcon } from '@chakra-ui/icons';
 import { Category } from '../types';
 import { deleteCategory, createCategory } from '../../utils/googleSheets';
 import { mutate } from 'swr';
+import { useCategories } from '../../hooks/useCategories';
 
 const CATEGORY_LIMIT = 8;
 
 interface CategoryManagerProps {
-  categories: Category[];
   isOpen: boolean;
   onClose: () => void;
 }
 
 export const CategoryManager: React.FC<CategoryManagerProps> = ({
-  categories,
   isOpen,
   onClose,
 }) => {
   const [newCategoryName, setNewCategoryName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const toast = useToast();
+  const { categories, createCategory, deleteCategory } = useCategories();
 
   const handleCreateCategory = async () => {
     if (!newCategoryName.trim()) return;
@@ -60,15 +60,8 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
 
     setIsLoading(true);
     try {
-      const newCategory = await createCategory({ name: newCategoryName.trim() });
+      await createCategory(newCategoryName.trim());
       setNewCategoryName('');
-      
-      // Actualizar la cache de SWR con la nueva categoría
-      await mutate('/api/categories', [...categories, newCategory], false);
-      
-      // Revalidar los datos
-      await mutate('/api/categories');
-
       toast({
         title: "Categoría creada",
         status: "success",
@@ -94,17 +87,6 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
     setIsLoading(true);
     try {
       await deleteCategory(id);
-      
-      // Actualizar la cache de SWR optimistamente
-      await mutate(
-        '/api/categories',
-        categories.filter(cat => cat.id !== id),
-        false
-      );
-      
-      // Revalidar datos
-      await mutate('/api/categories');
-
       toast({
         title: "Categoría eliminada",
         status: "success",

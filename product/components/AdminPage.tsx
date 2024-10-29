@@ -21,12 +21,14 @@ import CustomScripts from "./CustomScripts";
 import ProductModal from "./ProductModal";
 import { Product } from "../types";
 import { createProduct, updateProduct } from "../../utils/googleSheets";
+import { useCategories } from '../../hooks/useCategories';
 
 const AdminPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const toast = useToast();
+  const { categories } = useCategories();
 
   const handleStoreSettings = () => {
     router.push('/store-config');
@@ -146,7 +148,9 @@ const AdminPage: React.FC = () => {
           onClose={() => setIsModalOpen(false)}
           onSubmit={handleSubmit}
           product={null}
-          isLoading={isLoading} categories={[]}        />
+          isLoading={isLoading}
+          categories={categories}
+        />
       )}
     </Box>
   );
