@@ -24,6 +24,7 @@ import { Category } from "../product/types";
 import { getCategories } from "../utils/googleSheets";
 import useSWR from 'swr';
 import { SearchIcon } from "@chakra-ui/icons";
+import { CategoryManager } from '../product/components/CategoryManager';
 
 const AdminPage: React.FC = () => {
   const router = useRouter();
@@ -32,15 +33,8 @@ const AdminPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = React.useState("");
   const [selectedCategory, setSelectedCategory] = React.useState("");
-  const { data: categories } = useSWR<Category[]>('/api/categories', async () => {
-    const response = await fetch('/api/categories');
-    if (!response.ok) {
-      throw new Error('Error fetching categories');
-    }
-    return response.json();
-  }, {
-    refreshInterval: 60000,
-  });
+  const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
+  const { data: categories = [] } = useSWR<Category[]>('/api/categories');
 
   const handleStoreSettings = () => {
     router.push('/store-config');
@@ -122,6 +116,12 @@ const AdminPage: React.FC = () => {
           >
             Ir a la configuración de la tienda
           </Button>
+          <Button
+            colorScheme="purple"
+            onClick={() => setIsCategoryManagerOpen(true)}
+          >
+            Gestionar Categorías
+          </Button>
         </Flex>
       </Flex>
 
@@ -165,6 +165,12 @@ const AdminPage: React.FC = () => {
           categories={categories || []}
         />
       )}
+
+      <CategoryManager
+        categories={categories}
+        isOpen={isCategoryManagerOpen}
+        onClose={() => setIsCategoryManagerOpen(false)}
+      />
     </Box>
   );
 };
