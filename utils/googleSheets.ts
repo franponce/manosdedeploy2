@@ -100,11 +100,59 @@ if (typeof window === 'undefined') {
     return canvas.toDataURL('image/jpeg', quality);
   };
 
+  const checkAndUpdateScheduledProducts = async () => {
+    try {
+      const auth = await getAuthClient();
+      const { google } = await import('googleapis');
+      const sheets = google.sheets({ version: 'v4', auth });
+
+      // Obtener todos los productos
+      const response = await sheets.spreadsheets.values.get({
+        spreadsheetId: SPREADSHEET_ID,
+        range: PRODUCT_RANGE,
+      });
+
+      const rows = response.data.values;
+      if (!rows) return;
+
+      const now = new Date();
+      const updates = [];
+
+      rows.forEach((row, index) => {
+        if (row[6] === 'TRUE' && row[5]) { // isScheduled y scheduledPublishDate
+          const scheduledDate = new Date(row[5].replace(' ', 'T'));
+          if (scheduledDate <= now) {
+            // El producto debe ser actualizado
+            updates.push({
+              range: `La Libre Web - Catálogo online rev 2021 - products!F${index + 2}:G${index + 2}`,
+              values: [['', 'FALSE']] // Limpiar fecha y establecer isScheduled a FALSE
+            });
+          }
+        }
+      });
+
+      if (updates.length > 0) {
+        await sheets.spreadsheets.values.batchUpdate({
+          spreadsheetId: SPREADSHEET_ID,
+          requestBody: {
+            valueInputOption: 'USER_ENTERED',
+            data: updates
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error checking scheduled products:', error);
+    }
+  };
+
   googleSheetsApi = {
     getProducts: async (): Promise<Product[]> => {
       try {
         console.log('Starting getProducts in googleSheets.ts');
         
+        // Verificar productos programados antes de obtenerlos
+        await checkAndUpdateScheduledProducts();
+
         const auth = await getAuthClient();
         console.log('GoogleAuth instance created');
 
