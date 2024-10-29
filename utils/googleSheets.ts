@@ -420,12 +420,15 @@ if (typeof window === 'undefined') {
     },
 
     deleteCategory: async (id: string): Promise<void> => {
+      console.log('Starting deleteCategory for ID:', id);
+      
       try {
         const auth = await getAuthClient();
         const { google } = await import('googleapis');
         const sheets = google.sheets({ version: 'v4', auth });
 
         // Obtener información de la hoja
+        console.log('Fetching spreadsheet info');
         const spreadsheet = await sheets.spreadsheets.get({
           spreadsheetId: SPREADSHEET_ID,
         });
@@ -436,23 +439,30 @@ if (typeof window === 'undefined') {
         );
         
         if (!categoriesSheet?.properties?.sheetId) {
+          console.error('Categories sheet not found');
           throw new Error('No se pudo encontrar la hoja de categorías');
         }
 
         // Obtener todas las categorías
+        console.log('Fetching current categories');
         const response = await sheets.spreadsheets.values.get({
           spreadsheetId: SPREADSHEET_ID,
           range: 'Categories!A2:B'
         });
 
         const rows = response.data.values || [];
+        console.log('Current categories:', rows);
+        
         const rowIndex = rows.findIndex(row => row[0] === id);
+        console.log('Found category at index:', rowIndex);
 
         if (rowIndex === -1) {
+          console.error('Category not found:', id);
           throw new Error('Categoría no encontrada');
         }
 
-        // Eliminar la fila (rowIndex + 2 porque empezamos desde A2)
+        // Eliminar la fila
+        console.log('Deleting row at index:', rowIndex + 1);
         await sheets.spreadsheets.batchUpdate({
           spreadsheetId: SPREADSHEET_ID,
           requestBody: {
@@ -461,7 +471,7 @@ if (typeof window === 'undefined') {
                 range: {
                   sheetId: categoriesSheet.properties.sheetId,
                   dimension: 'ROWS',
-                  startIndex: rowIndex + 1, // +1 porque hay un encabezado
+                  startIndex: rowIndex + 1,
                   endIndex: rowIndex + 2
                 }
               }
@@ -469,22 +479,25 @@ if (typeof window === 'undefined') {
           }
         });
 
-        // Reordenar IDs secuencialmente
+        // Reordenar IDs
+        console.log('Reordering remaining categories');
         const remainingCategories = rows.filter((_, index) => index !== rowIndex);
         const updates = remainingCategories.map((_, index) => [(index + 1).toString()]);
 
         if (updates.length > 0) {
           await sheets.spreadsheets.values.update({
             spreadsheetId: SPREADSHEET_ID,
-            range: 'Categories!A2:A' + (updates.length + 1),
+            range: `Categories!A2:A${updates.length + 1}`,
             valueInputOption: 'RAW',
             requestBody: {
               values: updates
             }
           });
         }
+
+        console.log('Category deletion completed successfully');
       } catch (error) {
-        console.error('Error en deleteCategory:', error);
+        console.error('Error in deleteCategory:', error);
         throw error;
       }
     },
