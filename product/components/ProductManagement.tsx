@@ -168,35 +168,51 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm("¿Estás seguro de que quieres eliminar este producto?")) {
-      try {
-        setIsLoading(true);
-        await deleteProduct(id);
-        
-        // Actualizar la caché de SWR y el estado local
-        await mutate('/api/products');
-        await fetchProducts();
-        
-        toast({
-          title: "Producto eliminado",
-          description: "El producto ha sido eliminado exitosamente.",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
-      } catch (error) {
-        console.error("Error al eliminar producto:", error);
-        toast({
-          title: "Error",
-          description: "No se pudo eliminar el producto",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-      } finally {
-        setIsLoading(false);
+  const handleDelete = async (productId: string) => {
+    if (!window.confirm("¿Estás seguro de que deseas eliminar este producto?")) {
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // Obtener el índice del producto considerando que empieza en A2
+      const index = (products || []).findIndex(p => p.id === productId);
+      if (index === -1) {
+        throw new Error('Producto no encontrado');
       }
+
+      // Calcular el ID de la fila en el sheet (A2 = 2, A3 = 3, etc.)
+      const sheetRowId = (index + 2).toString();
+      
+      console.log(`Eliminando producto en fila ${sheetRowId}`); // Para debugging
+      await deleteProduct(sheetRowId);
+
+      // Actualizar el estado local y la caché
+      const updatedProducts = products?.filter(p => p.id !== productId) || [];
+      setProducts(updatedProducts);
+      
+      // Invalidar la caché de SWR para forzar una recarga
+      await mutate('/api/products');
+
+      toast({
+        title: "Producto eliminado",
+        description: "El producto ha sido eliminado exitosamente",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+
+    } catch (error) {
+      console.error('Error al eliminar producto:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo eliminar el producto. Por favor, intenta nuevamente.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 

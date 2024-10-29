@@ -46,14 +46,32 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         try {
           const { id } = req.query;
           if (typeof id !== 'string') {
-            res.status(400).json({ error: 'Invalid product ID' });
+            res.status(400).json({ error: 'ID de producto inválido' });
             return;
           }
+
+          // Validar que el ID es un número válido
+          const numericId = parseInt(id);
+          if (isNaN(numericId) || numericId < 1) {
+            res.status(400).json({ error: 'ID de producto inválido' });
+            return;
+          }
+
           await deleteProduct(id);
-          res.status(200).json({ message: 'Product deleted successfully' });
+          
+          // Esperar un momento para asegurar la sincronización
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          res.status(200).json({ 
+            message: 'Producto eliminado exitosamente',
+            deletedId: id 
+          });
         } catch (error) {
-          console.error('Error deleting product:', error);
-          res.status(500).json({ error: 'Failed to delete product' });
+          console.error('Error al eliminar producto:', error);
+          res.status(500).json({ 
+            error: 'Error al eliminar producto',
+            details: error instanceof Error ? error.message : 'Error desconocido'
+          });
         }
         break;
 

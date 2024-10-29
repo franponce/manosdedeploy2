@@ -242,72 +242,45 @@ if (typeof window === 'undefined') {
         const { google } = await import('googleapis');
         const sheets = google.sheets({ version: 'v4', auth });
 
-        // 1. Obtener información de la hoja de cálculo
-        const spreadsheet = await sheets.spreadsheets.get({
+        const response = await sheets.spreadsheets.values.get({
           spreadsheetId: SPREADSHEET_ID,
+          range: PRODUCT_RANGE
         });
 
-        // 2. Encontrar el sheetId correcto
-        const sheet = spreadsheet.data.sheets?.find(
-          s => s.properties?.title === 'La Libre Web - Catálogo online rev 2021 - products'
-        );
-
-        if (!sheet || !sheet.properties?.sheetId) {
-          throw new Error('No se pudo encontrar la hoja de productos');
+        const rows = response.data.values || [];
+        // El id representa la fila en el sheet (2 para A2, 3 para A3, etc.)
+        const rowIndex = parseInt(id);
+        
+        // Validar que el índice está dentro del rango válido (A2 en adelante)
+        if (rowIndex < 2 || rowIndex > rows.length + 1) {
+          throw new Error(`Fila inválida: ${rowIndex}`);
         }
 
-        const sheetId = sheet.properties.sheetId;
-        const rowIndex = parseInt(id) + 1;
-
-        // 3. Eliminar la fila
+        // Ajustar el índice para el array (0-based)
+        const adjustedIndex = rowIndex - 2;
+        console.log(`Eliminando producto en índice ${adjustedIndex} (fila ${rowIndex})`);
+        
+        // Eliminar la fila usando el método batchUpdate
         await sheets.spreadsheets.batchUpdate({
           spreadsheetId: SPREADSHEET_ID,
           requestBody: {
             requests: [{
               deleteDimension: {
                 range: {
-                  sheetId: sheetId,
+                  sheetId: 0, // ID de la hoja, 0 para la primera hoja
                   dimension: 'ROWS',
-                  startIndex: rowIndex,
-                  endIndex: rowIndex + 1
+                  startIndex: rowIndex - 1, // -1 porque las filas son 0-based
+                  endIndex: rowIndex // No incluye este índice
                 }
               }
             }]
           }
         });
 
-        // 4. Obtener productos restantes y actualizar IDs
-        const response = await sheets.spreadsheets.values.get({
-          spreadsheetId: SPREADSHEET_ID,
-          range: PRODUCT_RANGE,
-        });
-
-        const rows = response.data.values || [];
-
-        // 5. Actualizar los IDs
-        const updates = rows.map((row, index) => {
-          const newId = (index + 1).toString();
-          return [
-            newId,
-            ...row.slice(1)
-          ];
-        });
-
-        // 6. Actualizar la hoja con los nuevos IDs
-        if (updates.length > 0) {
-          await sheets.spreadsheets.values.update({
-            spreadsheetId: SPREADSHEET_ID,
-            range: PRODUCT_RANGE,
-            valueInputOption: 'RAW',
-            requestBody: {
-              values: updates
-            }
-          });
-        }
-
-        console.log('Producto eliminado y referencias actualizadas exitosamente');
+        // Esperar a que se complete la sincronización
+        await new Promise(resolve => setTimeout(resolve, 1000));
       } catch (error) {
-        console.error('Error al eliminar producto de Google Sheets:', error);
+        console.error('Error en deleteProduct:', error);
         throw error;
       }
     },
@@ -385,8 +358,18 @@ if (typeof window === 'undefined') {
       return response.json();
     },
     deleteProduct: async (id: string) => {
-      const response = await fetch(`/api/products?id=${id}`, { method: 'DELETE' });
-      if (!response.ok) throw new Error('Failed to delete product');
+      const response = await fetch(`/api/products?id=${id}`, { 
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to delete product');
+      }
+      return response.json();
     },
     getProductCount: async () => {
       const products = await googleSheetsApi.getProducts();
