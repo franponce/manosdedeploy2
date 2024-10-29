@@ -349,19 +349,98 @@ if (typeof window === 'undefined') {
       const sheets = google.sheets({ version: 'v4', auth });
 
       const categories = await googleSheetsApi.getCategories();
-      const newId = (Math.max(...categories.map((c: { id: string; }) => parseInt(c.id)), 0) + 1).toString();
+      
+      // Validar límite de categorías
+      if (categories.length >= 8) {
+        throw new Error(`No se pueden crear más categorías. El límite es de 8 categorías.`);
+      }
 
+      const newId = (Math.max(...categories.map((c: { id: string; }) => parseInt(c.id)), 0) + 1).toString();
       const values = [[newId, category.name]];
 
       await sheets.spreadsheets.values.append({
         spreadsheetId: SPREADSHEET_ID,
-        range: 'Categories!A1:B', // Cambiamos esto para empezar desde A1
+        range: 'Categories!A1:B',
         valueInputOption: 'USER_ENTERED',
         insertDataOption: 'INSERT_ROWS',
         requestBody: { values },
       });
 
       return { id: newId, name: category.name };
+    },
+
+    deleteCategory: async (id: string): Promise<void> => {
+      try {
+        const auth = await getAuthClient();
+        const { google } = await import('googleapis');
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        // Obtener información de la hoja
+        const spreadsheet = await sheets.spreadsheets.get({
+          spreadsheetId: SPREADSHEET_ID,
+        });
+
+        const sheetId = spreadsheet.data.sheets?.find(
+          sheet => sheet.properties?.title === 'Categories'
+        )?.properties?.sheetId;
+
+        if (!sheetId) {
+          throw new Error('No se pudo encontrar la hoja de categorías');
+        }
+
+        // Encontrar la fila a eliminar
+        const response = await sheets.spreadsheets.values.get({
+          spreadsheetId: SPREADSHEET_ID,
+          range: 'Categories!A:B'
+        });
+
+        const rows = response.data.values || [];
+        const rowIndex = rows.findIndex(row => row[0] === id);
+
+        if (rowIndex === -1) {
+          throw new Error('Categoría no encontrada');
+        }
+
+        // Eliminar la fila
+        await sheets.spreadsheets.batchUpdate({
+          spreadsheetId: SPREADSHEET_ID,
+          requestBody: {
+            requests: [{
+              deleteDimension: {
+                range: {
+                  sheetId: sheetId,
+                  dimension: 'ROWS',
+                  startIndex: rowIndex,
+                  endIndex: rowIndex + 1
+                }
+              }
+            }]
+          }
+        });
+
+        // Reordenar IDs
+        const updatedResponse = await sheets.spreadsheets.values.get({
+          spreadsheetId: SPREADSHEET_ID,
+          range: 'Categories!A:A',
+        });
+
+        const updatedRows = updatedResponse.data.values;
+        if (updatedRows && updatedRows.length > 1) {
+          const updates = updatedRows.slice(1).map((_, index) => (index + 1).toString());
+          
+          await sheets.spreadsheets.values.update({
+            spreadsheetId: SPREADSHEET_ID,
+            range: 'Categories!A2:A' + (updates.length + 1),
+            valueInputOption: 'RAW',
+            requestBody: {
+              values: updates.map(id => [id]),
+            },
+          });
+        }
+      } catch (error) {
+        console.error('Error en deleteCategory:', error);
+        throw error;
+      }
     },
   };
 } else {
@@ -432,4 +511,5 @@ export const {
   getProductCount,
   getCategories,
   createCategory,
+  deleteCategory,
 } = googleSheetsApi;
