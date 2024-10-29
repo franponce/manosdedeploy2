@@ -291,6 +291,26 @@ if (typeof window === 'undefined') {
 
         // Esperar a que se complete la sincronización
         await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Reordenar IDs
+        const updatedResponse = await sheets.spreadsheets.values.get({
+          spreadsheetId: SPREADSHEET_ID,
+          range: 'A:A', // Solo la columna de IDs
+        });
+
+        const updatedRows = updatedResponse.data.values;
+        if (updatedRows && updatedRows.length > 1) { // Ignorar la fila de encabezados
+          const updates = updatedRows.slice(1).map((_, index) => (index + 1).toString());
+          
+          await sheets.spreadsheets.values.update({
+            spreadsheetId: SPREADSHEET_ID,
+            range: 'A2:A' + (updates.length + 1), // Comenzar desde A2 para ignorar encabezados
+            valueInputOption: 'RAW',
+            requestBody: {
+              values: updates.map(id => [id]),
+            },
+          });
+        }
       } catch (error) {
         console.error('Error en deleteProduct:', error);
         throw error;
