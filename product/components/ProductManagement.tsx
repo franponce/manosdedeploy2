@@ -279,6 +279,20 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
     return text.substring(0, maxLength).trim() + '...';
   };
 
+  const ProductItem: React.FC<{ product: Product }> = ({ product }) => {
+    return (
+      <Box>
+        <Text fontWeight="bold">{product.title}</Text>
+        {product.isScheduled && product.scheduledPublishDate && (
+          <Text color="blue.500">
+            Producto programado para {new Date(product.scheduledPublishDate).toLocaleString()}
+          </Text>
+        )}
+        {/* Otros detalles del producto */}
+      </Box>
+    );
+  };
+
   return (
     <Box>
       {products.length >= PRODUCT_LIMIT - 5 && products.length < PRODUCT_LIMIT && (

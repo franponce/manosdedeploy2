@@ -208,15 +208,23 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
         price,
         isScheduled: isScheduleOpen,
         scheduledPublishDate: isScheduleOpen && scheduledDate ? scheduledDate : null,
+        categoryId: currentProduct.categoryId,
       };
 
       await onSubmit(productToSubmit);
+      toast({
+        title: "Producto guardado",
+        description: isScheduleOpen ? `Producto programado para ${scheduledDate?.toLocaleString()}` : "Producto guardado exitosamente",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
       onClose();
     } catch (error) {
       console.error("Error al guardar el producto:", error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "No se pudo guardar el producto",
+        description: "No se pudo guardar el producto. Por favor, intenta nuevamente.",
         status: "error",
         duration: 3000,
         isClosable: true,
