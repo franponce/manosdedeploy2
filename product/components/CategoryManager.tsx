@@ -60,9 +60,15 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
 
     setIsLoading(true);
     try {
-      await createCategory({ name: newCategoryName.trim() });
+      const newCategory = await createCategory({ name: newCategoryName.trim() });
       setNewCategoryName('');
-      mutate('/api/categories');
+      
+      // Actualizar la cache de SWR con la nueva categoría
+      await mutate('/api/categories', [...categories, newCategory], false);
+      
+      // Revalidar los datos
+      await mutate('/api/categories');
+
       toast({
         title: "Categoría creada",
         status: "success",

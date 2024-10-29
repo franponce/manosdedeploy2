@@ -401,7 +401,6 @@ if (typeof window === 'undefined') {
 
       const categories = await googleSheetsApi.getCategories();
       
-      // Validar límite de categorías
       if (categories.length >= 8) {
         throw new Error(`No se pueden crear más categorías. El límite es de 8 categorías.`);
       }
@@ -411,7 +410,7 @@ if (typeof window === 'undefined') {
 
       await sheets.spreadsheets.values.append({
         spreadsheetId: SPREADSHEET_ID,
-        range: 'Categories!A1:B',
+        range: 'Categories!A2:B',
         valueInputOption: 'USER_ENTERED',
         insertDataOption: 'INSERT_ROWS',
         requestBody: { values },
