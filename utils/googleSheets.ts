@@ -135,16 +135,30 @@ if (typeof window === 'undefined') {
 
     createProduct: async (product: Product): Promise<string> => {
       try {
+        console.log('Starting createProduct with:', product);
+        
         const currentProducts = await googleSheetsApi.getProducts();
+        console.log('Current products count:', currentProducts.length);
+
         if (currentProducts.length >= PRODUCT_LIMIT) {
-          throw new Error(`Product limit of ${PRODUCT_LIMIT} reached. Unable to add more products.`);
+          throw new Error(`Product limit of ${PRODUCT_LIMIT} reached`);
         }
 
         const auth = await getAuthClient();
+        console.log('Auth client obtained');
+
         const { google } = await import('googleapis');
         const sheets = google.sheets({ version: 'v4', auth });
 
         const newId = (Math.max(...currentProducts.map((p: Product) => parseInt(p.id)), 0) + 1).toString();
+        console.log('Generated new ID:', newId);
+
+        // Log the date formatting
+        const scheduledDate = product.scheduledPublishDate 
+          ? formatLocalDateTime(product.scheduledPublishDate) 
+          : '';
+        console.log('Formatted scheduled date:', scheduledDate);
+
         const values = [
           [
             newId, 
@@ -152,11 +166,13 @@ if (typeof window === 'undefined') {
             product.description, 
             product.image, 
             product.price.toString(),
-            product.scheduledPublishDate ? formatLocalDateTime(product.scheduledPublishDate) : '',
+            scheduledDate,
             product.isScheduled ? 'TRUE' : 'FALSE',
             product.categoryId 
           ],
         ];
+
+        console.log('Prepared values for sheet:', values);
 
         await sheets.spreadsheets.values.append({
           spreadsheetId: SPREADSHEET_ID,
@@ -166,10 +182,10 @@ if (typeof window === 'undefined') {
           requestBody: { values },
         });
 
-        console.log('Product created successfully with ID:', newId);
+        console.log('Product created successfully');
         return newId;
       } catch (error) {
-        console.error('Error creating product in Google Sheets:', error);
+        console.error('Error in createProduct:', error);
         throw error;
       }
     },
