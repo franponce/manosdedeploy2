@@ -86,13 +86,25 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
     }
   };
 
-  const handleDeleteCategory = async (categoryId: string) => {
-    if (!window.confirm('¿Estás seguro de que deseas eliminar esta categoría?')) return;
+  const handleDeleteCategory = async (id: string) => {
+    if (!window.confirm('¿Estás seguro de que deseas eliminar esta categoría?')) {
+      return;
+    }
 
     setIsLoading(true);
     try {
-      await deleteCategory(categoryId);
-      mutate('/api/categories');
+      await deleteCategory(id);
+      
+      // Actualizar la cache de SWR optimistamente
+      await mutate(
+        '/api/categories',
+        categories.filter(cat => cat.id !== id),
+        false
+      );
+      
+      // Revalidar datos
+      await mutate('/api/categories');
+
       toast({
         title: "Categoría eliminada",
         status: "success",
@@ -153,8 +165,8 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
                             icon={<DeleteIcon />}
                             colorScheme="red"
                             size="sm"
-                            onClick={() => handleDeleteCategory(category.id)}
                             isLoading={isLoading}
+                            onClick={() => handleDeleteCategory(category.id)}
                           />
                         </Tooltip>
                       </Td>

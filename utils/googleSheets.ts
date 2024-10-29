@@ -430,18 +430,19 @@ if (typeof window === 'undefined') {
           spreadsheetId: SPREADSHEET_ID,
         });
 
-        const sheetId = spreadsheet.data.sheets?.find(
+        // Encontrar la hoja de categorías
+        const categoriesSheet = spreadsheet.data.sheets?.find(
           sheet => sheet.properties?.title === 'Categories'
-        )?.properties?.sheetId;
-
-        if (!sheetId) {
+        );
+        
+        if (!categoriesSheet?.properties?.sheetId) {
           throw new Error('No se pudo encontrar la hoja de categorías');
         }
 
-        // Encontrar la fila a eliminar
+        // Obtener todas las categorías
         const response = await sheets.spreadsheets.values.get({
           spreadsheetId: SPREADSHEET_ID,
-          range: 'Categories!A:B'
+          range: 'Categories!A2:B'
         });
 
         const rows = response.data.values || [];
@@ -451,40 +452,35 @@ if (typeof window === 'undefined') {
           throw new Error('Categoría no encontrada');
         }
 
-        // Eliminar la fila
+        // Eliminar la fila (rowIndex + 2 porque empezamos desde A2)
         await sheets.spreadsheets.batchUpdate({
           spreadsheetId: SPREADSHEET_ID,
           requestBody: {
             requests: [{
               deleteDimension: {
                 range: {
-                  sheetId: sheetId,
+                  sheetId: categoriesSheet.properties.sheetId,
                   dimension: 'ROWS',
-                  startIndex: rowIndex,
-                  endIndex: rowIndex + 1
+                  startIndex: rowIndex + 1, // +1 porque hay un encabezado
+                  endIndex: rowIndex + 2
                 }
               }
             }]
           }
         });
 
-        // Reordenar IDs
-        const updatedResponse = await sheets.spreadsheets.values.get({
-          spreadsheetId: SPREADSHEET_ID,
-          range: 'Categories!A:A',
-        });
+        // Reordenar IDs secuencialmente
+        const remainingCategories = rows.filter((_, index) => index !== rowIndex);
+        const updates = remainingCategories.map((_, index) => [(index + 1).toString()]);
 
-        const updatedRows = updatedResponse.data.values;
-        if (updatedRows && updatedRows.length > 1) {
-          const updates = updatedRows.slice(1).map((_, index) => (index + 1).toString());
-          
+        if (updates.length > 0) {
           await sheets.spreadsheets.values.update({
             spreadsheetId: SPREADSHEET_ID,
             range: 'Categories!A2:A' + (updates.length + 1),
             valueInputOption: 'RAW',
             requestBody: {
-              values: updates.map(id => [id]),
-            },
+              values: updates
+            }
           });
         }
       } catch (error) {
@@ -548,6 +544,20 @@ if (typeof window === 'undefined') {
         body: JSON.stringify(category),
       });
       if (!response.ok) throw new Error('Failed to create category');
+      return response.json();
+    },
+    deleteCategory: async (id: string) => {
+      const response = await fetch(`/api/categories?id=${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to delete category');
+      }
       return response.json();
     },
   };
