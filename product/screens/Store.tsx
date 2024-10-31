@@ -23,6 +23,7 @@ import CartDrawer from "../components/CartDrawer";
 import { editCart } from "../selectors";
 import { parseCurrency } from "../../utils/currency";
 import useSWR, { mutate } from 'swr';
+import { useCart } from '../../hooks/useCart';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -33,11 +34,8 @@ interface StoreScreenProps {
   initialCategories: Category[];
 }
 
-const CART_STORAGE_KEY = 'simple-ecommerce-cart';
-const CART_EXPIRY_TIME = 24 * 60 * 60 * 1000; // 24 horas en milisegundos
-
 const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCategories }) => {
-  const [cart, setCart] = React.useState<CartItem[]>([]);
+  const { cart, addToCart, removeFromCart } = useCart();
   const toast = useToast();
   const [isCartOpen, toggleCart] = React.useState<boolean>(false);
   const [page, setPage] = React.useState(1);
@@ -65,29 +63,6 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
     });
     if (node) observer.current.observe(node);
   }, [isLoading, hasMore]);
-
-  React.useEffect(() => {
-    // Cargar el carrito desde localStorage cuando el componente se monta
-    const { savedCart, wasRecovered } = loadCartFromStorage();
-    if (savedCart) {
-      setCart(savedCart);
-      if (wasRecovered) {
-        toast({
-          title: "Carrito recuperado",
-          description: "Hemos recuperado los productos de tu carrito anterior.",
-          status: "info",
-          duration: 4000,
-          isClosable: true,
-          position: "bottom-right",
-        });
-      }
-    }
-  }, [toast]);
-
-  React.useEffect(() => {
-    // Guardar el carrito en localStorage cada vez que cambie
-    saveCartToStorage(cart);
-  }, [cart]);
 
   React.useEffect(() => {
     const checkScheduledProducts = () => {
@@ -140,29 +115,11 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
   const quantity = React.useMemo(() => cart.reduce((acc, item) => acc + item.quantity, 0), [cart]);
 
   function handleEditCart(product: Product, action: "increment" | "decrement") {
-    setCart(editCart(product, action));
-  }
-
-  function saveCartToStorage(cartItems: CartItem[]) {
-    const cartData = {
-      items: cartItems,
-      expiry: Date.now() + CART_EXPIRY_TIME
-    };
-    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartData));
-  }
-
-  function loadCartFromStorage(): { savedCart: CartItem[] | null, wasRecovered: boolean } {
-    const cartJson = localStorage.getItem(CART_STORAGE_KEY);
-    if (cartJson) {
-      const cartData = JSON.parse(cartJson);
-      if (cartData.expiry > Date.now()) {
-        return { savedCart: cartData.items, wasRecovered: true };
-      } else {
-        // El carrito ha expirado, lo eliminamos
-        localStorage.removeItem(CART_STORAGE_KEY);
-      }
+    if (action === "increment") {
+      addToCart(product);
+    } else {
+      removeFromCart(product);
     }
-    return { savedCart: null, wasRecovered: false };
   }
 
   const NoProductsFound = () => {

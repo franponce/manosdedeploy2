@@ -19,6 +19,7 @@ import { useSiteInfo } from '../../hooks/useSiteInfo';
 import { parseCurrency } from '../../utils/currency';
 import { FaArrowLeft, FaShoppingCart } from 'react-icons/fa';
 import { useScrollPosition } from '../../hooks/useScrollPosition';
+import { useCart } from '../../hooks/useCart';
 
 const ProductDetail: React.FC = () => {
   const router = useRouter();
@@ -27,10 +28,24 @@ const ProductDetail: React.FC = () => {
   const { siteInfo } = useSiteInfo();
   const toast = useToast();
   const { saveScrollPosition } = useScrollPosition(id as string);
+  const { addToCart } = useCart();
 
   const handleBack = () => {
     saveScrollPosition();
     router.back();
+  };
+
+  const handleAddToCart = () => {
+    if (product) {
+      addToCart(product);
+      toast({
+        title: 'Producto agregado',
+        description: 'El producto se agregó al carrito',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
 
   if (error) {
@@ -125,18 +140,7 @@ const ProductDetail: React.FC = () => {
                     size="lg"
                     colorScheme="blue"
                     leftIcon={<Icon as={FaShoppingCart} />}
-                    onClick={() => {
-                      if (product) {
-                        // Aquí va la lógica del carrito
-                        toast({
-                          title: 'Producto agregado',
-                          description: 'El producto se agregó al carrito',
-                          status: 'success',
-                          duration: 3000,
-                          isClosable: true,
-                        });
-                      }
-                    }}
+                    onClick={handleAddToCart}
                   >
                     Agregar al carrito
                   </Button>
