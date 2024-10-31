@@ -62,8 +62,9 @@ const StoreConfigPage: React.FC = () => {
     }
   }, [router]);
 
-  const handleBackToAdmin = () => {
-    router.push('/admin');
+  const handleBackToAdmin = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    await router.push('/admin');
   };
 
   const handleCurrencyChange = async () => {
@@ -105,7 +106,7 @@ const StoreConfigPage: React.FC = () => {
   return (
     <Box>
       <Container maxW="container.xl" p={4}>
-      {/* <Flex justifyContent="space-between" alignItems="center" mb={8}>
+        <Flex justifyContent="space-between" alignItems="center" mb={8}>
           <Button
             leftIcon={<Icon as={FaArrowLeft} />}
             onClick={handleBackToAdmin}
@@ -113,7 +114,7 @@ const StoreConfigPage: React.FC = () => {
           >
             Volver a la gestión de productos
           </Button>
-        </Flex>*/}
+        </Flex>
 
         <Flex direction="column" alignItems="center" mb={8}>
           <Box
