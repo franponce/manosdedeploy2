@@ -112,12 +112,18 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
     router.push('/admin');
   };
 
+  const isAdminRoute = router.pathname === '/admin' || router.pathname === '/store-config';
+
   const getWelcomeMessage = () => {
     if (router.pathname === '/store-config') {
       return (
         <Button
           leftIcon={<Icon as={FaArrowLeft} />}
-          onClick={() => router.push('/admin')}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            router.push('/admin');
+          }}
           variant="outline"
           alignSelf="flex-start"
           mb={4}
@@ -190,11 +196,17 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
       >
         <Container maxWidth="container.xl" padding={4}>
           <Flex alignItems="center" justifyContent="space-between">
-            <NextLink href="/" legacyBehavior>
-              <Heading as="a" size="md" cursor="pointer">
+            {isAdminRoute ? (
+              <Heading size="md">
                 {getWelcomeMessage()}
               </Heading>
-            </NextLink>
+            ) : (
+              <NextLink href="/" legacyBehavior>
+                <Heading as="a" size="md" cursor="pointer">
+                  {getWelcomeMessage()}
+                </Heading>
+              </NextLink>
+            )}
             {isMounted && (
               <HamburgerMenu
                 isLoggedIn={isLoggedIn}
