@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
-import { db } from '../utils/firebase';
-import { doc, getDoc } from 'firebase/firestore';
 import { Product } from '../product/types';
+import { getProducts } from '../utils/googleSheets';
 
 interface UseProductReturn {
   product: Product | null;
@@ -23,14 +22,11 @@ export const useProduct = (productId: string | undefined): UseProductReturn => {
 
       try {
         setIsLoading(true);
-        const productRef = doc(db, 'products', productId);
-        const productSnap = await getDoc(productRef);
+        const products = await getProducts();
+        const foundProduct = products.find((p: { id: string; }) => p.id === productId);
 
-        if (productSnap.exists()) {
-          setProduct({
-            id: productSnap.id,
-            ...productSnap.data() as Omit<Product, 'id'>
-          });
+        if (foundProduct) {
+          setProduct(foundProduct);
         } else {
           setError(new Error('Producto no encontrado'));
         }

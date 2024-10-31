@@ -17,7 +17,7 @@ import { useRouter } from 'next/router';
 import { useProduct } from '../../hooks/useProduct';
 import { useSiteInfo } from '../../hooks/useSiteInfo';
 import { parseCurrency } from '../../utils/currency';
-import { FaArrowLeft } from 'react-icons/fa';
+import { FaArrowLeft, FaShoppingCart } from 'react-icons/fa';
 
 const ProductDetail: React.FC = () => {
   const router = useRouter();
@@ -41,15 +41,21 @@ const ProductDetail: React.FC = () => {
           >
             Volver
           </Button>
-          <Box textAlign="center" py={10}>
-            <Heading size="lg" mb={4}>
+          <Box 
+            textAlign="center" 
+            py={10}
+            borderRadius="lg"
+            bg="gray.50"
+            p={8}
+          >
+            <Heading size="lg" mb={4} color="gray.600">
               Producto no encontrado
             </Heading>
-            <Text mb={6}>
-              Lo sentimos, no pudimos encontrar el producto que buscas.
+            <Text mb={6} color="gray.500">
+              Lo sentimos, el producto que buscas no está disponible en este momento.
             </Text>
             <Button colorScheme="blue" onClick={() => router.push('/')}>
-              Ir al inicio
+              Ver otros productos
             </Button>
           </Box>
         </VStack>
@@ -64,6 +70,7 @@ const ProductDetail: React.FC = () => {
           leftIcon={<Icon as={FaArrowLeft} />}
           onClick={handleBack}
           variant="ghost"
+          alignSelf="flex-start"
         >
           Volver
         </Button>
@@ -73,15 +80,20 @@ const ProductDetail: React.FC = () => {
             {isLoading ? (
               <Skeleton height="400px" borderRadius="lg" />
             ) : (
-              <Image
-                src={product?.image || '/placeholder.jpg'}
-                alt={product?.title}
+              <Box
                 borderRadius="lg"
-                objectFit="cover"
-                width="100%"
-                height="400px"
-                fallbackSrc="/placeholder.jpg"
-              />
+                overflow="hidden"
+                boxShadow="md"
+              >
+                <Image
+                  src={product?.image || '/placeholder.jpg'}
+                  alt={product?.title}
+                  objectFit="cover"
+                  width="100%"
+                  height="400px"
+                  fallbackSrc="/placeholder.jpg"
+                />
+              </Box>
             )}
           </GridItem>
 
@@ -109,9 +121,10 @@ const ProductDetail: React.FC = () => {
                   <Button
                     size="lg"
                     colorScheme="blue"
+                    leftIcon={<Icon as={FaShoppingCart} />}
                     onClick={() => {
                       if (product) {
-                        // Aquí iría la lógica para agregar al carrito
+                        // Aquí va la lógica del carrito
                         toast({
                           title: 'Producto agregado',
                           description: 'El producto se agregó al carrito',
