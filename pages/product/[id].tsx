@@ -10,98 +10,128 @@ import {
   Grid,
   GridItem,
   Skeleton,
-  SkeletonText,
   useToast,
+  Icon,
 } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
-import { Product } from '../../product/types';
+import { useProduct } from '../../hooks/useProduct';
 import { useSiteInfo } from '../../hooks/useSiteInfo';
-import { useProduct } from '@/hooks/useProduct';
 import { parseCurrency } from '../../utils/currency';
+import { FaArrowLeft } from 'react-icons/fa';
 
 const ProductDetail: React.FC = () => {
   const router = useRouter();
   const { id } = router.query;
-  const { product, isLoading, isError } = useProduct(id as string);
+  const { product, isLoading, error } = useProduct(id as string);
   const { siteInfo } = useSiteInfo();
-  const { addToCart } = useCart();
   const toast = useToast();
 
-  if (isError) {
+  const handleBack = () => {
+    router.back();
+  };
+
+  if (error) {
     return (
       <Container maxW="container.xl" py={8}>
-        <Text>No se pudo cargar el producto</Text>
+        <VStack spacing={6} align="stretch">
+          <Button
+            leftIcon={<Icon as={FaArrowLeft} />}
+            onClick={handleBack}
+            variant="ghost"
+          >
+            Volver
+          </Button>
+          <Box textAlign="center" py={10}>
+            <Heading size="lg" mb={4}>
+              Producto no encontrado
+            </Heading>
+            <Text mb={6}>
+              Lo sentimos, no pudimos encontrar el producto que buscas.
+            </Text>
+            <Button colorScheme="blue" onClick={() => router.push('/')}>
+              Ir al inicio
+            </Button>
+          </Box>
+        </VStack>
       </Container>
     );
   }
 
   return (
     <Container maxW="container.xl" py={8}>
-      <Grid templateColumns={{ base: '1fr', md: '1fr 1fr' }} gap={8}>
-        <GridItem>
-          {isLoading ? (
-            <Skeleton height="400px" borderRadius="lg" />
-          ) : (
-            <Image
-              src={product?.image || 'https://via.placeholder.com/500'}
-              alt={product?.title}
-              borderRadius="lg"
-              objectFit="cover"
-            />
-          )}
-        </GridItem>
-        <GridItem>
-          <VStack align="stretch" spacing={4}>
+      <VStack spacing={6} align="stretch">
+        <Button
+          leftIcon={<Icon as={FaArrowLeft} />}
+          onClick={handleBack}
+          variant="ghost"
+        >
+          Volver
+        </Button>
+
+        <Grid templateColumns={{ base: '1fr', md: '1fr 1fr' }} gap={8}>
+          <GridItem>
             {isLoading ? (
-              <>
-                <SkeletonText noOfLines={2} spacing="4" skeletonHeight="8" />
-                <Skeleton height="40px" />
-                <SkeletonText noOfLines={4} spacing="4" />
-              </>
+              <Skeleton height="400px" borderRadius="lg" />
             ) : (
-              <>
-                <Heading as="h1" size="xl">
-                  {product?.title}
-                </Heading>
-                <Text fontSize="2xl" fontWeight="bold">
-                  {parseCurrency(product?.price || 0)} {siteInfo?.currency}
-                </Text>
-                <Box>
-                  <div
-                    dangerouslySetInnerHTML={{ 
-                      __html: product?.description || 'No description available' 
-                    }}
-                  />
-                </Box>
-                <Button 
-                  colorScheme="blue" 
-                  size="lg"
-                  onClick={() => {
-                    if (product) {
-                      addToCart(product);
-                      toast({
-                        title: "Producto agregado",
-                        description: "El producto se agregó al carrito",
-                        status: "success",
-                        duration: 3000,
-                        isClosable: true,
-                      });
-                    }
-                  }}
-                >
-                  Agregar al carrito
-                </Button>
-              </>
+              <Image
+                src={product?.image || '/placeholder.jpg'}
+                alt={product?.title}
+                borderRadius="lg"
+                objectFit="cover"
+                width="100%"
+                height="400px"
+                fallbackSrc="/placeholder.jpg"
+              />
             )}
-          </VStack>
-        </GridItem>
-      </Grid>
+          </GridItem>
+
+          <GridItem>
+            <VStack align="stretch" spacing={6}>
+              {isLoading ? (
+                <>
+                  <Skeleton height="40px" />
+                  <Skeleton height="30px" />
+                  <Skeleton height="120px" />
+                </>
+              ) : (
+                <>
+                  <Heading size="xl">{product?.title}</Heading>
+                  <Text fontSize="2xl" fontWeight="bold" color="blue.600">
+                    {parseCurrency(product?.price || 0)} {siteInfo?.currency}
+                  </Text>
+                  <Box>
+                    <Text
+                      dangerouslySetInnerHTML={{
+                        __html: product?.description || '',
+                      }}
+                    />
+                  </Box>
+                  <Button
+                    size="lg"
+                    colorScheme="blue"
+                    onClick={() => {
+                      if (product) {
+                        // Aquí iría la lógica para agregar al carrito
+                        toast({
+                          title: 'Producto agregado',
+                          description: 'El producto se agregó al carrito',
+                          status: 'success',
+                          duration: 3000,
+                          isClosable: true,
+                        });
+                      }
+                    }}
+                  >
+                    Agregar al carrito
+                  </Button>
+                </>
+              )}
+            </VStack>
+          </GridItem>
+        </Grid>
+      </VStack>
     </Container>
   );
 };
 
-export default ProductDetail; 
-
-function useCart(): { addToCart: any; } {
-    throw new Error('Function not implemented.');
-}
+export default ProductDetail;
