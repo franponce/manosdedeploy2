@@ -117,8 +117,10 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
       return (
         <Button
           leftIcon={<Icon as={FaArrowLeft} />}
-          onClick={handleBackToAdmin}
+          onClick={() => router.push('/admin')}
           variant="outline"
+          alignSelf="flex-start"
+          mb={4}
         >
           Volver a la gestión de productos
         </Button>
@@ -279,7 +281,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
                       justifyContent="center"
                       width={8}
                     >
-                      <Image 
+                      <Image
                         alt={`${social.name} icon`}
                         src={`https://icongr.am/fontawesome/${social.name}.svg?size=20&color=ffffff`}
                       />

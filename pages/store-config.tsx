@@ -102,16 +102,6 @@ const StoreConfigPage: React.FC = () => {
     <Box>
       <Container maxW="container.xl" p={4}>
         <Flex direction="column" alignItems="center" mb={8}>
-          <Button
-            leftIcon={<Icon as={FaArrowLeft} />}
-            onClick={() => router.push('/admin')}
-            variant="outline"
-            alignSelf="flex-start"
-            mb={4}
-          >
-            Volver a la gestión de productos
-          </Button>
-
           <Box
             backgroundColor="white"
             borderRadius="full"
