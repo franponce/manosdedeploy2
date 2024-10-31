@@ -16,7 +16,7 @@ import {
 import ProductManagement from "../product/components/ProductManagement";
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { FaArrowRight, FaStore, FaPlus } from 'react-icons/fa';
+import { FaArrowRight, FaStore, FaPlus, FaList, FaEye } from 'react-icons/fa';
 import ProductModal from '../product/components/ProductModal';
 import { Product } from "../product/types";
 import { createProduct, updateProduct } from "../utils/googleSheets";
@@ -86,20 +86,23 @@ const AdminPage: React.FC = () => {
         <Heading as="h1" size="xl" mb={{ base: 4, md: 0 }}>
           Gestión de productos
         </Heading>
+
         <Flex
           direction={{ base: "column", sm: "row" }}
           gap={4}
+          order={{ base: 2, md: 1 }}
         >
           <Link href="/" passHref>
             <Button
               as="a"
               colorScheme="green"
               width={{ base: "full", sm: "auto" }}
-              leftIcon={<Icon as={FaStore} />}
+              leftIcon={<Icon as={FaEye} />}
             >
-              Ir a la tienda
+              Previsualizar
             </Button>
           </Link>
+
           <Button
             colorScheme="blue"
             width={{ base: "full", sm: "auto" }}
@@ -108,17 +111,22 @@ const AdminPage: React.FC = () => {
           >
             Crear nuevo producto
           </Button>
+
           <Button
             colorScheme="purple"
+            width={{ base: "full", sm: "auto" }}
             onClick={() => setIsCategoryManagerOpen(true)}
+            leftIcon={<Icon as={FaList} />}
           >
             Gestionar Categorías
           </Button>
+
           <Button
             colorScheme="gray"
             onClick={handleStoreSettings}
             width={{ base: "full", sm: "auto" }}
             rightIcon={<Icon as={FaArrowRight} />}
+            order={{ base: -1, md: 0 }}
           >
             Ir a la configuración de la tienda
           </Button>
