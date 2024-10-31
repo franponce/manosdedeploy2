@@ -504,21 +504,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                 </Box>
               </FormControl>
             </Collapse>
-            {isScheduleOpen && (
-              <FormControl>
-                <FormLabel>Producto programado</FormLabel>
-                <DatePicker
-                  selected={scheduledDate}
-                  onChange={handleDateChange}
-                  showTimeSelect
-                  timeFormat="HH:mm"
-                  timeIntervals={15}
-                  dateFormat="dd/MM/yyyy HH:mm"
-                  placeholderText="Selecciona fecha y hora"
-                  minDate={new Date()}
-                />
-              </FormControl>
-            )}
+           
           </VStack>
         </ModalBody>
         <ModalFooter>
