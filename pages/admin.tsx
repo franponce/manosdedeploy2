@@ -77,91 +77,111 @@ const AdminPage: React.FC = () => {
   return (
     <Box margin="auto" maxWidth="1200px" padding={4}>
       <Flex
-        direction={{ base: "column", md: "row" }}
-        justifyContent="space-between"
-        alignItems={{ base: "stretch", md: "center" }}
-        mb={8}
+        direction="column"
         gap={4}
       >
-        <Heading as="h1" size="xl" mb={{ base: 4, md: 0 }}>
-          Gestión de productos
-        </Heading>
-
-        <Flex
-          direction={{ base: "column", sm: "row" }}
-          gap={4}
-          order={{ base: 2, md: 1 }}
-        >
-          <Link href="/" passHref>
-            <Button
-              as="a"
-              colorScheme="green"
-              width={{ base: "full", sm: "auto" }}
-              leftIcon={<Icon as={FaEye} />}
-            >
-              Previsualizar
-            </Button>
-          </Link>
-
-          <Button
-            colorScheme="blue"
-            width={{ base: "full", sm: "auto" }}
-            leftIcon={<Icon as={FaPlus} />}
-            onClick={handleCreateProduct}
-          >
-            Crear nuevo producto
-          </Button>
-
-          <Button
-            colorScheme="purple"
-            width={{ base: "full", sm: "auto" }}
-            onClick={() => setIsCategoryManagerOpen(true)}
-            leftIcon={<Icon as={FaList} />}
-          >
-            Gestionar Categorías
-          </Button>
-
+        <Box display={{ base: 'block', md: 'none' }}>
           <Button
             colorScheme="gray"
             onClick={handleStoreSettings}
-            width={{ base: "full", sm: "auto" }}
+            width="full"
             rightIcon={<Icon as={FaArrowRight} />}
-            order={{ base: -1, md: 0 }}
           >
             Ir a la configuración de la tienda
           </Button>
-        </Flex>
-      </Flex>
+        </Box>
 
-      <Flex direction={{ base: "column", md: "row" }} gap={4} mb={6}>
-        <InputGroup>
-          <InputLeftElement pointerEvents="none">
-            <Icon as={SearchIcon} color="gray.300" />
-          </InputLeftElement>
-          <Input
-            placeholder="Buscar productos..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </InputGroup>
-        <Select
-          placeholder="Todas las categorías"
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
+        <Flex
+          direction={{ base: "column", md: "row" }}
+          justifyContent="space-between"
+          alignItems={{ base: "stretch", md: "center" }}
+          gap={4}
         >
-          {categories?.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.name}
-            </option>
-          ))}
-        </Select>
-      </Flex>
+          <Heading as="h1" size="xl">
+            Gestión de productos
+          </Heading>
 
-      <ProductManagement 
-        onCreateProduct={handleCreateProduct} 
-        searchTerm={searchTerm}
-        selectedCategory={selectedCategory}
-      />
+          <Flex
+            direction={{ base: "column", sm: "row" }}
+            gap={4}
+            flexWrap={{ sm: "wrap", md: "nowrap" }}
+          >
+            <Link href="/" passHref>
+              <Button
+                as="a"
+                colorScheme="green"
+                width={{ base: "full", sm: "auto" }}
+                leftIcon={<Icon as={FaEye} />}
+              >
+                Previsualizar
+              </Button>
+            </Link>
+
+            <Button
+              colorScheme="blue"
+              width={{ base: "full", sm: "auto" }}
+              leftIcon={<Icon as={FaPlus} />}
+              onClick={handleCreateProduct}
+            >
+              Crear nuevo producto
+            </Button>
+
+            <Button
+              colorScheme="purple"
+              width={{ base: "full", sm: "auto" }}
+              onClick={() => setIsCategoryManagerOpen(true)}
+              leftIcon={<Icon as={FaList} />}
+            >
+              Gestionar Categorías
+            </Button>
+
+            <Button
+              display={{ base: 'none', md: 'flex' }}
+              colorScheme="gray"
+              onClick={handleStoreSettings}
+              width={{ base: "full", sm: "auto" }}
+              rightIcon={<Icon as={FaArrowRight} />}
+            >
+              Ir a la configuración de la tienda
+            </Button>
+          </Flex>
+        </Flex>
+
+        <Flex 
+          direction={{ base: "column", md: "row" }} 
+          gap={4}
+        >
+          <InputGroup>
+            <InputLeftElement pointerEvents="none">
+              <Icon as={SearchIcon} color="gray.300" />
+            </InputLeftElement>
+            <Input
+              placeholder="Buscar productos..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </InputGroup>
+          <Select
+            placeholder="Todas las categorías"
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+          >
+            {categories?.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </Select>
+        </Flex>
+
+        <Box mt={4}>
+          <ProductManagement 
+            onCreateProduct={handleCreateProduct} 
+            searchTerm={searchTerm}
+            selectedCategory={selectedCategory}
+          />
+        </Box>
+      </Flex>
 
       {isModalOpen && (
         <ProductModal
