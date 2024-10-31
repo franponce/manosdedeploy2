@@ -586,3 +586,38 @@ export const {
   createCategory,
   deleteCategory,
 } = googleSheetsApi;
+
+export const getProductById = async (id: string): Promise<Product | null> => {
+  try {
+    const doc = await getGoogleSheet();
+    if (doc === undefined || doc === null) throw new Error('Could not get Google Sheet');
+    
+    const sheet = (doc as any).sheetsByTitle['La Libre Web - Catálogo online rev 2021 - products'];
+    if (!sheet) throw new Error('Could not find products sheet');
+    const rows = await sheet.getRows();
+    
+    const product = rows.find((row: any) => row.id === id);
+    if (!product) {
+      return null;
+    }
+
+    return {
+      id: product.id,
+      title: product.title,
+      description: product.description,
+      price: parseFloat(product.price),
+      currency: product.currency || 'USD',
+      isScheduled: false,
+      scheduledPublishDate: null,
+      image: product.image,
+      categoryId: product.category, 
+    };
+  } catch (error) {
+    console.error('Error fetching product by ID:', error);
+    throw new Error('Error fetching product');
+  }
+};
+function getGoogleSheet() {
+  throw new Error('Function not implemented.');
+}
+
