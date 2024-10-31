@@ -23,14 +23,15 @@ import {
   AlertIcon,
   Badge,
   Tooltip,
+  InputGroup,
+  InputRightElement,
 } from '@chakra-ui/react';
 import { DeleteIcon, AddIcon } from '@chakra-ui/icons';
 import { Category } from '../types';
 import { deleteCategory, createCategory } from '../../utils/googleSheets';
 import { mutate } from 'swr';
 import { useCategories } from '../../hooks/useCategories';
-
-const CATEGORY_LIMIT = 8;
+import { CATEGORY_CONSTANTS } from '../../utils/constants';
 
 interface CategoryManagerProps {
   isOpen: boolean;
@@ -47,11 +48,9 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
   const { categories, createCategory, deleteCategory } = useCategories();
 
   const handleCreateCategory = async () => {
-    if (!newCategoryName.trim()) return;
-    if (categories.length >= CATEGORY_LIMIT) {
+    if (!newCategoryName.trim()) {
       toast({
-        title: "Límite alcanzado",
-        description: `No puedes crear más de ${CATEGORY_LIMIT} categorías`,
+        title: CATEGORY_CONSTANTS.ERROR_MESSAGES.EMPTY_NAME,
         status: "warning",
         duration: 3000,
       });
@@ -63,15 +62,14 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
       await createCategory(newCategoryName.trim());
       setNewCategoryName('');
       toast({
-        title: "Categoría creada",
+        title: "¡Categoría creada con éxito! 🎉",
         status: "success",
         duration: 3000,
       });
     } catch (error) {
       toast({
-        title: "Error",
-        description: "No se pudo crear la categoría",
-        status: "error",
+        title: error instanceof Error ? error.message : "Error inesperado",
+        status: "warning",
         duration: 3000,
       });
     } finally {
@@ -109,21 +107,48 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>
-          <Text fontSize="2xl">Gestionar Categorías</Text>
-          <Text fontSize="sm" color="gray.500">
-            {categories.length} de {CATEGORY_LIMIT} categorías creadas
-          </Text>
+          <VStack align="start" spacing={1}>
+            <Text fontSize="2xl">Gestionar Categorías</Text>
+            <Text fontSize="sm" color={categories.length >= CATEGORY_CONSTANTS.MAX_CATEGORIES ? "orange.500" : "gray.500"}>
+              {CATEGORY_CONSTANTS.INFO_MESSAGES.LIMIT_INFO(categories.length)}
+            </Text>
+          </VStack>
         </ModalHeader>
         <ModalCloseButton />
         <ModalBody>
           <VStack spacing={6} pb={4}>
-            {categories.length >= CATEGORY_LIMIT && (
-              <Alert status="warning">
+            {categories.length >= CATEGORY_CONSTANTS.MAX_CATEGORIES ? (
+              <Alert status="info" borderRadius="md">
                 <AlertIcon />
-                Has alcanzado el límite de {CATEGORY_LIMIT} categorías
+                <Text>{CATEGORY_CONSTANTS.INFO_MESSAGES.CANNOT_CREATE}</Text>
               </Alert>
+            ) : (
+              <Box width="100%">
+                <InputGroup>
+                  <Input
+                    placeholder="Nombre de la categoría"
+                    value={newCategoryName}
+                    onChange={(e) => setNewCategoryName(e.target.value)}
+                    maxLength={CATEGORY_CONSTANTS.MAX_NAME_LENGTH}
+                  />
+                  <InputRightElement width="4.5rem">
+                    <Text fontSize="xs" color="gray.500">
+                      {newCategoryName.length}/{CATEGORY_CONSTANTS.MAX_NAME_LENGTH}
+                    </Text>
+                  </InputRightElement>
+                </InputGroup>
+                <Button
+                  mt={4}
+                  colorScheme="purple"
+                  onClick={handleCreateCategory}
+                  isLoading={isLoading}
+                  isDisabled={!newCategoryName.trim()}
+                  width="100%"
+                >
+                  Crear Categoría
+                </Button>
+              </Box>
             )}
-            
             <Box width="100%">
               <Table variant="simple">
                 <Thead>
@@ -157,27 +182,6 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
                 </Tbody>
               </Table>
             </Box>
-
-            {categories.length < CATEGORY_LIMIT && (
-              <Box width="100%" pt={4}>
-                <Text mb={2} fontWeight="bold">Crear nueva categoría</Text>
-                <Box display="flex" gap={2}>
-                  <Input
-                    value={newCategoryName}
-                    onChange={(e) => setNewCategoryName(e.target.value)}
-                    placeholder="Nombre de la categoría"
-                  />
-                  <Button
-                    leftIcon={<AddIcon />}
-                    colorScheme="blue"
-                    onClick={handleCreateCategory}
-                    isLoading={isLoading}
-                  >
-                    Crear
-                  </Button>
-                </Box>
-              </Box>
-            )}
           </VStack>
         </ModalBody>
       </ModalContent>

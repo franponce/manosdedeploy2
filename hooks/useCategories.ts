@@ -1,5 +1,6 @@
 import useSWR from 'swr';
 import { Category } from '../product/types';
+import { CATEGORY_CONSTANTS } from '../utils/constants';
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
@@ -11,13 +12,30 @@ export function useCategories() {
 
   const createCategory = async (name: string) => {
     try {
+      // Validar longitud
+      if (name.length > CATEGORY_CONSTANTS.MAX_NAME_LENGTH) {
+        throw new Error(CATEGORY_CONSTANTS.ERROR_MESSAGES.NAME_TOO_LONG);
+      }
+
+      // Validar duplicados
+      const existingCategory = categories?.find(
+        cat => cat.name.toLowerCase() === name.toLowerCase()
+      );
+      
+      if (existingCategory) {
+        throw new Error(CATEGORY_CONSTANTS.ERROR_MESSAGES.DUPLICATE);
+      }
+
       const response = await fetch('/api/categories', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name }),
       });
 
-      if (!response.ok) throw new Error('Error creating category');
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message);
+      }
       
       const newCategory = await response.json();
       await mutate([...(categories || []), newCategory], false);
