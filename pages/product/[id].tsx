@@ -18,6 +18,7 @@ import { useProduct } from '../../hooks/useProduct';
 import { useSiteInfo } from '../../hooks/useSiteInfo';
 import { parseCurrency } from '../../utils/currency';
 import { FaArrowLeft, FaShoppingCart } from 'react-icons/fa';
+import { useScrollPosition } from '../../hooks/useScrollPosition';
 
 const ProductDetail: React.FC = () => {
   const router = useRouter();
@@ -25,8 +26,10 @@ const ProductDetail: React.FC = () => {
   const { product, isLoading, error } = useProduct(id as string);
   const { siteInfo } = useSiteInfo();
   const toast = useToast();
+  const { saveScrollPosition } = useScrollPosition(id as string);
 
   const handleBack = () => {
+    saveScrollPosition();
     router.back();
   };
 

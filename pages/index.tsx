@@ -2,6 +2,8 @@ import { GetServerSideProps } from 'next';
 import StoreScreen from '../product/screens/Store';
 import { Product, Category } from '../product/types';
 import { getProducts, getCategories } from '../utils/googleSheets';
+import { useEffect } from 'react';
+import { useScrollPosition } from '../hooks/useScrollPosition';
 
 interface HomeProps {
   products: Product[];
@@ -19,6 +21,12 @@ export const getServerSideProps: GetServerSideProps<HomeProps> = async () => {
 };
 
 const Home: React.FC<HomeProps> = ({ products, categories }) => {
+  const { restoreScrollPosition } = useScrollPosition(undefined);
+
+  useEffect(() => {
+    restoreScrollPosition();
+  }, []);
+
   return <StoreScreen initialProducts={products} initialCategories={categories} />;
 };
 
