@@ -9,11 +9,14 @@ import {
   Skeleton,
   SkeletonText,
   useMediaQuery,
-  Tooltip,
+  Link,
+  useDisclosure,
 } from '@chakra-ui/react';
 import { Product } from '../types';
 import { parseCurrency } from '../../utils/currency';
 import { useSiteInfo } from '../../hooks/useSiteInfo';
+import NextLink from 'next/link';
+import { useRouter } from 'next/router';
 
 interface Props {
   product: Product;
@@ -26,36 +29,40 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading }) => {
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [isTitleExpanded, setIsTitleExpanded] = useState(false);
   const [isMobile] = useMediaQuery("(max-width: 48em)");
+  const router = useRouter();
 
-  if (!product && !isLoading) {
-    return null;
-  }
-
-  const toggleDescription = () => {
-    setIsDescriptionExpanded(!isDescriptionExpanded);
-  };
-
-  const toggleTitle = () => {
-    setIsTitleExpanded(!isTitleExpanded);
+  const handleProductClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    router.push(`/product/${product.id}`);
   };
 
   const renderTitle = () => {
+    const titleContent = (
+      <Text
+        fontWeight="bold"
+        fontSize="lg"
+        noOfLines={isTitleExpanded ? undefined : 2}
+        cursor="pointer"
+        _hover={{ color: "blue.500" }}
+        onClick={handleProductClick}
+      >
+        {product.title || 'Untitled Product'}
+      </Text>
+    );
+
     if (isMobile) {
       return (
         <Box>
-          <Text
-            fontWeight="bold"
-            fontSize="lg"
-            noOfLines={isTitleExpanded ? undefined : 2}
-          >
-            {product.title || 'Untitled Product'}
-          </Text>
+          {titleContent}
           {product.title && product.title.length > 50 && (
             <Button
               size="xs"
               variant="link"
               color="blue.500"
-              onClick={toggleTitle}
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsTitleExpanded(!isTitleExpanded);
+              }}
               mt={1}
             >
               {isTitleExpanded ? "Ver menos" : "Ver título completo"}
@@ -63,25 +70,23 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading }) => {
           )}
         </Box>
       );
-    } else {
-      return (
-        <Box
-          onMouseEnter={() => setIsTitleExpanded(true)}
-          onMouseLeave={() => setIsTitleExpanded(false)}
-        >
-          <Text
-            fontWeight="bold"
-            fontSize="lg"
-            noOfLines={isTitleExpanded ? undefined : 2}
-          >
-            {product.title || 'Untitled Product'}
-          </Text>
-        </Box>
-      );
     }
-  };
 
+    return (
+      <Box
+        onMouseEnter={() => setIsTitleExpanded(true)}
+        onMouseLeave={() => setIsTitleExpanded(false)}
+      >
+        {titleContent}
+      </Box>
+    );
+  };
   const renderDescription = () => {
+    function toggleDescription(event: React.MouseEvent<HTMLButtonElement>): void {
+      event.stopPropagation();
+      setIsDescriptionExpanded(!isDescriptionExpanded);
+    }
+
     return (
       <Box>
         <div
@@ -112,17 +117,25 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading }) => {
   };
 
   return (
-    <Box borderWidth={1} borderRadius="lg" overflow="hidden">
+    <Box 
+      borderWidth={1} 
+      borderRadius="lg" 
+      overflow="hidden"
+      transition="transform 0.2s"
+      _hover={{ transform: 'translateY(-4px)', boxShadow: 'lg' }}
+    >
       <AspectRatio ratio={1}>
         {isLoading ? (
           <Skeleton />
         ) : (
-          <Image 
-            src={product.image || 'https://via.placeholder.com/500'} 
-            alt={product.title || 'Product image'} 
-            objectFit="cover" 
-            fallbackSrc="https://via.placeholder.com/500"
-          />
+          <Link as="div" onClick={handleProductClick} cursor="pointer">
+            <Image 
+              src={product.image || 'https://via.placeholder.com/500'} 
+              alt={product.title || 'Product image'} 
+              objectFit="cover" 
+              fallbackSrc="https://via.placeholder.com/500"
+            />
+          </Link>
         )}
       </AspectRatio>
       <Box p={4}>
