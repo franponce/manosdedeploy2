@@ -62,11 +62,6 @@ const StoreConfigPage: React.FC = () => {
     }
   }, [router]);
 
-  const handleBackToAdmin = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    await router.push('/admin');
-  };
-
   const handleCurrencyChange = async () => {
     setIsSubmittingCurrency(true);
     try {
@@ -106,17 +101,17 @@ const StoreConfigPage: React.FC = () => {
   return (
     <Box>
       <Container maxW="container.xl" p={4}>
-        <Flex justifyContent="space-between" alignItems="center" mb={8}>
+        <Flex direction="column" alignItems="center" mb={8}>
           <Button
             leftIcon={<Icon as={FaArrowLeft} />}
-            onClick={handleBackToAdmin}
+            onClick={() => router.push('/admin')}
             variant="outline"
+            alignSelf="flex-start"
+            mb={4}
           >
             Volver a la gestión de productos
           </Button>
-        </Flex>
 
-        <Flex direction="column" alignItems="center" mb={8}>
           <Box
             backgroundColor="white"
             borderRadius="full"
@@ -135,7 +130,6 @@ const StoreConfigPage: React.FC = () => {
               fallback={<Box bg="gray.200" w="100%" h="100%" borderRadius="full" />}
             />
           </Box>
-          <Text fontSize="xl" fontWeight="bold" mb={2}>E-commerce</Text>
           <Heading as="h1" size="2xl" textAlign="center">{siteInfo?.title}</Heading>
         </Flex>
 
