@@ -109,18 +109,18 @@ const AdminPage: React.FC = () => {
             Crear nuevo producto
           </Button>
           <Button
+            colorScheme="purple"
+            onClick={() => setIsCategoryManagerOpen(true)}
+          >
+            Gestionar Categorías
+          </Button>
+          <Button
             colorScheme="gray"
             onClick={handleStoreSettings}
             width={{ base: "full", sm: "auto" }}
             rightIcon={<Icon as={FaArrowRight} />}
           >
             Ir a la configuración de la tienda
-          </Button>
-          <Button
-            colorScheme="purple"
-            onClick={() => setIsCategoryManagerOpen(true)}
-          >
-            Gestionar Categorías
           </Button>
         </Flex>
       </Flex>
