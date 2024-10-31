@@ -196,17 +196,9 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
       >
         <Container maxWidth="container.xl" padding={4}>
           <Flex alignItems="center" justifyContent="space-between">
-            {isAdminRoute ? (
-              <Heading size="md">
-                {getWelcomeMessage()}
-              </Heading>
-            ) : (
-              <NextLink href="/" legacyBehavior>
-                <Heading as="a" size="md" cursor="pointer">
-                  {getWelcomeMessage()}
-                </Heading>
-              </NextLink>
-            )}
+            <Heading size="md">
+              {getWelcomeMessage()}
+            </Heading>
             {isMounted && (
               <HamburgerMenu
                 isLoggedIn={isLoggedIn}
