@@ -26,7 +26,7 @@ import useSWR, { mutate } from 'swr';
 import { useCart } from '../../hooks/useCart';
 import { useRouter } from 'next/router';
 import { Container } from "@chakra-ui/react";
-import { FaEye, FaArrowLeft } from "react-icons/fa";
+import { FaEye, FaArrowLeft, FaTimes } from "react-icons/fa";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -193,7 +193,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
       {isPreviewMode && (
         <Box
           position="sticky"
-          top="70px" // Altura del header principal
+          top="70px"
           zIndex={999}
           bg="blue.50"
           py={3}
@@ -204,8 +204,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
             <Flex
               justify="space-between"
               align="center"
-              direction={{ base: "column", sm: "row" }}
-              gap={3}
+              px={4}
             >
               <Flex align="center" gap={2}>
                 <Icon as={FaEye} color="blue.500" />
@@ -216,11 +215,11 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
               <Button
                 size="sm"
                 colorScheme="blue"
-                variant="outline"
-                leftIcon={<Icon as={FaArrowLeft} />}
+                variant="link"
+                leftIcon={<Icon as={FaTimes} />}
                 onClick={() => router.push('/admin')}
               >
-                Cerrar y volver a editar la tienda
+                Cerrar y volver al administrador
               </Button>
             </Flex>
           </Container>

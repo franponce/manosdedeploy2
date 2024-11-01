@@ -119,7 +119,7 @@ const AdminPage: React.FC = () => {
                 width={{ base: "full", sm: "auto" }}
                 leftIcon={<Icon as={FaEye} />}
               >
-                Previsualizar
+                Previsualizar tienda
               </Button>
             </Link>
 
