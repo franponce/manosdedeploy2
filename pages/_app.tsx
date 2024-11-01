@@ -45,28 +45,30 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
     if (typeof window === 'undefined') return false;
     
     const isFromAdmin = router.query.preview === 'true' || localStorage.getItem('previewMode') === 'true';
-    return (isAdmin || isLoggedIn) && isFromAdmin && router.pathname === '/';
+    const isStoreRoute = router.pathname === '/';
+    const isAuthorizedUser = isAdmin || isLoggedIn;
+
+    return isAuthorizedUser && (isStoreRoute || isFromAdmin);
   }, [isAdmin, isLoggedIn, router.pathname, router.query.preview]);
 
   React.useEffect(() => {
-    // Mover toda la lógica de localStorage al useEffect
-    if (router.query.preview === 'true') {
+    if (typeof window === 'undefined') return;
+
+    if ((isAdmin || isLoggedIn) && router.pathname === '/') {
+      setIsPreviewMode(true);
+    } else if (router.query.preview === 'true') {
       localStorage.setItem('previewMode', 'true');
       setIsPreviewMode(true);
-    }
-
-    if (!router.pathname.startsWith('/') && router.pathname !== '/preview') {
+    } else if (!router.pathname.startsWith('/') && router.pathname !== '/preview') {
       localStorage.removeItem('previewMode');
       setIsPreviewMode(false);
     }
-
-    // Verificar el estado inicial
-    const storedPreviewMode = localStorage.getItem('previewMode') === 'true';
-    setIsPreviewMode(storedPreviewMode);
-  }, [router.query.preview, router.pathname]);
+  }, [router.pathname, router.query.preview, isAdmin, isLoggedIn]);
 
   const handleClosePreview = () => {
-    localStorage.removeItem('previewMode');
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('previewMode');
+    }
     setIsPreviewMode(false);
     router.push('/admin');
   };
@@ -259,7 +261,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
           </Flex>
         </Container>
       </Box>
-      {isPreviewMode && (
+      {showPreviewBanner && (
         <Box
           position="sticky"
           top="70px"
@@ -287,7 +289,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
                   color="blue.700"
                   fontSize={{ base: "sm", md: "md" }}
                 >
-                  Estás en Modo Previsualización. Así ven los clientes tu tienda actualmente.
+                  Estás visualizando la tienda como un cliente.
                 </Text>
               </Flex>
               <Button
@@ -298,7 +300,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
                 onClick={handleClosePreview}
                 fontSize={{ base: "sm", md: "md" }}
               >
-                Cerrar y volver al administrador
+                Volver al administrador
               </Button>
             </Flex>
           </Container>
