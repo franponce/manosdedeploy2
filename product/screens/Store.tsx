@@ -24,6 +24,9 @@ import { editCart } from "../selectors";
 import { parseCurrency } from "../../utils/currency";
 import useSWR, { mutate } from 'swr';
 import { useCart } from '../../hooks/useCart';
+import { useRouter } from 'next/router';
+import { Container } from "@chakra-ui/react";
+import { FaEye, FaArrowLeft } from "react-icons/fa";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -32,9 +35,15 @@ const PRODUCTS_PER_PAGE = 12;
 interface StoreScreenProps {
   initialProducts: Product[];
   initialCategories: Category[];
+  isPreviewMode?: boolean;
 }
 
-const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCategories }) => {
+const StoreScreen: React.FC<StoreScreenProps> = ({ 
+  initialProducts, 
+  initialCategories,
+  isPreviewMode = false
+}) => {
+  const router = useRouter();
   const { cart, addToCart, removeFromCart } = useCart();
   const toast = useToast();
   const [isCartOpen, toggleCart] = React.useState<boolean>(false);
@@ -181,6 +190,42 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
 
   return (
     <>
+      {isPreviewMode && (
+        <Box
+          position="sticky"
+          top="70px" // Altura del header principal
+          zIndex={999}
+          bg="blue.50"
+          py={3}
+          borderBottom="1px"
+          borderColor="blue.100"
+        >
+          <Container maxW="container.xl">
+            <Flex
+              justify="space-between"
+              align="center"
+              direction={{ base: "column", sm: "row" }}
+              gap={3}
+            >
+              <Flex align="center" gap={2}>
+                <Icon as={FaEye} color="blue.500" />
+                <Text color="blue.700">
+                  Estas en Modo Previsualización. Así ven los clientes tu tienda actualmente.
+                </Text>
+              </Flex>
+              <Button
+                size="sm"
+                colorScheme="blue"
+                variant="outline"
+                leftIcon={<Icon as={FaArrowLeft} />}
+                onClick={() => router.push('/admin')}
+              >
+                Cerrar y volver a editar la tienda
+              </Button>
+            </Flex>
+          </Container>
+        </Box>
+      )}
       <Stack spacing={6}>
         <Flex direction={{ base: "column", md: "row" }} gap={4}>
           <InputGroup>

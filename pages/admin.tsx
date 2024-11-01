@@ -106,7 +106,13 @@ const AdminPage: React.FC = () => {
             gap={4}
             flexWrap={{ sm: "wrap", md: "nowrap" }}
           >
-            <Link href="/" passHref>
+            <Link 
+              href={{ 
+                pathname: "/",
+                query: { preview: "true" } 
+              }} 
+              passHref
+            >
               <Button
                 as="a"
                 colorScheme="green"
