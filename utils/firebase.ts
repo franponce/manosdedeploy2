@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getFirestore, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { getStorage, ref, uploadString, getDownloadURL, uploadBytes } from "firebase/storage";
 import { 
   getAuth, 
@@ -174,6 +174,32 @@ export const getCurrentUser = (): User | null => {
 
 export const isAdminUser = (user: User | null): boolean => {
   return user?.uid === 'admin';
+};
+
+interface StoreVisibilityConfig {
+  showHeaderInProduct: boolean;
+  showLogoInProduct: boolean;
+  showDescriptionInProduct: boolean;
+  showSocialInProduct: boolean;
+}
+
+interface StoreConfig extends Record<string, any> {
+  visibility?: StoreVisibilityConfig;
+}
+
+export const updateStoreConfig = async (config: StoreConfig) => {
+  const configRef = doc(db, 'config', 'store');
+  await setDoc(configRef, {
+    ...config,
+    updatedAt: serverTimestamp(),
+    updatedBy: 'admin'
+  }, { merge: true });
+};
+
+export const getStoreConfig = async (): Promise<StoreConfig> => {
+  const configRef = doc(db, 'config', 'store');
+  const configSnap = await getDoc(configRef);
+  return configSnap.exists() ? configSnap.data() as StoreConfig : {};
 };
 
 export { auth, db, storage };

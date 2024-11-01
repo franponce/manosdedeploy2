@@ -172,49 +172,44 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
         )}
       </Head>
       <Box>
-        {!isProductPage && (
-          <>
-            {announcementBar && (
-              <Box 
-                bg="primary.500"
-                color="white"
-                py={2}
-                textAlign="center"
-              >
-                {announcementBar}
-              </Box>
-            )}
-            <Container maxW="container.xl" p={4}>
-              <Stack
-                align="center"
-                bg="white"
-                borderRadius="md"
-                boxShadow="sm"
-                p={4}
-                spacing={3}
-                textAlign="center"
-                width="100%"
-                maxWidth="600px"
-              >
-                <Heading size="lg">{siteInfo?.title}</Heading>
-                <Text dangerouslySetInnerHTML={{ __html: siteInfo?.description || '' }} />
-                <Text dangerouslySetInnerHTML={{ __html: siteInfo?.description2 || '' }} />
-                <Stack direction="row" mt={2} spacing={2} justify="center">
-                  {siteInfo?.social?.map((social) => (
-                    <Link 
-                      key={social.name}
-                      href={social.url}
-                      isExternal
-                    >
-                      <Icon as={social.icon} boxSize={6} />
-                    </Link>
-                  ))}
-                </Stack>
-              </Stack>
-            </Container>
-          </>
+        {announcementBar && (
+          <Box 
+            bg="primary.500"
+            color="white"
+            py={2}
+            textAlign="center"
+          >
+            {announcementBar}
+          </Box>
         )}
-
+        <Container maxW="container.xl" p={4}>
+          <Stack
+            align="center"
+            bg="white"
+            borderRadius="md"
+            boxShadow="sm"
+            p={4}
+            spacing={3}
+            textAlign="center"
+            width="100%"
+            maxWidth="600px"
+          >
+            <Heading size="lg">{siteInfo?.title}</Heading>
+            <Text dangerouslySetInnerHTML={{ __html: siteInfo?.description || '' }} />
+            <Text dangerouslySetInnerHTML={{ __html: siteInfo?.description2 || '' }} />
+            <Stack direction="row" mt={2} spacing={2} justify="center">
+              {siteInfo?.social?.map((social) => (
+                <Link 
+                  key={social.name}
+                  href={social.url}
+                  isExternal
+                >
+                  <Icon as={social.icon} boxSize={6} />
+                </Link>
+              ))}
+            </Stack>
+          </Stack>
+        </Container>
         <Component {...pageProps} />
       </Box>
     </ChakraProvider>
