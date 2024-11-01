@@ -17,6 +17,7 @@ import { parseCurrency } from '../../utils/currency';
 import { useSiteInfo } from '../../hooks/useSiteInfo';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
+import { useCart } from '../../hooks/useCart';
 
 interface Props {
   product: Product;
@@ -30,6 +31,7 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading }) => {
   const [isTitleExpanded, setIsTitleExpanded] = useState(false);
   const [isMobile] = useMediaQuery("(max-width: 48em)");
   const router = useRouter();
+  const { addToCart } = useCart();
 
   const handleProductClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -154,7 +156,10 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading }) => {
               <Text fontWeight="bold" fontSize="xl">
                 {parseCurrency(product.price || 0)} {siteInfo?.currency}
               </Text>
-              <Button colorScheme="blue" onClick={() => onAdd(product)}>
+              <Button
+                colorScheme="blue"
+                onClick={() => onAdd(product)}
+              >
                 Agregar al carrito
               </Button>
             </>
