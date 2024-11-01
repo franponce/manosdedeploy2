@@ -16,12 +16,6 @@ import {
   Container,
   Select,
   useToast,
-  FormControl,
-  FormLabel,
-  Stack,
-  Checkbox,
-  Spinner,
-  HStack,
 } from '@chakra-ui/react';
 import StoreConfiguration from '../product/components/StoreConfiguration';
 import PaymentMethodsConfig from '../product/components/PaymentMethodsConfig';
@@ -29,150 +23,207 @@ import CustomScripts from '../product/components/CustomScripts';
 import { useRouter } from 'next/router';
 import { FaArrowLeft, FaFlag } from 'react-icons/fa';
 import { useSiteInfo } from '../hooks/useSiteInfo';
-import { auth, updateSiteInfo, updateStoreConfig, getStoreConfig } from '../utils/firebase';
+import { auth, updateSiteInfo } from '../utils/firebase';
 import { currencies } from '@/utils/currencies';
 import { parseCookies } from 'nookies';
 
-const StoreConfig: React.FC = () => {
+const StoreConfigPage: React.FC = () => {
   const router = useRouter();
+  const { siteInfo, mutate } = useSiteInfo();
+  const [currency, setCurrency] = useState('ARS');
+  const [isSubmittingCurrency, setIsSubmittingCurrency] = useState(false);
   const toast = useToast();
   const [isAdmin, setIsAdmin] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Estados para la visibilidad
-  const [showHeaderInProduct, setShowHeaderInProduct] = useState(false);
-  const [showLogoInProduct, setShowLogoInProduct] = useState(false);
-  const [showDescriptionInProduct, setShowDescriptionInProduct] = useState(false);
-  const [showSocialInProduct, setShowSocialInProduct] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const cookies = parseCookies();
-      const authToken = cookies.authToken;
+    if (siteInfo && siteInfo.currency) {
+      setCurrency(siteInfo.currency);
+    }
+  }, [siteInfo]);
 
-      if (authToken !== 'admin-token') {
-        router.push('/');
-        return;
-      }
+  useEffect(() => {
+    const cookies = parseCookies();
+    const authToken = cookies.authToken;
 
+    if (authToken === 'admin-token') {
       setIsAdmin(true);
-      
-      // Cargar configuración actual
-      try {
-        const config = await getStoreConfig();
-        setShowHeaderInProduct(config.visibility?.showHeaderInProduct ?? false);
-        setShowLogoInProduct(config.visibility?.showLogoInProduct ?? false);
-        setShowDescriptionInProduct(config.visibility?.showDescriptionInProduct ?? false);
-        setShowSocialInProduct(config.visibility?.showSocialInProduct ?? false);
-      } catch (error) {
-        console.error('Error loading config:', error);
-        toast({
-          title: 'Error al cargar la configuración',
-          status: 'error',
-          duration: 3000,
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkAuth();
-  }, [router, toast]);
-
-  const handleSaveConfig = async () => {
-    setIsSaving(true);
-    try {
-      await updateStoreConfig({
-        visibility: {
-          showHeaderInProduct,
-          showLogoInProduct,
-          showDescriptionInProduct,
-          showSocialInProduct,
-        },
+      setIsLoggedIn(true);
+    } else {
+      const unsubscribe = auth.onAuthStateChanged((user) => {
+        if (user) {
+          setIsLoggedIn(true);
+        } else {
+          router.push('/login');
+        }
       });
-      
+
+      return () => unsubscribe();
+    }
+  }, [router]);
+
+  const handleCurrencyChange = async () => {
+    setIsSubmittingCurrency(true);
+    try {
+      await updateSiteInfo({ ...siteInfo, currency });
+      mutate();
       toast({
-        title: 'Configuración guardada',
-        status: 'success',
+        title: "Moneda actualizada",
+        description: "La moneda de la tienda ha sido actualizada exitosamente.",
+        status: "success",
         duration: 3000,
+        isClosable: true,
       });
     } catch (error) {
-      console.error('Error saving config:', error);
       toast({
-        title: 'Error al guardar la configuración',
-        status: 'error',
+        title: "Error",
+        description: "No se pudo actualizar la moneda de la tienda.",
+        status: "error",
         duration: 3000,
+        isClosable: true,
       });
     } finally {
-      setIsSaving(false);
+      setIsSubmittingCurrency(false);
     }
   };
 
-  if (!isAdmin || isLoading) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
-        <Spinner size="xl" />
-      </Box>
-    );
-  }
+  const modifiedCurrencies = {
+    ARS: { name: 'Peso Argentino', symbol: '$', flag: '🇦🇷' },
+    PEN: { name: 'Sol Peruano', symbol: 'S/', flag: '🇵🇪' },
+    USD: { name: 'Dólar Estadounidense', symbol: '$', flag: '🇺🇸' },
+    BRL: { name: 'Real Brasileño', symbol: 'R$', flag: '🇧🇷' },
+    EUR: { name: 'Euro', symbol: '€', flag: '🇪🇺' },
+    ...currencies
+  };
+
+  if (!siteInfo || !isLoggedIn) return null;
 
   return (
-    <Container maxW="container.md" py={8}>
-      <VStack spacing={8} align="stretch">
-        <Heading size="lg">Configuración de la tienda</Heading>
-        
-        <Box>
-          <Heading size="md" mb={4}>Visibilidad de elementos</Heading>
-          <FormControl>
-            <FormLabel>Elementos en página de producto</FormLabel>
-            <Stack spacing={2}>
-              <Checkbox 
-                isChecked={showHeaderInProduct}
-                onChange={(e) => setShowHeaderInProduct(e.target.checked)}
-              >
-                Mostrar banner en productos
-              </Checkbox>
-              <Checkbox 
-                isChecked={showLogoInProduct}
-                onChange={(e) => setShowLogoInProduct(e.target.checked)}
-              >
-                Mostrar logo en productos
-              </Checkbox>
-              <Checkbox 
-                isChecked={showDescriptionInProduct}
-                onChange={(e) => setShowDescriptionInProduct(e.target.checked)}
-              >
-                Mostrar descripción en productos
-              </Checkbox>
-              <Checkbox 
-                isChecked={showSocialInProduct}
-                onChange={(e) => setShowSocialInProduct(e.target.checked)}
-              >
-                Mostrar redes sociales en productos
-              </Checkbox>
-            </Stack>
-          </FormControl>
-        </Box>
+    <Box>
+      <Container maxW="container.xl" p={4}>
+        <Flex direction="column" alignItems="center" mb={8}>
+          <Box
+            backgroundColor="white"
+            borderRadius="full"
+            boxShadow="md"
+            boxSize="120px"
+            overflow="hidden"
+            position="relative"
+            mb={4}
+          >
+            <Image
+              src={`${siteInfo?.logoUrl}?${new Date().getTime()}`}
+              alt="Logo"
+              objectFit="cover"
+              width="100%"
+              height="100%"
+              fallback={<Box bg="gray.200" w="100%" h="100%" borderRadius="full" />}
+            />
+          </Box>
+          <Heading as="h1" size="2xl" textAlign="center">{siteInfo?.title}</Heading>
+        </Flex>
 
-        <HStack spacing={4} justify="flex-end">
-          <Button 
-            variant="outline" 
-            onClick={() => router.push('/admin')}
-          >
-            Cancelar
-          </Button>
-          <Button 
-            colorScheme="blue" 
-            onClick={handleSaveConfig}
-            isLoading={isSaving}
-          >
-            Guardar cambios
-          </Button>
-        </HStack>
-      </VStack>
-    </Container>
+        <Heading as="h2" size="xl" mb={8} textAlign="center">
+          Configuración de la tienda
+        </Heading>
+
+        <VStack spacing={8} align="stretch">
+          <Accordion allowMultiple>
+            <AccordionItem>
+              <h2>
+                <AccordionButton>
+                  <Box flex="1" textAlign="left">
+                    <Heading as="h3" size="lg">
+                      Información de la tienda
+                    </Heading>
+                  </Box>
+                  <AccordionIcon />
+                </AccordionButton>
+              </h2>
+              <AccordionPanel pb={4}>
+                <StoreConfiguration />
+              </AccordionPanel>
+            </AccordionItem>
+
+            <AccordionItem>
+              <h2>
+                <AccordionButton>
+                  <Box flex="1" textAlign="left">
+                    <Heading as="h3" size="lg">
+                      Configuración de métodos de pago
+                    </Heading>
+                  </Box>
+                  <AccordionIcon />
+                </AccordionButton>
+              </h2>
+              <AccordionPanel pb={4}>
+                <PaymentMethodsConfig />
+              </AccordionPanel>
+            </AccordionItem>
+
+            <AccordionItem>
+              <h2>
+                <AccordionButton>
+                  <Box flex="1" textAlign="left">
+                    <Heading as="h3" size="lg">
+                      Moneda de la tienda
+                    </Heading>
+                  </Box>
+                  <AccordionIcon />
+                </AccordionButton>
+              </h2>
+              <AccordionPanel pb={4}>
+                <Flex direction="column" align="stretch">
+                  <Select
+                    value={currency}
+                    onChange={(e) => setCurrency(e.target.value)}
+                    mb={4}
+                  >
+                    {Object.entries(modifiedCurrencies).map(([code, currency]) => {
+                      if (typeof currency === 'object' && 'flag' in currency && 'name' in currency) {
+                        return (
+                          <option key={code} value={code}>
+                            {currency.flag || <FaFlag />} {code} - {currency.name}
+                          </option>
+                        );
+                      }
+                      return null;
+                    })}
+                  </Select>
+                  <Button 
+                    colorScheme="blue" 
+                    onClick={handleCurrencyChange}
+                    isLoading={isSubmittingCurrency}
+                    loadingText="Guardando..."
+                  >
+                    Guardar cambios
+                  </Button>
+                </Flex>
+              </AccordionPanel>
+            </AccordionItem>
+
+            {isAdmin && (
+              <AccordionItem>
+                <h2>
+                  <AccordionButton>
+                    <Box flex="1" textAlign="left">
+                      <Heading as="h3" size="lg">
+                        Scripts personalizados
+                      </Heading>
+                    </Box>
+                    <AccordionIcon />
+                  </AccordionButton>
+                </h2>
+                <AccordionPanel pb={4}>
+                  <CustomScripts />
+                </AccordionPanel>
+              </AccordionItem>
+            )}
+          </Accordion>
+        </VStack>
+      </Container>
+    </Box>
   );
 };
 
-export default StoreConfig;
+export default StoreConfigPage;

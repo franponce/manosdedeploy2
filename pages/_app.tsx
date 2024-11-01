@@ -39,7 +39,6 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
   const [customScripts, setCustomScripts] = React.useState<string | null>(null);
   const [announcementBar, setAnnouncementBar] = React.useState<any>(null);
   const [hasRefreshed, setHasRefreshed] = React.useState(false);
-  const isProductPage = router.pathname.startsWith('/product/');
 
   React.useEffect(() => {
     const checkAuthStatus = () => {
@@ -171,46 +170,137 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
           <script dangerouslySetInnerHTML={{ __html: customScripts }} />
         )}
       </Head>
-      <Box>
-        {announcementBar && (
-          <Box 
-            bg="primary.500"
-            color="white"
-            py={2}
-            textAlign="center"
-          >
-            {announcementBar}
-          </Box>
-        )}
-        <Container maxW="container.xl" p={4}>
-          <Stack
-            align="center"
-            bg="white"
-            borderRadius="md"
-            boxShadow="sm"
-            p={4}
-            spacing={3}
-            textAlign="center"
-            width="100%"
-            maxWidth="600px"
-          >
-            <Heading size="lg">{siteInfo?.title}</Heading>
-            <Text dangerouslySetInnerHTML={{ __html: siteInfo?.description || '' }} />
-            <Text dangerouslySetInnerHTML={{ __html: siteInfo?.description2 || '' }} />
-            <Stack direction="row" mt={2} spacing={2} justify="center">
-              {siteInfo?.social?.map((social) => (
-                <Link 
-                  key={social.name}
-                  href={social.url}
-                  isExternal
-                >
-                  <Icon as={social.icon} boxSize={6} />
-                </Link>
+      {announcementBar && announcementBar.isEnabled && (
+        <Box bg="blue.500" color="white" py={2}>
+          <Container maxW="container.xl">
+            <Flex justify="space-between">
+              {[1, 2, 3].map((num) => (
+                announcementBar[`message${num}`] && (
+                  <Link key={num} href={announcementBar[`link${num}`]} isExternal>
+                    {announcementBar[`message${num}`]}
+                  </Link>
+                )
               ))}
-            </Stack>
-          </Stack>
+            </Flex>
+          </Container>
+        </Box>
+      )}
+      <Box
+        position="fixed"
+        top={0}
+        left={0}
+        right={0}
+        zIndex={1000}
+        bg="white"
+        boxShadow="md"
+      >
+        <Container maxWidth="container.xl" padding={4}>
+          <Flex alignItems="center" justifyContent="space-between">
+            <Heading size="md">
+              {getWelcomeMessage()}
+            </Heading>
+            {isMounted && (
+              <HamburgerMenu
+                isLoggedIn={isLoggedIn}
+                isAdmin={isAdmin}
+                onLogout={handleLogout}
+              />
+            )}
+          </Flex>
         </Container>
-        <Component {...pageProps} />
+      </Box>
+      <Box pt="70px"> {/* Ajusta este valor según la altura de tu header fijo */}
+        <Container
+          backgroundColor="white"
+          borderRadius="sm"
+          maxWidth="container.xl"
+          padding={4}
+        >
+          <Box mb={6} position="relative">
+            <Box
+              borderRadius="lg"
+              height={{ md: "300px" }}
+              overflow="hidden"
+              width="100%"
+              position="relative"
+            >
+              <Image
+                src={bannerError ? "/default-banner.jpg" : `${siteInfo?.bannerUrl}?${new Date().getTime()}`}
+                alt="Header image"
+                objectFit="cover"
+                width="100%"
+                height="100%"
+                onError={() => setBannerError(true)}
+                fallback={<Box bg="gray.200" w="100%" h="100%" />}
+              />
+            </Box>
+          </Box>
+          <Flex
+            direction="column"
+            align="center"
+            justify="center"
+            mb={6}
+          >
+            <Box
+              backgroundColor="white"
+              borderRadius="full"
+              boxShadow="md"
+              boxSize="120px"
+              overflow="hidden"
+              position="relative"
+              mb={4}
+            >
+              <Image
+                src={`${siteInfo?.logoUrl}?${new Date().getTime()}`}
+                alt="Avatar"
+                objectFit="cover"
+                width="100%"
+                height="100%"
+                fallback={<Box bg="gray.200" w="100%" h="100%" borderRadius="full" />}
+              />
+            </Box>
+            <Stack
+              align="center"
+              bg="white"
+              borderRadius="md"
+              boxShadow="sm"
+              p={4}
+              spacing={3}
+              textAlign="center"
+              width="100%"
+              maxWidth="600px"
+            >
+              <Heading size="lg">{siteInfo?.title}</Heading>
+              <Text color="gray.600" fontSize="md" dangerouslySetInnerHTML={{ __html: siteInfo?.description || '' }} />
+              <Text color="gray.600" fontSize="md" dangerouslySetInnerHTML={{ __html: siteInfo?.description2 || '' }} />
+              <Stack direction="row" mt={2} spacing={2} justify="center">
+                {siteInfo?.social?.map((social) => (
+                  <Link key={social.name} href={social.url} isExternal>
+                    <Flex
+                      alignItems="center"
+                      backgroundColor="#df7777"
+                      borderRadius="full"
+                      color="white"
+                      height={8}
+                      justifyContent="center"
+                      width={8}
+                    >
+                      <Image
+                        alt={`${social.name} icon`}
+                        src={`https://icongr.am/fontawesome/${social.name}.svg?size=20&color=ffffff`}
+                      />
+                    </Flex>
+                  </Link>
+                ))}
+              </Stack>
+            </Stack>
+          </Flex>
+          <Component {...pageProps} />
+          <Divider marginY={4} />
+          <Text textAlign="center">
+            © Copyright {new Date().getFullYear()}. Hecho con ♥ Simple Ecommerce
+          </Text>
+        </Container>
       </Box>
     </ChakraProvider>
   );

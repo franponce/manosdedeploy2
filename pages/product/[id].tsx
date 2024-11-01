@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React from 'react';
 import {
   Box,
   Container,
@@ -12,8 +12,6 @@ import {
   Skeleton,
   useToast,
   Icon,
-  Flex,
-  Stack,
 } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
 import { useProduct } from '../../hooks/useProduct';
@@ -22,8 +20,6 @@ import { parseCurrency } from '../../utils/currency';
 import { FaArrowLeft, FaShoppingCart } from 'react-icons/fa';
 import { useScrollPosition } from '../../hooks/useScrollPosition';
 import { useCart } from '../../hooks/useCart';
-import CartDrawer from '../../product/components/CartDrawer';
-import { Product, CartItem } from '../../product/types';
 
 const ProductDetail: React.FC = () => {
   const router = useRouter();
@@ -32,12 +28,11 @@ const ProductDetail: React.FC = () => {
   const { siteInfo } = useSiteInfo();
   const toast = useToast();
   const { saveScrollPosition } = useScrollPosition(id as string);
-  const { cart, addToCart, removeFromCart } = useCart();
-  const [isCartOpen, setIsCartOpen] = useState(false);
+  const { addToCart } = useCart();
 
   const handleBack = () => {
     saveScrollPosition();
-    router.push('/');
+    router.back();
   };
 
   const handleAddToCart = () => {
@@ -45,21 +40,13 @@ const ProductDetail: React.FC = () => {
       addToCart(product);
       toast({
         title: 'Producto agregado',
-        description: `${product.title} se agregó al carrito`,
+        description: 'El producto se agregó al carrito',
         status: 'success',
-        duration: 2000,
+        duration: 3000,
         isClosable: true,
-        position: "bottom-right"
       });
     }
   };
-
-  const total = useMemo(
-    () => parseCurrency(cart.reduce((total, product) => total + product.price * product.quantity, 0)),
-    [cart]
-  );
-
-  const quantity = useMemo(() => cart.reduce((acc, item) => acc + item.quantity, 0), [cart]);
 
   if (error) {
     return (
@@ -163,44 +150,6 @@ const ProductDetail: React.FC = () => {
           </GridItem>
         </Grid>
       </VStack>
-
-      {Boolean(cart.length) && (
-        <Flex alignItems="center" bottom={4} justifyContent="center" position="sticky">
-          <Button
-            boxShadow="xl"
-            colorScheme="primary"
-            size="lg"
-            width={{ base: "100%", sm: "fit-content" }}
-            onClick={() => setIsCartOpen(true)}
-          >
-            <Stack alignItems="center" direction="row" spacing={6}>
-              <Stack alignItems="center" direction="row" spacing={3}>
-                <Text fontSize="md">Ver carrito</Text>
-                <Text
-                  backgroundColor="rgba(0,0,0,0.25)"
-                  borderRadius="sm"
-                  color="gray.100"
-                  fontSize="xs"
-                  fontWeight="500"
-                  paddingX={2}
-                  paddingY={1}
-                >
-                  {quantity} {quantity === 1 ? "item" : "items"}
-                </Text>
-              </Stack>
-              <Text fontSize="md">{total}</Text>
-            </Stack>
-          </Button>
-        </Flex>
-      )}
-
-      <CartDrawer
-        isOpen={isCartOpen}
-        items={cart}
-        onClose={() => setIsCartOpen(false)}
-        onDecrement={(product: CartItem) => removeFromCart(product)}
-        onIncrement={(product: CartItem) => addToCart(product)}
-      />
     </Container>
   );
 };

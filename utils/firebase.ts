@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { getFirestore, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { getStorage, ref, uploadString, getDownloadURL, uploadBytes } from "firebase/storage";
 import { 
   getAuth, 
@@ -32,9 +32,7 @@ export interface SiteInformation {
   whatsappCart: string;
   sheet: string;
   color: string;
-  social: Array<{
-    icon: any; name: string; url: string 
-}>;
+  social: Array<{ name: string; url: string }>;
   logoUrl: string;
   bannerUrl: string;
   currency: string;
@@ -51,14 +49,8 @@ export const DEFAULT_SITE_INFORMATION: SiteInformation = {
   sheet: "https://docs.google.com/spreadsheets/d/e/2PACX-1vReSQMLVR-O0uKqZr28Y9j29RN1YYoaFkb29qVJjofGNZSRUnhCsgoohDDDrsAV0FW4R9xdulrn0aYE/pub?output=csv",
   color: "teal",
   social: [
-    {
-      name: "instagram", url: "https://www.hola.com",
-      icon: undefined
-    },
-    {
-      name: "whatsapp", url: "https://wa.me/54929542201999",
-      icon: undefined
-    }
+    { name: "instagram", url: "https://www.hola.com" },
+    { name: "whatsapp", url: "https://wa.me/54929542201999" }
   ],
   logoUrl: "/default-logo.png",
   bannerUrl: "/default-banner.jpg",
@@ -174,32 +166,6 @@ export const getCurrentUser = (): User | null => {
 
 export const isAdminUser = (user: User | null): boolean => {
   return user?.uid === 'admin';
-};
-
-interface StoreVisibilityConfig {
-  showHeaderInProduct: boolean;
-  showLogoInProduct: boolean;
-  showDescriptionInProduct: boolean;
-  showSocialInProduct: boolean;
-}
-
-interface StoreConfig extends Record<string, any> {
-  visibility?: StoreVisibilityConfig;
-}
-
-export const updateStoreConfig = async (config: StoreConfig) => {
-  const configRef = doc(db, 'config', 'store');
-  await setDoc(configRef, {
-    ...config,
-    updatedAt: serverTimestamp(),
-    updatedBy: 'admin'
-  }, { merge: true });
-};
-
-export const getStoreConfig = async (): Promise<StoreConfig> => {
-  const configRef = doc(db, 'config', 'store');
-  const configSnap = await getDoc(configRef);
-  return configSnap.exists() ? configSnap.data() as StoreConfig : {};
 };
 
 export { auth, db, storage };
