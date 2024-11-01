@@ -228,7 +228,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
           </Flex>
         </Container>
       </Box>
-      {router.pathname === '/preview' && (
+      {pageProps.isPreviewMode && (
         <Box
           position="sticky"
           top="70px"
