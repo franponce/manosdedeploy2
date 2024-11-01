@@ -24,6 +24,7 @@ import { useScrollPosition } from '../../hooks/useScrollPosition';
 import { useCart } from '../../hooks/useCart';
 import { CartItem, Product } from '@/product/types';
 import CartDrawer from '@/product/components/CartDrawer';
+import { DynamicElements } from '@/components/layout/DynamicElements';
 
 const ProductDetail: React.FC = () => {
   const router = useRouter();
@@ -173,48 +174,50 @@ const ProductDetail: React.FC = () => {
         </VStack>
       </Container>
 
-      {Boolean(cart.length) && (
-        <Flex alignItems="center" bottom={4} justifyContent="center" position="sticky">
-          <Button
-            boxShadow="xl"
-            colorScheme="primary"
-            data-testid="show-cart"
-            size="lg"
-            width={{ base: "100%", sm: "fit-content" }}
-            onClick={() => toggleCart(true)}
-          >
-            <Stack alignItems="center" direction="row" spacing={6}>
-              <Stack alignItems="center" direction="row" spacing={3}>
+      <DynamicElements>
+        {Boolean(cart.length) && (
+          <Flex alignItems="center" bottom={4} justifyContent="center" position="sticky">
+            <Button
+              boxShadow="xl"
+              colorScheme="primary"
+              data-testid="show-cart"
+              size="lg"
+              width={{ base: "100%", sm: "fit-content" }}
+              onClick={() => toggleCart(true)}
+            >
+              <Stack alignItems="center" direction="row" spacing={6}>
+                <Stack alignItems="center" direction="row" spacing={3}>
+                  <Text fontSize="md" lineHeight={6}>
+                    Ver carrito
+                  </Text>
+                  <Text
+                    backgroundColor="rgba(0,0,0,0.25)"
+                    borderRadius="sm"
+                    color="gray.100"
+                    fontSize="xs"
+                    fontWeight="500"
+                    paddingX={2}
+                    paddingY={1}
+                  >
+                    {quantity} {quantity === 1 ? "item" : "items"}
+                  </Text>
+                </Stack>
                 <Text fontSize="md" lineHeight={6}>
-                  Ver carrito
-                </Text>
-                <Text
-                  backgroundColor="rgba(0,0,0,0.25)"
-                  borderRadius="sm"
-                  color="gray.100"
-                  fontSize="xs"
-                  fontWeight="500"
-                  paddingX={2}
-                  paddingY={1}
-                >
-                  {quantity} {quantity === 1 ? "item" : "items"}
+                  {total}
                 </Text>
               </Stack>
-              <Text fontSize="md" lineHeight={6}>
-                {total}
-              </Text>
-            </Stack>
-          </Button>
-        </Flex>
-      )}
+            </Button>
+          </Flex>
+        )}
 
-      <CartDrawer
-        isOpen={isCartOpen}
-        items={cart}
-        onClose={() => toggleCart(false)}
-        onDecrement={(product) => handleEditCart(product, "decrement")}
-        onIncrement={(product) => handleEditCart(product, "increment")}
-      />
+        <CartDrawer
+          isOpen={isCartOpen}
+          items={cart}
+          onClose={() => toggleCart(false)}
+          onDecrement={(product) => handleEditCart(product, "decrement")}
+          onIncrement={(product) => handleEditCart(product, "increment")}
+        />
+      </DynamicElements>
     </>
   );
 };
