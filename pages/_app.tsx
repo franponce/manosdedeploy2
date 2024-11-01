@@ -39,7 +39,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
   const [customScripts, setCustomScripts] = React.useState<string | null>(null);
   const [announcementBar, setAnnouncementBar] = React.useState<any>(null);
   const [hasRefreshed, setHasRefreshed] = React.useState(false);
-  const isProductPage = router.pathname.includes('/product/');
+  const isProductPage = router.pathname.startsWith('/product/');
 
   React.useEffect(() => {
     const checkAuthStatus = () => {
@@ -143,18 +143,6 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
     return 'Te damos la bienvenida';
   };
 
-  const shouldShowBanner = React.useMemo(() => {
-    if (router.pathname.includes('/product/')) {
-      return false;
-    }
-    
-    if (router.pathname === '/' && router.asPath === '/') {
-      return true;
-    }
-
-    return true;
-  }, [router.pathname, router.asPath]);
-
   if (isLoading) return <Box display="flex" justifyContent="center" alignItems="center" height="100vh"><Spinner /></Box>;
   if (isError) return <Box>Error al cargar la información del sitio</Box>;
 
@@ -184,7 +172,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
         )}
       </Head>
       <Box>
-        {shouldShowBanner && (
+        {!isProductPage && (
           <>
             {announcementBar && (
               <Box 
