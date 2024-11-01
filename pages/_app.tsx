@@ -40,6 +40,30 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
   const [announcementBar, setAnnouncementBar] = React.useState<any>(null);
   const [hasRefreshed, setHasRefreshed] = React.useState(false);
 
+  const showPreviewBanner = React.useMemo(() => {
+    // Mostrar el banner si:
+    // 1. El usuario es admin o está logueado
+    // 2. Y viene desde el admin (usando query param o localStorage)
+    const isFromAdmin = router.query.preview === 'true' || localStorage.getItem('previewMode') === 'true';
+    return (isAdmin || isLoggedIn) && isFromAdmin && router.pathname === '/';
+  }, [isAdmin, isLoggedIn, router.pathname, router.query.preview]);
+
+  React.useEffect(() => {
+    // Guardar el estado de previsualización cuando viene desde el query param
+    if (router.query.preview === 'true') {
+      localStorage.setItem('previewMode', 'true');
+    }
+    // Limpiar el estado cuando se navega fuera de la tienda
+    if (!router.pathname.startsWith('/') && router.pathname !== '/preview') {
+      localStorage.removeItem('previewMode');
+    }
+  }, [router.query.preview, router.pathname]);
+
+  const handleClosePreview = () => {
+    localStorage.removeItem('previewMode');
+    router.push('/admin');
+  };
+
   React.useEffect(() => {
     const checkAuthStatus = () => {
       const cookies = parseCookies();
@@ -228,7 +252,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
           </Flex>
         </Container>
       </Box>
-      {pageProps.isPreviewMode && (
+      {showPreviewBanner && (
         <Box
           position="sticky"
           top="70px"
@@ -256,7 +280,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
                   color="blue.700"
                   fontSize={{ base: "sm", md: "md" }}
                 >
-                  Estas en Modo Previsualización. Así ven los clientes tu tienda actualmente.
+                  Estás en Modo Previsualización. Así ven los clientes tu tienda actualmente.
                 </Text>
               </Flex>
               <Button
@@ -264,7 +288,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
                 colorScheme="blue"
                 variant="link"
                 leftIcon={<Icon as={FaTimes} />}
-                onClick={() => router.push('/admin')}
+                onClick={handleClosePreview}
                 fontSize={{ base: "sm", md: "md" }}
               >
                 Cerrar y volver al administrador

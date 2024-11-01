@@ -106,22 +106,15 @@ const AdminPage: React.FC = () => {
             gap={4}
             flexWrap={{ sm: "wrap", md: "nowrap" }}
           >
-            <Link 
-              href={{ 
-                pathname: "/",
-                query: { preview: "true" } 
-              }} 
-              passHref
+            <Button
+              onClick={() => router.push('/?preview=true')}
+              as="a"
+              colorScheme="green"
+              width={{ base: "full", sm: "auto" }}
+              leftIcon={<Icon as={FaEye} />}
             >
-              <Button
-                as="a"
-                colorScheme="green"
-                width={{ base: "full", sm: "auto" }}
-                leftIcon={<Icon as={FaEye} />}
-              >
-                Previsualizar tienda
-              </Button>
-            </Link>
+              Previsualizar tienda
+            </Button>
 
             <Button
               colorScheme="blue"
