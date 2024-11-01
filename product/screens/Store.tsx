@@ -196,28 +196,38 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
           top="70px"
           zIndex={999}
           bg="blue.50"
-          py={3}
+          py={{ base: 2, md: 3 }}
           borderBottom="1px"
           borderColor="blue.100"
         >
           <Container maxW="container.xl">
             <Flex
-              justify="space-between"
+              justify={{ base: "center", sm: "space-between" }}
               align="center"
               px={4}
+              direction={{ base: "column", sm: "row" }}
+              gap={{ base: 2, sm: 0 }}
             >
-              <Flex align="center" gap={2}>
-                <Icon as={FaEye} color="blue.500" />
-                <Text color="blue.700">
+              <Flex 
+                align="center" 
+                gap={2}
+                textAlign={{ base: "center", sm: "left" }}
+              >
+                <Icon as={FaEye} color="blue.500" display={{ base: "none", sm: "block" }} />
+                <Text 
+                  color="blue.700"
+                  fontSize={{ base: "sm", md: "md" }}
+                >
                   Estas en Modo Previsualización. Así ven los clientes tu tienda actualmente.
                 </Text>
               </Flex>
               <Button
-                size="sm"
+                size={{ base: "xs", md: "sm" }}
                 colorScheme="blue"
                 variant="link"
                 leftIcon={<Icon as={FaTimes} />}
                 onClick={() => router.push('/admin')}
+                fontSize={{ base: "sm", md: "md" }}
               >
                 Cerrar y volver al administrador
               </Button>
