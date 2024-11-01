@@ -39,28 +39,35 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
   const [customScripts, setCustomScripts] = React.useState<string | null>(null);
   const [announcementBar, setAnnouncementBar] = React.useState<any>(null);
   const [hasRefreshed, setHasRefreshed] = React.useState(false);
+  const [isPreviewMode, setIsPreviewMode] = React.useState(false);
 
   const showPreviewBanner = React.useMemo(() => {
-    // Mostrar el banner si:
-    // 1. El usuario es admin o está logueado
-    // 2. Y viene desde el admin (usando query param o localStorage)
+    if (typeof window === 'undefined') return false;
+    
     const isFromAdmin = router.query.preview === 'true' || localStorage.getItem('previewMode') === 'true';
     return (isAdmin || isLoggedIn) && isFromAdmin && router.pathname === '/';
   }, [isAdmin, isLoggedIn, router.pathname, router.query.preview]);
 
   React.useEffect(() => {
-    // Guardar el estado de previsualización cuando viene desde el query param
+    // Mover toda la lógica de localStorage al useEffect
     if (router.query.preview === 'true') {
       localStorage.setItem('previewMode', 'true');
+      setIsPreviewMode(true);
     }
-    // Limpiar el estado cuando se navega fuera de la tienda
+
     if (!router.pathname.startsWith('/') && router.pathname !== '/preview') {
       localStorage.removeItem('previewMode');
+      setIsPreviewMode(false);
     }
+
+    // Verificar el estado inicial
+    const storedPreviewMode = localStorage.getItem('previewMode') === 'true';
+    setIsPreviewMode(storedPreviewMode);
   }, [router.query.preview, router.pathname]);
 
   const handleClosePreview = () => {
     localStorage.removeItem('previewMode');
+    setIsPreviewMode(false);
     router.push('/admin');
   };
 
@@ -252,7 +259,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
           </Flex>
         </Container>
       </Box>
-      {showPreviewBanner && (
+      {isPreviewMode && (
         <Box
           position="sticky"
           top="70px"
