@@ -115,6 +115,23 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
   const isAdminRoute = router.pathname === '/admin' || router.pathname === '/store-config';
 
   const getWelcomeMessage = () => {
+    if (router.pathname.startsWith('/product')) {
+      return (
+        <Button
+          leftIcon={<Icon as={FaArrowLeft} />}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            router.back();
+          }}
+          variant="ghost"
+          alignSelf="flex-start"
+        >
+          Volver a la tienda
+        </Button>
+      );
+    }
+    
     if (router.pathname === '/store-config') {
       return (
         <Button
@@ -132,6 +149,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
         </Button>
       );
     }
+    
     if (router.pathname === '/admin') {
       if (isAdmin) {
         return `Qué lindo verte de nuevo por acá, Admin`;
@@ -139,6 +157,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
         return `Qué lindo verte de nuevo por acá, ${userName}`;
       }
     }
+    
     return 'Te damos la bienvenida';
   };
 

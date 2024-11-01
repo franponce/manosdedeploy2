@@ -105,15 +105,6 @@ const ProductDetail: React.FC = () => {
     <>
       <Container maxW="container.xl" py={8}>
         <VStack spacing={6} align="stretch">
-          <Button
-            leftIcon={<Icon as={FaArrowLeft} />}
-            onClick={handleBack}
-            variant="ghost"
-            alignSelf="flex-start"
-          >
-            Volver
-          </Button>
-
           <Grid templateColumns={{ base: '1fr', md: '1fr 1fr' }} gap={8}>
             <GridItem>
               {isLoading ? (
