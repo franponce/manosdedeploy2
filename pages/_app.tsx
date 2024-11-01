@@ -26,7 +26,7 @@ import { auth, logoutUser } from '../utils/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { parseCookies, destroyCookie } from 'nookies';
 import HamburgerMenu from '../product/components/HamburgerMenu';
-import { FaArrowLeft } from 'react-icons/fa';
+import { FaArrowLeft, FaEye, FaTimes } from 'react-icons/fa';
 
 const MyApp = ({ Component, pageProps }: AppProps) => {
   const router = useRouter();
@@ -228,7 +228,52 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
           </Flex>
         </Container>
       </Box>
-      <Box pt="70px"> {/* Ajusta este valor según la altura de tu header fijo */}
+      {router.pathname === '/preview' && (
+        <Box
+          position="sticky"
+          top="70px"
+          zIndex={999}
+          bg="blue.50"
+          py={{ base: 2, md: 3 }}
+          borderBottom="1px"
+          borderColor="blue.100"
+        >
+          <Container maxW="container.xl">
+            <Flex
+              justify={{ base: "center", sm: "space-between" }}
+              align="center"
+              px={4}
+              direction={{ base: "column", sm: "row" }}
+              gap={{ base: 2, sm: 0 }}
+            >
+              <Flex 
+                align="center" 
+                gap={2}
+                textAlign={{ base: "center", sm: "left" }}
+              >
+                <Icon as={FaEye} color="blue.500" display={{ base: "none", sm: "block" }} />
+                <Text 
+                  color="blue.700"
+                  fontSize={{ base: "sm", md: "md" }}
+                >
+                  Estas en Modo Previsualización. Así ven los clientes tu tienda actualmente.
+                </Text>
+              </Flex>
+              <Button
+                size={{ base: "xs", md: "sm" }}
+                colorScheme="blue"
+                variant="link"
+                leftIcon={<Icon as={FaTimes} />}
+                onClick={() => router.push('/admin')}
+                fontSize={{ base: "sm", md: "md" }}
+              >
+                Cerrar y volver al administrador
+              </Button>
+            </Flex>
+          </Container>
+        </Box>
+      )}
+      <Box pt="70px">
         <Container
           backgroundColor="white"
           borderRadius="sm"
