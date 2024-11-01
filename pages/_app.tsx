@@ -26,7 +26,7 @@ import { auth, logoutUser } from '../utils/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { parseCookies, destroyCookie } from 'nookies';
 import HamburgerMenu from '../product/components/HamburgerMenu';
-import { FaArrowLeft, FaEye, FaTimes } from 'react-icons/fa';
+import { FaArrowLeft, FaEye, FaArrowRight } from 'react-icons/fa';
 
 const MyApp = ({ Component, pageProps }: AppProps) => {
   const router = useRouter();
@@ -296,7 +296,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
                 size={{ base: "xs", md: "sm" }}
                 colorScheme="blue"
                 variant="link"
-                leftIcon={<Icon as={FaTimes} />}
+                rightIcon={<Icon as={FaArrowRight} />}
                 onClick={handleClosePreview}
                 fontSize={{ base: "sm", md: "md" }}
               >
