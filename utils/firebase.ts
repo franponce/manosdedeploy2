@@ -32,7 +32,9 @@ export interface SiteInformation {
   whatsappCart: string;
   sheet: string;
   color: string;
-  social: Array<{ name: string; url: string }>;
+  social: Array<{
+    icon: any; name: string; url: string 
+}>;
   logoUrl: string;
   bannerUrl: string;
   currency: string;
@@ -49,8 +51,14 @@ export const DEFAULT_SITE_INFORMATION: SiteInformation = {
   sheet: "https://docs.google.com/spreadsheets/d/e/2PACX-1vReSQMLVR-O0uKqZr28Y9j29RN1YYoaFkb29qVJjofGNZSRUnhCsgoohDDDrsAV0FW4R9xdulrn0aYE/pub?output=csv",
   color: "teal",
   social: [
-    { name: "instagram", url: "https://www.hola.com" },
-    { name: "whatsapp", url: "https://wa.me/54929542201999" }
+    {
+      name: "instagram", url: "https://www.hola.com",
+      icon: undefined
+    },
+    {
+      name: "whatsapp", url: "https://wa.me/54929542201999",
+      icon: undefined
+    }
   ],
   logoUrl: "/default-logo.png",
   bannerUrl: "/default-banner.jpg",
