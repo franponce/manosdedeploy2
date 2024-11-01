@@ -143,6 +143,18 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
     return 'Te damos la bienvenida';
   };
 
+  const shouldShowBanner = React.useMemo(() => {
+    if (router.pathname.includes('/product/')) {
+      return false;
+    }
+    
+    if (router.pathname === '/' && router.asPath === '/') {
+      return true;
+    }
+
+    return true;
+  }, [router.pathname, router.asPath]);
+
   if (isLoading) return <Box display="flex" justifyContent="center" alignItems="center" height="100vh"><Spinner /></Box>;
   if (isError) return <Box>Error al cargar la información del sitio</Box>;
 
@@ -172,7 +184,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
         )}
       </Head>
       <Box>
-        {!isProductPage && (
+        {shouldShowBanner && (
           <>
             {announcementBar && (
               <Box 

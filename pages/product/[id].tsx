@@ -37,7 +37,7 @@ const ProductDetail: React.FC = () => {
 
   const handleBack = () => {
     saveScrollPosition();
-    router.back();
+    router.push('/');
   };
 
   const handleAddToCart = () => {
