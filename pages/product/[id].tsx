@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Container,
@@ -20,6 +20,7 @@ import { parseCurrency } from '../../utils/currency';
 import { FaArrowLeft, FaShoppingCart } from 'react-icons/fa';
 import { useScrollPosition } from '../../hooks/useScrollPosition';
 import { useCart } from '../../hooks/useCart';
+import { CartItem } from '@/product/types';
 
 const ProductDetail: React.FC = () => {
   const router = useRouter();
@@ -28,7 +29,16 @@ const ProductDetail: React.FC = () => {
   const { siteInfo } = useSiteInfo();
   const toast = useToast();
   const { saveScrollPosition } = useScrollPosition(id as string);
-  const { addToCart } = useCart();
+  const { addToCart, removeFromCart } = useCart();
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isInCart, setIsInCart] = useState(false);
+
+  useEffect(() => {
+    if (product) {
+      const cartItems = JSON.parse(localStorage.getItem('cart') || '[]');
+      setIsInCart(cartItems.some((item: CartItem) => item.id === product.id));
+    }
+  }, [product]);
 
   const handleBack = () => {
     saveScrollPosition();
@@ -38,6 +48,7 @@ const ProductDetail: React.FC = () => {
   const handleAddToCart = () => {
     if (product) {
       addToCart(product);
+      setIsInCart(true);
       toast({
         title: 'Producto agregado',
         description: 'El producto se agregó al carrito',
@@ -46,6 +57,10 @@ const ProductDetail: React.FC = () => {
         isClosable: true,
       });
     }
+  };
+
+  const handleOpenCart = () => {
+    setIsCartOpen(true);
   };
 
   if (error) {
@@ -139,10 +154,10 @@ const ProductDetail: React.FC = () => {
                   <Button
                     size="lg"
                     colorScheme="blue"
-                    leftIcon={<Icon as={FaShoppingCart} />}
-                    onClick={handleAddToCart}
+                    leftIcon={<Icon as={isInCart ? FaShoppingCart : FaShoppingCart} />}
+                    onClick={isInCart ? handleOpenCart : handleAddToCart}
                   >
-                    Agregar al carrito
+                    {isInCart ? 'Ver carrito' : 'Agregar al carrito'}
                   </Button>
                 </>
               )}
