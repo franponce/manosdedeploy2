@@ -31,13 +31,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       case 'PUT':
         try {
-          await updateProduct(req.body);
-          res.status(200).json({ message: 'Product updated successfully' });
+          const product = req.body;
+          // Validar el stock
+          if (typeof product.stock !== 'number' || product.stock < 0) {
+            return res.status(400).json({ 
+              error: 'Stock inválido',
+              details: 'El stock debe ser un número mayor o igual a 0'
+            });
+          }
+
+          await updateProduct(product);
+          
+          // Invalidar el cache de SWR
+          res.setHeader('Cache-Control', 'no-cache');
+          
+          res.status(200).json({ 
+            message: 'Producto actualizado correctamente',
+            product 
+          });
         } catch (error) {
           console.error('Error updating product:', error);
           res.status(500).json({ 
             error: 'Error al actualizar producto', 
-            details: error instanceof Error ? error.message : 'Unknown error' 
+            details: error instanceof Error ? error.message : 'Error desconocido' 
           });
         }
         break;

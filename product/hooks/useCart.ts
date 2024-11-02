@@ -4,21 +4,13 @@ import { Product, CartItem } from '../types';
 import { useToast } from '@chakra-ui/react';
 
 export const useCart = () => {
-  const { data: products, error, isLoading } = useSWR<Product[]>('/api/products', async () => {
-    const response = await fetch('/api/products');
-    if (!response.ok) {
-      throw new Error('Error fetching products');
-    }
-    return response.json();
-  }, {
-    refreshInterval: 60000,
-  });
-
   const [cart, setCart] = useState<CartItem[]>([]);
   const toast = useToast();
+  const { data: products } = useSWR<Product[]>('/api/products');
 
   const addToCart = useCallback((product: Product) => {
-    if (!product.stock || product.stock === 0) {
+    const currentProduct = products?.find(p => p.id === product.id);
+    if (!currentProduct || currentProduct.stock === 0) {
       toast({
         title: "Sin stock",
         description: "Este producto no tiene stock disponible",
@@ -30,10 +22,10 @@ export const useCart = () => {
     }
 
     const cartItem = cart.find(item => item.id === product.id);
-    if (cartItem && cartItem.quantity >= product.stock) {
+    if (cartItem && cartItem.quantity >= currentProduct.stock) {
       toast({
         title: "Stock máximo alcanzado",
-        description: `Solo hay ${product.stock} unidades disponibles`,
+        description: `Solo hay ${currentProduct.stock} unidades disponibles`,
         status: "warning",
         duration: 3000,
         isClosable: true,
@@ -52,7 +44,7 @@ export const useCart = () => {
       }
       return [...prevCart, { ...product, quantity: 1 }];
     });
-  }, [cart, toast]);
+  }, [cart, products, toast]);
 
   const removeFromCart = useCallback((product: Product) => {
     setCart(prevCart => prevCart.filter(item => item.id !== product.id));

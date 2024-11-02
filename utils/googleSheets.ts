@@ -184,7 +184,7 @@ if (typeof window === 'undefined') {
             scheduledPublishDate: row[5] ? new Date(row[5].replace(' ', 'T')) : null,
             isScheduled: row[6] === 'TRUE',
             categoryId: row[7] || '',
-            stock: parseInt(row[8]) || 0,
+            stock: parseInt(row[8]) || 0, // Aseguramos que stock sea número
           }))
           .filter((product) => product.title && product.title.trim() !== '');
       } catch (error) {
@@ -200,12 +200,28 @@ if (typeof window === 'undefined') {
         const { google } = await import('googleapis');
         const sheets = google.sheets({ version: 'v4', auth });
 
+        // Primero obtenemos todos los productos para encontrar la fila correcta
+        const response = await sheets.spreadsheets.values.get({
+          spreadsheetId: SPREADSHEET_ID,
+          range: 'La Libre Web - Catálogo online rev 2021 - products',
+        });
+        const rows = response.data.values;
+        if (!rows || rows.length === 0) {
+          throw new Error('No se encontraron productos');
+        }
+        
+        const rowIndex = rows.findIndex(row => row[0] === product.id);
+
+        if (rowIndex === -1) {
+          throw new Error('Producto no encontrado');
+        }
+
         const values = [
           [
-            product.id, 
-            product.title, 
-            product.description, 
-            product.image, 
+            product.id,
+            product.title,
+            product.description,
+            product.image,
             product.price.toString(),
             product.scheduledPublishDate ? formatLocalDateTime(product.scheduledPublishDate) : '',
             product.isScheduled ? 'TRUE' : 'FALSE',
@@ -216,7 +232,7 @@ if (typeof window === 'undefined') {
 
         await sheets.spreadsheets.values.update({
           spreadsheetId: SPREADSHEET_ID,
-          range: `La Libre Web - Catálogo online rev 2021 - products!A${parseInt(product.id) + 1}:I${parseInt(product.id) + 1}`,
+          range: `La Libre Web - Catálogo online rev 2021 - products!A${rowIndex + 1}:I${rowIndex + 1}`,
           valueInputOption: 'USER_ENTERED',
           requestBody: { values },
         });
