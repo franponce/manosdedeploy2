@@ -163,9 +163,28 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
     return () => clearInterval(intervalId);
   }, [fetchProducts]);
 
-  const handleEdit = (product: Product) => {
-    setCurrentProduct(product);
-    setIsModalOpen(true);
+  const handleEdit = async (product: Product) => {
+    try {
+      setIsLoading(true);
+      // Obtener el producto actualizado del sheet
+      const response = await fetch(`/api/products/${product.id}`);
+      if (!response.ok) throw new Error('Error al obtener el producto');
+      
+      const updatedProduct = await response.json();
+      setCurrentProduct(updatedProduct);
+      setIsModalOpen(true);
+    } catch (error) {
+      console.error('Error al obtener el producto:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo obtener la información actualizada del producto",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleDelete = async (productId: string) => {

@@ -608,33 +608,38 @@ export const {
 
 export const getProductById = async (id: string): Promise<Product | null> => {
   try {
-    const doc = await getGoogleSheet();
-    if (doc === undefined || doc === null) throw new Error('Could not get Google Sheet');
-    
-    const sheet = (doc as any).sheetsByTitle['La Libre Web - Catálogo online rev 2021 - products'];
-    if (!sheet) throw new Error('Could not find products sheet');
-    const rows = await sheet.getRows();
-    
-    const product = rows.find((row: any) => row.id === id);
-    if (!product) {
-      return null;
-    }
+    const auth = await getAuthClient();
+    const { google } = await import('googleapis');
+    const sheets = google.sheets({ version: 'v4', auth });
+
+    // Obtener todos los productos
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: process.env.SPREADSHEET_ID,
+      range: process.env.PRODUCT_RANGE,
+    });
+
+    const rows = response.data.values;
+    if (!rows) return null;
+
+    // Buscar el producto por ID
+    const productRow = rows.find(row => row[0] === id);
+    if (!productRow) return null;
 
     return {
-      id: product.id,
-      title: product.title,
-      description: product.description,
-      price: parseFloat(product.price),
-      currency: product.currency || 'USD',
-      isScheduled: false,
-      scheduledPublishDate: null,
-      image: product.image,
-      categoryId: product.category,
-      stock: parseInt(product.stock) || 0
+      id: productRow[0],
+      title: productRow[1],
+      description: productRow[2],
+      image: productRow[3],
+      price: parseFloat(productRow[4]) || 0,
+      scheduledPublishDate: productRow[5] ? new Date(productRow[5].replace(' ', 'T')) : null,
+      isScheduled: productRow[6] === 'TRUE',
+      categoryId: productRow[7] || '',
+      stock: parseInt(productRow[8]) || 0,
+      currency: 'USD'
     };
   } catch (error) {
     console.error('Error fetching product by ID:', error);
-    throw new Error('Error fetching product');
+    return null;
   }
 };
 function getGoogleSheet() {
