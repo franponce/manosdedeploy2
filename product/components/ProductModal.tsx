@@ -88,9 +88,13 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
 
   useEffect(() => {
     if (product) {
+      const validStock = typeof product.stock === 'number' && !isNaN(product.stock) ? 
+        product.stock : 
+        0;
+
       setCurrentProduct({
         ...product,
-        stock: typeof product.stock === 'number' ? product.stock : 0
+        stock: validStock
       });
       setImagePreview(product.image);
       setDescription(product.description || '');
@@ -212,10 +216,11 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
       return;
     }
 
-    if (currentProduct.stock < 0) {
+    const stockValue = parseInt(currentProduct.stock.toString());
+    if (isNaN(stockValue) || stockValue < 0) {
       toast({
         title: "Error",
-        description: "El stock no puede ser negativo",
+        description: "El stock debe ser un número válido mayor o igual a cero",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -242,7 +247,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
         isScheduled: isScheduleOpen,
         scheduledPublishDate: isScheduleOpen && scheduledDate ? scheduledDate : null,
         categoryId: currentProduct.categoryId,
-        stock: parseInt(currentProduct.stock.toString()) || 0
+        stock: stockValue
       };
 
       await onSubmit(productToSubmit);
