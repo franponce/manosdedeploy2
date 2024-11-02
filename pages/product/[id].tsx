@@ -105,30 +105,51 @@ const ProductDetail: React.FC = () => {
     <>
       <Container maxW="container.xl" py={8}>
         <VStack spacing={6} align="stretch">
-          <Grid templateColumns={{ base: '1fr', md: '1fr 1fr' }} gap={8}>
+          <Button
+            leftIcon={<Icon as={FaArrowLeft} />}
+            onClick={handleBack}
+            variant="ghost"
+          >
+            Volver
+          </Button>
+
+          <Grid 
+            templateColumns={{ base: '1fr', lg: '800px 1fr' }} 
+            gap={8}
+            mx="auto"
+            alignItems="start"
+          >
             <GridItem>
               {isLoading ? (
-                <Skeleton height="400px" borderRadius="lg" />
+                <Skeleton height="800px" borderRadius="lg" />
               ) : (
                 <Box
                   borderRadius="lg"
                   overflow="hidden"
                   boxShadow="md"
+                  maxW="800px"
+                  mx="auto"
                 >
                   <Image
                     src={product?.image || '/placeholder.jpg'}
                     alt={product?.title}
                     objectFit="cover"
-                    width="100%"
-                    height="400px"
+                    width="800px"
+                    height="800px"
                     fallbackSrc="/placeholder.jpg"
+                    loading="lazy"
                   />
                 </Box>
               )}
             </GridItem>
 
             <GridItem>
-              <VStack align="stretch" spacing={6}>
+              <VStack 
+                align="stretch" 
+                spacing={6}
+                position="sticky"
+                top="100px"
+              >
                 {isLoading ? (
                   <>
                     <Skeleton height="40px" />
