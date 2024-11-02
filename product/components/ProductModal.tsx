@@ -43,6 +43,7 @@ import 'react-quill/dist/quill.snow.css';
 import { createCategory } from "../../utils/googleSheets";
 import { CATEGORY_CONSTANTS } from '../../utils/constants';
 import { useCategories } from '../../hooks/useCategories';
+import { mutate } from "swr";
 
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 
@@ -181,6 +182,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!currentProduct) return;
 
     if (!currentProduct.title.trim()) {
       toast({
@@ -216,19 +218,46 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
       return;
     }
 
+    if (currentProduct.stock < 0) {
+      toast({
+        title: "Error",
+        description: "El stock no puede ser negativo",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
     try {
       const productToSubmit: Product = {
         ...currentProduct,
         description: description,
-        price,
+        price: parseFloat(currentProduct.price.toString()),
         isScheduled: isScheduleOpen,
         scheduledPublishDate: isScheduleOpen && scheduledDate ? scheduledDate : null,
+        categoryId: currentProduct.categoryId,
+        stock: parseInt(currentProduct.stock.toString()) || 0
       };
 
       await onSubmit(productToSubmit);
+      
+      mutate(
+        '/api/products',
+        async (currentData?: Product[]) => {
+          if (!currentData) return currentData;
+          return currentData.map(p =>
+            p.id === productToSubmit.id ? productToSubmit : p
+          );
+        },
+        false
+      );
+
       toast({
         title: "Producto guardado",
-        description: isScheduleOpen ? `Producto programado para ${scheduledDate?.toLocaleString()}` : "Producto guardado exitosamente",
+        description: `${isScheduleOpen ? 
+          `Producto programado para ${scheduledDate?.toLocaleString()}` : 
+          "Producto guardado exitosamente"} - Stock actual: ${productToSubmit.stock} unidades`,
         status: "success",
         duration: 3000,
         isClosable: true,
@@ -318,13 +347,13 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     <Modal isOpen={isOpen} onClose={onClose} size="xl">
       <ModalContent maxW={{ base: "95%", sm: "600px" }}>
         <ModalHeader>
-          {product ? 'Editar Producto' : 'Crear Nuevo Producto'}
+          {currentProduct.id ? "Editar Producto" : "Crear Nuevo Producto"}
         </ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          <VStack spacing={4}>
-            {/* ... otros campos del formulario ... */}
-            
+          <VStack spacing={4} as="form" onSubmit={handleSubmit}>
+            {/* ... campos existentes ... */}
+
             <FormControl>
               <FormLabel>Stock disponible</FormLabel>
               <NumberInput
@@ -341,6 +370,13 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                   <NumberDecrementStepper />
                 </NumberInputStepper>
               </NumberInput>
+              <Text fontSize="sm" color="gray.500" mt={1}>
+                {currentProduct.stock === 0 ? (
+                  <Text as="span" color="red.500">Sin stock disponible</Text>
+                ) : (
+                  `${currentProduct.stock} unidades disponibles`
+                )}
+              </Text>
             </FormControl>
           </VStack>
         </ModalBody>
@@ -350,8 +386,9 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
             mr={3}
             onClick={handleSubmit}
             isLoading={isLoading}
+            isDisabled={currentProduct.stock < 0}
           >
-            {isScheduleOpen ? "Guardar y programar" : (product ? "Actualizar" : "Crear")}
+            {isScheduleOpen ? "Guardar y programar" : (currentProduct.id ? "Actualizar" : "Crear")}
           </Button>
           <Button variant="ghost" onClick={onClose}>
             Cancelar
