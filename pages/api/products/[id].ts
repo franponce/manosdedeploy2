@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getProducts, updateProduct } from '../../../utils/googleSheets';
+import { Product } from '@/product/types';
 
 export default async function handler(
   req: NextApiRequest,
@@ -29,7 +30,7 @@ export default async function handler(
       }
 
       const products = await getProducts();
-      const product = products.find((p: { id: string; }) => p.id === id);
+      const product = products.find((p: Product) => p.id === id);
       
       if (!product) {
         return res.status(404).json({ message: 'Product not found' });
