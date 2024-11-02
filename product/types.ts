@@ -5,9 +5,10 @@ export interface Product {
   image: string;
   price: number;
   currency: string;
-  isScheduled: boolean;
-  scheduledPublishDate: Date | null;
-  categoryId: string; 
+  categoryId?: string;
+  isScheduled?: boolean;
+  scheduledPublishDate?: Date | null;
+  stock: number;
 }
 
 export interface CartItem extends Product {

@@ -156,6 +156,9 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading }) => {
               <Text fontWeight="bold" fontSize="xl">
                 {parseCurrency(product.price || 0)} {siteInfo?.currency}
               </Text>
+              <Text color={product.stock > 0 ? "green.500" : "red.500"} fontSize="sm">
+                {product.stock > 0 ? `${product.stock} unidades disponibles` : "Sin stock"}
+              </Text>
               <Button
                 colorScheme="blue"
                 onClick={() => onAdd(product)}

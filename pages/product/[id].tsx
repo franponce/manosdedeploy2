@@ -82,8 +82,14 @@ const ProductDetail: React.FC = () => {
     }
   }
 
+  const shareText = `¡Mira este producto! ${product?.title} 🛒`;
+  const shareTextWithPrice = `¡Descubrí ${product?.title} por ${parseCurrency(product?.price || 0)}! 🛒`;
+  const emailSubject = `Te comparto este producto de ${siteInfo?.storeName || 'nuestra tienda'}`;
+  const emailBody = `Hola! Encontré este producto que te puede interesar:\n\n${product?.title}\n${window.location.href}`;
+
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(window.location.href);
+    const textToCopy = `¡Mirá este producto! ${product?.title}\n${window.location.href}`;
+    navigator.clipboard.writeText(textToCopy);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -117,112 +123,113 @@ const ProductDetail: React.FC = () => {
   return (
     <>
       <Container maxW="container.xl" py={8}>
-        <VStack spacing={6} align="stretch">
-          <Grid
-            templateColumns={{ base: '1fr', lg: '1fr 1fr' }}
-            gap={8}
-            mx="auto"
-            alignItems="start"
-          >
+        <VStack spacing={8} align="stretch">
+          <Button leftIcon={<FaArrowLeft />} variant="ghost" onClick={handleBack}>
+            Volver
+          </Button>
+
+          <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={8}>
             <GridItem>
-              {isLoading ? (
-                <Skeleton height="500px" borderRadius="lg" />
-              ) : (
-                <Box
-                  borderRadius="lg"
-                  overflow="hidden"
-                  boxShadow="md"
-                  bg="white"
-                >
-                  <Image
-                    src={product?.image || '/placeholder.jpg'}
-                    alt={product?.title}
-                    objectFit="contain"
-                    width="100%"
-                    height="auto"
-                    maxH="500px"
-                    p={4}
-                  />
-                </Box>
-              )}
+              {/* Imagen del producto */}
+              <Skeleton isLoaded={!isLoading}>
+                <Image
+                  src={product?.image}
+                  alt={product?.title}
+                  objectFit="contain"
+                  width="100%"
+                />
+              </Skeleton>
             </GridItem>
 
             <GridItem>
-              <VStack
-                align="stretch"
-                spacing={6}
-                position="sticky"
-                top="100px"
-              >
-                {isLoading ? (
-                  <>
-                    <Skeleton height="40px" />
-                    <Skeleton height="30px" />
-                    <Skeleton height="120px" />
-                  </>
-                ) : (
-                  <>
-                    <Heading size="xl">{product?.title}</Heading>
+              <VStack spacing={6} align="stretch">
+                {/* 1. Título del producto */}
+                <Heading as="h1" size="xl">
+                  {product?.title}
+                </Heading>
 
-                    <HStack spacing={2}>
-                      <WhatsappShareButton url={window.location.href} title={product?.title}>
+                {/* 2. Precio y disponibilidad */}
+                <Box>
+                  <Text fontSize="2xl" fontWeight="bold">
+                    {parseCurrency(product?.price || 0)}
+                  </Text>
+                  <Text 
+                    color={product?.stock ? "green.500" : "red.500"}
+                    fontWeight="medium"
+                  >
+                    {product?.stock ? `${product.stock} unidades disponibles` : "Sin stock"}
+                  </Text>
+                </Box>
+
+                {/* 3. Botón de compra principal */}
+                <Button
+                  size="lg"
+                  colorScheme="blue"
+                  leftIcon={<Icon as={FaShoppingCart} />}
+                  onClick={handleAddToCart}
+                >
+                  Agregar al carrito
+                </Button>
+
+                {/* 4. Opciones para compartir */}
+                <Box>
+                  <Text mb={2} fontWeight="medium">Compartir producto:</Text>
+                  <HStack spacing={2}>
+                    <Tooltip label="Compartir en WhatsApp">
+                      <WhatsappShareButton
+                        url={window.location.href}
+                        title={shareTextWithPrice}
+                      >
                         <WhatsappIcon size={40} round />
                       </WhatsappShareButton>
-                      <FacebookShareButton url={window.location.href} quote={product?.title}>
+                    </Tooltip>
+
+                    <Tooltip label="Compartir en Facebook">
+                      <FacebookShareButton
+                        url={window.location.href}
+                        quote={shareText}
+                      >
                         <FacebookIcon size={40} round />
                       </FacebookShareButton>
-                      <TwitterShareButton url={window.location.href} title={product?.title}>
+                    </Tooltip>
+
+                    <Tooltip label="Compartir en Twitter">
+                      <TwitterShareButton
+                        url={window.location.href}
+                        title={shareText}
+                      >
                         <TwitterIcon size={40} round />
                       </TwitterShareButton>
-                      <EmailShareButton url={window.location.href} subject={product?.title}>
+                    </Tooltip>
+
+                    <Tooltip label="Compartir por email">
+                      <EmailShareButton
+                        url={window.location.href}
+                        subject={emailSubject}
+                        body={emailBody}
+                      >
                         <EmailIcon size={40} round />
                       </EmailShareButton>
-                      <Tooltip label={copied ? "¡Copiado!" : "Copiar enlace"}>
-                        <IconButton
-                          aria-label="Copiar enlace"
-                          icon={<FaCopy />}
-                          onClick={handleCopyLink}
-                          size="lg"
-                          colorScheme={copied ? "green" : "gray"}
-                          rounded="full"
-                        />
-                      </Tooltip>
-                    </HStack>
+                    </Tooltip>
 
-                    <Text fontSize="2xl" fontWeight="bold" color="blue.600">
-                      {parseCurrency(product?.price || 0)} {siteInfo?.currency}
-                    </Text>
-
-                    <Box
-                      borderRadius="md"
-                      p={4}
-                      bg="gray.50"
-                      maxH={{ base: "none", md: "400px" }}
-                      overflowY="auto"
-                    >
-                      <Text
-                        dangerouslySetInnerHTML={{
-                          __html: product?.description || '',
-                        }}
-                        sx={{
-                          'img': {
-                            maxWidth: '100%',
-                            height: 'auto'
-                          }
-                        }}
+                    <Tooltip label={copied ? "¡Copiado!" : "Copiar enlace"}>
+                      <IconButton
+                        aria-label="Copiar enlace"
+                        icon={<FaCopy />}
+                        onClick={handleCopyLink}
+                        size="lg"
+                        colorScheme={copied ? "green" : "gray"}
+                        rounded="full"
                       />
-                    </Box>
+                    </Tooltip>
+                  </HStack>
+                </Box>
 
-                    <Button
-                      size="lg"
-                      colorScheme="blue"
-                      leftIcon={<Icon as={FaShoppingCart} />}
-                      onClick={handleAddToCart}
-                    >
-                      Agregar al carrito
-                    </Button>
-                  </>
-                )}
+                {/* 5. Descripción del producto */}
+                <Box>
+                  <Text fontWeight="medium" mb={2}>Descripción:</Text>
+                  <Text>{product?.description}</Text>
+                </Box>
               </VStack>
             </GridItem>
           </Grid>

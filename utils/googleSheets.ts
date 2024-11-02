@@ -183,7 +183,8 @@ if (typeof window === 'undefined') {
             price: parseFloat(row[4]) || 0,
             scheduledPublishDate: row[5] ? new Date(row[5].replace(' ', 'T')) : null,
             isScheduled: row[6] === 'TRUE',
-            categoryId: row[7] || '', // Añadimos el categoryId
+            categoryId: row[7] || '',
+            stock: parseInt(row[8]) || 0,
           }))
           .filter((product) => product.title && product.title.trim() !== '');
       } catch (error) {
@@ -208,13 +209,14 @@ if (typeof window === 'undefined') {
             product.price.toString(),
             product.scheduledPublishDate ? formatLocalDateTime(product.scheduledPublishDate) : '',
             product.isScheduled ? 'TRUE' : 'FALSE',
-            product.categoryId 
+            product.categoryId,
+            product.stock.toString()
           ],
         ];
 
         await sheets.spreadsheets.values.update({
           spreadsheetId: SPREADSHEET_ID,
-          range: `La Libre Web - Catálogo online rev 2021 - products!A${parseInt(product.id) + 1}:H${parseInt(product.id) + 1}`,
+          range: `La Libre Web - Catálogo online rev 2021 - products!A${parseInt(product.id) + 1}:I${parseInt(product.id) + 1}`,
           valueInputOption: 'USER_ENTERED',
           requestBody: { values },
         });
@@ -265,7 +267,8 @@ if (typeof window === 'undefined') {
             product.price.toString(),
             scheduledDate,
             product.isScheduled ? 'TRUE' : 'FALSE',
-            product.categoryId || ''
+            product.categoryId || '',
+            product.stock.toString()
           ]
         ];
 
@@ -610,7 +613,8 @@ export const getProductById = async (id: string): Promise<Product | null> => {
       isScheduled: false,
       scheduledPublishDate: null,
       image: product.image,
-      categoryId: product.category, 
+      categoryId: product.category,
+      stock: parseInt(product.stock) || 0
     };
   } catch (error) {
     console.error('Error fetching product by ID:', error);

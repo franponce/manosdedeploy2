@@ -26,6 +26,7 @@ const storage = getStorage(app);
 const auth = getAuth(app);
 
 export interface SiteInformation {
+  storeName: string;
   title: string;
   description: string;
   description2: string;
@@ -42,6 +43,7 @@ export interface SiteInformation {
 }
 
 export const DEFAULT_SITE_INFORMATION: SiteInformation = {
+  storeName: 'Mi Tienda',
   title: "Manos de manteca",
   description: "Envianos tu pedido y a la brevedad te respondemos.",
   description2: "👉 Nuestro horario de atención es de X a X de X a X hs. Hacemos envíos 🚴‍♀",
