@@ -90,10 +90,15 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     if (product) {
       setCurrentProduct({
         ...product,
-        stock: product.stock || 0
+        stock: typeof product.stock === 'number' ? product.stock : 0
       });
       setImagePreview(product.image);
       setDescription(product.description || '');
+      if (product.scheduledPublishDate) {
+        const date = new Date(product.scheduledPublishDate);
+        setScheduledDate(date);
+        toggleSchedule();
+      }
     } else {
       setCurrentProduct({
         id: "",
@@ -109,8 +114,9 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
       });
       setImagePreview(null);
       setDescription('');
+      setScheduledDate(null);
     }
-  }, [product]);
+  }, [product, toggleSchedule]);
 
   const handleProductImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
