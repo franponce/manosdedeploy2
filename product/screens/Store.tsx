@@ -51,10 +51,15 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
   const [displayedProducts, setDisplayedProducts] = React.useState<Product[]>([]);
   const [hasMore, setHasMore] = React.useState(true);
   const observer = React.useRef<IntersectionObserver | null>(null);
-  const { data: products, error, isLoading, mutate } = useSWR<Product[]>('/api/products', {
-    refreshInterval: 30000, // Revalidar cada 30 segundos
-    revalidateOnFocus: true,
-  });
+  const { data: products = initialProducts, error, isLoading } = useSWR<Product[]>(
+    '/api/products',
+    fetcher,
+    {
+      fallbackData: initialProducts,
+      refreshInterval: 30000,
+      revalidateOnFocus: true,
+    }
+  );
   const { data: categories } = useSWR<Category[]>('/api/categories', fetcher, {
     fallbackData: initialCategories,
     refreshInterval: 60000,
@@ -62,16 +67,43 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
   const [searchTerm, setSearchTerm] = React.useState("");
   const [selectedCategory, setSelectedCategory] = React.useState("");
 
+  React.useEffect(() => {
+    if (products) {
+      let filteredProducts = products.filter(product =>
+        product && 
+        product.id && 
+        product.title && 
+        !product.isScheduled && 
+        product.title.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+
+      if (selectedCategory) {
+        filteredProducts = filteredProducts.filter(product => 
+          product.categoryId === selectedCategory
+        );
+      }
+
+      setDisplayedProducts(filteredProducts.slice(0, page * PRODUCTS_PER_PAGE));
+      setHasMore(page * PRODUCTS_PER_PAGE < filteredProducts.length);
+    }
+  }, [products, page, searchTerm, selectedCategory]);
+
+  const loadMore = React.useCallback(() => {
+    if (!isLoading && hasMore) {
+      setPage(prevPage => prevPage + 1);
+    }
+  }, [isLoading, hasMore]);
+
   const lastProductElementRef = React.useCallback((node: HTMLDivElement | null) => {
     if (isLoading) return;
     if (observer.current) observer.current.disconnect();
     observer.current = new IntersectionObserver(entries => {
       if (entries[0].isIntersecting && hasMore) {
-        setPage(prevPage => prevPage + 1);
+        loadMore();
       }
     });
     if (node) observer.current.observe(node);
-  }, [isLoading, hasMore]);
+  }, [isLoading, hasMore, loadMore]);
 
   React.useEffect(() => {
     const checkScheduledProducts = () => {
@@ -92,17 +124,6 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
 
     return () => clearInterval(interval);
   }, [products, mutate]);
-
-  React.useEffect(() => {
-    if (products) {
-      let filteredProducts = products.filter(product =>
-        product && 
-        typeof product.stock === 'number' &&
-        product.title.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setDisplayedProducts(filteredProducts);
-    }
-  }, [products, searchTerm]);
 
   const total = React.useMemo(
     () => parseCurrency(cart.reduce((total, product) => total + product.price * product.quantity, 0)),
