@@ -14,16 +14,29 @@ import {
   Icon,
   Flex,
   Stack,
+  Tooltip,
+  IconButton,
+  HStack,
 } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
 import { useProduct } from '../../hooks/useProduct';
 import { useSiteInfo } from '../../hooks/useSiteInfo';
 import { parseCurrency } from '../../utils/currency';
-import { FaArrowLeft, FaShoppingCart } from 'react-icons/fa';
+import { FaArrowLeft, FaShoppingCart, FaCopy } from 'react-icons/fa';
 import { useScrollPosition } from '../../hooks/useScrollPosition';
 import { useCart } from '../../hooks/useCart';
 import { CartItem, Product } from '@/product/types';
 import CartDrawer from '@/product/components/CartDrawer';
+import {
+  WhatsappShareButton,
+  WhatsappIcon,
+  FacebookShareButton, 
+  FacebookIcon,
+  TwitterShareButton,
+  TwitterIcon,
+  EmailShareButton,
+  EmailIcon
+} from 'next-share';
 
 const ProductDetail: React.FC = () => {
   const router = useRouter();
@@ -34,6 +47,7 @@ const ProductDetail: React.FC = () => {
   const { saveScrollPosition } = useScrollPosition(id as string);
   const { cart, addToCart, removeFromCart } = useCart();
   const [isCartOpen, toggleCart] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const total = useMemo(
     () => parseCurrency(cart.reduce((total, item) => total + item.price * item.quantity, 0)),
@@ -68,17 +82,16 @@ const ProductDetail: React.FC = () => {
     }
   }
 
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   if (error) {
     return (
       <Container maxW="container.xl" py={8}>
         <VStack spacing={6} align="stretch">
-          <Button
-            leftIcon={<Icon as={FaArrowLeft} />}
-            onClick={handleBack}
-            variant="ghost"
-          >
-            Volver
-          </Button>
           <Box 
             textAlign="center" 
             py={10}
@@ -114,30 +127,29 @@ const ProductDetail: React.FC = () => {
           </Button>
 
           <Grid 
-            templateColumns={{ base: '1fr', lg: '800px 1fr' }} 
+            templateColumns={{ base: '1fr', lg: '1fr 1fr' }} 
             gap={8}
             mx="auto"
             alignItems="start"
           >
             <GridItem>
               {isLoading ? (
-                <Skeleton height="800px" borderRadius="lg" />
+                <Skeleton height="500px" borderRadius="lg" />
               ) : (
                 <Box
                   borderRadius="lg"
                   overflow="hidden"
                   boxShadow="md"
-                  maxW="800px"
-                  mx="auto"
+                  bg="white"
                 >
                   <Image
                     src={product?.image || '/placeholder.jpg'}
                     alt={product?.title}
-                    objectFit="cover"
-                    width="800px"
-                    height="800px"
-                    fallbackSrc="/placeholder.jpg"
-                    loading="lazy"
+                    objectFit="contain"
+                    width="100%"
+                    height="auto"
+                    maxH="500px"
+                    p={4}
                   />
                 </Box>
               )}
@@ -159,16 +171,56 @@ const ProductDetail: React.FC = () => {
                 ) : (
                   <>
                     <Heading size="xl">{product?.title}</Heading>
+                    
+                    <HStack spacing={2}>
+                      <WhatsappShareButton url={window.location.href} title={product?.title}>
+                        <WhatsappIcon size={40} round />
+                      </WhatsappShareButton>
+                      <FacebookShareButton url={window.location.href} quote={product?.title}>
+                        <FacebookIcon size={40} round />
+                      </FacebookShareButton>
+                      <TwitterShareButton url={window.location.href} title={product?.title}>
+                        <TwitterIcon size={40} round />
+                      </TwitterShareButton>
+                      <EmailShareButton url={window.location.href} subject={product?.title}>
+                        <EmailIcon size={40} round />
+                      </EmailShareButton>
+                      <Tooltip label={copied ? "¡Copiado!" : "Copiar enlace"}>
+                        <IconButton
+                          aria-label="Copiar enlace"
+                          icon={<FaCopy />}
+                          onClick={handleCopyLink}
+                          size="lg"
+                          colorScheme={copied ? "green" : "gray"}
+                          rounded="full"
+                        />
+                      </Tooltip>
+                    </HStack>
+
                     <Text fontSize="2xl" fontWeight="bold" color="blue.600">
                       {parseCurrency(product?.price || 0)} {siteInfo?.currency}
                     </Text>
-                    <Box>
+                    
+                    <Box
+                      borderRadius="md"
+                      p={4}
+                      bg="gray.50"
+                      maxH={{ base: "none", md: "400px" }}
+                      overflowY="auto"
+                    >
                       <Text
                         dangerouslySetInnerHTML={{
                           __html: product?.description || '',
                         }}
+                        sx={{
+                          'img': {
+                            maxWidth: '100%',
+                            height: 'auto'
+                          }
+                        }}
                       />
                     </Box>
+
                     <Button
                       size="lg"
                       colorScheme="blue"
