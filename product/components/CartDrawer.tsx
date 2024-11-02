@@ -114,6 +114,20 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
     );
   };
 
+  const handleIncrement = (product: CartItem) => {
+    if (product.quantity < product.stock) {
+      onIncrement(product);
+    } else {
+      toast({
+        title: "Límite de stock alcanzado",
+        description: `Solo hay ${product.stock} unidades disponibles`,
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
   return (
     <Drawer isOpen={isOpen} placement="right" onClose={onClose} size="md">
       <DrawerOverlay>
@@ -148,7 +162,7 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
                     <HStack flexShrink={0}>
                       <Button size="sm" onClick={() => onDecrement(item)}>-</Button>
                       <Text>{item.quantity}</Text>
-                      <Button size="sm" onClick={() => onIncrement(item)}>+</Button>
+                      <Button size="sm" onClick={() => handleIncrement(item)}>+</Button>
                     </HStack>
                   </Flex>
                 ))

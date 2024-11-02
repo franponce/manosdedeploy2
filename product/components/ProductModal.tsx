@@ -58,44 +58,17 @@ interface ProductModalProps {
 
 const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, product, isLoading, categories }) => {
   const [currentProduct, setCurrentProduct] = useState<Product>({
-    id: '',
-    title: '',
-    description: '',
-    image: '',
+    id: "",
+    title: "",
+    description: "",
+    image: "",
     price: 0,
-    currency: 'ARS',
-    categoryId: '',
+    currency: "ARS",
     isScheduled: false,
     scheduledPublishDate: null,
+    categoryId: "",
     stock: 0
   });
-
-  useEffect(() => {
-    if (product) {
-      setCurrentProduct({
-        ...product,
-        stock: product.stock || 0
-      });
-      setImagePreview(product.image);
-      setDescription(product.description || '');
-    } else {
-      setCurrentProduct({
-        id: '',
-        title: '',
-        description: '',
-        image: '',
-        price: 0,
-        currency: 'ARS',
-        categoryId: '',
-        isScheduled: false,
-        scheduledPublishDate: null,
-        stock: 0
-      });
-      setImagePreview(null);
-      setDescription('');
-    }
-  }, [product]);
-
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const toast = useToast();
   const [scheduledDate, setScheduledDate] = useState<Date | null>(null);
@@ -112,6 +85,32 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
   const MAX_IMAGE_SIZE_MB = 5;
   const TARGET_WIDTH = 800;
   const TARGET_HEIGHT = 800;
+
+  useEffect(() => {
+    if (product) {
+      setCurrentProduct({
+        ...product,
+        stock: product.stock || 0
+      });
+      setImagePreview(product.image);
+      setDescription(product.description || '');
+    } else {
+      setCurrentProduct({
+        id: "",
+        title: "",
+        description: "",
+        image: "",
+        price: 0,
+        currency: "ARS",
+        isScheduled: false,
+        scheduledPublishDate: null,
+        categoryId: "",
+        stock: 0
+      });
+      setImagePreview(null);
+      setDescription('');
+    }
+  }, [product]);
 
   const handleProductImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -159,7 +158,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
       }
 
       setImagePreview(base64);
-      setCurrentProduct(prev => ({ ...prev, image: base64 }));
+      setCurrentProduct((prev) => ({ ...prev, image: base64 }));
 
       toast({
         title: "Imagen cargada",
@@ -207,17 +206,6 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
       return;
     }
 
-    if (isScheduleOpen && !scheduledDate) {
-      toast({
-        title: "Error",
-        description: "Por favor, seleccione una fecha y hora para la publicación programada",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
     if (currentProduct.stock < 0) {
       toast({
         title: "Error",
@@ -229,11 +217,22 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
       return;
     }
 
+    if (isScheduleOpen && !scheduledDate) {
+      toast({
+        title: "Error",
+        description: "Por favor, seleccione una fecha y hora para la publicación programada",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
     try {
       const productToSubmit: Product = {
         ...currentProduct,
         description: description,
-        price: parseFloat(currentProduct.price.toString()),
+        price,
         isScheduled: isScheduleOpen,
         scheduledPublishDate: isScheduleOpen && scheduledDate ? scheduledDate : null,
         categoryId: currentProduct.categoryId,
@@ -241,10 +240,10 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
       };
 
       await onSubmit(productToSubmit);
-      
-      mutate(
+      // Actualizamos la caché de SWR
+      mutate<Product[]>(
         '/api/products',
-        async (currentData?: Product[]) => {
+        (currentData) => {
           if (!currentData) return currentData;
           return currentData.map(p =>
             p.id === productToSubmit.id ? productToSubmit : p
@@ -252,6 +251,15 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
         },
         false
       );
+
+      // También actualizamos la caché del producto individual si existe
+      if (productToSubmit.id) {
+        mutate(
+          `/api/products/${productToSubmit.id}`,
+          productToSubmit,
+          false
+        );
+      }
 
       toast({
         title: "Producto guardado",
@@ -352,7 +360,71 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
         <ModalCloseButton />
         <ModalBody>
           <VStack spacing={4} as="form" onSubmit={handleSubmit}>
-            {/* ... campos existentes ... */}
+            <FormControl>
+              <FormLabel>Título</FormLabel>
+              <Input
+                name="title"
+                value={currentProduct.title}
+                onChange={handleInputChange}
+                maxLength={MAX_TITLE_LENGTH}
+              />
+              <Text fontSize="sm" color="gray.500">
+                {`${currentProduct.title.length}/${MAX_TITLE_LENGTH}`}
+              </Text>
+            </FormControl>
+
+            <FormControl>
+              <FormLabel>Descripción</FormLabel>
+              <Box border="1px" borderColor="gray.200" borderRadius="md">
+                <ReactQuill
+                  value={description}
+                  onChange={handleDescriptionChange}
+                  modules={modules}
+                  formats={formats}
+                />
+              </Box>
+              <Text fontSize="sm" color="gray.500" mt={1}>
+                {`${description.replace(/<[^>]*>/g, '').length}/${MAX_DESCRIPTION_LENGTH}`}
+              </Text>
+            </FormControl>
+
+            <FormControl>
+              <FormLabel>Imagen</FormLabel>
+              <Text fontSize="sm" color="gray.600" mb={2}>
+                Recomendaciones 😉:
+                <br />
+                • Intenta que tu imagen sea cuadrada.
+                <br />
+                • Las medidas recomendadas son de 800x800 px.
+                <br />
+                • No debe pesar más de 5MB.
+              </Text>
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={handleProductImageUpload}
+              />
+            </FormControl>
+
+            {imagePreview && (
+              <Image
+                src={imagePreview}
+                alt="Preview"
+                maxHeight="200px"
+                objectFit="contain"
+              />
+            )}
+
+            <FormControl>
+              <FormLabel>Precio ({siteInfo?.currency})</FormLabel>
+              <Input
+                name="price"
+                type="number"
+                step="0.01"
+                value={currentProduct.price}
+                onChange={handleInputChange}
+              />
+            </FormControl>
 
             <FormControl>
               <FormLabel>Stock disponible</FormLabel>

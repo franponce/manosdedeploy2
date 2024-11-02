@@ -62,7 +62,18 @@ const ProductDetail: React.FC = () => {
   };
 
   const handleAddToCart = () => {
-    if (product) {
+    if (product && product.stock > 0) {
+      const cartItem = cart.find(item => item.id === product.id);
+      if (cartItem && cartItem.quantity >= product.stock) {
+        toast({
+          title: 'No hay suficiente stock',
+          description: 'Has alcanzado el límite de stock disponible',
+          status: 'warning',
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
       addToCart(product);
       toast({
         title: 'Producto agregado',
@@ -163,8 +174,9 @@ const ProductDetail: React.FC = () => {
                   colorScheme="blue"
                   leftIcon={<Icon as={FaShoppingCart} />}
                   onClick={handleAddToCart}
+                  isDisabled={!product?.stock || product.stock === 0}
                 >
-                  Agregar al carrito
+                  {product?.stock ? "Agregar al carrito" : "Sin stock disponible"}
                 </Button>
 
                 {/* 4. Opciones para compartir */}
