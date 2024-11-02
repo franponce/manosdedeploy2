@@ -56,7 +56,7 @@ interface ProductModalProps {
 }
 
 const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, product, isLoading, categories }) => {
-  const [formData, setFormData] = useState<Product>({
+  const [currentProduct, setCurrentProduct] = useState<Product>({
     id: '',
     title: '',
     description: '',
@@ -71,24 +71,23 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
 
   useEffect(() => {
     if (product) {
-      setFormData({
+      setCurrentProduct({
         ...product,
-        scheduledPublishDate: product.scheduledPublishDate ? new Date(product.scheduledPublishDate) : null,
         stock: product.stock || 0
       });
       setImagePreview(product.image);
       setDescription(product.description || '');
     } else {
-      setFormData({
+      setCurrentProduct({
         id: '',
         title: '',
         description: '',
         image: '',
         price: 0,
         currency: 'ARS',
+        categoryId: '',
         isScheduled: false,
         scheduledPublishDate: null,
-        categoryId: '',
         stock: 0
       });
       setImagePreview(null);
@@ -159,7 +158,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
       }
 
       setImagePreview(base64);
-      setFormData(prev => ({ ...prev, image: base64 }));
+      setCurrentProduct(prev => ({ ...prev, image: base64 }));
 
       toast({
         title: "Imagen cargada",
@@ -183,7 +182,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.title.trim()) {
+    if (!currentProduct.title.trim()) {
       toast({
         title: "Error",
         description: "El título es obligatorio",
@@ -194,7 +193,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
       return;
     }
 
-    const price = parseFloat(formData.price.toString());
+    const price = parseFloat(currentProduct.price.toString());
     if (isNaN(price) || price <= 0) {
       toast({
         title: "Error",
@@ -219,7 +218,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
 
     try {
       const productToSubmit: Product = {
-        ...formData,
+        ...currentProduct,
         description: description,
         price,
         isScheduled: isScheduleOpen,
@@ -249,12 +248,12 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setCurrentProduct(prev => ({ ...prev, [name]: value }));
   };
 
   const handleDateChange = (date: Date | null) => {
     setScheduledDate(date);
-    setFormData(prev => ({
+    setCurrentProduct(prev => ({
       ...prev,
       scheduledPublishDate: date,
       isScheduled: date !== null,
@@ -295,7 +294,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
       }
 
       const newCategory = await createCategory(newCategoryName.trim());
-      setFormData(prev => ({ ...prev, categoryId: newCategory.id }));
+      setCurrentProduct(prev => ({ ...prev, categoryId: newCategory.id }));
       setNewCategoryName("");
       setShowNewCategoryInput(false);
       
@@ -330,10 +329,10 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
               <FormLabel>Stock disponible</FormLabel>
               <NumberInput
                 min={0}
-                value={formData.stock}
+                value={currentProduct.stock}
                 onChange={(valueString) => {
                   const value = parseInt(valueString) || 0;
-                  setFormData(prev => ({ ...prev, stock: value }));
+                  setCurrentProduct(prev => ({ ...prev, stock: value }));
                 }}
               >
                 <NumberInputField />

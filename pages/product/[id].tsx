@@ -124,10 +124,6 @@ const ProductDetail: React.FC = () => {
     <>
       <Container maxW="container.xl" py={8}>
         <VStack spacing={8} align="stretch">
-          <Button leftIcon={<FaArrowLeft />} variant="ghost" onClick={handleBack}>
-            Volver
-          </Button>
-
           <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={8}>
             <GridItem>
               {/* Imagen del producto */}
