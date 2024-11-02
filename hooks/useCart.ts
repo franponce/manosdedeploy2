@@ -20,7 +20,7 @@ export const useCart = () => {
   }, [cart]);
 
   const addToCart = useCallback((product: Product) => {
-    if (!product.stock || product.stock === 0) {
+    if (product.stock === 0) {
       toast({
         title: "Sin stock",
         description: "Este producto no tiene stock disponible",

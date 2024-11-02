@@ -405,7 +405,13 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
               <NumberInput
                 min={0}
                 value={currentProduct.stock}
-                onChange={handleStockChange}
+                onChange={(valueString) => {
+                  const value = parseInt(valueString);
+                  setCurrentProduct(prev => ({
+                    ...prev,
+                    stock: isNaN(value) ? 0 : value
+                  }));
+                }}
               >
                 <NumberInputField />
                 <NumberInputStepper>
@@ -414,11 +420,9 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                 </NumberInputStepper>
               </NumberInput>
               <Text fontSize="sm" color={currentProduct.stock > 0 ? "green.500" : "red.500"}>
-                {currentProduct.stock === 0 ? (
-                  <Text as="span" color="red.500">Sin stock disponible</Text>
-                ) : (
-                  `${currentProduct.stock} unidades disponibles`
-                )}
+                {currentProduct.stock > 0 
+                  ? `${currentProduct.stock} unidades disponibles`
+                  : "Sin stock disponible"}
               </Text>
             </FormControl>
 
