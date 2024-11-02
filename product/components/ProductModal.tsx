@@ -44,6 +44,7 @@ import { createCategory } from "../../utils/googleSheets";
 import { CATEGORY_CONSTANTS } from '../../utils/constants';
 import { useCategories } from '../../hooks/useCategories';
 import { mutate } from "swr";
+import { useRouter } from 'next/router';
 
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 
@@ -79,6 +80,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
   const [newCategoryName, setNewCategoryName] = useState('');
   const [showNewCategoryInput, setShowNewCategoryInput] = useState(false);
   const { createCategory } = useCategories();
+  const router = useRouter();
 
   const MAX_TITLE_LENGTH = 60;
   const MAX_DESCRIPTION_LENGTH = 300;
@@ -210,11 +212,25 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
         ...currentProduct,
         stock: stockValue
       };
+
       await onSubmit(productToSubmit);
-      // Actualizamos el SWR cache para reflejar el cambio en la tienda
-      mutate('/api/products');
+      
+      await mutate('/api/products');
+      
+      if (router.query.id) {
+        await mutate(`/api/products/${router.query.id}`);
+      }
+
+      onClose();
     } catch (error) {
-      console.error('Error al guardar el producto:', error);
+      console.error('Error al guardar:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo guardar el producto",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
     }
   };
 

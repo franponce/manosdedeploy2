@@ -216,35 +216,31 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
     }
   };
 
-  const handleSubmit = async (product: Product) => {
-    setIsLoading(true);
+  const handleSubmit = async (updatedProduct: Product) => {
     try {
-      if (product.id) {
-        await updateProduct(product);
+      setIsLoading(true);
+      if (currentProduct) {
+        await updateProduct(updatedProduct);
       } else {
-        await createProduct(product);
+        await createProduct(updatedProduct);
       }
+      
+      // Esto es clave: actualiza el cache de SWR
+      await mutate('/api/products');
+      
       setIsModalOpen(false);
       setCurrentProduct(null);
-      
-      // Actualizar la caché de SWR con el nuevo producto
-      mutate('/api/products', async (currentData: any) => {
-        const updatedProducts = currentData ? [...currentData, product] : [product];
-        return updatedProducts;
-      }, false);
-
       toast({
-        title: "Éxito",
-        description: `Producto ${product.id ? "actualizado" : "creado"} exitosamente.`,
+        title: currentProduct ? "Producto actualizado" : "Producto creado",
         status: "success",
         duration: 3000,
         isClosable: true,
       });
     } catch (error) {
-      console.error("Error saving product:", error);
+      console.error('Error:', error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Error desconocido al guardar el producto",
+        description: "No se pudo guardar el producto",
         status: "error",
         duration: 3000,
         isClosable: true,
