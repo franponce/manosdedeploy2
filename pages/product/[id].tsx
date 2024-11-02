@@ -30,7 +30,7 @@ import CartDrawer from '@/product/components/CartDrawer';
 import {
   WhatsappShareButton,
   WhatsappIcon,
-  FacebookShareButton, 
+  FacebookShareButton,
   FacebookIcon,
   TwitterShareButton,
   TwitterIcon,
@@ -92,8 +92,8 @@ const ProductDetail: React.FC = () => {
     return (
       <Container maxW="container.xl" py={8}>
         <VStack spacing={6} align="stretch">
-          <Box 
-            textAlign="center" 
+          <Box
+            textAlign="center"
             py={10}
             borderRadius="lg"
             bg="gray.50"
@@ -118,16 +118,8 @@ const ProductDetail: React.FC = () => {
     <>
       <Container maxW="container.xl" py={8}>
         <VStack spacing={6} align="stretch">
-          <Button
-            leftIcon={<Icon as={FaArrowLeft} />}
-            onClick={handleBack}
-            variant="ghost"
-          >
-            Volver
-          </Button>
-
-          <Grid 
-            templateColumns={{ base: '1fr', lg: '1fr 1fr' }} 
+          <Grid
+            templateColumns={{ base: '1fr', lg: '1fr 1fr' }}
             gap={8}
             mx="auto"
             alignItems="start"
@@ -156,8 +148,8 @@ const ProductDetail: React.FC = () => {
             </GridItem>
 
             <GridItem>
-              <VStack 
-                align="stretch" 
+              <VStack
+                align="stretch"
                 spacing={6}
                 position="sticky"
                 top="100px"
@@ -171,7 +163,7 @@ const ProductDetail: React.FC = () => {
                 ) : (
                   <>
                     <Heading size="xl">{product?.title}</Heading>
-                    
+
                     <HStack spacing={2}>
                       <WhatsappShareButton url={window.location.href} title={product?.title}>
                         <WhatsappIcon size={40} round />
@@ -200,7 +192,7 @@ const ProductDetail: React.FC = () => {
                     <Text fontSize="2xl" fontWeight="bold" color="blue.600">
                       {parseCurrency(product?.price || 0)} {siteInfo?.currency}
                     </Text>
-                    
+
                     <Box
                       borderRadius="md"
                       p={4}
