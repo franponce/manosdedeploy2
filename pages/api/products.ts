@@ -32,8 +32,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       case 'PUT':
         try {
           const product = req.body;
+          
           // Validar el stock
-          if (typeof product.stock !== 'number' || product.stock < 0) {
+          if (typeof product.stock !== 'number') {
+            product.stock = parseInt(product.stock) || 0;
+          }
+          
+          if (product.stock < 0) {
             return res.status(400).json({ 
               error: 'Stock inválido',
               details: 'El stock debe ser un número mayor o igual a 0'
@@ -42,8 +47,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
           await updateProduct(product);
           
-          // Invalidar el cache de SWR
-          res.setHeader('Cache-Control', 'no-cache');
+          // Invalidar el cache
+          res.setHeader('Cache-Control', 'no-store, must-revalidate');
           
           res.status(200).json({ 
             message: 'Producto actualizado correctamente',

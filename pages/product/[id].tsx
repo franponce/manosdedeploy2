@@ -37,6 +37,7 @@ import {
   EmailShareButton,
   EmailIcon
 } from 'next-share';
+import useSWR from 'swr';
 
 const ProductDetail: React.FC = () => {
   const router = useRouter();
@@ -48,6 +49,17 @@ const ProductDetail: React.FC = () => {
   const { cart, addToCart, removeFromCart } = useCart();
   const [isCartOpen, toggleCart] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  const { data: currentProduct } = useSWR(
+    id ? `/api/products/${id}` : null,
+    null,
+    {
+      refreshInterval: 10000,
+      fallbackData: product
+    }
+  );
+
+  const displayProduct = currentProduct || product;
 
   const total = useMemo(
     () => parseCurrency(cart.reduce((total, item) => total + item.price * item.quantity, 0)),
@@ -62,7 +74,7 @@ const ProductDetail: React.FC = () => {
   };
 
   const handleAddToCart = () => {
-    if (!product?.stock || product.stock === 0) {
+    if (!displayProduct?.stock || displayProduct.stock === 0) {
       toast({
         title: "Sin stock",
         description: "Este producto no tiene stock disponible",
@@ -73,11 +85,11 @@ const ProductDetail: React.FC = () => {
       return;
     }
 
-    const cartItem = cart.find(item => item.id === product.id);
-    if (cartItem && cartItem.quantity >= product.stock) {
+    const cartItem = cart.find(item => item.id === displayProduct.id);
+    if (cartItem && cartItem.quantity >= displayProduct.stock) {
       toast({
         title: "Stock máximo alcanzado",
-        description: `Solo hay ${product.stock} unidades disponibles`,
+        description: `Solo hay ${displayProduct.stock} unidades disponibles`,
         status: "warning",
         duration: 3000,
         isClosable: true,
@@ -85,7 +97,7 @@ const ProductDetail: React.FC = () => {
       return;
     }
 
-    addToCart(product);
+    addToCart(displayProduct);
     toast({
       title: "Producto agregado",
       description: "El producto se agregó al carrito",
@@ -103,13 +115,13 @@ const ProductDetail: React.FC = () => {
     }
   }
 
-  const shareText = `¡Mira este producto! ${product?.title} 🛒`;
-  const shareTextWithPrice = `¡Descubrí ${product?.title} por ${parseCurrency(product?.price || 0)}! 🛒`;
+  const shareText = `¡Mira este producto! ${displayProduct?.title} 🛒`;
+  const shareTextWithPrice = `¡Descubrí ${displayProduct?.title} por ${parseCurrency(displayProduct?.price || 0)}! 🛒`;
   const emailSubject = `Te comparto este producto de ${siteInfo?.storeName || 'nuestra tienda'}`;
-  const emailBody = `Hola! Encontré este producto que te puede interesar:\n\n${product?.title}\n${window.location.href}`;
+  const emailBody = `Hola! Encontré este producto que te puede interesar:\n\n${displayProduct?.title}\n${window.location.href}`;
 
   const handleCopyLink = () => {
-    const textToCopy = `¡Mirá este producto! ${product?.title}\n${window.location.href}`;
+    const textToCopy = `¡Mirá este producto! ${displayProduct?.title}\n${window.location.href}`;
     navigator.clipboard.writeText(textToCopy);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -147,11 +159,10 @@ const ProductDetail: React.FC = () => {
         <VStack spacing={8} align="stretch">
           <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={8}>
             <GridItem>
-              {/* Imagen del producto */}
               <Skeleton isLoaded={!isLoading}>
                 <Image
-                  src={product?.image}
-                  alt={product?.title}
+                  src={displayProduct?.image}
+                  alt={displayProduct?.title}
                   objectFit="contain"
                   width="100%"
                 />
@@ -160,39 +171,44 @@ const ProductDetail: React.FC = () => {
 
             <GridItem>
               <VStack spacing={6} align="stretch">
-                {/* 1. Título del producto */}
                 <Heading as="h1" size="xl">
-                  {product?.title}
+                  {displayProduct?.title}
                 </Heading>
 
-                {/* 2. Precio y disponibilidad */}
                 <Box>
                   <Text fontSize="2xl" fontWeight="bold">
-                    {parseCurrency(product?.price || 0)}
+                    {parseCurrency(displayProduct?.price || 0)}
                   </Text>
                   <Text 
-                    color={product?.stock ? "green.500" : "red.500"}
+                    color={displayProduct?.stock > 0 ? "green.500" : "red.500"}
                     fontWeight="medium"
+                    fontSize="md"
                   >
-                    {product?.stock ? `${product.stock} unidades disponibles` : "Sin stock"}
+                    {displayProduct?.stock > 0 ? (
+                      <HStack spacing={2}>
+                        <Text>Stock disponible:</Text>
+                        <Text>{displayProduct.stock} unidades</Text>
+                      </HStack>
+                    ) : (
+                      <Text>Sin stock disponible</Text>
+                    )}
                   </Text>
                 </Box>
 
-                {/* 3. Botón de compra principal */}
                 <Button
                   size="lg"
-                  colorScheme="blue"
+                  colorScheme={displayProduct?.stock > 0 ? "blue" : "gray"}
                   leftIcon={<Icon as={FaShoppingCart} />}
                   onClick={handleAddToCart}
-                  isDisabled={!product?.stock || product.stock === 0}
+                  isDisabled={!displayProduct?.stock || displayProduct.stock === 0}
+                  width="full"
                 >
-                  {!product?.stock || product.stock === 0 ? 
-                    "Sin stock disponible" : 
-                    "Agregar al carrito"
+                  {!displayProduct?.stock || displayProduct.stock === 0 
+                    ? "Sin stock disponible" 
+                    : "Agregar al carrito"
                   }
                 </Button>
 
-                {/* 4. Opciones para compartir */}
                 <Box>
                   <Text mb={2} fontWeight="medium">Compartir producto:</Text>
                   <HStack spacing={2}>
@@ -246,10 +262,9 @@ const ProductDetail: React.FC = () => {
                   </HStack>
                 </Box>
 
-                {/* 5. Descripción del producto */}
                 <Box>
                   <Text fontWeight="medium" mb={2}>Descripción:</Text>
-                  <Text>{product?.description}</Text>
+                  <Text>{displayProduct?.description}</Text>
                 </Box>
               </VStack>
             </GridItem>

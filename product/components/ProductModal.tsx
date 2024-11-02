@@ -93,15 +93,12 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     if (product) {
       console.log('Producto cargado en modal:', {
         ...product,
-        stock: typeof product.stock === 'number' ? product.stock : 'no definido'
+        stock: typeof product.stock === 'number' ? product.stock : 0
       });
-      const validStock = typeof product.stock === 'number' && !isNaN(product.stock) ? 
-        product.stock : 
-        0;
-
+      
       setCurrentProduct({
         ...product,
-        stock: validStock
+        stock: typeof product.stock === 'number' ? product.stock : 0
       });
       setImagePreview(product.image);
       setDescription(product.description || '');
@@ -258,9 +255,10 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
       nuevoValor: value,
       esValido: !isNaN(value)
     });
+    
     setCurrentProduct(prev => ({
       ...prev,
-      stock: isNaN(value) ? 0 : value
+      stock: isNaN(value) ? 0 : Math.max(0, value)
     }));
   };
 

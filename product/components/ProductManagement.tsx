@@ -219,19 +219,24 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
   const handleSubmit = async (updatedProduct: Product) => {
     try {
       setIsLoading(true);
-      if (currentProduct) {
-        await updateProduct(updatedProduct);
-      } else {
-        await createProduct(updatedProduct);
+      const response = await fetch('/api/products', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedProduct),
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al actualizar el producto');
       }
-      
-      // Esto es clave: actualiza el cache de SWR
+
+      // Forzar revalidación de datos
       await mutate('/api/products');
       
-      setIsModalOpen(false);
-      setCurrentProduct(null);
       toast({
-        title: currentProduct ? "Producto actualizado" : "Producto creado",
+        title: "Éxito",
+        description: "Producto actualizado correctamente",
         status: "success",
         duration: 3000,
         isClosable: true,
@@ -240,7 +245,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
       console.error('Error:', error);
       toast({
         title: "Error",
-        description: "No se pudo guardar el producto",
+        description: "No se pudo actualizar el producto",
         status: "error",
         duration: 3000,
         isClosable: true,

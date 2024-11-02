@@ -51,9 +51,9 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
   const [displayedProducts, setDisplayedProducts] = React.useState<Product[]>([]);
   const [hasMore, setHasMore] = React.useState(true);
   const observer = React.useRef<IntersectionObserver | null>(null);
-  const { data: products, error, isLoading } = useSWR<Product[]>('/api/products', fetcher, {
-    fallbackData: initialProducts,
-    refreshInterval: 60000, // Actualizar cada minuto
+  const { data: products, error, isLoading, mutate } = useSWR<Product[]>('/api/products', {
+    refreshInterval: 30000, // Revalidar cada 30 segundos
+    revalidateOnFocus: true,
   });
   const { data: categories } = useSWR<Category[]>('/api/categories', fetcher, {
     fallbackData: initialCategories,
@@ -97,25 +97,12 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
     if (products) {
       let filteredProducts = products.filter(product =>
         product && 
-        product.id && 
-        product.title && 
-        product.image && 
-        product.price && 
-        !product.isScheduled && 
-        typeof product.stock === 'number' && // Validamos que stock sea número
+        typeof product.stock === 'number' &&
         product.title.toLowerCase().includes(searchTerm.toLowerCase())
       );
-
-      if (selectedCategory) {
-        filteredProducts = filteredProducts.filter(product => 
-          product.categoryId === selectedCategory
-        );
-      }
-
-      setDisplayedProducts(filteredProducts.slice(0, page * PRODUCTS_PER_PAGE));
-      setHasMore(page * PRODUCTS_PER_PAGE < filteredProducts.length);
+      setDisplayedProducts(filteredProducts);
     }
-  }, [products, page, searchTerm, selectedCategory]);
+  }, [products, searchTerm]);
 
   const total = React.useMemo(
     () => parseCurrency(cart.reduce((total, product) => total + product.price * product.quantity, 0)),
