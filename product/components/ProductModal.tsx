@@ -88,8 +88,13 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
   const TARGET_WIDTH = 800;
   const TARGET_HEIGHT = 800;
 
+  // Log cuando el producto se carga inicialmente
   useEffect(() => {
     if (product) {
+      console.log('Producto cargado en modal:', {
+        ...product,
+        stock: typeof product.stock === 'number' ? product.stock : 'no definido'
+      });
       const validStock = typeof product.stock === 'number' && !isNaN(product.stock) ? 
         product.stock : 
         0;
@@ -191,6 +196,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     }
   }, [toast]);
 
+  // Log antes de enviar el formulario
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentProduct) return;
@@ -206,6 +212,11 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
       });
       return;
     }
+
+    console.log('Enviando producto con datos:', {
+      ...currentProduct,
+      stock: typeof currentProduct.stock === 'number' ? currentProduct.stock : 'no definido'
+    });
 
     try {
       const productToSubmit = {
@@ -237,6 +248,20 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setCurrentProduct(prev => ({ ...prev, [name]: value }));
+  };
+
+  // Log cuando se actualiza el stock
+  const handleStockChange = (valueString: string) => {
+    const value = parseInt(valueString);
+    console.log('Actualizando stock:', {
+      valorAnterior: currentProduct.stock,
+      nuevoValor: value,
+      esValido: !isNaN(value)
+    });
+    setCurrentProduct(prev => ({
+      ...prev,
+      stock: isNaN(value) ? 0 : value
+    }));
   };
 
   const handleDateChange = (date: Date | null) => {
@@ -382,10 +407,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
               <NumberInput
                 min={0}
                 value={currentProduct.stock}
-                onChange={(valueString) => {
-                  const value = parseInt(valueString) || 0;
-                  setCurrentProduct(prev => ({ ...prev, stock: value }));
-                }}
+                onChange={handleStockChange}
               >
                 <NumberInputField />
                 <NumberInputStepper>
@@ -393,7 +415,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                   <NumberDecrementStepper />
                 </NumberInputStepper>
               </NumberInput>
-              <Text fontSize="sm" color="gray.500" mt={1}>
+              <Text fontSize="sm" color={currentProduct.stock > 0 ? "green.500" : "red.500"}>
                 {currentProduct.stock === 0 ? (
                   <Text as="span" color="red.500">Sin stock disponible</Text>
                 ) : (
