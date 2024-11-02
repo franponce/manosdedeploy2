@@ -193,29 +193,6 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     e.preventDefault();
     if (!currentProduct) return;
 
-    if (!currentProduct.title.trim()) {
-      toast({
-        title: "Error",
-        description: "El título es obligatorio",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
-    const price = parseFloat(currentProduct.price.toString());
-    if (isNaN(price) || price <= 0) {
-      toast({
-        title: "Error",
-        description: "Por favor, ingrese un precio válido mayor que 0",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
     const stockValue = parseInt(currentProduct.stock.toString());
     if (isNaN(stockValue) || stockValue < 0) {
       toast({
@@ -228,69 +205,16 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
       return;
     }
 
-    if (isScheduleOpen && !scheduledDate) {
-      toast({
-        title: "Error",
-        description: "Por favor, seleccione una fecha y hora para la publicación programada",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
     try {
-      const productToSubmit: Product = {
+      const productToSubmit = {
         ...currentProduct,
-        description: description,
-        price,
-        isScheduled: isScheduleOpen,
-        scheduledPublishDate: isScheduleOpen && scheduledDate ? scheduledDate : null,
-        categoryId: currentProduct.categoryId,
         stock: stockValue
       };
-
       await onSubmit(productToSubmit);
-      // Actualizamos la caché de SWR
-      mutate<Product[]>(
-        '/api/products',
-        (currentData) => {
-          if (!currentData) return currentData;
-          return currentData.map(p =>
-            p.id === productToSubmit.id ? productToSubmit : p
-          );
-        },
-        false
-      );
-
-      // También actualizamos la caché del producto individual si existe
-      if (productToSubmit.id) {
-        mutate(
-          `/api/products/${productToSubmit.id}`,
-          productToSubmit,
-          false
-        );
-      }
-
-      toast({
-        title: "Producto guardado",
-        description: `${isScheduleOpen ? 
-          `Producto programado para ${scheduledDate?.toLocaleString()}` : 
-          "Producto guardado exitosamente"} - Stock actual: ${productToSubmit.stock} unidades`,
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-      onClose();
+      // Actualizamos el SWR cache para reflejar el cambio en la tienda
+      mutate('/api/products');
     } catch (error) {
-      console.error("Error al guardar el producto:", error);
-      toast({
-        title: "Error",
-        description: "No se pudo guardar el producto. Por favor, intenta nuevamente.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      console.error('Error al guardar el producto:', error);
     }
   };
 

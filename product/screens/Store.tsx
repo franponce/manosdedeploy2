@@ -101,7 +101,8 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
         product.title && 
         product.image && 
         product.price && 
-        !product.isScheduled && // Solo muestra productos no programados
+        !product.isScheduled && 
+        typeof product.stock === 'number' && // Validamos que stock sea número
         product.title.toLowerCase().includes(searchTerm.toLowerCase())
       );
 
