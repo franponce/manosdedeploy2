@@ -186,6 +186,33 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
     }
   };
 
+  const handleAddToCart = (product: Product) => {
+    if (!product.stock || product.stock === 0) {
+      toast({
+        title: "Sin stock",
+        description: "Este producto no tiene stock disponible",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    const cartItem = cart.find(item => item.id === product.id);
+    if (cartItem && cartItem.quantity >= product.stock) {
+      toast({
+        title: "Stock máximo alcanzado",
+        description: `Solo hay ${product.stock} unidades disponibles`,
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    addToCart(product);
+  };
+
   if (error) return <div>Failed to load products</div>;
 
   return (
@@ -242,7 +269,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
               >
                 <ProductCard
                   product={product}
-                  onAdd={(product) => handleEditCart(product, "increment")}
+                  onAdd={(product) => handleAddToCart(product)}
                   isLoading={false}
                 />
               </Box>

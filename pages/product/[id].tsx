@@ -62,27 +62,37 @@ const ProductDetail: React.FC = () => {
   };
 
   const handleAddToCart = () => {
-    if (product && product.stock > 0) {
-      const cartItem = cart.find(item => item.id === product.id);
-      if (cartItem && cartItem.quantity >= product.stock) {
-        toast({
-          title: 'No hay suficiente stock',
-          description: 'Has alcanzado el límite de stock disponible',
-          status: 'warning',
-          duration: 3000,
-          isClosable: true,
-        });
-        return;
-      }
-      addToCart(product);
+    if (!product?.stock || product.stock === 0) {
       toast({
-        title: 'Producto agregado',
-        description: 'El producto se agregó al carrito',
-        status: 'success',
+        title: "Sin stock",
+        description: "Este producto no tiene stock disponible",
+        status: "error",
         duration: 3000,
         isClosable: true,
       });
+      return;
     }
+
+    const cartItem = cart.find(item => item.id === product.id);
+    if (cartItem && cartItem.quantity >= product.stock) {
+      toast({
+        title: "Stock máximo alcanzado",
+        description: `Solo hay ${product.stock} unidades disponibles`,
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    addToCart(product);
+    toast({
+      title: "Producto agregado",
+      description: "El producto se agregó al carrito",
+      status: "success",
+      duration: 3000,
+      isClosable: true,
+    });
   };
 
   function handleEditCart(product: Product, action: "increment" | "decrement") {
@@ -176,7 +186,10 @@ const ProductDetail: React.FC = () => {
                   onClick={handleAddToCart}
                   isDisabled={!product?.stock || product.stock === 0}
                 >
-                  {product?.stock ? "Agregar al carrito" : "Sin stock disponible"}
+                  {!product?.stock || product.stock === 0 ? 
+                    "Sin stock disponible" : 
+                    "Agregar al carrito"
+                  }
                 </Button>
 
                 {/* 4. Opciones para compartir */}

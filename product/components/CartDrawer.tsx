@@ -115,17 +115,17 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
   };
 
   const handleIncrement = (product: CartItem) => {
-    if (product.quantity < product.stock) {
-      onIncrement(product);
-    } else {
+    if (product.quantity >= product.stock) {
       toast({
-        title: "Límite de stock alcanzado",
+        title: "Stock máximo alcanzado",
         description: `Solo hay ${product.stock} unidades disponibles`,
         status: "warning",
         duration: 3000,
         isClosable: true,
       });
+      return;
     }
+    onIncrement(product);
   };
 
   return (

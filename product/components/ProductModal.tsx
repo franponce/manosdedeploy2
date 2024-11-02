@@ -450,6 +450,134 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                 )}
               </Text>
             </FormControl>
+
+            <FormControl>
+              <FormLabel>Categoría</FormLabel>
+              <VStack align="stretch" spacing={2}>
+                <Select
+                  name="categoryId"
+                  value={currentProduct.categoryId}
+                  onChange={handleInputChange}
+                >
+                  <option value="">Sin categoría</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </Select>
+                
+                {!showNewCategoryInput ? (
+                  categories.length < CATEGORY_CONSTANTS.MAX_CATEGORIES && (
+                    <Button
+                      size="sm"
+                      leftIcon={<AddIcon />}
+                      variant="outline"
+                      onClick={() => setShowNewCategoryInput(true)}
+                    >
+                      Crear nueva categoría
+                    </Button>
+                  )
+                ) : (
+                  <Box>
+                    <InputGroup size="md">
+                      <Input
+                        value={newCategoryName}
+                        onChange={(e) => setNewCategoryName(e.target.value)}
+                        placeholder="Nombre de la nueva categoría"
+                        maxLength={CATEGORY_CONSTANTS.MAX_NAME_LENGTH}
+                      />
+                      <InputRightElement width="4.5rem">
+                        <Text fontSize="xs" color="gray.500">
+                          {newCategoryName.length}/{CATEGORY_CONSTANTS.MAX_NAME_LENGTH}
+                        </Text>
+                      </InputRightElement>
+                    </InputGroup>
+                    <HStack mt={2} spacing={2}>
+                      <Button
+                        size="sm"
+                        colorScheme="purple"
+                        onClick={handleCreateCategory}
+                        isDisabled={!newCategoryName.trim()}
+                      >
+                        Crear y seleccionar
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setShowNewCategoryInput(false);
+                          setNewCategoryName('');
+                        }}
+                      >
+                        Cancelar
+                      </Button>
+                    </HStack>
+                  </Box>
+                )}
+                
+                {categories.length >= CATEGORY_CONSTANTS.MAX_CATEGORIES && (
+                  <Text fontSize="sm" color="orange.500">
+                    {CATEGORY_CONSTANTS.INFO_MESSAGES.CANNOT_CREATE}
+                  </Text>
+                )}
+              </VStack>
+            </FormControl>
+
+            <Button
+              leftIcon={<TimeIcon />}
+              variant="outline"
+              onClick={toggleSchedule}
+              width="100%"
+              justifyContent="flex-start"
+            >
+              {isScheduleOpen ? "Cancelar programación" : "Programar publicación"}
+            </Button>
+            <Collapse in={isScheduleOpen} animateOpacity>
+              <FormControl>
+                <Center mb={4}>
+                  <Text fontWeight="bold">Fecha y hora de publicación</Text>
+                </Center>
+                <Box 
+                  border="1px" 
+                  borderColor="gray.200" 
+                  borderRadius="md" 
+                  p={2}
+                  overflowX="auto"
+                  maxWidth="100%"
+                >
+                  <Flex 
+                    direction="row"
+                    alignItems="center"
+                    justifyContent="center"
+                    gap={4}
+                    flexWrap="nowrap"
+                  >
+                    <Box flexShrink={0}>
+                      <DatePicker
+                        selected={scheduledDate}
+                        onChange={handleDateChange}
+                        dateFormat="dd/MM/yyyy"
+                        minDate={new Date()}
+                        inline
+                      />
+                    </Box>
+                    <Box flexShrink={0}>
+                      <DatePicker
+                        selected={scheduledDate}
+                        onChange={handleDateChange}
+                        showTimeSelect
+                        showTimeSelectOnly
+                        timeIntervals={15}
+                        timeCaption="Hora"
+                        dateFormat="HH:mm"
+                        inline
+                      />
+                    </Box>
+                  </Flex>
+                </Box>
+              </FormControl>
+            </Collapse>
           </VStack>
         </ModalBody>
         <ModalFooter>
