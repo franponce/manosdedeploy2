@@ -201,7 +201,17 @@ if (typeof window === 'undefined') {
         const { google } = await import('googleapis');
         const sheets = google.sheets({ version: 'v4', auth });
 
-        // Aseguramos que los valores no sean undefined
+        // Formatear la fecha correctamente
+        let formattedDate = '';
+        if (product.scheduledPublishDate) {
+          if (product.scheduledPublishDate instanceof Date) {
+            formattedDate = product.scheduledPublishDate.toISOString();
+          } else {
+            // Si es string, asegurarnos de que sea una fecha válida
+            formattedDate = new Date(product.scheduledPublishDate).toISOString();
+          }
+        }
+
         const values = [
           [
             product.id, 
@@ -209,7 +219,7 @@ if (typeof window === 'undefined') {
             product.description || '', 
             product.image || '', 
             (product.price || 0).toString(),
-            product.scheduledPublishDate ? product.scheduledPublishDate.toISOString() : '', // Convertimos a ISO string aquí
+            formattedDate, // Usamos la fecha formateada
             product.isScheduled ? 'TRUE' : 'FALSE',
             product.categoryId || ''
           ],
@@ -217,14 +227,14 @@ if (typeof window === 'undefined') {
 
         await sheets.spreadsheets.values.update({
           spreadsheetId: SPREADSHEET_ID,
-          range: `La Libre Web - Catálogo online rev 2021 - products!A${parseInt(product.id) + 1}:H${parseInt(product.id) + 1}`,
+          range: `${SHEET_NAME}!A${parseInt(product.id) + 1}:H${parseInt(product.id) + 1}`,
           valueInputOption: 'USER_ENTERED',
           requestBody: { values },
         });
         console.log('Product updated successfully');
       } catch (error) {
         console.error('Error updating product in Google Sheets:', error);
-        throw error;
+        throw new Error('Error al actualizar el producto. Por favor, intente nuevamente.');
       }
     },
 
