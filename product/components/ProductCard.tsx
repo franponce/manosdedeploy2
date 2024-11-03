@@ -210,13 +210,12 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading, stockStatusRe
               </Text>
               {stockStatusRenderer ? stockStatusRenderer(product) : renderStockStatus()}
               <Button
-                colorScheme={currentStock > 0 ? "blue" : "gray"}
+                colorScheme={buttonProps?.colorScheme || "blue"}
                 onClick={() => onAdd(product)}
-                isDisabled={currentStock === 0}
+                isDisabled={buttonProps?.isDisabled}
                 width="full"
-                {...buttonProps}
               >
-                {currentStock > 0 ? "Agregar al carrito" : "Sin stock disponible"}
+                {buttonProps?.children || "Agregar al carrito"}
               </Button>
             </>
           )}
