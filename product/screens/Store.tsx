@@ -45,7 +45,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
   isPreviewMode = false
 }) => {
   const router = useRouter();
-  const { cart, addToCart, removeFromCart } = useCart();
+  const { cart, addToCart, removeFromCart, stockLevels } = useCart();
   const toast = useToast();
   const [isCartOpen, toggleCart] = React.useState<boolean>(false);
   const [page, setPage] = React.useState(1);
@@ -67,9 +67,9 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
   const [productsStock, setProductsStock] = React.useState<Record<string, number>>({});
 
   const renderStockStatus = (product: Product) => {
-    const stock = typeof product.stock === 'number' ? product.stock : 0;
+    const currentStock = stockLevels[product.id] ?? product.stock;
 
-    if (stock <= 0) {
+    if (!currentStock || currentStock <= 0) {
       return (
         <Text
           color="red.500"
@@ -89,7 +89,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
         fontSize="sm"
         textAlign="center"
       >
-        Stock disponible: {stock} {stock === 1 ? "unidad" : "unidades"}
+        Stock disponible: {currentStock} {currentStock === 1 ? "unidad" : "unidades"}
       </Text>
     );
   };
@@ -197,8 +197,19 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
     }
   }
 
-  const handleAddToCart = (product: Product) => {
-    handleEditCart(product, "increment");
+  const handleAddToCart = async (product: Product) => {
+    try {
+      await addToCart(product);
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo agregar el producto al carrito",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
 
   const NoProductsFound = () => {
@@ -311,7 +322,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
             }}
           >
             {displayedProducts.map((product, index) => {
-              const currentStock = productsStock[product.id] ?? product.stock;
+              const currentStock = stockLevels[product.id] ?? product.stock;
               
               return (
                 <Box
@@ -327,7 +338,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
                     isLoading={false}
                     stockStatusRenderer={renderStockStatus}
                     buttonProps={{
-                      isDisabled: !currentStock || currentStock === 0,
+                      isDisabled: !currentStock || currentStock <= 0,
                       colorScheme: currentStock > 0 ? "blue" : "gray",
                       children: currentStock > 0 ? "Agregar al carrito" : "Sin stock disponible"
                     }}
