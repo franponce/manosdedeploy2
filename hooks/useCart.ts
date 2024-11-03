@@ -21,10 +21,9 @@ export const useCart = () => {
 
   const addToCart = useCallback(async (product: Product) => {
     try {
-      // Verificar stock actual
       const response = await fetch(`/api/products/${product.id}/stock`);
       const { stock } = await response.json();
-      
+
       if (stock === 0) {
         toast({
           title: "Sin stock",
@@ -37,7 +36,7 @@ export const useCart = () => {
       }
 
       const currentQuantity = cart.find(item => item.id === product.id)?.quantity || 0;
-      
+
       if (currentQuantity >= stock) {
         toast({
           title: "Stock máximo alcanzado",
@@ -51,7 +50,6 @@ export const useCart = () => {
 
       setCart(currentCart => {
         const existingItem = currentCart.find(item => item.id === product.id);
-        
         if (existingItem) {
           return currentCart.map(item =>
             item.id === product.id
@@ -59,7 +57,6 @@ export const useCart = () => {
               : item
           );
         }
-
         return [...currentCart, { ...product, quantity: 1 }];
       });
     } catch (error) {

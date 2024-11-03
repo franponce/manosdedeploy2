@@ -45,10 +45,13 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading, stockStatusRe
     const checkStock = async () => {
       try {
         const response = await fetch(`/api/products/${product.id}/stock`);
+        if (!response.ok) {
+          throw new Error('Error al obtener stock');
+        }
         const data = await response.json();
         setCurrentStock(data.stock);
       } catch (error) {
-        console.error('Error verificando stock:', error);
+        console.error('Error al verificar stock:', error);
       }
     };
 
