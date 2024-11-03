@@ -157,8 +157,16 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
             e.stopPropagation();
             router.back();
           }}
-          variant="ghost"
+          colorScheme="blue"
+          size="md"
+          boxShadow="sm"
+          _hover={{
+            transform: 'translateY(-2px)',
+            boxShadow: 'md',
+          }}
+          transition="all 0.2s"
           alignSelf="flex-start"
+          px={6}
         >
           Volver a la tienda
         </Button>
