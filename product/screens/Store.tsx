@@ -197,6 +197,10 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
     }
   }
 
+  const handleAddToCart = (product: Product) => {
+    handleEditCart(product, "increment");
+  };
+
   const NoProductsFound = () => {
     if (selectedCategory && !searchTerm) {
       return (
@@ -249,37 +253,6 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
           )}
         </Center>
       );
-    }
-  };
-
-  const handleAddToCart = async (product: Product) => {
-    try {
-      // Verificar stock actual
-      const response = await fetch(`/api/products/${product.id}/stock`);
-      const { stock } = await response.json();
-      
-      const cartItem = cart.find(item => item.id === product.id);
-      if (cartItem && cartItem.quantity >= stock) {
-        toast({
-          title: "Stock máximo alcanzado",
-          description: `Solo hay ${stock} unidades disponibles`,
-          status: "warning",
-          duration: 3000,
-          isClosable: true,
-        });
-        return;
-      }
-
-      addToCart({ ...product, stock }); // Actualizamos el stock en el producto
-    } catch (error) {
-      console.error('Error verificando stock:', error);
-      toast({
-        title: "Error",
-        description: "No se pudo verificar el stock disponible",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
     }
   };
 

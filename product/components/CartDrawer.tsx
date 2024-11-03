@@ -41,128 +41,25 @@ interface Props {
 }
 
 const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDecrement }) => {
-  const [isLoadingStock, setIsLoadingStock] = useState<{ [key: string]: boolean }>({});
-  const [stockLevels, setStockLevels] = useState<{ [key: string]: number }>({});
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethods>({
+    mercadoPago: false,
+    cash: false,
+    bankTransfer: false,
+  });
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('');
   const [note, setNote] = useState<string>('');
   const [fullName, setFullName] = useState<string>('');
   const [isFullNameError, setIsFullNameError] = useState<boolean>(false);
   const toast = useToast();
   const { siteInfo } = useSiteInfo();
 
-  // Función para obtener stock de un solo producto
-  const fetchProductStock = async (productId: string) => {
-    try {
-      setIsLoadingStock(prev => ({ ...prev, [productId]: true }));
-      const response = await fetch(`/api/products/${productId}/stock`);
-      if (!response.ok) throw new Error('Error al obtener stock');
-      const { stock } = await response.json();
-      setStockLevels(prev => ({ ...prev, [productId]: Number(stock) }));
-    } catch (error) {
-      console.error(`Error al obtener stock para producto ${productId}:`, error);
-      // Mantener el stock anterior si hay error
-      setStockLevels(prev => ({ ...prev, [productId]: prev[productId] || 0 }));
-    } finally {
-      setIsLoadingStock(prev => ({ ...prev, [productId]: false }));
-    }
-  };
-
-  // Efecto para cargar el stock cuando se abre el drawer
   useEffect(() => {
-    if (isOpen && items.length > 0) {
-      items.forEach(item => {
-        if (!isLoadingStock[item.id]) {
-          fetchProductStock(item.id);
-        }
-      });
-    }
-  }, [isOpen, items]);
+    fetchPaymentMethods();
+  }, [isOpen]);
 
-  const handleIncrement = async (product: CartItem) => {
-    const currentStock = stockLevels[product.id];
-    
-    if (isLoadingStock[product.id]) {
-      toast({
-        title: "Cargando stock",
-        description: "Por favor, espera mientras verificamos el stock disponible",
-        status: "info",
-        duration: 2000,
-        isClosable: true,
-      });
-      return;
-    }
-
-    if (currentStock === undefined) {
-      await fetchProductStock(product.id);
-      return;
-    }
-
-    if (product.quantity >= currentStock) {
-      toast({
-        title: "Stock máximo alcanzado",
-        description: "Has alcanzado el máximo de unidades disponibles",
-        status: "warning",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
-    onIncrement(product);
-  };
-
-  const renderStockInfo = (item: CartItem) => {
-    if (isLoadingStock[item.id]) {
-      return (
-        <Text 
-          fontSize="xs" 
-          color="gray.500"
-          fontWeight="medium"
-        >
-          Verificando stock...
-        </Text>
-      );
-    }
-
-    const currentStock = stockLevels[item.id];
-    if (currentStock === undefined) {
-      return null;
-    }
-
-    const remainingStock = Math.max(0, currentStock - item.quantity);
-
-    if (remainingStock === 0) {
-      return (
-        <Text 
-          fontSize="xs" 
-          color="orange.500"
-          fontWeight="medium"
-        >
-          Llegaste al máximo de unidades disponibles
-        </Text>
-      );
-    }
-
-    if (remainingStock === 1) {
-      return (
-        <Text 
-          fontSize="xs" 
-          color="orange.500"
-          fontWeight="medium"
-        >
-          ¡Última unidad disponible!
-        </Text>
-      );
-    }
-
-    return (
-      <Text 
-        fontSize="xs" 
-        color="green.500"
-        fontWeight="medium"
-      >
-        Stock disponible: {remainingStock} unidades
-      </Text>
-    );
+  const fetchPaymentMethods = async () => {
+    const methods = await getPaymentMethods();
+    setPaymentMethods(methods);
   };
 
   const total = useMemo(
@@ -190,11 +87,31 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
       `-- \n\n` +
       `*Detalle de la compra*\n\n` +
       `Nombre completo: ${fullName}\n` +
+      `Método de pago: ${selectedPaymentMethod}\n` +
       `Aclaración: ${note.trim() || 'Sin aclaración'}\n` +
       `*Total: ${total} ${siteInfo?.currency}*`
     );
     const whatsappURL = `https://wa.me/${INFORMATION.whatsappCart}?text=${whatsappMessage}`;
     window.open(whatsappURL, "_blank");
+  };
+
+  const renderTitle = (item: CartItem) => {
+    return (
+      <Text
+        fontWeight="bold"
+        fontSize="sm"
+        lineHeight="short"
+        overflow="hidden"
+        textOverflow="ellipsis"
+        style={{
+          display: '-webkit-box',
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: 'vertical',
+        }}
+      >
+        {item.title}
+      </Text>
+    );
   };
 
   return (
@@ -225,33 +142,13 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
                       flexShrink={0}
                     />
                     <Box flex={1} minWidth={0}>
-                      <Text
-                        fontWeight="bold"
-                        fontSize="sm"
-                        lineHeight="short"
-                        overflow="hidden"
-                        textOverflow="ellipsis"
-                        style={{
-                          display: '-webkit-box',
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: 'vertical',
-                        }}
-                      >
-                        {item.title}
-                      </Text>
+                      {renderTitle(item)}
                       <Text fontSize="sm">{parseCurrency(item.price)} {siteInfo?.currency}</Text>
-                      {renderStockInfo(item)}
                     </Box>
                     <HStack flexShrink={0}>
                       <Button size="sm" onClick={() => onDecrement(item)}>-</Button>
                       <Text>{item.quantity}</Text>
-                      <Button 
-                        size="sm" 
-                        onClick={() => handleIncrement(item)}
-                        isDisabled={isLoadingStock[item.id] || item.quantity >= (stockLevels[item.id] || 0)}
-                      >
-                        +
-                      </Button>
+                      <Button size="sm" onClick={() => onIncrement(item)}>+</Button>
                     </HStack>
                   </Flex>
                 ))
@@ -271,6 +168,23 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
                 {isFullNameError && (
                   <FormErrorMessage>El nombre completo es requerido</FormErrorMessage>
                 )}
+              </FormControl>
+
+              <FormControl isRequired>
+                <FormLabel>Método de pago</FormLabel>
+                <RadioGroup onChange={setSelectedPaymentMethod} value={selectedPaymentMethod}>
+                  <VStack align="start">
+                    {paymentMethods.mercadoPago && (
+                      <Radio value="MercadoPago">MercadoPago</Radio>
+                    )}
+                    {paymentMethods.cash && (
+                      <Radio value="Efectivo">Efectivo</Radio>
+                    )}
+                    {paymentMethods.bankTransfer && (
+                      <Radio value="Transferencia bancaria">Transferencia bancaria</Radio>
+                    )}
+                  </VStack>
+                </RadioGroup>
               </FormControl>
 
               <FormControl>
@@ -294,7 +208,7 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
               colorScheme="green"
               width="100%"
               onClick={handleWhatsAppRedirect}
-              isDisabled={items.length === 0 || !fullName.trim()}
+              isDisabled={items.length === 0 || !selectedPaymentMethod || !fullName.trim()}
               leftIcon={<Icon as={FaWhatsapp} />}
               mb={2}
             >
