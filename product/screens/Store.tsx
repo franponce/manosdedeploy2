@@ -351,53 +351,21 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
               sm: "repeat(auto-fill, minmax(280px, 1fr))",
             }}
           >
-            {displayedProducts.map((product, index) => {
-              const currentStock = productsStock[product.id] ?? product.stock;
-              return (
-                <Box
-                  key={product.id}
-                  ref={index === displayedProducts.length - 1 ? lastProductElementRef : null}
-                >
-                  <Box 
-                    borderWidth={1} 
-                    borderRadius="lg" 
-                    overflow="hidden"
-                    p={4}
-                  >
-                    <Stack spacing={2}>
-                      <Image
-                        src={product.image}
-                        alt={product.title}
-                        height="200px"
-                        width="100%"
-                        objectFit="cover"
-                      />
-                      <Heading size="md" noOfLines={2}>
-                        {product.title}
-                      </Heading>
-                      <Text color="gray.600" fontSize="sm" noOfLines={2}>
-                        {product.description}
-                      </Text>
-                      <Text fontWeight="bold" fontSize="xl">
-                        {parseCurrency(product.price)}
-                      </Text>
-                      {renderStockStatus(product)}
-                      <Button
-                        colorScheme={currentStock > 0 ? "blue" : "gray"}
-                        onClick={() => handleAddToCart(product)}
-                        isDisabled={!currentStock || currentStock === 0}
-                        width="full"
-                      >
-                        {!currentStock || currentStock === 0 
-                          ? "Sin stock disponible" 
-                          : "Agregar al carrito"
-                        }
-                      </Button>
-                    </Stack>
-                  </Box>
-                </Box>
-              );
-            })}
+            {displayedProducts.map((product, index) => (
+              <Box
+                key={product.id}
+                ref={index === displayedProducts.length - 1 ? lastProductElementRef : null}
+              >
+                <ProductCard
+                  product={{
+                    ...product,
+                    stock: productsStock[product.id] ?? product.stock
+                  }}
+                  onAdd={(product) => handleEditCart(product, "increment")}
+                  isLoading={false}
+                />
+              </Box>
+            ))}
           </Grid>
         ) : (
           <NoProductsFound />
