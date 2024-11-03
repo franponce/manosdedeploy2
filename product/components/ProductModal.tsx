@@ -197,20 +197,33 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     e.preventDefault();
     if (!currentProduct) return;
 
-    console.log('Enviando producto para actualizar:', currentProduct); // Debug log
-
     try {
       const productToSubmit: Product = {
         ...currentProduct,
-        description: description,
-        price: parseFloat(currentProduct.price.toString()),
+        title: currentProduct.title.trim(),
+        description: description.trim(),
+        price: parseFloat(currentProduct.price.toString()) || 0,
         isScheduled: isScheduleOpen,
-        scheduledPublishDate: isScheduleOpen && scheduledDate ? scheduledDate : null,
+        scheduledPublishDate: isScheduleOpen && scheduledDate ? 
+          scheduledDate : null, // Ya es un Date, no necesitamos convertirlo
         stock: currentProduct.stock || 0,
-        lastStockUpdate: currentProduct.lastStockUpdate || new Date().toISOString()
+        lastStockUpdate: new Date().toISOString(),
+        categoryId: currentProduct.categoryId || ''
       };
 
-      console.log('Producto formateado para enviar:', productToSubmit); // Debug log
+      // Validación específica para productos programados
+      if (isScheduleOpen && !scheduledDate) {
+        toast({
+          title: "Error",
+          description: "Debe seleccionar una fecha y hora para programar el producto",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+
+      console.log('Producto formateado para enviar:', productToSubmit);
       
       await onSubmit(productToSubmit);
       onClose();

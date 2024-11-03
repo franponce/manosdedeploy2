@@ -201,16 +201,17 @@ if (typeof window === 'undefined') {
         const { google } = await import('googleapis');
         const sheets = google.sheets({ version: 'v4', auth });
 
+        // Aseguramos que los valores no sean undefined
         const values = [
           [
             product.id, 
-            product.title, 
-            product.description, 
-            product.image, 
-            product.price.toString(),
-            product.scheduledPublishDate ? product.scheduledPublishDate.toISOString() : '',
+            product.title || '', 
+            product.description || '', 
+            product.image || '', 
+            (product.price || 0).toString(),
+            product.scheduledPublishDate ? product.scheduledPublishDate.toISOString() : '', // Convertimos a ISO string aquí
             product.isScheduled ? 'TRUE' : 'FALSE',
-            product.categoryId 
+            product.categoryId || ''
           ],
         ];
 
