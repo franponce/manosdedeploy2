@@ -154,6 +154,23 @@ const ProductDetail: React.FC = () => {
     );
   };
 
+  const renderDescription = () => {
+    if (!displayProduct?.description) return null;
+
+    // Crear un elemento temporal para parsear el HTML
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = displayProduct.description;
+
+    // Obtener el texto plano
+    const plainText = tempDiv.textContent || tempDiv.innerText || '';
+
+    return (
+      <Text>
+        {plainText}
+      </Text>
+    );
+  };
+
   if (error) {
     return (
       <Container maxW="container.xl" py={8}>
@@ -292,7 +309,7 @@ const ProductDetail: React.FC = () => {
                     <Text fontWeight="medium" mb={2}>Descripción:</Text>
                   </Skeleton>
                   <SkeletonText isLoaded={!isLoading} noOfLines={4} spacing={4}>
-                    <Text>{displayProduct?.description}</Text>
+                    {renderDescription()}
                   </SkeletonText>
                 </Box>
               </VStack>
