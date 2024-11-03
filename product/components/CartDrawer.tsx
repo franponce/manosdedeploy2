@@ -118,13 +118,12 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
     try {
       const response = await fetch(`/api/products/${product.id}/stock`);
       const { stock } = await response.json();
-      
-      const currentStock = typeof stock === 'number' ? stock : 0;
+      const currentStock = Number(stock);
       
       if (product.quantity >= currentStock) {
         toast({
           title: "Máximo alcanzado",
-          description: "Llegaste al máximo de unidades disponibles",
+          description: "Alcanzaste el máximo de unidades disponibles para este producto",
           status: "warning",
           duration: 3000,
           isClosable: true,
@@ -145,43 +144,42 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
   };
 
   const renderStockInfo = (item: CartItem) => {
-    console.log('Item recibido:', {
-      itemStock: item.stock,
-      itemQuantity: item.quantity,
-      typeofStock: typeof item.stock,
-      typeofQuantity: typeof item.quantity
-    });
+    // Obtener el stock actual del producto
+    const [currentStock, setCurrentStock] = useState<number | null>(null);
 
-    // Si el stock es undefined o null, asumimos que hay stock
-    if (item.stock === undefined || item.stock === null) {
-      return (
-        <Text 
-          fontSize="xs" 
-          color="green.500"
-          fontWeight="medium"
-        >
-          Stock disponible
-        </Text>
-      );
+    useEffect(() => {
+      const fetchStock = async () => {
+        try {
+          const response = await fetch(`/api/products/${item.id}/stock`);
+          const { stock } = await response.json();
+          setCurrentStock(Number(stock));
+        } catch (error) {
+          console.error('Error fetching stock:', error);
+        }
+      };
+      
+      fetchStock();
+    }, [item.id]);
+
+    if (currentStock === null) {
+      return null; // O un loading state
     }
 
-    const currentQuantity = item.quantity || 0;
-    
-    // Si ya tenemos todas las unidades disponibles en el carrito
-    if (currentQuantity >= item.stock) {
+    const remainingStock = Math.max(0, currentStock - item.quantity);
+
+    if (item.quantity >= currentStock) {
       return (
         <Text 
           fontSize="xs" 
           color="orange.500"
           fontWeight="medium"
         >
-          Llegaste al máximo de unidades disponibles
+          Alcanzaste el máximo de unidades disponibles para este producto
         </Text>
       );
     }
 
-    // Si queda una sola unidad disponible
-    if (item.stock - currentQuantity === 1) {
+    if (remainingStock === 1) {
       return (
         <Text 
           fontSize="xs" 
@@ -193,14 +191,13 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
       );
     }
 
-    // Stock normal
     return (
       <Text 
         fontSize="xs" 
         color="green.500"
         fontWeight="medium"
       >
-        Stock disponible: {item.stock - currentQuantity} unidades
+        Stock disponible: {remainingStock} unidades
       </Text>
     );
   };
