@@ -246,6 +246,11 @@ if (typeof window === 'undefined') {
 
     createProduct: async (product: Product): Promise<string> => {
       try {
+        const currentProducts = await googleSheetsApi.getProducts();
+        if (currentProducts.length >= PRODUCT_LIMIT) {
+          throw new Error(`Product limit of ${PRODUCT_LIMIT} reached. Unable to add more products.`);
+        }
+
         let imageToSave = product.image;
 
         // Comprimir imagen si es necesario
@@ -253,7 +258,6 @@ if (typeof window === 'undefined') {
           try {
             imageToSave = await compressImage(imageToSave);
             
-            // Si aún después de comprimir es muy grande
             if (imageToSave.length > 50000) {
               throw new Error('La imagen sigue siendo demasiado grande después de la compresión. Por favor, usa una imagen más pequeña.');
             }
@@ -267,39 +271,36 @@ if (typeof window === 'undefined') {
         const { google } = await import('googleapis');
         const sheets = google.sheets({ version: 'v4', auth });
 
-        const currentProducts = await googleSheetsApi.getProducts();
         const newId = (Math.max(...currentProducts.map((p: Product) => parseInt(p.id)), 0) + 1).toString();
-
-        // Asegurarnos de que la descripción no sea undefined o null
-        const description = product.description || '';
         
-        // Formatear fecha correctamente
-        const scheduledDate = product.scheduledPublishDate 
-          ? formatLocalDateTime(new Date(product.scheduledPublishDate))
-          : '';
+        const values = [
+          [
+            newId, 
+            product.title, 
+            product.description,
+            imageToSave, // Usamos la imagen comprimida
+            product.price.toString(),
+            product.scheduledPublishDate ? new Date(product.scheduledPublishDate).toISOString() : '',
+            product.isScheduled ? 'TRUE' : 'FALSE',
+            product.categoryId || '',
+            (product.stock || 0).toString()
+          ],
+        ];
 
-        // Usar el helper formatProductForSheet
-        const productData = formatProductForSheet({
-          ...product,
-          id: newId,
-          description: description
-        });
-
-        const values = [productData];
-
-        console.log('Valores preparados para la hoja:', values);
+        console.log('Valores a insertar:', values);
 
         await sheets.spreadsheets.values.append({
           spreadsheetId: SPREADSHEET_ID,
           range: PRODUCT_RANGE,
-          valueInputOption: 'USER_ENTERED', // Importante para preservar el formato HTML
+          valueInputOption: 'USER_ENTERED',
           insertDataOption: 'INSERT_ROWS',
           requestBody: { values },
         });
 
+        console.log('Producto creado exitosamente con ID:', newId);
         return newId;
       } catch (error) {
-        console.error('Error en createProduct:', error);
+        console.error('Error creating product in Google Sheets:', error);
         throw error;
       }
     },
