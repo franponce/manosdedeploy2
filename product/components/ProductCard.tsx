@@ -117,18 +117,28 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading, stockStatusRe
 
     return (
       <Box>
-        <div
-          dangerouslySetInnerHTML={{ __html: product.description || 'No description available' }}
-          style={{
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            display: '-webkit-box',
-            WebkitLineClamp: isDescriptionExpanded ? 'unset' : 3,
-            WebkitBoxOrient: 'vertical',
-            lineHeight: '1.5em',
-            maxHeight: isDescriptionExpanded ? 'none' : '4.5em', // 3 líneas
+        <Box
+          sx={{
+            '& p': { marginBottom: '0.5em' },
+            '& ul, & ol': { paddingLeft: '1.5em', marginBottom: '0.5em' },
+            '& li': { marginBottom: '0.25em' }
           }}
-        />
+        >
+          <div
+            dangerouslySetInnerHTML={{ 
+              __html: product.description || 'No description available' 
+            }}
+            style={{
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              display: '-webkit-box',
+              WebkitLineClamp: isDescriptionExpanded ? 'unset' : 3,
+              WebkitBoxOrient: 'vertical',
+              lineHeight: '1.5em',
+              maxHeight: isDescriptionExpanded ? 'none' : '4.5em',
+            }}
+          />
+        </Box>
         {product.description && product.description.length > 150 && (
           <Button
             size="xs"
