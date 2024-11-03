@@ -667,7 +667,16 @@ function formatLocalDateTime(scheduledPublishDate: Date): string {
   throw new Error('Function not implemented.');
 }
 
+// Constantes al inicio del archivo
+const SPREADSHEET_ID = process.env.GOOGLE_SHEET_ID;
+const SHEET_NAME = 'La Libre Web - Catálogo online rev 2021 - products';
+const PRODUCT_RANGE = `${SHEET_NAME}!A2:I`;
+
 export const updateProductStock = async (productId: string, newStock: number): Promise<void> => {
+  if (!SPREADSHEET_ID) {
+    throw new Error('GOOGLE_SHEET_ID no está configurado');
+  }
+
   try {
     const auth = await getAuthClient();
     const { google } = await import('googleapis');
@@ -675,33 +684,37 @@ export const updateProductStock = async (productId: string, newStock: number): P
 
     // Primero obtenemos el índice del producto
     const response = await sheets.spreadsheets.values.get({
-      spreadsheetId: process.env.SPREADSHEET_ID,
-      range: process.env.PRODUCT_RANGE,
+      spreadsheetId: SPREADSHEET_ID,
+      range: PRODUCT_RANGE,
+      valueRenderOption: 'UNFORMATTED_VALUE'
     });
 
-    const rows = response.data.values;
-    if (!rows || rows.length === 0) {
-      throw new Error('No se encontraron productos');
+    if (!response.data.values) {
+      throw new Error('No se encontraron datos en la hoja');
     }
 
+    const rows = response.data.values;
     const rowIndex = rows.findIndex(row => row[0] === productId);
+
     if (rowIndex === -1) {
-      throw new Error('Producto no encontrado');
+      throw new Error(`Producto no encontrado: ${productId}`);
     }
 
     // Actualizamos solo la columna de stock (I)
+    const updateRange = `${SHEET_NAME}!I${rowIndex + 2}`;
+    
     await sheets.spreadsheets.values.update({
-      spreadsheetId: process.env.SPREADSHEET_ID,
-      range: `${process.env.SHEET_NAME}!I${rowIndex + 2}`,
+      spreadsheetId: SPREADSHEET_ID,
+      range: updateRange,
       valueInputOption: 'RAW',
       requestBody: {
         values: [[newStock.toString()]]
       }
     });
 
-    console.log(`Stock actualizado para producto ${productId}: ${newStock}`);
+    console.log(`Stock actualizado exitosamente - Producto: ${productId}, Nuevo stock: ${newStock}, Rango: ${updateRange}`);
   } catch (error) {
-    console.error('Error actualizando stock:', error);
+    console.error('Error detallado actualizando stock:', error);
     throw new Error('Error al actualizar el stock');
   }
 };

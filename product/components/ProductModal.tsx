@@ -405,8 +405,8 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
               />
             </FormControl>
 
-            <FormControl>
-              <FormLabel>Stock disponible</FormLabel>
+            <FormControl isRequired>
+              <FormLabel>Stock</FormLabel>
               <NumberInput
                 value={currentProduct.stock}
                 min={0}
@@ -418,11 +418,6 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                   <NumberDecrementStepper />
                 </NumberInputStepper>
               </NumberInput>
-              <Text fontSize="sm" color={currentProduct.stock > 0 ? "green.500" : "red.500"}>
-                {currentProduct.stock > 0 
-                  ? `${currentProduct.stock} unidades disponibles`
-                  : "Sin stock disponible"}
-              </Text>
             </FormControl>
 
             <FormControl>
@@ -556,13 +551,12 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
         </ModalBody>
         <ModalFooter>
           <Button
-            colorScheme={isScheduleOpen ? "green" : "blue"}
+            colorScheme="blue"
             mr={3}
-            onClick={handleSubmit}
+            type="submit"
             isLoading={isLoading}
-            isDisabled={currentProduct.stock < 0}
           >
-            {isScheduleOpen ? "Guardar y programar" : (currentProduct.id ? "Actualizar" : "Crear")}
+            {currentProduct.id ? "Actualizar" : "Crear"}
           </Button>
           <Button variant="ghost" onClick={onClose}>
             Cancelar
