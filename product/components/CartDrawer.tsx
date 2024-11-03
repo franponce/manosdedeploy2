@@ -145,11 +145,30 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
   };
 
   const renderStockInfo = (item: CartItem) => {
-    const totalStock = typeof item.stock === 'number' ? item.stock : 0;
-    const currentQuantity = typeof item.quantity === 'number' ? item.quantity : 0;
-    const remainingStock = Math.max(0, totalStock - currentQuantity);
+    console.log('Item recibido:', {
+      itemStock: item.stock,
+      itemQuantity: item.quantity,
+      typeofStock: typeof item.stock,
+      typeofQuantity: typeof item.quantity
+    });
 
-    if (totalStock > 0 && currentQuantity >= totalStock) {
+    // Si el stock es undefined o null, asumimos que hay stock
+    if (item.stock === undefined || item.stock === null) {
+      return (
+        <Text 
+          fontSize="xs" 
+          color="green.500"
+          fontWeight="medium"
+        >
+          Stock disponible
+        </Text>
+      );
+    }
+
+    const currentQuantity = item.quantity || 0;
+    
+    // Si ya tenemos todas las unidades disponibles en el carrito
+    if (currentQuantity >= item.stock) {
       return (
         <Text 
           fontSize="xs" 
@@ -161,7 +180,8 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
       );
     }
 
-    if (remainingStock === 1) {
+    // Si queda una sola unidad disponible
+    if (item.stock - currentQuantity === 1) {
       return (
         <Text 
           fontSize="xs" 
@@ -173,25 +193,14 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
       );
     }
 
-    if (remainingStock > 1) {
-      return (
-        <Text 
-          fontSize="xs" 
-          color="green.500"
-          fontWeight="medium"
-        >
-          Stock disponible: {remainingStock} unidades
-        </Text>
-      );
-    }
-
+    // Stock normal
     return (
       <Text 
         fontSize="xs" 
-        color="red.500"
+        color="green.500"
         fontWeight="medium"
       >
-        Sin stock disponible
+        Stock disponible: {item.stock - currentQuantity} unidades
       </Text>
     );
   };
