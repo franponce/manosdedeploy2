@@ -114,18 +114,45 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
     );
   };
 
-  const handleIncrement = (product: CartItem) => {
-    if (product.quantity >= product.stock) {
+  const handleIncrement = async (product: CartItem) => {
+    try {
+      const response = await fetch(`/api/products/${product.id}/stock`);
+      const { stock } = await response.json();
+      
+      if (product.quantity >= stock) {
+        toast({
+          title: "Stock máximo alcanzado",
+          description: `Solo hay ${stock} unidades disponibles`,
+          status: "warning",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+      onIncrement(product);
+    } catch (error) {
+      console.error('Error verificando stock:', error);
       toast({
-        title: "Stock máximo alcanzado",
-        description: `Solo hay ${product.stock} unidades disponibles`,
-        status: "warning",
+        title: "Error",
+        description: "No se pudo verificar el stock disponible",
+        status: "error",
         duration: 3000,
         isClosable: true,
       });
-      return;
     }
-    onIncrement(product);
+  };
+
+  const renderStockInfo = (item: CartItem) => {
+    return (
+      <Text 
+        fontSize="xs" 
+        color={item.quantity >= item.stock ? "orange.500" : "green.500"}
+      >
+        {item.quantity >= item.stock 
+          ? "Máximo stock alcanzado" 
+          : `${item.stock - item.quantity} unidades disponibles`}
+      </Text>
+    );
   };
 
   return (
@@ -158,11 +185,18 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
                     <Box flex={1} minWidth={0}>
                       {renderTitle(item)}
                       <Text fontSize="sm">{parseCurrency(item.price)} {siteInfo?.currency}</Text>
+                      {renderStockInfo(item)}
                     </Box>
                     <HStack flexShrink={0}>
                       <Button size="sm" onClick={() => onDecrement(item)}>-</Button>
                       <Text>{item.quantity}</Text>
-                      <Button size="sm" onClick={() => handleIncrement(item)}>+</Button>
+                      <Button 
+                        size="sm" 
+                        onClick={() => handleIncrement(item)}
+                        isDisabled={item.quantity >= item.stock}
+                      >
+                        +
+                      </Button>
                     </HStack>
                   </Flex>
                 ))
