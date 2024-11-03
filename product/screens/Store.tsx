@@ -340,22 +340,31 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
               sm: "repeat(auto-fill, minmax(280px, 1fr))",
             }}
           >
-            {displayedProducts.map((product, index) => (
-              <Box
-                key={product.id}
-                ref={index === displayedProducts.length - 1 ? lastProductElementRef : null}
-              >
-                <ProductCard
-                  product={{
-                    ...product,
-                    stock: productsStock[product.id] ?? product.stock
-                  }}
-                  onAdd={handleAddToCart}
-                  isLoading={false}
-                  stockStatusRenderer={stockStatusRenderer}
-                />
-              </Box>
-            ))}
+            {displayedProducts.map((product, index) => {
+              const currentStock = productsStock[product.id] ?? product.stock;
+              
+              return (
+                <Box
+                  key={product.id}
+                  ref={index === displayedProducts.length - 1 ? lastProductElementRef : null}
+                >
+                  <ProductCard
+                    product={{
+                      ...product,
+                      stock: currentStock
+                    }}
+                    onAdd={handleAddToCart}
+                    isLoading={false}
+                    stockStatusRenderer={stockStatusRenderer}
+                    buttonProps={{
+                      isDisabled: !currentStock || currentStock === 0,
+                      colorScheme: currentStock > 0 ? "blue" : "gray",
+                      children: currentStock > 0 ? "Agregar al carrito" : "Sin stock disponible"
+                    }}
+                  />
+                </Box>
+              );
+            })}
           </Grid>
         ) : (
           <NoProductsFound />

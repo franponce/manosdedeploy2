@@ -24,9 +24,14 @@ interface Props {
   onAdd: (product: Product) => void;
   isLoading: boolean;
   stockStatusRenderer?: (product: Product) => React.ReactNode;
+  buttonProps?: {
+    isDisabled?: boolean;
+    colorScheme?: string;
+    children: React.ReactNode;
+  };
 }
 
-const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading, stockStatusRenderer }) => {
+const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading, stockStatusRenderer, buttonProps }) => {
   const { siteInfo } = useSiteInfo();
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [isTitleExpanded, setIsTitleExpanded] = useState(false);
@@ -209,6 +214,7 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading, stockStatusRe
                 onClick={() => onAdd(product)}
                 isDisabled={currentStock === 0}
                 width="full"
+                {...buttonProps}
               >
                 {currentStock > 0 ? "Agregar al carrito" : "Sin stock disponible"}
               </Button>
