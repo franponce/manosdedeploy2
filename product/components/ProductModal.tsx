@@ -197,6 +197,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     e.preventDefault();
     
     try {
+      // Validaciones iniciales
       if (!currentProduct.title || !currentProduct.price) {
         toast({
           title: "Error",
@@ -208,29 +209,30 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
         return;
       }
 
-      // Primero actualizamos el producto general
-      await onSubmit(currentProduct);
-
-      // Luego actualizamos el stock específicamente
+      // Primero actualizamos el stock
       if (currentProduct.id) {
+        console.log('Actualizando stock:', currentProduct.stock);
         const stockResponse = await fetch(`/api/products/${currentProduct.id}/stock`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ stock: currentProduct.stock })
+          body: JSON.stringify({ stock: currentProduct.stock || 0 })
         });
 
         if (!stockResponse.ok) {
-          throw new Error('Error al actualizar stock');
+          const errorData = await stockResponse.json();
+          throw new Error(errorData.message || 'Error al actualizar stock');
         }
       }
 
-      // Revalidar todos los datos
+      // Luego actualizamos el resto del producto
+      await onSubmit(currentProduct);
+
+      // Revalidar datos
       await mutate('/api/products');
       if (currentProduct.id) {
         await mutate(`/api/products/${currentProduct.id}`);
-        await mutate(`/api/products/${currentProduct.id}/stock`);
       }
 
       toast({
@@ -243,10 +245,10 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
 
       onClose();
     } catch (error) {
-      console.error('Error al actualizar producto:', error);
+      console.error('Error detallado:', error);
       toast({
         title: "Error",
-        description: "No se pudo actualizar el producto",
+        description: error instanceof Error ? error.message : "Error al actualizar el producto",
         status: "error",
         duration: 3000,
         isClosable: true,
