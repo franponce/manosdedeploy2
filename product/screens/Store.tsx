@@ -151,7 +151,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
     };
 
     updateStockForProducts();
-    const interval = setInterval(updateStockForProducts, 30000); // Actualizar cada 30 segundos
+    const interval = setInterval(updateStockForProducts, 30000);
 
     return () => clearInterval(interval);
   }, [displayedProducts]);
@@ -256,16 +256,8 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
       }
 
       addToCart({ ...product, stock }); // Actualizamos el stock en el producto
-      
-      toast({
-        title: "Producto agregado",
-        description: "El producto se agregó al carrito",
-        status: "success",
-        duration: 2000,
-        isClosable: true,
-      });
     } catch (error) {
-      console.error('Error al verificar stock:', error);
+      console.error('Error verificando stock:', error);
       toast({
         title: "Error",
         description: "No se pudo verificar el stock disponible",
@@ -330,21 +322,24 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
               sm: "repeat(auto-fill, minmax(280px, 1fr))",
             }}
           >
-            {displayedProducts.map((product, index) => (
-              <Box
-                key={product.id}
-                ref={index === displayedProducts.length - 1 ? lastProductElementRef : null}
-              >
-                <ProductCard
-                  product={{
-                    ...product,
-                    stock: productsStock[product.id] ?? product.stock
-                  }}
-                  onAdd={handleAddToCart}
-                  isLoading={false}
-                />
-              </Box>
-            ))}
+            {displayedProducts.map((product, index) => {
+              const currentStock = productsStock[product.id] ?? product.stock;
+              return (
+                <Box
+                  key={product.id}
+                  ref={index === displayedProducts.length - 1 ? lastProductElementRef : null}
+                >
+                  <ProductCard
+                    product={{
+                      ...product,
+                      stock: currentStock
+                    }}
+                    onAdd={handleAddToCart}
+                    isLoading={false}
+                  />
+                </Box>
+              );
+            })}
           </Grid>
         ) : (
           <NoProductsFound />
