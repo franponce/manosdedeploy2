@@ -210,14 +210,13 @@ if (typeof window === 'undefined') {
             product.price.toString(),
             product.scheduledPublishDate ? product.scheduledPublishDate.toISOString() : '',
             product.isScheduled ? 'TRUE' : 'FALSE',
-            product.categoryId,
-            (product.stock || 0).toString() // Agregamos stock
+            product.categoryId 
           ],
         ];
 
         await sheets.spreadsheets.values.update({
           spreadsheetId: SPREADSHEET_ID,
-          range: `La Libre Web - Catálogo online rev 2021 - products!A${parseInt(product.id) + 1}:I${parseInt(product.id) + 1}`,
+          range: `La Libre Web - Catálogo online rev 2021 - products!A${parseInt(product.id) + 1}:H${parseInt(product.id) + 1}`,
           valueInputOption: 'USER_ENTERED',
           requestBody: { values },
         });
@@ -662,44 +661,12 @@ function formatLocalDateTime(scheduledPublishDate: Date): string {
 }
 
 export const updateProductStock = async (productId: string, newStock: number): Promise<void> => {
-  if (!SPREADSHEET_ID) {
-    throw new Error('SPREADSHEET_ID no está configurado');
-  }
-
   try {
     const auth = await getAuthClient();
     const { google } = await import('googleapis');
     const sheets = google.sheets({ version: 'v4', auth });
 
-    // Primero verificamos si el producto existe
-    const product = await getProductById(productId);
-    if (!product) {
-      throw new Error(`Producto no encontrado: ${productId}`);
-    }
-
-    // Obtenemos todos los productos para encontrar el índice correcto
-    const response = await sheets.spreadsheets.values.get({
-      spreadsheetId: SPREADSHEET_ID,
-      range: PRODUCT_RANGE,
-    });
-
-    if (!response.data.values) {
-      throw new Error('No se encontraron datos en la hoja');
-    }
-
-    // Buscamos el índice exacto del producto
-    const rowIndex = response.data.values.findIndex(row => {
-      console.log('Comparando:', row[0], productId); // Debug
-      return row[0].toString() === productId.toString();
-    });
-
-    if (rowIndex === -1) {
-      throw new Error(`No se encontró la fila para el producto: ${productId}`);
-    }
-
-    // Actualizamos el stock
-    const updateRange = `${SHEET_NAME}!I${rowIndex + 2}`; // +2 porque el rango empieza en A2
-    console.log('Actualizando rango:', updateRange); // Debug
+    const updateRange = `La Libre Web - Catálogo online rev 2021 - products!I${parseInt(productId) + 1}`;
 
     await sheets.spreadsheets.values.update({
       spreadsheetId: SPREADSHEET_ID,
@@ -710,9 +677,9 @@ export const updateProductStock = async (productId: string, newStock: number): P
       }
     });
 
-    console.log(`Stock actualizado exitosamente - Producto: ${productId}, Nuevo stock: ${newStock}`);
+    console.log('Stock updated successfully');
   } catch (error) {
-    console.error('Error detallado actualizando stock:', error);
+    console.error('Error updating stock:', error);
     throw error;
   }
 };
