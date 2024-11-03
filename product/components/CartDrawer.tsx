@@ -119,10 +119,12 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
       const response = await fetch(`/api/products/${product.id}/stock`);
       const { stock } = await response.json();
       
-      if (product.quantity >= stock) {
+      const currentStock = typeof stock === 'number' ? stock : 0;
+      
+      if (product.quantity >= currentStock) {
         toast({
           title: "Stock máximo alcanzado",
-          description: `Solo hay ${stock} unidades disponibles`,
+          description: `Solo hay ${currentStock} unidades disponibles`,
           status: "warning",
           duration: 3000,
           isClosable: true,
@@ -143,14 +145,17 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
   };
 
   const renderStockInfo = (item: CartItem) => {
+    const availableStock = typeof item.stock === 'number' ? item.stock : 0;
+    const remainingStock = Math.max(0, availableStock - item.quantity);
+    
     return (
       <Text 
         fontSize="xs" 
-        color={item.quantity >= item.stock ? "orange.500" : "green.500"}
+        color={remainingStock === 0 ? "orange.500" : "green.500"}
       >
-        {item.quantity >= item.stock 
+        {remainingStock === 0
           ? "Máximo stock alcanzado" 
-          : `${item.stock - item.quantity} unidades disponibles`}
+          : `${remainingStock} ${remainingStock === 1 ? "unidad" : "unidades"} disponible${remainingStock === 1 ? '' : 's'}`}
       </Text>
     );
   };
@@ -193,7 +198,7 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
                       <Button 
                         size="sm" 
                         onClick={() => handleIncrement(item)}
-                        isDisabled={item.quantity >= item.stock}
+                        isDisabled={item.quantity >= (item.stock || 0)}
                       >
                         +
                       </Button>

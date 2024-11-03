@@ -69,12 +69,12 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
   const [selectedCategory, setSelectedCategory] = React.useState("");
   const [productsStock, setProductsStock] = React.useState<Record<string, number>>({});
 
-  const stockStatusRenderer = (product: Product) => {
-    const currentStock = productsStock[product.id] ?? product.stock;
+  const renderStockStatus = (product: Product) => {
+    const stock = typeof product.stock === 'number' ? product.stock : 0;
 
-    if (!currentStock || currentStock === 0) {
+    if (stock <= 0) {
       return (
-        <Text 
+        <Text
           color="red.500"
           fontWeight="medium"
           fontSize="sm"
@@ -92,7 +92,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
         fontSize="sm"
         textAlign="center"
       >
-        Stock disponible: {currentStock} unidades
+        Stock disponible: {stock} {stock === 1 ? "unidad" : "unidades"}
       </Text>
     );
   };
@@ -355,7 +355,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
                     }}
                     onAdd={handleAddToCart}
                     isLoading={false}
-                    stockStatusRenderer={stockStatusRenderer}
+                    stockStatusRenderer={renderStockStatus}
                     buttonProps={{
                       isDisabled: !currentStock || currentStock === 0,
                       colorScheme: currentStock > 0 ? "blue" : "gray",
