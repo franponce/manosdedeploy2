@@ -196,52 +196,34 @@ if (typeof window === 'undefined') {
 
     updateProduct: async (product: Product): Promise<void> => {
       try {
-        console.log('Actualizando producto:', product); // Log para debug
-        
-        let imageToSave = product.image;
-        if (imageToSave && imageToSave.length > 50000) {
-          try {
-            imageToSave = await compressImage(imageToSave);
-            if (imageToSave.length > 50000) {
-              throw new Error('La imagen sigue siendo demasiado grande después de la compresión.');
-            }
-          } catch (error) {
-            console.error('Error comprimiendo imagen:', error);
-            throw new Error('Error comprimiendo imagen. Por favor, intenta nuevamente.');
-          }
-        }
-
+        console.log('Updating product:', product);
         const auth = await getAuthClient();
         const { google } = await import('googleapis');
         const sheets = google.sheets({ version: 'v4', auth });
 
         const values = [
           [
-            product.id,
-            product.title,
-            product.description, // Aseguramos que la descripción se incluya
-            imageToSave,
+            product.id, 
+            product.title, 
+            product.description, 
+            product.image, 
             product.price.toString(),
-            product.scheduledPublishDate ? new Date(product.scheduledPublishDate).toISOString() : '',
+            product.scheduledPublishDate ? product.scheduledPublishDate.toISOString() : '',
             product.isScheduled ? 'TRUE' : 'FALSE',
-            product.categoryId || '',
-            (product.stock || 0).toString(),
-            product.lastStockUpdate || new Date().toISOString()
+            product.categoryId,
+            (product.stock || 0).toString() // Agregamos stock
           ],
         ];
 
-        console.log('Valores a actualizar:', values); // Log para debug
-
         await sheets.spreadsheets.values.update({
           spreadsheetId: SPREADSHEET_ID,
-          range: `La Libre Web - Catálogo online rev 2021 - products!A${parseInt(product.id) + 1}:J${parseInt(product.id) + 1}`,
+          range: `La Libre Web - Catálogo online rev 2021 - products!A${parseInt(product.id) + 1}:I${parseInt(product.id) + 1}`,
           valueInputOption: 'USER_ENTERED',
           requestBody: { values },
         });
-
-        console.log('Producto actualizado exitosamente');
+        console.log('Product updated successfully');
       } catch (error) {
-        console.error('Error actualizando producto en Google Sheets:', error);
+        console.error('Error updating product in Google Sheets:', error);
         throw error;
       }
     },
