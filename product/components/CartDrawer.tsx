@@ -145,22 +145,11 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
   };
 
   const renderStockInfo = (item: CartItem) => {
-    const availableStock = typeof item.stock === 'number' ? item.stock : 0;
-    const remainingStock = Math.max(0, availableStock - item.quantity);
-    
-    if (availableStock <= 0) {
-      return (
-        <Text 
-          fontSize="xs" 
-          color="red.500"
-          fontWeight="medium"
-        >
-          Sin stock disponible
-        </Text>
-      );
-    }
+    const totalStock = typeof item.stock === 'number' ? item.stock : 0;
+    const currentQuantity = typeof item.quantity === 'number' ? item.quantity : 0;
+    const remainingStock = Math.max(0, totalStock - currentQuantity);
 
-    if (item.quantity >= availableStock) {
+    if (totalStock > 0 && currentQuantity >= totalStock) {
       return (
         <Text 
           fontSize="xs" 
@@ -184,13 +173,25 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
       );
     }
 
+    if (remainingStock > 1) {
+      return (
+        <Text 
+          fontSize="xs" 
+          color="green.500"
+          fontWeight="medium"
+        >
+          Stock disponible: {remainingStock} unidades
+        </Text>
+      );
+    }
+
     return (
       <Text 
         fontSize="xs" 
-        color="green.500"
+        color="red.500"
         fontWeight="medium"
       >
-        Stock disponible: {remainingStock} unidades
+        Sin stock disponible
       </Text>
     );
   };
