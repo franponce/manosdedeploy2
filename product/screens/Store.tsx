@@ -61,10 +61,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
       revalidateOnFocus: true,
     }
   );
-  const { data: categories } = useSWR<Category[]>('/api/categories', fetcher, {
-    fallbackData: initialCategories,
-    refreshInterval: 60000,
-  });
+  const { data: categories = [], error: categoriesError } = useSWR<Category[]>('/api/categories');
   const [searchTerm, setSearchTerm] = React.useState("");
   const [selectedCategory, setSelectedCategory] = React.useState("");
   const [productsStock, setProductsStock] = React.useState<Record<string, number>>({});
@@ -307,11 +304,11 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
           >
-            {categories?.map((category) => (
+            {Array.isArray(categories) ? categories.map((category) => (
               <option key={category.id} value={category.id}>
                 {category.name}
               </option>
-            ))}
+            )) : null}
           </Select>
         </Flex>
 

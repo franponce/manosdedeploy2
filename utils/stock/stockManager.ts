@@ -6,7 +6,10 @@ export class StockManager {
     try {
       const products = await getProducts();
       const product = products.find((p: Product) => p.id === productId);
-      return product?.stock || 0;
+      
+      // Asegurarse de que el stock sea un número
+      const stock = Number(product?.stock);
+      return isNaN(stock) ? 0 : stock;
     } catch (error) {
       console.error('Error al obtener stock actual:', error);
       throw new Error('Error al obtener stock actual');

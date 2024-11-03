@@ -180,14 +180,14 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
 
     const remainingStock = Math.max(0, currentStock - item.quantity);
 
-    if (item.quantity >= currentStock) {
+    if (currentStock === 0) {
       return (
         <Text 
           fontSize="xs" 
-          color="orange.500"
+          color="red.500"
           fontWeight="medium"
         >
-          Llegaste al máximo de unidades disponibles para este producto
+          Sin stock disponible
         </Text>
       );
     }
