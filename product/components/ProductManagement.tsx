@@ -246,33 +246,37 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
   };
 
   const handleSubmit = async (product: Product) => {
+    setIsLoading(true);
     try {
-      if (onsubmit) {
-        await onsubmit(product);
-        // Revalidar datos
-        await mutate('/api/products');
-        
-        if (router.query.id) {
-          await mutate(`/api/products/${router.query.id}`);
-        }
-
-        toast({
-          title: "Éxito",
-          description: "Producto actualizado correctamente",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
+      console.log('Producto recibido para actualizar:', product); // Debug log
+      
+      if (product.id) {
+        await updateProduct(product);
+        await fetchProducts(); // Refrescamos la lista después de actualizar
+      } else {
+        await createProduct(product);
       }
+      setIsModalOpen(false);
+      setCurrentProduct(null);
+      
+      toast({
+        title: "Éxito",
+        description: `Producto ${product.id ? "actualizado" : "creado"} exitosamente.`,
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
     } catch (error) {
-      console.error('Error:', error);
+      console.error("Error saving product:", error);
       toast({
         title: "Error",
-        description: "No se pudo actualizar el producto",
+        description: error instanceof Error ? error.message : "Error desconocido al guardar el producto",
         status: "error",
         duration: 3000,
         isClosable: true,
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 

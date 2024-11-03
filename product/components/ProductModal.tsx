@@ -197,9 +197,9 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     e.preventDefault();
     if (!currentProduct) return;
 
+    console.log('Enviando producto para actualizar:', currentProduct); // Debug log
+
     try {
-      console.log('Descripción antes de enviar:', description);
-      
       const productToSubmit: Product = {
         ...currentProduct,
         description: description,
@@ -210,15 +210,15 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
         lastStockUpdate: currentProduct.lastStockUpdate || new Date().toISOString()
       };
 
-      console.log('Descripción en productToSubmit:', productToSubmit.description);
+      console.log('Producto formateado para enviar:', productToSubmit); // Debug log
       
       await onSubmit(productToSubmit);
       onClose();
     } catch (error) {
-      console.error('Error detallado:', error);
+      console.error("Error al guardar el producto:", error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Error al actualizar el producto",
+        description: "No se pudo guardar el producto. Por favor, intente de nuevo.",
         status: "error",
         duration: 3000,
         isClosable: true,
