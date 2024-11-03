@@ -66,6 +66,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
   });
   const [searchTerm, setSearchTerm] = React.useState("");
   const [selectedCategory, setSelectedCategory] = React.useState("");
+  const [productsStock, setProductsStock] = React.useState<Record<string, number>>({});
 
   React.useEffect(() => {
     if (products) {
@@ -124,6 +125,36 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
 
     return () => clearInterval(interval);
   }, [products, mutate]);
+
+  React.useEffect(() => {
+    const updateStockForProducts = async () => {
+      if (!displayedProducts?.length) return;
+
+      const stockPromises = displayedProducts.map(async (product) => {
+        try {
+          const response = await fetch(`/api/products/${product.id}/stock`);
+          const { stock } = await response.json();
+          return { id: product.id, stock };
+        } catch (error) {
+          console.error(`Error fetching stock for product ${product.id}:`, error);
+          return { id: product.id, stock: product.stock };
+        }
+      });
+
+      const stockResults = await Promise.all(stockPromises);
+      const newStockState = stockResults.reduce((acc, { id, stock }) => {
+        acc[id] = stock;
+        return acc;
+      }, {} as Record<string, number>);
+
+      setProductsStock(newStockState);
+    };
+
+    updateStockForProducts();
+    const interval = setInterval(updateStockForProducts, 30000); // Actualizar cada 30 segundos
+
+    return () => clearInterval(interval);
+  }, [displayedProducts]);
 
   const total = React.useMemo(
     () => parseCurrency(cart.reduce((total, product) => total + product.price * product.quantity, 0)),
@@ -305,7 +336,10 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
                 ref={index === displayedProducts.length - 1 ? lastProductElementRef : null}
               >
                 <ProductCard
-                  product={product}
+                  product={{
+                    ...product,
+                    stock: productsStock[product.id] ?? product.stock
+                  }}
                   onAdd={handleAddToCart}
                   isLoading={false}
                 />
