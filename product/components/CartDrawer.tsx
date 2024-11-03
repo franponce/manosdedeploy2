@@ -52,10 +52,31 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
   const [isFullNameError, setIsFullNameError] = useState<boolean>(false);
   const toast = useToast();
   const { siteInfo } = useSiteInfo();
+  const [stockLevels, setStockLevels] = useState<{ [key: string]: number }>({});
 
   useEffect(() => {
     fetchPaymentMethods();
   }, [isOpen]);
+
+  useEffect(() => {
+    const fetchStockLevels = async () => {
+      const levels: { [key: string]: number } = {};
+      for (const item of items) {
+        try {
+          const response = await fetch(`/api/products/${item.id}/stock`);
+          const { stock } = await response.json();
+          levels[item.id] = Number(stock);
+        } catch (error) {
+          console.error('Error fetching stock for item:', item.id, error);
+        }
+      }
+      setStockLevels(levels);
+    };
+
+    if (isOpen) {
+      fetchStockLevels();
+    }
+  }, [isOpen, items]);
 
   const fetchPaymentMethods = async () => {
     const methods = await getPaymentMethods();
@@ -115,53 +136,29 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
   };
 
   const handleIncrement = async (product: CartItem) => {
-    try {
-      const response = await fetch(`/api/products/${product.id}/stock`);
-      const { stock } = await response.json();
-      const currentStock = Number(stock);
-      
-      if (product.quantity >= currentStock) {
-        toast({
-          title: "Máximo alcanzado",
-          description: "Alcanzaste el máximo de unidades disponibles para este producto",
-          status: "warning",
-          duration: 3000,
-          isClosable: true,
-        });
-        return;
-      }
-      onIncrement(product);
-    } catch (error) {
-      console.error('Error verificando stock:', error);
+    const currentStock = stockLevels[product.id];
+    
+    if (currentStock === undefined) {
+      return; // Esperar a que se cargue el stock
+    }
+
+    if (product.quantity >= currentStock) {
       toast({
-        title: "Error",
-        description: "No se pudo verificar el stock disponible",
-        status: "error",
+        title: "Máximo alcanzado",
+        description: "Alcanzaste el máximo de unidades disponibles para este producto",
+        status: "warning",
         duration: 3000,
         isClosable: true,
       });
+      return;
     }
+    onIncrement(product);
   };
 
   const renderStockInfo = (item: CartItem) => {
-    // Obtener el stock actual del producto
-    const [currentStock, setCurrentStock] = useState<number | null>(null);
-
-    useEffect(() => {
-      const fetchStock = async () => {
-        try {
-          const response = await fetch(`/api/products/${item.id}/stock`);
-          const { stock } = await response.json();
-          setCurrentStock(Number(stock));
-        } catch (error) {
-          console.error('Error fetching stock:', error);
-        }
-      };
-      
-      fetchStock();
-    }, [item.id]);
-
-    if (currentStock === null) {
+    const currentStock = stockLevels[item.id];
+    
+    if (currentStock === undefined) {
       return null; // O un loading state
     }
 
