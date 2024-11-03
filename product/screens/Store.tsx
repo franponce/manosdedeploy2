@@ -261,17 +261,6 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
       const response = await fetch(`/api/products/${product.id}/stock`);
       const { stock } = await response.json();
       
-      if (!stock || stock === 0) {
-        toast({
-          title: "Sin stock",
-          description: "Este producto no tiene stock disponible",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-        return;
-      }
-
       const cartItem = cart.find(item => item.id === product.id);
       if (cartItem && cartItem.quantity >= stock) {
         toast({
