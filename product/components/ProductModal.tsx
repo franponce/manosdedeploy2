@@ -193,99 +193,77 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     }
   }, [toast]);
 
-  // Log antes de enviar el formulario
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!currentProduct) return;
+    
+    try {
+      if (!currentProduct.title || !currentProduct.price) {
+        toast({
+          title: "Error",
+          description: "Título y precio son obligatorios",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
 
-    const stockValue = parseInt(currentProduct.stock.toString());
-    if (isNaN(stockValue) || stockValue < 0) {
+      // Primero actualizamos el producto general
+      await onSubmit(currentProduct);
+
+      // Luego actualizamos el stock específicamente
+      if (currentProduct.id) {
+        const stockResponse = await fetch(`/api/products/${currentProduct.id}/stock`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ stock: currentProduct.stock })
+        });
+
+        if (!stockResponse.ok) {
+          throw new Error('Error al actualizar stock');
+        }
+      }
+
+      // Revalidar todos los datos
+      await mutate('/api/products');
+      if (currentProduct.id) {
+        await mutate(`/api/products/${currentProduct.id}`);
+        await mutate(`/api/products/${currentProduct.id}/stock`);
+      }
+
       toast({
-        title: "Error",
-        description: "El stock debe ser un número válido mayor o igual a cero",
-        status: "error",
-        duration: 3000,
+        title: "Éxito",
+        description: "Producto actualizado correctamente",
+        status: "success",
+        duration: 2000,
         isClosable: true,
       });
-      return;
-    }
-
-    console.log('Enviando producto con datos:', {
-      ...currentProduct,
-      stock: typeof currentProduct.stock === 'number' ? currentProduct.stock : 'no definido'
-    });
-
-    try {
-      const productToSubmit = {
-        ...currentProduct,
-        stock: stockValue
-      };
-
-      await onSubmit(productToSubmit);
-      
-      await mutate('/api/products');
-      
-      if (router.query.id) {
-        await mutate(`/api/products/${router.query.id}`);
-      }
 
       onClose();
     } catch (error) {
-      console.error('Error al guardar:', error);
+      console.error('Error al actualizar producto:', error);
       toast({
         title: "Error",
-        description: "No se pudo guardar el producto",
+        description: "No se pudo actualizar el producto",
         status: "error",
         duration: 3000,
         isClosable: true,
       });
     }
+  };
+
+  const handleStockChange = (value: number) => {
+    setCurrentProduct(prev => ({
+      ...prev,
+      stock: value
+    }));
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setCurrentProduct(prev => ({ ...prev, [name]: value }));
-  };
-
-  // Log cuando se actualiza el stock
-  const handleStockChange = async (valueString: string) => {
-    const value = parseInt(valueString);
-    if (isNaN(value) || value < 0) return;
-
-    try {
-      if (currentProduct.id) {
-        const response = await fetch(`/api/products/${currentProduct.id}/stock`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ stock: value })
-        });
-
-        if (!response.ok) {
-          throw new Error('Error al actualizar stock');
-        }
-
-        // Actualizamos el estado local después de confirmar la actualización
-        setCurrentProduct(prev => ({
-          ...prev,
-          stock: value
-        }));
-
-        // Revalidamos los datos
-        await mutate(`/api/products/${currentProduct.id}`);
-        await mutate('/api/products');
-      }
-    } catch (error) {
-      console.error('Error actualizando stock:', error);
-      toast({
-        title: "Error",
-        description: "No se pudo actualizar el stock",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    }
   };
 
   const handleDateChange = (date: Date | null) => {
@@ -353,13 +331,14 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl">
-      <ModalContent maxW={{ base: "95%", sm: "600px" }}>
+      <ModalOverlay />
+      <ModalContent as="form" onSubmit={handleSubmit}>
         <ModalHeader>
-          {currentProduct.id ? "Editar Producto" : "Crear Nuevo Producto"}
+          {currentProduct.id ? "Editar Producto" : "Crear Producto"}
         </ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          <VStack spacing={4} as="form" onSubmit={handleSubmit}>
+          <VStack spacing={4}>
             <FormControl>
               <FormLabel>Título</FormLabel>
               <Input
@@ -429,15 +408,9 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
             <FormControl>
               <FormLabel>Stock disponible</FormLabel>
               <NumberInput
-                min={0}
                 value={currentProduct.stock}
-                onChange={(valueString) => {
-                  const value = parseInt(valueString);
-                  setCurrentProduct(prev => ({
-                    ...prev,
-                    stock: isNaN(value) ? 0 : value
-                  }));
-                }}
+                min={0}
+                onChange={(_, valueNumber) => handleStockChange(valueNumber)}
               >
                 <NumberInputField />
                 <NumberInputStepper>
