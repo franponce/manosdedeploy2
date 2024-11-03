@@ -69,6 +69,34 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
   const [selectedCategory, setSelectedCategory] = React.useState("");
   const [productsStock, setProductsStock] = React.useState<Record<string, number>>({});
 
+  const renderStockStatus = (product: Product) => {
+    const currentStock = productsStock[product.id] ?? product.stock;
+
+    if (!currentStock || currentStock === 0) {
+      return (
+        <Text 
+          color="red.500"
+          fontWeight="medium"
+          fontSize="sm"
+          textAlign="center"
+        >
+          Sin stock disponible
+        </Text>
+      );
+    }
+
+    return (
+      <Text
+        color="green.500"
+        fontWeight="medium"
+        fontSize="sm"
+        textAlign="center"
+      >
+        Stock disponible: {currentStock} unidades
+      </Text>
+    );
+  };
+
   React.useEffect(() => {
     if (products) {
       let filteredProducts = products.filter(product =>
@@ -267,34 +295,6 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
         isClosable: true,
       });
     }
-  };
-
-  const renderStockStatus = (product: Product) => {
-    const currentStock = productsStock[product.id] ?? product.stock;
-
-    if (!currentStock || currentStock === 0) {
-      return (
-        <Text 
-          color="red.500"
-          fontWeight="medium"
-          fontSize="sm"
-          textAlign="center"
-        >
-          Sin stock disponible
-        </Text>
-      );
-    }
-
-    return (
-      <Text
-        color="green.500"
-        fontWeight="medium"
-        fontSize="sm"
-        textAlign="center"
-      >
-        Stock disponible: {currentStock} unidades
-      </Text>
-    );
   };
 
   if (error) return <div>Failed to load products</div>;
