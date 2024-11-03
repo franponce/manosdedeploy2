@@ -253,11 +253,6 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     if (isNaN(value) || value < 0) return;
 
     try {
-      setCurrentProduct(prev => ({
-        ...prev,
-        stock: value
-      }));
-
       if (currentProduct.id) {
         const response = await fetch(`/api/products/${currentProduct.id}/stock`, {
           method: 'PUT',
@@ -270,9 +265,19 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
         if (!response.ok) {
           throw new Error('Error al actualizar stock');
         }
+
+        // Actualizamos el estado local después de confirmar la actualización
+        setCurrentProduct(prev => ({
+          ...prev,
+          stock: value
+        }));
+
+        // Revalidamos los datos
+        await mutate(`/api/products/${currentProduct.id}`);
+        await mutate('/api/products');
       }
     } catch (error) {
-      console.error('Error al actualizar stock:', error);
+      console.error('Error actualizando stock:', error);
       toast({
         title: "Error",
         description: "No se pudo actualizar el stock",

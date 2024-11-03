@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Box,
   Image,
@@ -32,6 +32,22 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading }) => {
   const [isMobile] = useMediaQuery("(max-width: 48em)");
   const router = useRouter();
   const { addToCart } = useCart();
+  const [currentStock, setCurrentStock] = useState(product.stock);
+
+  // Verificar stock en tiempo real
+  useEffect(() => {
+    const checkStock = async () => {
+      try {
+        const response = await fetch(`/api/products/${product.id}/stock`);
+        const data = await response.json();
+        setCurrentStock(data.stock);
+      } catch (error) {
+        console.error('Error verificando stock:', error);
+      }
+    };
+
+    checkStock();
+  }, [product.id]);
 
   const handleProductClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -158,23 +174,21 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading }) => {
               </Text>
               <Text 
                 fontSize="sm" 
-                color={product.stock > 0 ? "green.500" : "red.500"}
+                color={currentStock > 0 ? "green.500" : "red.500"}
+                fontWeight="bold"
                 textAlign="center"
               >
-                {product.stock > 0 
-                  ? `${product.stock} unidades disponibles`
+                {currentStock > 0 
+                  ? `${currentStock} unidades disponibles`
                   : "Sin stock"}
               </Text>
               <Button
-                colorScheme={!product.stock || product.stock === 0 ? "gray" : "blue"}
+                colorScheme={currentStock > 0 ? "blue" : "gray"}
                 onClick={() => onAdd(product)}
-                isDisabled={!product.stock || product.stock === 0}
+                isDisabled={currentStock === 0}
                 width="full"
               >
-                {!product.stock || product.stock === 0 ? 
-                  "Sin stock disponible" : 
-                  "Agregar al carrito"
-                }
+                {currentStock > 0 ? "Agregar al carrito" : "Sin stock disponible"}
               </Button>
             </>
           )}

@@ -33,7 +33,8 @@ async function getAuthClient() {
 if (typeof window === 'undefined') {
   // Esto solo se ejecutará en el servidor
   const SPREADSHEET_ID = process.env.GOOGLE_SHEET_ID;
-  const PRODUCT_RANGE = 'La Libre Web - Catálogo online rev 2021 - products!A2:H';
+  const SHEET_NAME = 'La Libre Web - Catálogo online rev 2021 - products';
+  const PRODUCT_RANGE = `${SHEET_NAME}!A2:I`;
   const CATEGORY_RANGE = 'Categories!A2:B'; // Nuevo rango para las categorías
   const PRODUCT_LIMIT = 30;
 
@@ -665,4 +666,43 @@ const formatProductForSheet = (product: Product): string[] => {
 function formatLocalDateTime(scheduledPublishDate: Date): string {
   throw new Error('Function not implemented.');
 }
+
+export const updateProductStock = async (productId: string, newStock: number): Promise<void> => {
+  try {
+    const auth = await getAuthClient();
+    const { google } = await import('googleapis');
+    const sheets = google.sheets({ version: 'v4', auth });
+
+    // Primero obtenemos el índice del producto
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: process.env.SPREADSHEET_ID,
+      range: process.env.PRODUCT_RANGE,
+    });
+
+    const rows = response.data.values;
+    if (!rows || rows.length === 0) {
+      throw new Error('No se encontraron productos');
+    }
+
+    const rowIndex = rows.findIndex(row => row[0] === productId);
+    if (rowIndex === -1) {
+      throw new Error('Producto no encontrado');
+    }
+
+    // Actualizamos solo la columna de stock (I)
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: process.env.SPREADSHEET_ID,
+      range: `${process.env.SHEET_NAME}!I${rowIndex + 2}`,
+      valueInputOption: 'RAW',
+      requestBody: {
+        values: [[newStock.toString()]]
+      }
+    });
+
+    console.log(`Stock actualizado para producto ${productId}: ${newStock}`);
+  } catch (error) {
+    console.error('Error actualizando stock:', error);
+    throw new Error('Error al actualizar el stock');
+  }
+};
 
