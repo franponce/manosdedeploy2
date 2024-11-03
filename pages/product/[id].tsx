@@ -157,17 +157,29 @@ const ProductDetail: React.FC = () => {
   const renderDescription = () => {
     if (!displayProduct?.description) return null;
 
-    // Crear un elemento temporal para parsear el HTML
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = displayProduct.description;
-
-    // Obtener el texto plano
-    const plainText = tempDiv.textContent || tempDiv.innerText || '';
-
     return (
-      <Text>
-        {plainText}
-      </Text>
+      <Box
+        className="product-description"
+        dangerouslySetInnerHTML={{ __html: displayProduct.description }}
+        sx={{
+          'p': {
+            marginBottom: '1em'
+          },
+          'ul, ol': {
+            marginLeft: '1.5em',
+            marginBottom: '1em'
+          },
+          'li': {
+            marginBottom: '0.5em'
+          },
+          'strong': {
+            fontWeight: 'bold'
+          },
+          'em': {
+            fontStyle: 'italic'
+          }
+        }}
+      />
     );
   };
 
