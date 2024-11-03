@@ -115,6 +115,20 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading, stockStatusRe
       setIsDescriptionExpanded(!isDescriptionExpanded);
     }
 
+    const truncateText = (html: string, maxLength: number) => {
+      if (html.length <= maxLength) return html;
+      
+      // Crear un elemento temporal para parsear el HTML
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = html;
+      
+      // Obtener el texto plano
+      const text = tempDiv.textContent || tempDiv.innerText;
+      const truncated = text.slice(0, maxLength);
+      
+      return truncated + '...';
+    };
+
     return (
       <Box>
         <Box
@@ -126,7 +140,9 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading, stockStatusRe
         >
           <div
             dangerouslySetInnerHTML={{ 
-              __html: product.description || 'No description available' 
+              __html: isDescriptionExpanded 
+                ? product.description 
+                : truncateText(product.description || '', 150)
             }}
             style={{
               overflow: 'hidden',
