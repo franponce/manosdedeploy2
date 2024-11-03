@@ -17,7 +17,6 @@ import {
   Text,
   Box,
   Collapse,
-  useDisclosure,
   useMediaQuery,
   Flex,
   Center,
@@ -73,7 +72,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const toast = useToast();
   const [scheduledDate, setScheduledDate] = useState<Date | null>(null);
-  const { isOpen: isScheduleOpen, onToggle: toggleSchedule } = useDisclosure();
+  const [isScheduleOpen, setIsScheduleOpen] = useState(false);
   const [isMobile] = useMediaQuery("(max-width: 48em)");
   const { siteInfo } = useSiteInfo();
   const [description, setDescription] = useState('');
@@ -103,9 +102,8 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
       setImagePreview(product.image);
       setDescription(product.description || '');
       if (product.scheduledPublishDate) {
-        const date = new Date(product.scheduledPublishDate);
-        setScheduledDate(date);
-        toggleSchedule();
+        setScheduledDate(new Date(product.scheduledPublishDate));
+        setIsScheduleOpen(true);
       }
     } else {
       setCurrentProduct({
@@ -118,13 +116,15 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
         isScheduled: false,
         scheduledPublishDate: null,
         categoryId: "",
-        stock: 0
+        stock: 0,
+        lastStockUpdate: new Date().toISOString()
       });
       setImagePreview(null);
       setDescription('');
       setScheduledDate(null);
+      setIsScheduleOpen(false);
     }
-  }, [product, toggleSchedule]);
+  }, [product]);
 
   const handleProductImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -344,6 +344,18 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     }
   };
 
+  const handleToggleSchedule = () => {
+    setIsScheduleOpen(!isScheduleOpen);
+    if (!isScheduleOpen) {
+      // Si estamos abriendo la programación y no hay fecha seleccionada
+      if (!scheduledDate) {
+        const defaultDate = new Date();
+        defaultDate.setHours(defaultDate.getHours() + 1);
+        setScheduledDate(defaultDate);
+      }
+    }
+  };
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl">
       <ModalOverlay />
@@ -511,7 +523,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
             <Button
               leftIcon={<TimeIcon />}
               variant="outline"
-              onClick={toggleSchedule}
+              onClick={handleToggleSchedule}
               width="100%"
               justifyContent="flex-start"
             >
