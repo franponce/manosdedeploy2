@@ -134,6 +134,32 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading }) => {
     );
   };
 
+  const renderStockStatus = () => {
+    if (currentStock === 0) {
+      return (
+        <Text 
+          fontSize="sm" 
+          color="red.500"
+          fontWeight="bold"
+          textAlign="center"
+        >
+          Sin stock disponible
+        </Text>
+      );
+    }
+
+    return (
+      <Text 
+        fontSize="sm" 
+        color="green.500"
+        fontWeight="bold"
+        textAlign="center"
+      >
+        Stock disponible: {currentStock} unidades
+      </Text>
+    );
+  };
+
   return (
     <Box 
       borderWidth={1} 
@@ -172,16 +198,7 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading }) => {
               <Text fontWeight="bold" fontSize="xl">
                 {parseCurrency(product.price || 0)} {siteInfo?.currency}
               </Text>
-              <Text 
-                fontSize="sm" 
-                color={currentStock > 0 ? "green.500" : "red.500"}
-                fontWeight="bold"
-                textAlign="center"
-              >
-                {currentStock > 0 
-                  ? `${currentStock} unidades disponibles`
-                  : "Sin stock"}
-              </Text>
+              {renderStockStatus()}
               <Button
                 colorScheme={currentStock > 0 ? "blue" : "gray"}
                 onClick={() => onAdd(product)}

@@ -127,6 +127,32 @@ const ProductDetail: React.FC = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const renderStockStatus = () => {
+    if (!displayProduct?.stock || displayProduct.stock === 0) {
+      return (
+        <Text 
+          color="red.500"
+          fontWeight="medium"
+          fontSize="md"
+        >
+          Sin stock disponible
+        </Text>
+      );
+    }
+
+    return (
+      <HStack spacing={2}>
+        <Text
+          color="green.500"
+          fontWeight="medium"
+          fontSize="md"
+        >
+          Stock disponible: {displayProduct.stock} unidades
+        </Text>
+      </HStack>
+    );
+  };
+
   if (error) {
     return (
       <Container maxW="container.xl" py={8}>
@@ -179,20 +205,7 @@ const ProductDetail: React.FC = () => {
                   <Text fontSize="2xl" fontWeight="bold">
                     {parseCurrency(displayProduct?.price || 0)}
                   </Text>
-                  <Text 
-                    color={displayProduct?.stock > 0 ? "green.500" : "red.500"}
-                    fontWeight="medium"
-                    fontSize="md"
-                  >
-                    {displayProduct?.stock > 0 ? (
-                      <HStack spacing={2}>
-                        <Text>Stock disponible:</Text>
-                        <Text>{displayProduct.stock} unidades</Text>
-                      </HStack>
-                    ) : (
-                      <Text>Sin stock disponible</Text>
-                    )}
-                  </Text>
+                  {renderStockStatus()}
                 </Box>
 
                 <Button
