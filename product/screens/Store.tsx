@@ -283,7 +283,12 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
             }}
           >
             {Array.from({ length: 6 }).map((_, index) => (
-              <ProductCard key={index} product={{} as Product} onAdd={() => {}} isLoading={true} />
+              <ProductCard 
+                key={index} 
+                product={{} as Product} 
+                onAdd={() => {}} 
+                isLoading={true} 
+              />
             ))}
           </Grid>
         ) : displayedProducts.length ? (
