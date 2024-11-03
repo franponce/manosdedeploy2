@@ -75,7 +75,18 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
   }
 
   const handleAddToCart = async (product: Product) => {
-    handleEditCart(product, "increment");
+    try {
+      await addToCart(product);
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo agregar el producto al carrito",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
 
   const renderStockStatus = (product: Product) => {
@@ -89,7 +100,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
           fontSize="sm"
           textAlign="center"
         >
-          Sin stock
+          Sin stock disponible
         </Text>
       );
     }
@@ -311,7 +322,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
             }}
           >
             {displayedProducts.map((product, index) => {
-              const currentStock = stockLevels[product.id] ?? product.stock;
+              const currentStock = stockLevels[product.id] ?? productsStock[product.id] ?? product.stock;
               
               return (
                 <Box
@@ -329,7 +340,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
                     buttonProps={{
                       isDisabled: !currentStock || currentStock <= 0,
                       colorScheme: currentStock > 0 ? "blue" : "gray",
-                      children: currentStock > 0 ? "Agregar al carrito" : "Sin stock"
+                      children: currentStock > 0 ? "Agregar al carrito" : "Sin stock disponible"
                     }}
                   />
                 </Box>
