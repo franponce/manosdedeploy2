@@ -41,47 +41,128 @@ interface Props {
 }
 
 const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDecrement }) => {
-  const [paymentMethods, setPaymentMethods] = useState<PaymentMethods>({
-    mercadoPago: false,
-    cash: false,
-    bankTransfer: false,
-  });
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('');
+  const [isLoadingStock, setIsLoadingStock] = useState<{ [key: string]: boolean }>({});
+  const [stockLevels, setStockLevels] = useState<{ [key: string]: number }>({});
   const [note, setNote] = useState<string>('');
   const [fullName, setFullName] = useState<string>('');
   const [isFullNameError, setIsFullNameError] = useState<boolean>(false);
   const toast = useToast();
   const { siteInfo } = useSiteInfo();
-  const [stockLevels, setStockLevels] = useState<{ [key: string]: number }>({});
 
-  useEffect(() => {
-    fetchPaymentMethods();
-  }, [isOpen]);
+  // Función para obtener stock de un solo producto
+  const fetchProductStock = async (productId: string) => {
+    try {
+      setIsLoadingStock(prev => ({ ...prev, [productId]: true }));
+      const response = await fetch(`/api/products/${productId}/stock`);
+      if (!response.ok) throw new Error('Error al obtener stock');
+      const { stock } = await response.json();
+      setStockLevels(prev => ({ ...prev, [productId]: Number(stock) }));
+    } catch (error) {
+      console.error(`Error al obtener stock para producto ${productId}:`, error);
+      // Mantener el stock anterior si hay error
+      setStockLevels(prev => ({ ...prev, [productId]: prev[productId] || 0 }));
+    } finally {
+      setIsLoadingStock(prev => ({ ...prev, [productId]: false }));
+    }
+  };
 
+  // Efecto para cargar el stock cuando se abre el drawer
   useEffect(() => {
-    const fetchStockLevels = async () => {
-      const levels: { [key: string]: number } = {};
-      for (const item of items) {
-        try {
-          const response = await fetch(`/api/products/${item.id}/stock`);
-          const { stock } = await response.json();
-          console.log(`Stock for ${item.id}:`, stock);
-          levels[item.id] = Number(stock);
-        } catch (error) {
-          console.error('Error fetching stock for item:', item.id, error);
+    if (isOpen && items.length > 0) {
+      items.forEach(item => {
+        if (!isLoadingStock[item.id]) {
+          fetchProductStock(item.id);
         }
-      }
-      setStockLevels(levels);
-    };
-
-    if (isOpen) {
-      fetchStockLevels();
+      });
     }
   }, [isOpen, items]);
 
-  const fetchPaymentMethods = async () => {
-    const methods = await getPaymentMethods();
-    setPaymentMethods(methods);
+  const handleIncrement = async (product: CartItem) => {
+    const currentStock = stockLevels[product.id];
+    
+    if (isLoadingStock[product.id]) {
+      toast({
+        title: "Cargando stock",
+        description: "Por favor, espera mientras verificamos el stock disponible",
+        status: "info",
+        duration: 2000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (currentStock === undefined) {
+      await fetchProductStock(product.id);
+      return;
+    }
+
+    if (product.quantity >= currentStock) {
+      toast({
+        title: "Stock máximo alcanzado",
+        description: "Has alcanzado el máximo de unidades disponibles",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    onIncrement(product);
+  };
+
+  const renderStockInfo = (item: CartItem) => {
+    if (isLoadingStock[item.id]) {
+      return (
+        <Text 
+          fontSize="xs" 
+          color="gray.500"
+          fontWeight="medium"
+        >
+          Verificando stock...
+        </Text>
+      );
+    }
+
+    const currentStock = stockLevels[item.id];
+    if (currentStock === undefined) {
+      return null;
+    }
+
+    const remainingStock = Math.max(0, currentStock - item.quantity);
+
+    if (remainingStock === 0) {
+      return (
+        <Text 
+          fontSize="xs" 
+          color="red.500"
+          fontWeight="medium"
+        >
+          Sin stock adicional disponible
+        </Text>
+      );
+    }
+
+    if (remainingStock === 1) {
+      return (
+        <Text 
+          fontSize="xs" 
+          color="orange.500"
+          fontWeight="medium"
+        >
+          ¡Última unidad disponible!
+        </Text>
+      );
+    }
+
+    return (
+      <Text 
+        fontSize="xs" 
+        color="green.500"
+        fontWeight="medium"
+      >
+        Stock disponible: {remainingStock} {remainingStock === 1 ? "unidad" : "unidades"}
+      </Text>
+    );
   };
 
   const total = useMemo(
@@ -109,110 +190,11 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
       `-- \n\n` +
       `*Detalle de la compra*\n\n` +
       `Nombre completo: ${fullName}\n` +
-      `Método de pago: ${selectedPaymentMethod}\n` +
       `Aclaración: ${note.trim() || 'Sin aclaración'}\n` +
       `*Total: ${total} ${siteInfo?.currency}*`
     );
     const whatsappURL = `https://wa.me/${INFORMATION.whatsappCart}?text=${whatsappMessage}`;
     window.open(whatsappURL, "_blank");
-  };
-
-  const renderTitle = (item: CartItem) => {
-    return (
-      <Text
-        fontWeight="bold"
-        fontSize="sm"
-        lineHeight="short"
-        overflow="hidden"
-        textOverflow="ellipsis"
-        style={{
-          display: '-webkit-box',
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical',
-        }}
-      >
-        {item.title}
-      </Text>
-    );
-  };
-
-  const handleIncrement = async (product: CartItem) => {
-    const currentStock = stockLevels[product.id];
-
-    if (currentStock === undefined) {
-      toast({
-        title: "Cargando stock",
-        description: "Por favor, espera mientras se carga la información del stock.",
-        status: "info",
-        duration: 3000,
-        isClosable: true,
-      });
-      return; // Esperar a que se cargue el stock
-    }
-
-    if (product.quantity >= currentStock) {
-      toast({
-        title: "Máximo alcanzado",
-        description: "Llegaste al máximo de unidades disponibles para este producto",
-        status: "warning",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-    onIncrement(product);
-  };
-
-  const renderStockInfo = (item: CartItem) => {
-    const currentStock = stockLevels[item.id];
-
-    if (currentStock === undefined) {
-      return (
-        <Text 
-          fontSize="xs" 
-          color="gray.500"
-          fontWeight="medium"
-        >
-          Cargando stock...
-        </Text>
-      );
-    }
-
-    const remainingStock = Math.max(0, currentStock - item.quantity);
-
-    if (currentStock === 0) {
-      return (
-        <Text 
-          fontSize="xs" 
-          color="red.500"
-          fontWeight="medium"
-        >
-          Sin stock disponible
-        </Text>
-      );
-    }
-
-    if (remainingStock === 1) {
-      return (
-        <Text 
-          fontSize="xs" 
-          color="orange.500"
-          fontWeight="medium"
-        >
-          ¡Última unidad disponible!
-        </Text>
-      );
-    }
-
-    return (
-      <Text 
-        fontSize="xs" 
-        color="green.500"
-        fontWeight="medium"
-      >
-        Stock disponible: {remainingStock} {remainingStock === 1 ? "unidad" : "unidades"}
-      </Text>
-    );
   };
 
   return (
@@ -243,7 +225,20 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
                       flexShrink={0}
                     />
                     <Box flex={1} minWidth={0}>
-                      {renderTitle(item)}
+                      <Text
+                        fontWeight="bold"
+                        fontSize="sm"
+                        lineHeight="short"
+                        overflow="hidden"
+                        textOverflow="ellipsis"
+                        style={{
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                        }}
+                      >
+                        {item.title}
+                      </Text>
                       <Text fontSize="sm">{parseCurrency(item.price)} {siteInfo?.currency}</Text>
                       {renderStockInfo(item)}
                     </Box>
@@ -253,8 +248,7 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
                       <Button 
                         size="sm" 
                         onClick={() => handleIncrement(item)}
-                        isDisabled={item.quantity >= (item.stock || 0)}
-                        aria-label="Incrementar cantidad"
+                        isDisabled={isLoadingStock[item.id] || item.quantity >= (stockLevels[item.id] || 0)}
                       >
                         +
                       </Button>
@@ -279,23 +273,6 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
                 )}
               </FormControl>
 
-              <FormControl isRequired>
-                <FormLabel>Método de pago</FormLabel>
-                <RadioGroup onChange={setSelectedPaymentMethod} value={selectedPaymentMethod}>
-                  <VStack align="start">
-                    {paymentMethods.mercadoPago && (
-                      <Radio value="MercadoPago">MercadoPago</Radio>
-                    )}
-                    {paymentMethods.cash && (
-                      <Radio value="Efectivo">Efectivo</Radio>
-                    )}
-                    {paymentMethods.bankTransfer && (
-                      <Radio value="Transferencia bancaria">Transferencia bancaria</Radio>
-                    )}
-                  </VStack>
-                </RadioGroup>
-              </FormControl>
-
               <FormControl>
                 <FormLabel>Aclaración (opcional)</FormLabel>
                 <Textarea
@@ -317,7 +294,7 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
               colorScheme="green"
               width="100%"
               onClick={handleWhatsAppRedirect}
-              isDisabled={items.length === 0 || !selectedPaymentMethod || !fullName.trim()}
+              isDisabled={items.length === 0 || !fullName.trim()}
               leftIcon={<Icon as={FaWhatsapp} />}
               mb={2}
             >
