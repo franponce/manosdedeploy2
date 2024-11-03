@@ -137,7 +137,7 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
 
   const handleIncrement = async (product: CartItem) => {
     const currentStock = stockLevels[product.id];
-    
+
     if (currentStock === undefined) {
       return; // Esperar a que se cargue el stock
     }
@@ -145,7 +145,7 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
     if (product.quantity >= currentStock) {
       toast({
         title: "Máximo alcanzado",
-        description: "Alcanzaste el máximo de unidades disponibles para este producto",
+        description: "Llegaste al máximo de unidades disponibles para este producto",
         status: "warning",
         duration: 3000,
         isClosable: true,
@@ -157,9 +157,17 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
 
   const renderStockInfo = (item: CartItem) => {
     const currentStock = stockLevels[item.id];
-    
+
     if (currentStock === undefined) {
-      return null; // O un loading state
+      return (
+        <Text 
+          fontSize="xs" 
+          color="gray.500"
+          fontWeight="medium"
+        >
+          Cargando stock...
+        </Text>
+      );
     }
 
     const remainingStock = Math.max(0, currentStock - item.quantity);
@@ -171,7 +179,7 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
           color="orange.500"
           fontWeight="medium"
         >
-          Alcanzaste el máximo de unidades disponibles para este producto
+          Llegaste al máximo de unidades disponibles para este producto
         </Text>
       );
     }
@@ -194,7 +202,7 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
         color="green.500"
         fontWeight="medium"
       >
-        Stock disponible: {remainingStock} unidades
+        Stock disponible: {remainingStock} {remainingStock === 1 ? "unidad" : "unidades"}
       </Text>
     );
   };
