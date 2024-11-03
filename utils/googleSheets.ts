@@ -607,45 +607,57 @@ export const {
   deleteCategory,
 } = googleSheetsApi;
 
+// Constantes globales al inicio del archivo
+const SPREADSHEET_ID = process.env.GOOGLE_SHEET_ID;
+const SHEET_NAME = 'La Libre Web - Catálogo online rev 2021 - products';
+const PRODUCT_RANGE = `${SHEET_NAME}!A2:I`;
+
 export const getProductById = async (id: string): Promise<Product | null> => {
+  if (!SPREADSHEET_ID) {
+    throw new Error('GOOGLE_SHEET_ID no está configurado');
+  }
+
   try {
     const auth = await getAuthClient();
     const { google } = await import('googleapis');
     const sheets = google.sheets({ version: 'v4', auth });
 
-    // Obtener todos los productos
     const response = await sheets.spreadsheets.values.get({
-      spreadsheetId: process.env.SPREADSHEET_ID,
-      range: process.env.PRODUCT_RANGE,
+      spreadsheetId: SPREADSHEET_ID,
+      range: PRODUCT_RANGE,
+      valueRenderOption: 'UNFORMATTED_VALUE'
     });
 
-    const rows = response.data.values;
-    if (!rows) return null;
+    if (!response.data.values) {
+      console.log('No se encontraron datos en la hoja');
+      return null;
+    }
 
-    // Buscar el producto por ID
-    const productRow = rows.find(row => row[0] === id);
-    if (!productRow) return null;
+    const product = response.data.values.find(row => row[0] === id);
+    
+    if (!product) {
+      console.log(`No se encontró el producto con ID: ${id}`);
+      return null;
+    }
 
     return {
-      id: productRow[0],
-      title: productRow[1],
-      description: productRow[2],
-      image: productRow[3],
-      price: parseFloat(productRow[4]) || 0,
-      scheduledPublishDate: productRow[5] ? new Date(productRow[5].replace(' ', 'T')) : null,
-      isScheduled: productRow[6] === 'TRUE',
-      categoryId: productRow[7] || '',
-      stock: parseInt(productRow[8]) || 0,
-      currency: 'USD'
+      id: product[0],
+      title: product[1],
+      description: product[2],
+      image: product[3],
+      price: parseFloat(product[4]) || 0,
+      scheduledPublishDate: product[5] ? new Date(product[5]) : null,
+      isScheduled: product[6] === 'TRUE',
+      categoryId: product[7] || '',
+      stock: parseInt(product[8]) || 0,
+      currency: 'ARS'
     };
+
   } catch (error) {
-    console.error('Error fetching product by ID:', error);
-    return null;
+    console.error('Error detallado obteniendo producto por ID:', error);
+    throw new Error('Error al obtener el producto');
   }
 };
-function getGoogleSheet() {
-  throw new Error('Function not implemented.');
-}
 
 // Asegurarnos que el stock se incluya en todas las operaciones
 const formatProductForSheet = (product: Product): string[] => {
@@ -666,11 +678,6 @@ const formatProductForSheet = (product: Product): string[] => {
 function formatLocalDateTime(scheduledPublishDate: Date): string {
   throw new Error('Function not implemented.');
 }
-
-// Constantes al inicio del archivo
-const SPREADSHEET_ID = process.env.GOOGLE_SHEET_ID;
-const SHEET_NAME = 'La Libre Web - Catálogo online rev 2021 - products';
-const PRODUCT_RANGE = `${SHEET_NAME}!A2:I`;
 
 export const updateProductStock = async (productId: string, newStock: number): Promise<void> => {
   if (!SPREADSHEET_ID) {
