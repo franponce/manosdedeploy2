@@ -197,34 +197,42 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     e.preventDefault();
     if (!currentProduct) return;
 
+    const price = parseFloat(currentProduct.price.toString());
+    if (isNaN(price) || price <= 0) {
+      toast({
+        title: "Error",
+        description: "Por favor, ingrese un precio válido mayor que 0.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (isScheduleOpen && !scheduledDate) {
+      toast({
+        title: "Error",
+        description: "Por favor, seleccione una fecha y hora para la publicación programada.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
     try {
       const productToSubmit: Product = {
         ...currentProduct,
-        title: currentProduct.title.trim(),
-        description: description.trim(),
-        price: parseFloat(currentProduct.price.toString()) || 0,
+        description: description,
+        price,
         isScheduled: isScheduleOpen,
-        scheduledPublishDate: isScheduleOpen && scheduledDate ? 
-          scheduledDate : null, // Ya es un Date, no necesitamos convertirlo
+        scheduledPublishDate: scheduledDate,
+        categoryId: currentProduct.categoryId || '',
         stock: currentProduct.stock || 0,
-        lastStockUpdate: new Date().toISOString(),
-        categoryId: currentProduct.categoryId || ''
+        lastStockUpdate: currentProduct.lastStockUpdate || new Date().toISOString()
       };
 
-      // Validación específica para productos programados
-      if (isScheduleOpen && !scheduledDate) {
-        toast({
-          title: "Error",
-          description: "Debe seleccionar una fecha y hora para programar el producto",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-        return;
-      }
-
-      console.log('Producto formateado para enviar:', productToSubmit);
-      
+      console.log('Producto a enviar:', productToSubmit);
       await onSubmit(productToSubmit);
       onClose();
     } catch (error) {
