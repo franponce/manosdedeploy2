@@ -197,42 +197,64 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     e.preventDefault();
     if (!currentProduct) return;
 
-    const price = parseFloat(currentProduct.price.toString());
-    if (isNaN(price) || price <= 0) {
-      toast({
-        title: "Error",
-        description: "Por favor, ingrese un precio válido mayor que 0.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
-    if (isScheduleOpen && !scheduledDate) {
-      toast({
-        title: "Error",
-        description: "Por favor, seleccione una fecha y hora para la publicación programada.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
     try {
+      console.log('Estado actual antes de submit:', {
+        currentProduct,
+        description,
+        scheduledDate,
+        isScheduleOpen
+      });
+
+      // Validaciones
+      if (!currentProduct.title.trim()) {
+        toast({
+          title: "Error",
+          description: "El título es obligatorio",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+
+      const price = parseFloat(currentProduct.price.toString());
+      if (isNaN(price) || price <= 0) {
+        toast({
+          title: "Error",
+          description: "Por favor, ingrese un precio válido mayor que 0.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+
+      if (isScheduleOpen && !scheduledDate) {
+        toast({
+          title: "Error",
+          description: "Por favor, seleccione una fecha y hora para la publicación programada.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+
       const productToSubmit: Product = {
         ...currentProduct,
+        title: currentProduct.title.trim(),
         description: description,
-        price,
+        image: currentProduct.image, // Mantenemos la imagen
+        price: price,
         isScheduled: isScheduleOpen,
         scheduledPublishDate: scheduledDate,
         categoryId: currentProduct.categoryId || '',
         stock: currentProduct.stock || 0,
-        lastStockUpdate: currentProduct.lastStockUpdate || new Date().toISOString()
+        lastStockUpdate: currentProduct.lastStockUpdate || new Date().toISOString(),
+        currency: currentProduct.currency || 'ARS'
       };
 
-      console.log('Producto a enviar:', productToSubmit);
+      console.log('Producto final a enviar:', productToSubmit);
       await onSubmit(productToSubmit);
       onClose();
     } catch (error) {
