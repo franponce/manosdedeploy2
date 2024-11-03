@@ -195,54 +195,24 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+    if (!currentProduct) return;
+
     try {
-      // Validaciones iniciales
-      if (!currentProduct.title || !currentProduct.price) {
-        toast({
-          title: "Error",
-          description: "Título y precio son obligatorios",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-        return;
-      }
+      console.log('Descripción antes de enviar:', description);
+      
+      const productToSubmit: Product = {
+        ...currentProduct,
+        description: description,
+        price: parseFloat(currentProduct.price.toString()),
+        isScheduled: isScheduleOpen,
+        scheduledPublishDate: isScheduleOpen && scheduledDate ? scheduledDate : null,
+        stock: currentProduct.stock || 0,
+        lastStockUpdate: currentProduct.lastStockUpdate || new Date().toISOString()
+      };
 
-      // Primero actualizamos el stock
-      if (currentProduct.id) {
-        console.log('Actualizando stock:', currentProduct.stock);
-        const stockResponse = await fetch(`/api/products/${currentProduct.id}/stock`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ stock: currentProduct.stock || 0 })
-        });
-
-        if (!stockResponse.ok) {
-          const errorData = await stockResponse.json();
-          throw new Error(errorData.message || 'Error al actualizar stock');
-        }
-      }
-
-      // Luego actualizamos el resto del producto
-      await onSubmit(currentProduct);
-
-      // Revalidar datos
-      await mutate('/api/products');
-      if (currentProduct.id) {
-        await mutate(`/api/products/${currentProduct.id}`);
-      }
-
-      toast({
-        title: "Éxito",
-        description: "Producto actualizado correctamente",
-        status: "success",
-        duration: 2000,
-        isClosable: true,
-      });
-
+      console.log('Descripción en productToSubmit:', productToSubmit.description);
+      
+      await onSubmit(productToSubmit);
       onClose();
     } catch (error) {
       console.error('Error detallado:', error);

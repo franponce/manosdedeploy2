@@ -246,18 +246,17 @@ if (typeof window === 'undefined') {
 
     createProduct: async (product: Product): Promise<string> => {
       try {
+        console.log('Descripción recibida:', product.description);
+        
         const currentProducts = await googleSheetsApi.getProducts();
         if (currentProducts.length >= PRODUCT_LIMIT) {
           throw new Error(`Product limit of ${PRODUCT_LIMIT} reached. Unable to add more products.`);
         }
 
         let imageToSave = product.image;
-
-        // Comprimir imagen si es necesario
         if (imageToSave && imageToSave.length > 50000) {
           try {
             imageToSave = await compressImage(imageToSave);
-            
             if (imageToSave.length > 50000) {
               throw new Error('La imagen sigue siendo demasiado grande después de la compresión. Por favor, usa una imagen más pequeña.');
             }
@@ -273,12 +272,15 @@ if (typeof window === 'undefined') {
 
         const newId = (Math.max(...currentProducts.map((p: Product) => parseInt(p.id)), 0) + 1).toString();
         
+        const description = product.description || '';
+        console.log('Descripción procesada:', description);
+        
         const values = [
           [
             newId, 
             product.title, 
-            product.description,
-            imageToSave, // Usamos la imagen comprimida
+            description,
+            imageToSave,
             product.price.toString(),
             product.scheduledPublishDate ? new Date(product.scheduledPublishDate).toISOString() : '',
             product.isScheduled ? 'TRUE' : 'FALSE',
@@ -287,20 +289,21 @@ if (typeof window === 'undefined') {
           ],
         ];
 
-        console.log('Valores a insertar:', values);
+        console.log('Valores a insertar en sheets:', JSON.stringify(values, null, 2));
 
-        await sheets.spreadsheets.values.append({
+        const response = await sheets.spreadsheets.values.append({
           spreadsheetId: SPREADSHEET_ID,
           range: PRODUCT_RANGE,
-          valueInputOption: 'USER_ENTERED',
+          valueInputOption: 'RAW',
           insertDataOption: 'INSERT_ROWS',
           requestBody: { values },
         });
 
+        console.log('Respuesta de Google Sheets:', response.data);
         console.log('Producto creado exitosamente con ID:', newId);
         return newId;
       } catch (error) {
-        console.error('Error creating product in Google Sheets:', error);
+        console.error('Error detallado en createProduct:', error);
         throw error;
       }
     },
