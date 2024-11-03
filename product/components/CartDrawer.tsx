@@ -148,14 +148,37 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
     const availableStock = typeof item.stock === 'number' ? item.stock : 0;
     const remainingStock = Math.max(0, availableStock - item.quantity);
     
+    if (availableStock <= 0) {
+      return (
+        <Text 
+          fontSize="xs" 
+          color="red.500"
+          fontWeight="medium"
+        >
+          Sin stock disponible
+        </Text>
+      );
+    }
+
+    if (item.quantity >= availableStock) {
+      return (
+        <Text 
+          fontSize="xs" 
+          color="orange.500"
+          fontWeight="medium"
+        >
+          Máximo stock alcanzado
+        </Text>
+      );
+    }
+
     return (
       <Text 
         fontSize="xs" 
-        color={remainingStock === 0 ? "orange.500" : "green.500"}
+        color="green.500"
+        fontWeight="medium"
       >
-        {remainingStock === 0
-          ? "Máximo stock alcanzado" 
-          : `${remainingStock} ${remainingStock === 1 ? "unidad" : "unidades"} disponible${remainingStock === 1 ? '' : 's'}`}
+        {remainingStock} {remainingStock === 1 ? "unidad disponible" : "unidades disponibles"}
       </Text>
     );
   };
@@ -199,6 +222,7 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
                         size="sm" 
                         onClick={() => handleIncrement(item)}
                         isDisabled={item.quantity >= (item.stock || 0)}
+                        aria-label="Incrementar cantidad"
                       >
                         +
                       </Button>
