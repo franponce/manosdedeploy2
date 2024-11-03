@@ -270,38 +270,36 @@ if (typeof window === 'undefined') {
         const currentProducts = await googleSheetsApi.getProducts();
         const newId = (Math.max(...currentProducts.map((p: Product) => parseInt(p.id)), 0) + 1).toString();
 
+        // Asegurarnos de que la descripción no sea undefined o null
+        const description = product.description || '';
+        
         // Formatear fecha correctamente
         const scheduledDate = product.scheduledPublishDate 
           ? formatLocalDateTime(new Date(product.scheduledPublishDate))
           : '';
 
-        const values = [
-          [
-            newId,
-            product.title,
-            product.description,
-            imageToSave,
-            product.price.toString(),
-            scheduledDate,
-            product.isScheduled ? 'TRUE' : 'FALSE',
-            product.categoryId || '',
-            product.stock.toString()
-          ]
-        ];
+        // Usar el helper formatProductForSheet
+        const productData = formatProductForSheet({
+          ...product,
+          id: newId,
+          description: description
+        });
 
-        console.log('Prepared values for sheet:', values);
+        const values = [productData];
+
+        console.log('Valores preparados para la hoja:', values);
 
         await sheets.spreadsheets.values.append({
           spreadsheetId: SPREADSHEET_ID,
           range: PRODUCT_RANGE,
-          valueInputOption: 'USER_ENTERED',
+          valueInputOption: 'USER_ENTERED', // Importante para preservar el formato HTML
           insertDataOption: 'INSERT_ROWS',
           requestBody: { values },
         });
 
         return newId;
       } catch (error) {
-        console.error('Error in createProduct:', error);
+        console.error('Error en createProduct:', error);
         throw error;
       }
     },
@@ -659,14 +657,14 @@ export const getProductById = async (id: string): Promise<Product | null> => {
 const formatProductForSheet = (product: Product): string[] => {
   return [
     product.id,
-    product.title,
-    product.description,
-    product.image,
-    product.price.toString(),
-    product.scheduledPublishDate ? formatLocalDateTime(product.scheduledPublishDate) : '',
+    product.title || '',
+    product.description || '', // Aseguramos que no sea undefined
+    product.image || '',
+    (product.price || 0).toString(),
+    product.scheduledPublishDate ? formatLocalDateTime(new Date(product.scheduledPublishDate)) : '',
     product.isScheduled ? 'TRUE' : 'FALSE',
     product.categoryId || '',
-    product.stock.toString(),
+    (product.stock || 0).toString(),
     product.lastStockUpdate || ''
   ];
 };
