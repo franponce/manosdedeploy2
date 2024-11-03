@@ -69,7 +69,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
   const [selectedCategory, setSelectedCategory] = React.useState("");
   const [productsStock, setProductsStock] = React.useState<Record<string, number>>({});
 
-  const renderStockStatus = (product: Product) => {
+  const stockStatusRenderer = (product: Product) => {
     const currentStock = productsStock[product.id] ?? product.stock;
 
     if (!currentStock || currentStock === 0) {
@@ -361,8 +361,9 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
                     ...product,
                     stock: productsStock[product.id] ?? product.stock
                   }}
-                  onAdd={(product) => handleEditCart(product, "increment")}
+                  onAdd={handleAddToCart}
                   isLoading={false}
+                  stockStatusRenderer={stockStatusRenderer}
                 />
               </Box>
             ))}

@@ -23,9 +23,10 @@ interface Props {
   product: Product;
   onAdd: (product: Product) => void;
   isLoading: boolean;
+  stockStatusRenderer?: (product: Product) => React.ReactNode;
 }
 
-const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading }) => {
+const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading, stockStatusRenderer }) => {
   const { siteInfo } = useSiteInfo();
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [isTitleExpanded, setIsTitleExpanded] = useState(false);
@@ -202,7 +203,7 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading }) => {
               <Text fontWeight="bold" fontSize="xl">
                 {parseCurrency(product.price || 0)} {siteInfo?.currency}
               </Text>
-              {renderStockStatus()}
+              {stockStatusRenderer ? stockStatusRenderer(product) : renderStockStatus()}
               <Button
                 colorScheme={currentStock > 0 ? "blue" : "gray"}
                 onClick={() => onAdd(product)}
