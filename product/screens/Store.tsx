@@ -66,6 +66,18 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
   const [selectedCategory, setSelectedCategory] = React.useState("");
   const [productsStock, setProductsStock] = React.useState<Record<string, number>>({});
 
+  function handleEditCart(product: Product, action: "increment" | "decrement") {
+    if (action === "increment") {
+      addToCart(product);
+    } else {
+      removeFromCart(product);
+    }
+  }
+
+  const handleAddToCart = async (product: Product) => {
+    handleEditCart(product, "increment");
+  };
+
   const renderStockStatus = (product: Product) => {
     const currentStock = stockLevels[product.id] ?? product.stock;
 
@@ -77,7 +89,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
           fontSize="sm"
           textAlign="center"
         >
-          Sin stock disponible
+          Sin stock
         </Text>
       );
     }
@@ -188,29 +200,6 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
   );
 
   const quantity = React.useMemo(() => cart.reduce((acc, item) => acc + item.quantity, 0), [cart]);
-
-  function handleEditCart(product: Product, action: "increment" | "decrement") {
-    if (action === "increment") {
-      addToCart(product);
-    } else {
-      removeFromCart(product);
-    }
-  }
-
-  const handleAddToCart = async (product: Product) => {
-    try {
-      await addToCart(product);
-    } catch (error) {
-      console.error('Error adding to cart:', error);
-      toast({
-        title: "Error",
-        description: "No se pudo agregar el producto al carrito",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    }
-  };
 
   const NoProductsFound = () => {
     if (selectedCategory && !searchTerm) {
@@ -340,7 +329,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
                     buttonProps={{
                       isDisabled: !currentStock || currentStock <= 0,
                       colorScheme: currentStock > 0 ? "blue" : "gray",
-                      children: currentStock > 0 ? "Agregar al carrito" : "Sin stock disponible"
+                      children: currentStock > 0 ? "Agregar al carrito" : "Sin stock"
                     }}
                   />
                 </Box>
