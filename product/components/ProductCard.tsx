@@ -46,8 +46,12 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading }) => {
       }
     };
 
-    checkStock();
-  }, [product.id]);
+    if (!isLoading && product.id) {
+      checkStock();
+      const interval = setInterval(checkStock, 30000); // Actualizar cada 30 segundos
+      return () => clearInterval(interval);
+    }
+  }, [product.id, isLoading]);
 
   const handleProductClick = (e: React.MouseEvent) => {
     e.preventDefault();

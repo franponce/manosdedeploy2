@@ -195,31 +195,54 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
     }
   };
 
-  const handleAddToCart = (product: Product) => {
-    if (!product.stock || product.stock === 0) {
+  const handleAddToCart = async (product: Product) => {
+    try {
+      // Verificar stock actual
+      const response = await fetch(`/api/products/${product.id}/stock`);
+      const { stock } = await response.json();
+      
+      if (!stock || stock === 0) {
+        toast({
+          title: "Sin stock",
+          description: "Este producto no tiene stock disponible",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+
+      const cartItem = cart.find(item => item.id === product.id);
+      if (cartItem && cartItem.quantity >= stock) {
+        toast({
+          title: "Stock máximo alcanzado",
+          description: `Solo hay ${stock} unidades disponibles`,
+          status: "warning",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+
+      addToCart({ ...product, stock }); // Actualizamos el stock en el producto
+      
       toast({
-        title: "Sin stock",
-        description: "Este producto no tiene stock disponible",
+        title: "Producto agregado",
+        description: "El producto se agregó al carrito",
+        status: "success",
+        duration: 2000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('Error al verificar stock:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo verificar el stock disponible",
         status: "error",
         duration: 3000,
         isClosable: true,
       });
-      return;
     }
-
-    const cartItem = cart.find(item => item.id === product.id);
-    if (cartItem && cartItem.quantity >= product.stock) {
-      toast({
-        title: "Stock máximo alcanzado",
-        description: `Solo hay ${product.stock} unidades disponibles`,
-        status: "warning",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
-    addToCart(product);
   };
 
   if (error) return <div>Failed to load products</div>;
@@ -278,7 +301,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
               >
                 <ProductCard
                   product={product}
-                  onAdd={(product) => handleAddToCart(product)}
+                  onAdd={handleAddToCart}
                   isLoading={false}
                 />
               </Box>
