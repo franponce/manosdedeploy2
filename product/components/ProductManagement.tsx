@@ -21,6 +21,9 @@ import {
   Tooltip,
   Table,
   Select,
+  Skeleton,
+  SkeletonText,
+  Stack,
 } from "@chakra-ui/react";
 import { SearchIcon } from "@chakra-ui/icons";
 import { FaTrash } from "react-icons/fa";
@@ -173,26 +176,24 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
   }, [fetchProducts]);
 
   const handleEdit = async (product: Product) => {
+    setCurrentProduct(product);
+    setIsModalOpen(true);
+
     try {
-      setIsLoading(true);
-      // Obtener el producto actualizado del sheet
       const response = await fetch(`/api/products/${product.id}`);
       if (!response.ok) throw new Error('Error al obtener el producto');
       
       const updatedProduct = await response.json();
       setCurrentProduct(updatedProduct);
-      setIsModalOpen(true);
     } catch (error) {
       console.error('Error al obtener el producto:', error);
       toast({
-        title: "Error",
-        description: "No se pudo obtener la información actualizada del producto",
-        status: "error",
+        title: "Advertencia",
+        description: "Usando datos locales del producto. Algunos campos podrían no estar actualizados.",
+        status: "warning",
         duration: 3000,
         isClosable: true,
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -314,6 +315,26 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
     );
   };
 
+  // Primero creamos un componente para el skeleton
+  const ProductSkeleton = () => (
+    <Box borderRadius="lg" borderWidth={1} overflow="hidden">
+      <AspectRatio ratio={1}>
+        <Skeleton height="100%" />
+      </AspectRatio>
+      <Box p={4}>
+        <Stack spacing={4}>
+          <SkeletonText noOfLines={2} spacing="4" />
+          <SkeletonText noOfLines={3} spacing="4" />
+          <Skeleton height="20px" />
+          <HStack spacing={4}>
+            <Skeleton height="40px" width="100px" />
+            <Skeleton height="40px" width="100px" />
+          </HStack>
+        </Stack>
+      </Box>
+    </Box>
+  );
+
   return (
     <Box>
       {products.length >= PRODUCT_LIMIT - 5 && products.length < PRODUCT_LIMIT && (
@@ -332,9 +353,11 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
       )}
 
       {isLoading ? (
-        <Center p={8}>
-          <Spinner size="xl" />
-        </Center>
+        <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+          {Array.from({ length: 6 }).map((_, index) => (
+            <ProductSkeleton key={index} />
+          ))}
+        </SimpleGrid>
       ) : displayedProducts.length ? (
         <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
           {displayedProducts.map((product, index) => (
