@@ -680,8 +680,12 @@ function formatLocalDateTime(scheduledPublishDate: Date): string {
 }
 
 export const updateProductStock = async (productId: string, newStock: number): Promise<void> => {
+  console.log('Actualizando stock para:', productId, 'nuevo stock:', newStock);
+  console.log('SPREADSHEET_ID:', SPREADSHEET_ID);
+  
   if (!SPREADSHEET_ID) {
-    throw new Error('GOOGLE_SHEET_ID no está configurado');
+    console.error('SPREADSHEET_ID no está configurado');
+    throw new Error('Configuración incompleta');
   }
 
   try {
@@ -721,8 +725,8 @@ export const updateProductStock = async (productId: string, newStock: number): P
 
     console.log(`Stock actualizado exitosamente - Producto: ${productId}, Nuevo stock: ${newStock}, Rango: ${updateRange}`);
   } catch (error) {
-    console.error('Error detallado actualizando stock:', error);
-    throw new Error('Error al actualizar el stock');
+    console.error('Error completo:', error);
+    throw error; // Propagar el error original para mejor debugging
   }
 };
 
