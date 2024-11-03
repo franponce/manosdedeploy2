@@ -207,7 +207,6 @@ if (typeof window === 'undefined') {
           if (product.scheduledPublishDate instanceof Date) {
             formattedDate = product.scheduledPublishDate.toISOString();
           } else {
-            // Si es string, asegurarnos de que sea una fecha válida
             formattedDate = new Date(product.scheduledPublishDate).toISOString();
           }
         }
@@ -219,19 +218,20 @@ if (typeof window === 'undefined') {
             product.description || '', 
             product.image || '', 
             (product.price || 0).toString(),
-            formattedDate, // Usamos la fecha formateada
+            formattedDate,
             product.isScheduled ? 'TRUE' : 'FALSE',
-            product.categoryId || ''
+            product.categoryId || '',
+            (product.stock || 0).toString()
           ],
         ];
 
         await sheets.spreadsheets.values.update({
           spreadsheetId: SPREADSHEET_ID,
-          range: `${SHEET_NAME}!A${parseInt(product.id) + 1}:H${parseInt(product.id) + 1}`,
+          range: `${SHEET_NAME}!A${parseInt(product.id) + 1}:I${parseInt(product.id) + 1}`,
           valueInputOption: 'USER_ENTERED',
           requestBody: { values },
         });
-        console.log('Product updated successfully');
+        console.log('Product updated successfully with stock:', product.stock);
       } catch (error) {
         console.error('Error updating product in Google Sheets:', error);
         throw new Error('Error al actualizar el producto. Por favor, intente nuevamente.');
