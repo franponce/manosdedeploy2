@@ -27,6 +27,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { parseCookies, destroyCookie } from 'nookies';
 import HamburgerMenu from '../product/components/HamburgerMenu';
 import { FaArrowLeft, FaEye, FaArrowRight } from 'react-icons/fa';
+import { CartProvider } from '../contexts/CartContext';
 
 const MyApp = ({ Component, pageProps }: AppProps) => {
   const router = useRouter();
@@ -408,7 +409,9 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
               </Flex>
             </>
           )}
-          <Component {...pageProps} />
+          <CartProvider>
+            <Component {...pageProps} />
+          </CartProvider>
           {shouldShowHeader && (
             <>
               <Divider marginY={4} />

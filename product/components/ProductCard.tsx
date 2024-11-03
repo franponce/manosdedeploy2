@@ -31,36 +31,14 @@ interface Props {
   };
 }
 
-const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading, stockStatusRenderer, buttonProps }) => {
+const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading: cardLoading }) => {
   const { siteInfo } = useSiteInfo();
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [isTitleExpanded, setIsTitleExpanded] = useState(false);
   const [isMobile] = useMediaQuery("(max-width: 48em)");
   const router = useRouter();
-  const { addToCart } = useCart();
-  const [currentStock, setCurrentStock] = useState(product.stock);
-
-  // Verificar stock en tiempo real
-  useEffect(() => {
-    const checkStock = async () => {
-      try {
-        const response = await fetch(`/api/products/${product.id}/stock`);
-        if (!response.ok) {
-          throw new Error('Error al obtener stock');
-        }
-        const data = await response.json();
-        setCurrentStock(data.stock);
-      } catch (error) {
-        console.error('Error al verificar stock:', error);
-      }
-    };
-
-    if (!isLoading && product.id) {
-      checkStock();
-      const interval = setInterval(checkStock, 30000); // Actualizar cada 30 segundos
-      return () => clearInterval(interval);
-    }
-  }, [product.id, isLoading]);
+  const { addToCart, isLoading, stockLevels } = useCart();
+  const [currentStock, setCurrentStock] = useState<number>(0);
 
   const handleProductClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -174,7 +152,7 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading, stockStatusRe
   };
 
   const renderStockStatus = () => {
-    if (currentStock === 0) {
+    if (stockLevels[product.id] === 0) {
       return (
         <Text 
           fontSize="sm" 
@@ -194,9 +172,13 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading, stockStatusRe
         fontWeight="bold"
         textAlign="center"
       >
-        Stock disponible: {currentStock} unidades
+        Stock disponible: {stockLevels[product.id]} unidades
       </Text>
     );
+  };
+
+  const handleAddToCart = async () => {
+    await addToCart(product);
   };
 
   return (
@@ -208,7 +190,7 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading, stockStatusRe
       _hover={{ transform: 'translateY(-4px)', boxShadow: 'lg' }}
     >
       <AspectRatio ratio={1}>
-        {isLoading ? (
+        {cardLoading ? (
           <Skeleton />
         ) : (
           <Link as="div" onClick={handleProductClick} cursor="pointer">
@@ -223,7 +205,7 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading, stockStatusRe
       </AspectRatio>
       <Box p={4}>
         <Stack spacing={2}>
-          {isLoading ? (
+          {cardLoading ? (
             <>
               <SkeletonText noOfLines={2} spacing="4" />
               <SkeletonText noOfLines={3} spacing="4" />
@@ -237,14 +219,13 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading, stockStatusRe
               <Text fontWeight="bold" fontSize="xl">
                 {parseCurrency(product.price || 0)} {siteInfo?.currency}
               </Text>
-              {stockStatusRenderer ? stockStatusRenderer(product) : renderStockStatus()}
+              {renderStockStatus()}
               <Button
-                colorScheme={buttonProps?.colorScheme || "blue"}
-                onClick={() => onAdd(product)}
-                isDisabled={buttonProps?.isDisabled}
-                width="full"
+                onClick={handleAddToCart}
+                isLoading={isLoading}
+                isDisabled={!stockLevels[product.id]}
               >
-                {buttonProps?.children || "Agregar al carrito"}
+                Agregar al carrito
               </Button>
             </>
           )}

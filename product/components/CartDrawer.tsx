@@ -134,10 +134,10 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
       return (
         <Text 
           fontSize="xs" 
-          color="red.500"
+          color="orange.500"
           fontWeight="medium"
         >
-          Sin stock adicional disponible
+          Llegaste al máximo de unidades disponibles
         </Text>
       );
     }
@@ -160,7 +160,7 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
         color="green.500"
         fontWeight="medium"
       >
-        Stock disponible: {remainingStock} {remainingStock === 1 ? "unidad" : "unidades"}
+        Stock disponible: {remainingStock} unidades
       </Text>
     );
   };

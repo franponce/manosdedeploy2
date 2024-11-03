@@ -2,8 +2,20 @@ import { useState, useEffect, useCallback } from 'react';
 import { CartItem, Product } from '../product/types';
 import { useToast } from '@chakra-ui/react';
 
-export const useCart = () => {
+interface CartContextType {
+  cart: CartItem[];
+  isLoading: boolean;
+  stockLevels: { [key: string]: number };
+  addToCart: (product: Product) => Promise<void>;
+  removeFromCart: (product: Product) => void;
+  isInCart: (productId: string) => boolean;
+  getItemQuantity: (productId: string) => number;
+}
+
+export const useCart = (): CartContextType => {
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [stockLevels, setStockLevels] = useState<{ [key: string]: number }>({});
   const toast = useToast();
 
   // Cargar el carrito desde localStorage al iniciar
@@ -89,6 +101,8 @@ export const useCart = () => {
 
   return {
     cart,
+    isLoading,
+    stockLevels,
     addToCart,
     removeFromCart,
     isInCart: (productId: string) => cart.some(item => item.id === productId),
