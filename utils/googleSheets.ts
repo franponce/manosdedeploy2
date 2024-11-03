@@ -196,50 +196,52 @@ if (typeof window === 'undefined') {
 
     updateProduct: async (product: Product): Promise<void> => {
       try {
-        console.log('Updating product:', product);
+        console.log('Actualizando producto:', product); // Log para debug
+        
+        let imageToSave = product.image;
+        if (imageToSave && imageToSave.length > 50000) {
+          try {
+            imageToSave = await compressImage(imageToSave);
+            if (imageToSave.length > 50000) {
+              throw new Error('La imagen sigue siendo demasiado grande después de la compresión.');
+            }
+          } catch (error) {
+            console.error('Error comprimiendo imagen:', error);
+            throw new Error('Error comprimiendo imagen. Por favor, intenta nuevamente.');
+          }
+        }
+
         const auth = await getAuthClient();
         const { google } = await import('googleapis');
         const sheets = google.sheets({ version: 'v4', auth });
-
-        // Primero obtenemos todos los productos para encontrar la fila correcta
-        const response = await sheets.spreadsheets.values.get({
-          spreadsheetId: SPREADSHEET_ID,
-          range: 'La Libre Web - Catálogo online rev 2021 - products',
-        });
-        const rows = response.data.values;
-        if (!rows || rows.length === 0) {
-          throw new Error('No se encontraron productos');
-        }
-        
-        const rowIndex = rows.findIndex(row => row[0] === product.id);
-
-        if (rowIndex === -1) {
-          throw new Error('Producto no encontrado');
-        }
 
         const values = [
           [
             product.id,
             product.title,
-            product.description,
-            product.image,
+            product.description, // Aseguramos que la descripción se incluya
+            imageToSave,
             product.price.toString(),
-            product.scheduledPublishDate ? formatLocalDateTime(product.scheduledPublishDate) : '',
+            product.scheduledPublishDate ? new Date(product.scheduledPublishDate).toISOString() : '',
             product.isScheduled ? 'TRUE' : 'FALSE',
-            product.categoryId,
-            product.stock.toString()
+            product.categoryId || '',
+            (product.stock || 0).toString(),
+            product.lastStockUpdate || new Date().toISOString()
           ],
         ];
 
+        console.log('Valores a actualizar:', values); // Log para debug
+
         await sheets.spreadsheets.values.update({
           spreadsheetId: SPREADSHEET_ID,
-          range: `La Libre Web - Catálogo online rev 2021 - products!A${rowIndex + 1}:I${rowIndex + 1}`,
+          range: `La Libre Web - Catálogo online rev 2021 - products!A${parseInt(product.id) + 1}:J${parseInt(product.id) + 1}`,
           valueInputOption: 'USER_ENTERED',
           requestBody: { values },
         });
-        console.log('Product updated successfully');
+
+        console.log('Producto actualizado exitosamente');
       } catch (error) {
-        console.error('Error updating product in Google Sheets:', error);
+        console.error('Error actualizando producto en Google Sheets:', error);
         throw error;
       }
     },
