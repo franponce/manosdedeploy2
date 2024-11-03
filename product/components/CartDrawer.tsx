@@ -123,8 +123,8 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
       
       if (product.quantity >= currentStock) {
         toast({
-          title: "Stock máximo alcanzado",
-          description: `Solo hay ${currentStock} unidades disponibles`,
+          title: "Máximo alcanzado",
+          description: "Llegaste al máximo de unidades disponibles",
           status: "warning",
           duration: 3000,
           isClosable: true,
@@ -167,7 +167,19 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
           color="orange.500"
           fontWeight="medium"
         >
-          Máximo stock alcanzado
+          Llegaste al máximo de unidades disponibles
+        </Text>
+      );
+    }
+
+    if (remainingStock === 1) {
+      return (
+        <Text 
+          fontSize="xs" 
+          color="orange.500"
+          fontWeight="medium"
+        >
+          ¡Última unidad disponible!
         </Text>
       );
     }
@@ -178,7 +190,7 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
         color="green.500"
         fontWeight="medium"
       >
-        {remainingStock} {remainingStock === 1 ? "unidad disponible" : "unidades disponibles"}
+        Stock disponible: {remainingStock} unidades
       </Text>
     );
   };
