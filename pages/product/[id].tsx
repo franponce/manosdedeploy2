@@ -17,6 +17,7 @@ import {
   Tooltip,
   IconButton,
   HStack,
+  SkeletonText,
 } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
 import { useProduct } from '../../hooks/useProduct';
@@ -185,99 +186,114 @@ const ProductDetail: React.FC = () => {
         <VStack spacing={8} align="stretch">
           <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={8}>
             <GridItem>
-              <Skeleton isLoaded={!isLoading}>
+              <Skeleton isLoaded={!isLoading} height="400px">
                 <Image
                   src={displayProduct?.image}
                   alt={displayProduct?.title}
                   objectFit="contain"
                   width="100%"
+                  height="100%"
                 />
               </Skeleton>
             </GridItem>
 
             <GridItem>
               <VStack spacing={6} align="stretch">
-                <Heading as="h1" size="xl">
-                  {displayProduct?.title}
-                </Heading>
+                <Skeleton isLoaded={!isLoading}>
+                  <Heading as="h1" size="xl">
+                    {displayProduct?.title}
+                  </Heading>
+                </Skeleton>
 
                 <Box>
-                  <Text fontSize="2xl" fontWeight="bold">
-                    {parseCurrency(displayProduct?.price || 0)}
-                  </Text>
-                  {renderStockStatus()}
+                  <Skeleton isLoaded={!isLoading}>
+                    <Text fontSize="2xl" fontWeight="bold">
+                      {parseCurrency(displayProduct?.price || 0)}
+                    </Text>
+                  </Skeleton>
+                  <Skeleton isLoaded={!isLoading}>
+                    {renderStockStatus()}
+                  </Skeleton>
                 </Box>
 
-                <Button
-                  size="lg"
-                  colorScheme={displayProduct?.stock > 0 ? "blue" : "gray"}
-                  leftIcon={<Icon as={FaShoppingCart} />}
-                  onClick={handleAddToCart}
-                  isDisabled={!displayProduct?.stock || displayProduct.stock === 0}
-                  width="full"
-                >
-                  {!displayProduct?.stock || displayProduct.stock === 0 
-                    ? "Sin stock disponible" 
-                    : "Agregar al carrito"
-                  }
-                </Button>
+                <Skeleton isLoaded={!isLoading}>
+                  <Button
+                    size="lg"
+                    colorScheme={displayProduct?.stock > 0 ? "blue" : "gray"}
+                    leftIcon={<Icon as={FaShoppingCart} />}
+                    onClick={handleAddToCart}
+                    isDisabled={!displayProduct?.stock || displayProduct.stock === 0}
+                    width="full"
+                  >
+                    {!displayProduct?.stock || displayProduct.stock === 0 
+                      ? "Sin stock disponible" 
+                      : "Agregar al carrito"
+                    }
+                  </Button>
+                </Skeleton>
+
+                <Skeleton isLoaded={!isLoading}>
+                  <Box>
+                    <Text mb={2} fontWeight="medium">Compartir producto:</Text>
+                    <HStack spacing={2}>
+                      <Tooltip label="Compartir en WhatsApp">
+                        <WhatsappShareButton
+                          url={window.location.href}
+                          title={shareTextWithPrice}
+                        >
+                          <WhatsappIcon size={40} round />
+                        </WhatsappShareButton>
+                      </Tooltip>
+
+                      <Tooltip label="Compartir en Facebook">
+                        <FacebookShareButton
+                          url={window.location.href}
+                          quote={shareText}
+                        >
+                          <FacebookIcon size={40} round />
+                        </FacebookShareButton>
+                      </Tooltip>
+
+                      <Tooltip label="Compartir en Twitter">
+                        <TwitterShareButton
+                          url={window.location.href}
+                          title={shareText}
+                        >
+                          <TwitterIcon size={40} round />
+                        </TwitterShareButton>
+                      </Tooltip>
+
+                      <Tooltip label="Compartir por email">
+                        <EmailShareButton
+                          url={window.location.href}
+                          subject={emailSubject}
+                          body={emailBody}
+                        >
+                          <EmailIcon size={40} round />
+                        </EmailShareButton>
+                      </Tooltip>
+
+                      <Tooltip label={copied ? "¡Copiado!" : "Copiar enlace"}>
+                        <IconButton
+                          aria-label="Copiar enlace"
+                          icon={<FaCopy />}
+                          onClick={handleCopyLink}
+                          size="lg"
+                          colorScheme={copied ? "green" : "gray"}
+                          rounded="full"
+                        />
+                      </Tooltip>
+                    </HStack>
+                  </Box>
+                </Skeleton>
 
                 <Box>
-                  <Text mb={2} fontWeight="medium">Compartir producto:</Text>
-                  <HStack spacing={2}>
-                    <Tooltip label="Compartir en WhatsApp">
-                      <WhatsappShareButton
-                        url={window.location.href}
-                        title={shareTextWithPrice}
-                      >
-                        <WhatsappIcon size={40} round />
-                      </WhatsappShareButton>
-                    </Tooltip>
-
-                    <Tooltip label="Compartir en Facebook">
-                      <FacebookShareButton
-                        url={window.location.href}
-                        quote={shareText}
-                      >
-                        <FacebookIcon size={40} round />
-                      </FacebookShareButton>
-                    </Tooltip>
-
-                    <Tooltip label="Compartir en Twitter">
-                      <TwitterShareButton
-                        url={window.location.href}
-                        title={shareText}
-                      >
-                        <TwitterIcon size={40} round />
-                      </TwitterShareButton>
-                    </Tooltip>
-
-                    <Tooltip label="Compartir por email">
-                      <EmailShareButton
-                        url={window.location.href}
-                        subject={emailSubject}
-                        body={emailBody}
-                      >
-                        <EmailIcon size={40} round />
-                      </EmailShareButton>
-                    </Tooltip>
-
-                    <Tooltip label={copied ? "¡Copiado!" : "Copiar enlace"}>
-                      <IconButton
-                        aria-label="Copiar enlace"
-                        icon={<FaCopy />}
-                        onClick={handleCopyLink}
-                        size="lg"
-                        colorScheme={copied ? "green" : "gray"}
-                        rounded="full"
-                      />
-                    </Tooltip>
-                  </HStack>
-                </Box>
-
-                <Box>
-                  <Text fontWeight="medium" mb={2}>Descripción:</Text>
-                  <Text>{displayProduct?.description}</Text>
+                  <Skeleton isLoaded={!isLoading}>
+                    <Text fontWeight="medium" mb={2}>Descripción:</Text>
+                  </Skeleton>
+                  <SkeletonText isLoaded={!isLoading} noOfLines={4} spacing={4}>
+                    <Text>{displayProduct?.description}</Text>
+                  </SkeletonText>
                 </Box>
               </VStack>
             </GridItem>
