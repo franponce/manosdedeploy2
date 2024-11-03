@@ -65,6 +65,7 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
         try {
           const response = await fetch(`/api/products/${item.id}/stock`);
           const { stock } = await response.json();
+          console.log(`Stock for ${item.id}:`, stock);
           levels[item.id] = Number(stock);
         } catch (error) {
           console.error('Error fetching stock for item:', item.id, error);
@@ -139,6 +140,13 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
     const currentStock = stockLevels[product.id];
 
     if (currentStock === undefined) {
+      toast({
+        title: "Cargando stock",
+        description: "Por favor, espera mientras se carga la información del stock.",
+        status: "info",
+        duration: 3000,
+        isClosable: true,
+      });
       return; // Esperar a que se cargue el stock
     }
 
