@@ -625,23 +625,20 @@ export const getProductById = async (id: string): Promise<Product | null> => {
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
       range: PRODUCT_RANGE,
-      valueRenderOption: 'UNFORMATTED_VALUE'
     });
 
     if (!response.data.values) {
-      console.log('No se encontraron datos en la hoja');
       return null;
     }
 
-    const product = response.data.values.find(row => row[0] === id);
+    const product = response.data.values.find(row => row[0].toString() === id.toString());
     
     if (!product) {
-      console.log(`No se encontró el producto con ID: ${id}`);
       return null;
     }
 
     return {
-      id: product[0],
+      id: product[0].toString(),
       title: product[1],
       description: product[2],
       image: product[3],
@@ -652,10 +649,9 @@ export const getProductById = async (id: string): Promise<Product | null> => {
       stock: parseInt(product[8]) || 0,
       currency: 'ARS'
     };
-
   } catch (error) {
-    console.error('Error detallado obteniendo producto por ID:', error);
-    throw new Error('Error al obtener el producto');
+    console.error('Error obteniendo producto por ID:', error);
+    throw error;
   }
 };
 
@@ -680,12 +676,8 @@ function formatLocalDateTime(scheduledPublishDate: Date): string {
 }
 
 export const updateProductStock = async (productId: string, newStock: number): Promise<void> => {
-  console.log('Actualizando stock para:', productId, 'nuevo stock:', newStock);
-  console.log('SPREADSHEET_ID:', SPREADSHEET_ID);
-  
   if (!SPREADSHEET_ID) {
-    console.error('SPREADSHEET_ID no está configurado');
-    throw new Error('Configuración incompleta');
+    throw new Error('SPREADSHEET_ID no está configurado');
   }
 
   try {
@@ -693,27 +685,36 @@ export const updateProductStock = async (productId: string, newStock: number): P
     const { google } = await import('googleapis');
     const sheets = google.sheets({ version: 'v4', auth });
 
-    // Primero obtenemos el índice del producto
+    // Primero verificamos si el producto existe
+    const product = await getProductById(productId);
+    if (!product) {
+      throw new Error(`Producto no encontrado: ${productId}`);
+    }
+
+    // Obtenemos todos los productos para encontrar el índice correcto
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
       range: PRODUCT_RANGE,
-      valueRenderOption: 'UNFORMATTED_VALUE'
     });
 
     if (!response.data.values) {
       throw new Error('No se encontraron datos en la hoja');
     }
 
-    const rows = response.data.values;
-    const rowIndex = rows.findIndex(row => row[0] === productId);
+    // Buscamos el índice exacto del producto
+    const rowIndex = response.data.values.findIndex(row => {
+      console.log('Comparando:', row[0], productId); // Debug
+      return row[0].toString() === productId.toString();
+    });
 
     if (rowIndex === -1) {
-      throw new Error(`Producto no encontrado: ${productId}`);
+      throw new Error(`No se encontró la fila para el producto: ${productId}`);
     }
 
-    // Actualizamos solo la columna de stock (I)
-    const updateRange = `${SHEET_NAME}!I${rowIndex + 2}`;
-    
+    // Actualizamos el stock
+    const updateRange = `${SHEET_NAME}!I${rowIndex + 2}`; // +2 porque el rango empieza en A2
+    console.log('Actualizando rango:', updateRange); // Debug
+
     await sheets.spreadsheets.values.update({
       spreadsheetId: SPREADSHEET_ID,
       range: updateRange,
@@ -723,10 +724,10 @@ export const updateProductStock = async (productId: string, newStock: number): P
       }
     });
 
-    console.log(`Stock actualizado exitosamente - Producto: ${productId}, Nuevo stock: ${newStock}, Rango: ${updateRange}`);
+    console.log(`Stock actualizado exitosamente - Producto: ${productId}, Nuevo stock: ${newStock}`);
   } catch (error) {
-    console.error('Error completo:', error);
-    throw error; // Propagar el error original para mejor debugging
+    console.error('Error detallado actualizando stock:', error);
+    throw error;
   }
 };
 
