@@ -248,18 +248,39 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
   };
 
   // Log cuando se actualiza el stock
-  const handleStockChange = (valueString: string) => {
+  const handleStockChange = async (valueString: string) => {
     const value = parseInt(valueString);
-    console.log('Actualizando stock:', {
-      valorAnterior: currentProduct.stock,
-      nuevoValor: value,
-      esValido: !isNaN(value)
-    });
-    
-    setCurrentProduct(prev => ({
-      ...prev,
-      stock: isNaN(value) ? 0 : Math.max(0, value)
-    }));
+    if (isNaN(value) || value < 0) return;
+
+    try {
+      setCurrentProduct(prev => ({
+        ...prev,
+        stock: value
+      }));
+
+      if (currentProduct.id) {
+        const response = await fetch(`/api/products/${currentProduct.id}/stock`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ stock: value })
+        });
+
+        if (!response.ok) {
+          throw new Error('Error al actualizar stock');
+        }
+      }
+    } catch (error) {
+      console.error('Error al actualizar stock:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar el stock",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
 
   const handleDateChange = (date: Date | null) => {

@@ -19,43 +19,57 @@ export const useCart = () => {
     localStorage.setItem('cart', JSON.stringify(cart));
   }, [cart]);
 
-  const addToCart = useCallback((product: Product) => {
-    if (product.stock === 0) {
+  const addToCart = useCallback(async (product: Product) => {
+    try {
+      // Verificar stock actual antes de agregar
+      const response = await fetch(`/api/products/${product.id}/stock`);
+      const { stock } = await response.json();
+      
+      if (stock === 0) {
+        toast({
+          title: "Sin stock",
+          description: "Este producto no tiene stock disponible",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+
+      setCart(currentCart => {
+        const existingItem = currentCart.find(item => item.id === product.id);
+        
+        if (existingItem) {
+          if (existingItem.quantity >= stock) {
+            toast({
+              title: "Stock máximo alcanzado",
+              description: `Solo hay ${stock} unidades disponibles`,
+              status: "warning",
+              duration: 3000,
+              isClosable: true,
+            });
+            return currentCart;
+          }
+          
+          return currentCart.map(item =>
+            item.id === product.id
+              ? { ...item, quantity: item.quantity + 1 }
+              : item
+          );
+        }
+
+        return [...currentCart, { ...product, quantity: 1 }];
+      });
+    } catch (error) {
+      console.error('Error al verificar stock:', error);
       toast({
-        title: "Sin stock",
-        description: "Este producto no tiene stock disponible",
+        title: "Error",
+        description: "No se pudo verificar el stock disponible",
         status: "error",
         duration: 3000,
         isClosable: true,
       });
-      return;
     }
-
-    setCart(currentCart => {
-      const existingItem = currentCart.find(item => item.id === product.id);
-      
-      if (existingItem) {
-        // Validar que no exceda el stock disponible
-        if (existingItem.quantity >= product.stock) {
-          toast({
-            title: "Stock máximo alcanzado",
-            description: `Solo hay ${product.stock} unidades disponibles`,
-            status: "warning",
-            duration: 3000,
-            isClosable: true,
-          });
-          return currentCart;
-        }
-        
-        return currentCart.map(item =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      }
-
-      return [...currentCart, { ...product, quantity: 1 }];
-    });
   }, [toast]);
 
   const removeFromCart = useCallback((product: Product) => {

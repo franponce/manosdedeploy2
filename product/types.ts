@@ -9,6 +9,7 @@ export interface Product {
   isScheduled?: boolean;
   scheduledPublishDate?: Date | null;
   stock: number;
+  lastStockUpdate?: string;
 }
 
 export interface CartItem extends Product {

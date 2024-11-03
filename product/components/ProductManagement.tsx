@@ -28,6 +28,7 @@ import ProductModal from "./ProductModal";
 import { getProducts, createProduct, updateProduct, deleteProduct, getCategories } from "../../utils/googleSheets";
 import { Product, Category } from "../types";
 import useSWR, { mutate } from 'swr';
+import { useRouter } from 'next/router';
 
 const PRODUCT_LIMIT = 30;
 const SYNC_INTERVAL = 30000; // 30 segundos
@@ -36,12 +37,19 @@ interface ProductManagementProps {
   onCreateProduct: () => void;
   searchTerm: string;
   selectedCategory: string;
+  onsubmit?: (product: Product) => Promise<void>;
+}
+
+// Antes del componente, definimos el tipo para el evento
+interface ProductSubmitEvent extends Product {
+  preventDefault: () => void;
 }
 
 const ProductManagement: React.FC<ProductManagementProps> = ({ 
   onCreateProduct, 
   searchTerm, 
-  selectedCategory 
+  selectedCategory,
+  onsubmit 
 }) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
@@ -52,6 +60,9 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
   const [hasMore, setHasMore] = useState(true);
   const [expandedDescriptions, setExpandedDescriptions] = useState<{ [key: string]: boolean }>({});
   const observer = useRef<IntersectionObserver | null>(null);
+
+  const router = useRouter();
+  const toast = useToast();
 
   // Efecto para filtrar productos basado en búsqueda y categoría
   useEffect(() => {
@@ -123,8 +134,6 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
     });
     if (node) observer.current.observe(node);
   }, [isLoading, hasMore]);
-
-  const toast = useToast();
 
   const [categories, setCategories] = useState<Category[]>([]);
 
@@ -235,31 +244,25 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
     }
   };
 
-  const handleSubmit = async (updatedProduct: Product) => {
+  const handleSubmit = async (product: Product) => {
     try {
-      setIsLoading(true);
-      const response = await fetch('/api/products', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updatedProduct),
-      });
+      if (onsubmit) {
+        await onsubmit(product);
+        // Revalidar datos
+        await mutate('/api/products');
+        
+        if (router.query.id) {
+          await mutate(`/api/products/${router.query.id}`);
+        }
 
-      if (!response.ok) {
-        throw new Error('Error al actualizar el producto');
+        toast({
+          title: "Éxito",
+          description: "Producto actualizado correctamente",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
       }
-
-      // Forzar revalidación de datos
-      await mutate('/api/products');
-      
-      toast({
-        title: "Éxito",
-        description: "Producto actualizado correctamente",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
     } catch (error) {
       console.error('Error:', error);
       toast({
@@ -269,8 +272,6 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
         duration: 3000,
         isClosable: true,
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 

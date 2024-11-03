@@ -156,8 +156,14 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading }) => {
               <Text fontWeight="bold" fontSize="xl">
                 {parseCurrency(product.price || 0)} {siteInfo?.currency}
               </Text>
-              <Text color={product.stock > 0 ? "green.500" : "red.500"} fontSize="sm">
-                {product.stock > 0 ? `${product.stock} unidades disponibles` : "Sin stock"}
+              <Text 
+                fontSize="sm" 
+                color={product.stock > 0 ? "green.500" : "red.500"}
+                textAlign="center"
+              >
+                {product.stock > 0 
+                  ? `${product.stock} unidades disponibles`
+                  : "Sin stock"}
               </Text>
               <Button
                 colorScheme={!product.stock || product.stock === 0 ? "gray" : "blue"}
@@ -170,16 +176,6 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading }) => {
                   "Agregar al carrito"
                 }
               </Button>
-              <Text 
-                fontSize="sm" 
-                color={product.stock ? "green.500" : "red.500"}
-                textAlign="center"
-              >
-                {product.stock ? 
-                  `${product.stock} unidades disponibles` : 
-                  "Sin stock"
-                }
-              </Text>
             </>
           )}
         </Stack>

@@ -646,3 +646,23 @@ function getGoogleSheet() {
   throw new Error('Function not implemented.');
 }
 
+// Asegurarnos que el stock se incluya en todas las operaciones
+const formatProductForSheet = (product: Product): string[] => {
+  return [
+    product.id,
+    product.title,
+    product.description,
+    product.image,
+    product.price.toString(),
+    product.scheduledPublishDate ? formatLocalDateTime(product.scheduledPublishDate) : '',
+    product.isScheduled ? 'TRUE' : 'FALSE',
+    product.categoryId || '',
+    product.stock.toString(),
+    product.lastStockUpdate || ''
+  ];
+};
+
+function formatLocalDateTime(scheduledPublishDate: Date): string {
+  throw new Error('Function not implemented.');
+}
+
