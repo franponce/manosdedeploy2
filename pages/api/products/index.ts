@@ -1,29 +1,37 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getProducts } from '../../../utils/googleSheets';
 import { Product } from '../../../product/types';
-import { cache } from 'react';
-
-const CACHE_KEY = 'all_products';
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<Product[] | { error: string }>
 ) {
+  res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate');
+
   try {
-    // Intentar obtener del cache
-    const cachedData = await cache(async () => {
-      return await getProducts();
-    })();
-    if (cachedData) {
-      return res.status(200).json(cachedData);
+    const products = await getProducts();
+    
+    if (!products || !Array.isArray(products)) {
+      console.error('Products is not an array:', products);
+      return res.status(200).json([]);
     }
 
-    // Si no hay cache, obtener de Google Sheets
-    const products = await getProducts();
-    // No necesitamos guardar en cache manualmente ya que cache() lo hace automáticamente
-    res.status(200).json(products);
+    const validProducts = products
+      .filter(p => p && typeof p === 'object')
+      .map(p => ({
+        id: String(p.id || ''),
+        title: String(p.title || ''),
+        description: String(p.description || ''),
+        image: String(p.image || ''),
+        price: Number(p.price || 0),
+        currency: String(p.currency || ''),
+        categoryId: String(p.categoryId || ''),
+        stock: Number(p.stock || 0)
+      }));
+
+    return res.status(200).json(validProducts);
   } catch (error) {
     console.error('Error fetching products:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
+    return res.status(200).json([]);
   }
 } 
