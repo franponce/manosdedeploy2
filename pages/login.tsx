@@ -206,6 +206,11 @@ const LoginPage: React.FC = () => {
           maxW="400px"
           w="100%"
           px={8}
+          bg="white"
+          borderRadius="3xl"
+          boxShadow="lg"
+          py={12}
+          mx={4}
         >
           <Box
             backgroundColor="white"
@@ -215,6 +220,7 @@ const LoginPage: React.FC = () => {
             overflow="hidden"
             position="relative"
             mx="auto"
+            mb={2}
           >
             <Image
               src={`${siteInfo?.logoUrl}?${new Date().getTime()}`}
@@ -228,23 +234,22 @@ const LoginPage: React.FC = () => {
 
           <Stack
             align="center"
-            bg="white"
-            borderRadius="lg"
-            boxShadow="sm"
-            p={8}
-            spacing={4}
+            spacing={6}
             textAlign="center"
+            px={6}
           >
             <Heading size="lg">{siteInfo?.title}</Heading>
             <Text 
               color="gray.600" 
               fontSize="md"
+              lineHeight="tall"
               dangerouslySetInnerHTML={{ __html: siteInfo?.description || '' }}
             />
             {siteInfo?.description2 && (
               <Text 
                 color="gray.600" 
                 fontSize="md"
+                lineHeight="tall"
                 dangerouslySetInnerHTML={{ __html: siteInfo?.description2 || '' }}
               />
             )}
