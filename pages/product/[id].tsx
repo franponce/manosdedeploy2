@@ -163,63 +163,59 @@ const ProductDetail: React.FC = () => {
     if (!displayProduct?.description) return null;
 
     return (
-      <Box 
+      <Container 
         id="product-description" 
-        mt={3}
-        width="100%"
-        maxWidth={{ base: "100%", md: "container.md" }}
-        mx="auto"
-        px={{ base: 4, md: 0 }}
+        maxW={{ base: "100%", md: "container.md" }}
+        p={0}
+        centerContent
       >
-        <Box 
-          className="user-content"
-          mb={4}
-          textAlign={{ base: "left", md: "left" }}
-          width="100%"
+        <VStack 
+          width="full"
+          spacing={4}
+          align="stretch"
+          px={{ base: 4, md: 6 }}
         >
           <Heading 
             as="h5" 
             size="sm"
-            mb={3}
+            textAlign="left"
             fontWeight="600"
-            textAlign={{ base: "center", md: "left" }}
           >
             Descripción
           </Heading>
 
           <Box
+            width="full"
             sx={{
-              width: "100%",
               '& p': {
                 fontSize: { base: "sm", md: "md" },
                 color: 'gray.700',
                 lineHeight: 'tall',
-                textAlign: "left",
                 marginBottom: 2,
+                width: "100%",
                 '& strong': { fontWeight: '600' },
                 '& em': { fontStyle: 'italic' }
               },
               '& ul, & ol': {
-                pl: 4,
-                mb: 3,
-                width: "100%"
+                width: "100%",
+                paddingLeft: "1rem",
+                marginBottom: 3
               },
               '& li': {
-                mb: 1,
-                textAlign: "left"
+                marginBottom: 1
               }
             }}
             dangerouslySetInnerHTML={{ 
               __html: displayProduct.description 
             }}
           />
-        </Box>
+        </VStack>
 
         <Box 
           id="reviewsapp" 
-          width="100%"
+          width="full"
         />
-      </Box>
+      </Container>
     );
   };
 
