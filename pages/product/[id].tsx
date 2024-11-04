@@ -158,28 +158,34 @@ const ProductDetail: React.FC = () => {
     if (!displayProduct?.description) return null;
 
     return (
-      <Box
-        className="product-description"
-        dangerouslySetInnerHTML={{ __html: displayProduct.description }}
+      <Box 
+        maxH="300px" 
+        overflowY="auto"
+        borderRadius="md"
+        p={4}
+        bg="gray.50"
         sx={{
-          'p': {
-            marginBottom: '1em'
+          '&::-webkit-scrollbar': {
+            width: '4px',
           },
-          'ul, ol': {
-            marginLeft: '1.5em',
-            marginBottom: '1em'
+          '&::-webkit-scrollbar-track': {
+            width: '6px',
           },
-          'li': {
-            marginBottom: '0.5em'
+          '&::-webkit-scrollbar-thumb': {
+            background: 'gray.300',
+            borderRadius: '24px',
           },
-          'strong': {
-            fontWeight: 'bold'
-          },
-          'em': {
-            fontStyle: 'italic'
-          }
         }}
-      />
+      >
+        <Text
+          whiteSpace="pre-wrap"
+          fontSize="sm"
+          lineHeight="tall"
+          color="gray.700"
+        >
+          {displayProduct.description}
+        </Text>
+      </Box>
     );
   };
 
