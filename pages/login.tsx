@@ -123,7 +123,7 @@ const LoginPage: React.FC = () => {
         alignItems="center"
         justifyContent="center"
         p={{ base: 4, md: 8 }}
-        order={{ base: 2, md: 1 }}
+        order={{ base: 1, md: 1 }}
       >
         <VStack 
           spacing={6} 
@@ -191,14 +191,14 @@ const LoginPage: React.FC = () => {
       {/* Lado derecho - Header/Banner */}
       <Box 
         flex={{ base: "1", md: "1" }}
-        display="flex"
+        display={{ base: "none", md: "flex" }}
         flexDirection="column"
         justifyContent="center"
         alignItems="center"
         bg="gray.50"
         p={8}
         position="relative"
-        order={{ base: 1, md: 2 }}
+        order={{ base: 2, md: 2 }}
       >
         <Box mb={6} position="relative">
           <Box
