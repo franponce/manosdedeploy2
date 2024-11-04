@@ -163,58 +163,50 @@ const ProductDetail: React.FC = () => {
     if (!displayProduct?.description) return null;
 
     return (
-      <Box>
-        <Accordion allowToggle>
-          <AccordionItem border="none">
-            <AccordionButton 
-              px={0} 
-              _hover={{ bg: 'transparent' }}
-            >
-              <Box flex="1" textAlign="left">
-                <Text fontWeight="medium">Descripción</Text>
-              </Box>
-              <AccordionIcon />
-            </AccordionButton>
+      <Box 
+        id="product-description" 
+        mt={3}
+        className="product-description"
+      >
+        <Box 
+          className="user-content"
+          px={{ base: 0, md: 3 }}
+          mb={4}
+        >
+          <Heading 
+            as="h5" 
+            size="sm"
+            mb={3}
+            fontWeight="600"
+          >
+            Descripción
+          </Heading>
 
-            <AccordionPanel pb={4}>
-              <Box
-                maxH="300px"
-                overflowY="auto"
-                sx={{
-                  '&::-webkit-scrollbar': {
-                    width: '2px',
-                  },
-                  '&::-webkit-scrollbar-thumb': {
-                    background: 'gray.200',
-                    borderRadius: '24px',
-                  },
-                  '& p': {
-                    fontSize: 'sm',
-                    lineHeight: 'tall',
-                    mb: 3,
-                  },
-                  '& ul, & ol': {
-                    pl: 4,
-                    mb: 3,
-                  },
-                  '& li': {
-                    mb: 1,
-                  },
-                  '& p:empty': {
-                    display: 'none'
-                  }
-                }}
-              >
-                <Box
-                  dangerouslySetInnerHTML={{ 
-                    __html: displayProduct.description 
-                  }}
-                  color="gray.700"
-                />
-              </Box>
-            </AccordionPanel>
-          </AccordionItem>
-        </Accordion>
+          <Box
+            sx={{
+              '& p': {
+                fontSize: 'md',
+                color: 'gray.700',
+                lineHeight: 'tall',
+                '& strong': { fontWeight: '600' },
+                '& em': { fontStyle: 'italic' }
+              },
+              '& ul, & ol': {
+                pl: 4,
+                mb: 3
+              },
+              '& li': {
+                mb: 1
+              }
+            }}
+            dangerouslySetInnerHTML={{ 
+              __html: displayProduct.description 
+            }}
+          />
+        </Box>
+
+        {/* Espacio para reviews u otra información adicional */}
+        <Box id="reviewsapp" />
       </Box>
     );
   };
