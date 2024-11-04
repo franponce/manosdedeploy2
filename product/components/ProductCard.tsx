@@ -31,7 +31,11 @@ interface Props {
   };
 }
 
-const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading: cardLoading }) => {
+const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading: cardLoading, stockStatusRenderer, buttonProps = {
+  colorScheme: "blue",
+  children: "Ver detalle",
+  isDisabled: false
+}}) => {
   const { siteInfo } = useSiteInfo();
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [isTitleExpanded, setIsTitleExpanded] = useState(false);
@@ -177,8 +181,9 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading: cardLoading }
     );
   };
 
-  const handleAddToCart = async () => {
-    await addToCart(product);
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    onAdd(product);
   };
 
   return (
@@ -221,11 +226,12 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading: cardLoading }
               </Text>
               {renderStockStatus()}
               <Button
-                onClick={handleAddToCart}
-                isLoading={isLoading}
-                isDisabled={!stockLevels[product.id]}
+                colorScheme={buttonProps.colorScheme}
+                isDisabled={buttonProps.isDisabled}
+                onClick={handleClick}
+                width="full"
               >
-                Agregar al carrito
+                {buttonProps.children}
               </Button>
             </>
           )}

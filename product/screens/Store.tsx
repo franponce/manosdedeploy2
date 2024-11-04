@@ -298,31 +298,29 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
               sm: "repeat(auto-fill, minmax(280px, 1fr))",
             }}
           >
-            {displayedProducts.map((product, index) => {
-              const currentStock = productsStock[product.id] ?? product.stock;
-              
-              return (
-                <Box
-                  key={product.id}
-                  ref={index === displayedProducts.length - 1 ? lastProductElementRef : null}
-                >
-                  <ProductCard
-                    product={{
-                      ...product,
-                      stock: currentStock
-                    }}
-                    onAdd={() => router.push(`/product/${product.id}`)}
-                    isLoading={false}
-                    stockStatusRenderer={renderStockStatus}
-                    buttonProps={{
-                      isDisabled: !currentStock || currentStock === 0,
-                      colorScheme: currentStock > 0 ? "blue" : "gray",
-                      children: "Ver detalle"
-                    }}
-                  />
-                </Box>
-              );
-            })}
+            {displayedProducts.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                onAdd={() => router.push(`/product/${product.id}`)}
+                isLoading={false}
+                buttonProps={{
+                  colorScheme: product.stock > 0 ? "blue" : "gray",
+                  isDisabled: !product.stock,
+                  children: "Ver detalle"
+                }}
+                stockStatusRenderer={(product) => (
+                  <Text
+                    color={product.stock > 0 ? "green.500" : "red.500"}
+                    fontWeight="medium"
+                    fontSize="sm"
+                    textAlign="center"
+                  >
+                    {product.stock > 0 ? "Stock disponible" : "Sin stock"}
+                  </Text>
+                )}
+              />
+            ))}
           </Grid>
         ) : (
           <NoProductsFound />
