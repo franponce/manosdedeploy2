@@ -68,30 +68,6 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
   const [productsStock, setProductsStock] = React.useState<Record<string, number>>({});
   const { siteInfo } = useSiteInfo();
 
-  const renderStockStatus = (product: Product) => {
-    if (!product.stock || product.stock === 0) {
-      return (
-        <Text 
-          color="red.500"
-          fontWeight="medium"
-          fontSize="md"
-        >
-          Sin stock
-        </Text>
-      );
-    }
-
-    return (
-      <Text
-        color="green.500"
-        fontWeight="medium"
-        fontSize="md"
-      >
-        Stock disponible
-      </Text>
-    );
-  };
-
   React.useEffect(() => {
     if (products) {
       let filteredProducts = products.filter(product =>
@@ -262,15 +238,20 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
   return (
     <>
       <Container maxW="container.xl" py={8}>
-        {/* Banner va aquí, al inicio del Container */}
         {siteInfo?.banner && (
-          <Box mb={6}>
+          <Box 
+            mb={6} 
+            position="relative" 
+            overflow="hidden" 
+            borderRadius="lg"
+          >
             <Image
               src={siteInfo.banner}
               alt="Banner de la tienda"
               width="100%"
               height="auto"
-              borderRadius="lg"
+              objectFit="cover"
+              loading="eager"
             />
           </Box>
         )}
