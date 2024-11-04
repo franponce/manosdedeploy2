@@ -66,56 +66,15 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
   const [selectedCategory, setSelectedCategory] = React.useState("");
   const [productsStock, setProductsStock] = React.useState<Record<string, number>>({});
 
-  const handleAddToCart = async (product: Product) => {
-    try {
-      const response = await fetch(`/api/products/${product.id}/stock`);
-      const { stock } = await response.json();
-      
-      const cartItem = cart.find(item => item.id === product.id);
-      if (cartItem && cartItem.quantity >= stock) {
-        toast({
-          title: "Stock máximo alcanzado",
-          description: `Solo hay ${stock} unidades disponibles`,
-          status: "warning",
-          duration: 3000,
-          isClosable: true,
-        });
-        return;
-      }
-
-      addToCart({ ...product, stock });
-    } catch (error) {
-      console.error('Error verificando stock:', error);
-      toast({
-        title: "Error",
-        description: "No se pudo verificar el stock disponible",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    }
-  };
-
-  function handleEditCart(product: Product, action: "increment" | "decrement") {
-    if (action === "increment") {
-      handleAddToCart(product);
-    } else {
-      removeFromCart(product);
-    }
-  }
-
   const renderStockStatus = (product: Product) => {
-    const stock = typeof product.stock === 'number' ? product.stock : 0;
-
-    if (stock <= 0) {
+    if (!product.stock || product.stock === 0) {
       return (
-        <Text
+        <Text 
           color="red.500"
           fontWeight="medium"
-          fontSize="sm"
-          textAlign="center"
+          fontSize="md"
         >
-          Sin stock disponible
+          Sin stock
         </Text>
       );
     }
@@ -124,10 +83,9 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
       <Text
         color="green.500"
         fontWeight="medium"
-        fontSize="sm"
-        textAlign="center"
+        fontSize="md"
       >
-        Stock disponible: {stock} {stock === 1 ? "unidad" : "unidades"}
+        Stock disponible
       </Text>
     );
   };
@@ -284,6 +242,10 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
 
   if (error) return <div>Failed to load products</div>;
 
+  function handleEditCart(product: CartItem, arg1: string): void {
+    throw new Error("Function not implemented.");
+  }
+
   return (
     <>
       <Stack spacing={6}>
@@ -349,13 +311,13 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
                       ...product,
                       stock: currentStock
                     }}
-                    onAdd={handleAddToCart}
+                    onAdd={() => router.push(`/product/${product.id}`)}
                     isLoading={false}
                     stockStatusRenderer={renderStockStatus}
                     buttonProps={{
                       isDisabled: !currentStock || currentStock === 0,
                       colorScheme: currentStock > 0 ? "blue" : "gray",
-                      children: currentStock > 0 ? "Agregar al carrito" : "Sin stock disponible"
+                      children: "Ver detalle"
                     }}
                   />
                 </Box>
