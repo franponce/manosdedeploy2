@@ -174,7 +174,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
           alignSelf="flex-start"
           px={6}
         >
-          Volver a la tienda
+          <Text fontWeight="bold">Volver a la tienda</Text>
         </Button>
       );
     }
@@ -192,20 +192,20 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
           alignSelf="flex-start"
           mb={4}
         >
-          Volver a la gestión de productos
+          <Text fontWeight="bold">Volver a la gestión de productos</Text>
         </Button>
       );
     }
     
     if (router.pathname === '/admin') {
       if (isAdmin) {
-        return `Qué lindo verte de nuevo por acá, Admin`;
+        return <Text fontWeight="bold">Qué lindo verte de nuevo por acá, Admin</Text>;
       } else if (isLoggedIn) {
-        return `Qué lindo verte de nuevo por acá, ${userName}`;
+        return <Text fontWeight="bold">Qué lindo verte de nuevo por acá, {userName}</Text>;
       }
     }
     
-    return 'Te damos la bienvenida';
+    return <Text fontWeight="bold">Te damos la bienvenida</Text>;
   };
 
   const shouldShowHeader = React.useMemo(() => {
