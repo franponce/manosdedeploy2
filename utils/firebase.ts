@@ -44,7 +44,7 @@ export interface SiteInformation {
 
 export const DEFAULT_SITE_INFORMATION: SiteInformation = {
   storeName: 'Mi Tienda',
-  title: "Manos de manteca",
+  title: "Tu tienda Simple",
   description: "Envianos tu pedido y a la brevedad te respondemos.",
   description2: "👉 Nuestro horario de atención es de X a X de X a X hs. Hacemos envíos 🚴‍♀",
   whatsappCart: "5492954271140",
