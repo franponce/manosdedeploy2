@@ -175,16 +175,41 @@ const ProductDetail: React.FC = () => {
             background: 'gray.300',
             borderRadius: '24px',
           },
+          '& p': { 
+            marginBottom: '0.5em',
+            lineHeight: 'tall',
+          },
+          '& ul, & ol': { 
+            paddingLeft: '1.5em',
+            marginBottom: '0.5em',
+          },
+          '& li': { 
+            marginBottom: '0.25em',
+          },
+          '& strong': {
+            fontWeight: 'bold',
+          },
+          '& em': {
+            fontStyle: 'italic',
+          },
+          '& p:empty': {
+            display: 'none',
+          },
+          '& p:blank': {
+            display: 'none',
+          },
+          '& > *:last-child': {
+            marginBottom: 0,
+          },
         }}
       >
-        <Text
-          whiteSpace="pre-wrap"
+        <Box
+          dangerouslySetInnerHTML={{ 
+            __html: displayProduct.description 
+          }}
           fontSize="sm"
-          lineHeight="tall"
           color="gray.700"
-        >
-          {displayProduct.description}
-        </Text>
+        />
       </Box>
     );
   };
