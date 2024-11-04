@@ -149,6 +149,10 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
   const isAdminRoute = router.pathname === '/admin' || router.pathname === '/store-config';
 
   const getWelcomeMessage = () => {
+    if (router.pathname === '/login') {
+      return 'Simple E-commerce';
+    }
+
     if (router.pathname.startsWith('/product')) {
       return (
         <Button

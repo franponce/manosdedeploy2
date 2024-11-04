@@ -13,10 +13,12 @@ import {
   InputGroup, 
   InputRightElement,
   IconButton,
-  Link
+  Link,
+  Image
 } from '@chakra-ui/react';
 import { ViewIcon, ViewOffIcon } from '@chakra-ui/icons';
 import { getSiteInformation, loginUser, resetPassword } from '../utils/firebase';
+import { useSiteInfo } from '@/context/SiteInfoContext';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -26,6 +28,7 @@ const LoginPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const toast = useToast();
+  const { siteInfo } = useSiteInfo();
 
   useEffect(() => {
     const fetchStoreName = async () => {
@@ -106,47 +109,127 @@ const LoginPage: React.FC = () => {
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
 
   return (
-    <Box margin="auto" maxWidth="400px" mt={8}>
-      <VStack spacing={4} align="stretch">
-        <Heading as="h1" size="xl">¡Hola de nuevo! 👋</Heading>
-        <Text fontSize="lg">Inicia sesión a <strong>{storeName}</strong></Text>
-        <form onSubmit={handleSubmit}>
-          <VStack spacing={4}>
-            <FormControl isRequired>
-              <FormLabel>Email o Usuario</FormLabel>
-              <Input 
-                type="text" 
-                value={email} 
-                onChange={(e) => setEmail(e.target.value)} 
-              />
-            </FormControl>
-            <FormControl isRequired>
-              <FormLabel>Contraseña</FormLabel>
-              <InputGroup>
-                <Input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+    <Box 
+      display="flex" 
+      flexDirection={{ base: "column", md: "row" }}
+      minHeight="calc(100vh - 70px)"
+      gap={{ base: 8, md: 0 }}
+    >
+      {/* Lado izquierdo - Header/Banner */}
+      <Box 
+        flex={{ base: "1", md: "1" }}
+        display="flex"
+        flexDirection="column"
+        justifyContent="center"
+        alignItems="center"
+        bg="gray.50"
+        p={8}
+        position="relative"
+      >
+        <Image
+          src={siteInfo?.bannerUrl || '/default-banner.jpg'}
+          alt="Store banner"
+          objectFit="cover"
+          width="100%"
+          height="300px"
+          borderRadius="lg"
+          mb={6}
+        />
+        <Box
+          backgroundColor="white"
+          borderRadius="full"
+          boxShadow="md"
+          boxSize="120px"
+          overflow="hidden"
+          position="relative"
+          mb={4}
+        >
+          <Image
+            src={siteInfo?.logoUrl || '/default-logo.png'}
+            alt="Store logo"
+            objectFit="cover"
+            width="100%"
+            height="100%"
+          />
+        </Box>
+        <Heading size="lg" textAlign="center" mb={2}>
+          {storeName}
+        </Heading>
+        <Text color="gray.600" textAlign="center">
+          {siteInfo?.description || 'Productos de skincare y maquillaje cruelty free 🌸'}
+        </Text>
+      </Box>
+
+      {/* Lado derecho - Formulario */}
+      <Box 
+        flex={{ base: "1", md: "1" }}
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+        p={{ base: 4, md: 8 }}
+      >
+        <VStack 
+          spacing={6} 
+          align="stretch"
+          maxW="400px"
+          width="100%"
+        >
+          <Box>
+            <Heading as="h1" size="xl" mb={2}>¡Hola de nuevo! 👋</Heading>
+            <Text fontSize="lg">Inicia sesión a <strong>{storeName}</strong></Text>
+          </Box>
+
+          <form onSubmit={handleSubmit}>
+            <VStack spacing={4}>
+              <FormControl isRequired>
+                <FormLabel>Email o Usuario</FormLabel>
+                <Input 
+                  type="text" 
+                  value={email} 
+                  onChange={(e) => setEmail(e.target.value)} 
                 />
-                <InputRightElement>
-                  <IconButton
-                    aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-                    icon={showPassword ? <ViewOffIcon /> : <ViewIcon />}
-                    onClick={togglePasswordVisibility}
-                    variant="ghost"
+              </FormControl>
+              
+              <FormControl isRequired>
+                <FormLabel>Contraseña</FormLabel>
+                <InputGroup>
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                   />
-                </InputRightElement>
-              </InputGroup>
-            </FormControl>
-            <Button colorScheme="blue" type="submit" width="full" isLoading={isLoading}>
-              Iniciar sesión
-            </Button>
-          </VStack>
-        </form>
-        <Link color="blue.500" onClick={handleResetPassword} textAlign="center">
-          ¿Olvidaste tu contraseña?
-        </Link>
-      </VStack>
+                  <InputRightElement>
+                    <IconButton
+                      aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                      icon={showPassword ? <ViewOffIcon /> : <ViewIcon />}
+                      onClick={togglePasswordVisibility}
+                      variant="ghost"
+                    />
+                  </InputRightElement>
+                </InputGroup>
+              </FormControl>
+
+              <Button 
+                colorScheme="blue" 
+                type="submit" 
+                width="full" 
+                isLoading={isLoading}
+              >
+                Iniciar sesión
+              </Button>
+            </VStack>
+          </form>
+
+          <Link 
+            color="blue.500" 
+            onClick={handleResetPassword} 
+            textAlign="center"
+            display="block"
+          >
+            ¿Olvidaste tu contraseña?
+          </Link>
+        </VStack>
+      </Box>
     </Box>
   );
 };
