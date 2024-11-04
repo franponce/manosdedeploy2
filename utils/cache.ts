@@ -5,6 +5,9 @@ interface CacheItem<T> {
 }
 
 export class Cache {
+  static get(key: string) {
+      throw new Error('Method not implemented.');
+  }
   private cache: Map<string, CacheItem<any>>;
   private static instance: Cache;
 

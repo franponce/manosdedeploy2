@@ -2,13 +2,35 @@ import useSWR from 'swr';
 import { Category } from '../product/types';
 import { CATEGORY_CONSTANTS } from '../utils/constants';
 
-const fetcher = (url: string) => fetch(url).then(res => res.json());
+// Definir interfaz para el error personalizado
+interface CustomError extends Error {
+  info?: any;
+}
+
+const fetcher = async (url: string) => {
+  const response = await fetch(url);
+  if (!response.ok) {
+    const customError = new Error('Error al obtener categorías') as CustomError;
+    customError.info = await response.json();
+    throw customError;
+  }
+  return response.json();
+};
 
 export function useCategories() {
-  const { data: categories, error, mutate } = useSWR<Category[]>('/api/categories', fetcher, {
-    refreshInterval: 5000, // Revalidar cada 5 segundos
-    revalidateOnFocus: true,
-  });
+  const { data: categories, error, mutate } = useSWR<Category[]>(
+    '/api/categories',
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: true,
+      dedupingInterval: 5000,
+      onErrorRetry: (error, key, config, revalidate, { retryCount }) => {
+        if (retryCount >= 3) return;
+        setTimeout(() => revalidate({ retryCount }), 5000);
+      },
+    }
+  );
 
   const createCategory = async (name: string) => {
     try {

@@ -28,6 +28,7 @@ import { parseCookies, destroyCookie } from 'nookies';
 import HamburgerMenu from '../product/components/HamburgerMenu';
 import { FaArrowLeft, FaEye, FaArrowRight } from 'react-icons/fa';
 import { CartProvider } from '../contexts/CartContext';
+import ErrorBoundary from '../components/ErrorBoundary';
 
 const MyApp = ({ Component, pageProps }: AppProps) => {
   const router = useRouter();
@@ -417,7 +418,9 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
             </>
           )}
           <CartProvider>
-            <Component {...pageProps} />
+            <ErrorBoundary>
+              <Component {...pageProps} />
+            </ErrorBoundary>
           </CartProvider>
           {shouldShowHeader && (
             <>
