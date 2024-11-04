@@ -25,19 +25,10 @@ const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [storeName, setStoreName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const toast = useToast();
   const { siteInfo } = useSiteInfo();
-
-  useEffect(() => {
-    const fetchStoreName = async () => {
-      const siteInfo = await getSiteInformation();
-      setStoreName(siteInfo.title);
-    };
-    fetchStoreName();
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -133,7 +124,7 @@ const LoginPage: React.FC = () => {
         >
           <Box>
             <Heading as="h1" size="xl" mb={2}>¡Hola de nuevo! 👋</Heading>
-            <Text fontSize="lg">Inicia sesión a <strong>{storeName}</strong></Text>
+            <Text fontSize="lg">Inicia sesión a <strong>{siteInfo?.title}</strong></Text>
           </Box>
 
           <form onSubmit={handleSubmit}>
@@ -209,7 +200,7 @@ const LoginPage: React.FC = () => {
             position="relative"
           >
             <Image
-              src={siteInfo?.bannerUrl || '/default-banner.jpg'}
+              src={`${siteInfo?.bannerUrl}?${new Date().getTime()}`}
               alt="Store banner"
               objectFit="cover"
               width="100%"
@@ -229,7 +220,7 @@ const LoginPage: React.FC = () => {
           mb={4}
         >
           <Image
-            src={siteInfo?.logoUrl || '/default-logo.png'}
+            src={`${siteInfo?.logoUrl}?${new Date().getTime()}`}
             alt="Store logo"
             objectFit="cover"
             width="100%"
@@ -249,14 +240,10 @@ const LoginPage: React.FC = () => {
           width="100%"
           maxWidth="600px"
         >
-          <Heading size="lg">{siteInfo?.title || storeName}</Heading>
-          <Text color="gray.600" fontSize="md">
-            {siteInfo?.description || 'Productos de skincare y maquillaje cruelty free 🌸'}
-          </Text>
+          <Heading size="lg">{siteInfo?.title}</Heading>
+          <Text color="gray.600" fontSize="md" dangerouslySetInnerHTML={{ __html: siteInfo?.description || '' }} />
           {siteInfo?.description2 && (
-            <Text color="gray.600" fontSize="md">
-              {siteInfo.description2}
-            </Text>
+            <Text color="gray.600" fontSize="md" dangerouslySetInnerHTML={{ __html: siteInfo?.description2 || '' }} />
           )}
         </Stack>
       </Box>
