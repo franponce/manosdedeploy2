@@ -257,7 +257,6 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
       duration: 3000,
       isClosable: true,
     });
-    toggleCart(true); // Abrimos el drawer automáticamente
   };
 
   return (
