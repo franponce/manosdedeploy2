@@ -187,15 +187,6 @@ const ProductDetail: React.FC = () => {
           align="stretch"
           px={{ base: 4, md: 6 }}
         >
-          <Heading 
-            as="h5" 
-            size="sm"
-            textAlign="left"
-            fontWeight="600"
-          >
-            Descripción
-          </Heading>
-
           <Box
             width="full"
             sx={{
