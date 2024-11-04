@@ -148,6 +148,45 @@ if (typeof window === 'undefined') {
     }
   };
 
+  const updateProductInSheet = async (product: Product): Promise<void> => {
+    try {
+      const auth = await getAuthClient();
+      const { google } = await import('googleapis');
+      const sheets = google.sheets({ version: 'v4', auth });
+
+      // Encontrar la fila del producto
+      const products = await getProducts();
+      const productIndex = products.findIndex((p: { id: string; }) => p.id === product.id);
+      
+      if (productIndex === -1) {
+        throw new Error('Producto no encontrado');
+      }
+
+      // La fila real en la hoja es productIndex + 2 (debido al encabezado)
+      const row = productIndex + 2;
+      const range = `${SHEET_NAME}!A${row}:I${row}`;
+
+      const values = [formatProductForSheet(product)];
+
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: SPREADSHEET_ID,
+        range,
+        valueInputOption: 'RAW',
+        requestBody: { values },
+      });
+
+      // Invalidar caché después de actualizar
+      await CacheManager.invalidateProduct(product.id);
+      if (product.categoryId) {
+        await CacheManager.invalidateCategory(product.categoryId);
+      }
+
+    } catch (error) {
+      console.error('Error updating product in sheet:', error);
+      throw new Error('Error al actualizar el producto en la hoja de cálculo');
+    }
+  };
+
   googleSheetsApi = {
     getProducts: async (): Promise<Product[]> => {
       try {
@@ -194,47 +233,25 @@ if (typeof window === 'undefined') {
       }
     },
 
-    updateProduct: async (product: Product): Promise<void> => {
+    updateProduct: async (product: Product, newStock?: number): Promise<void> => {
       try {
-        console.log('Updating product:', product);
-        const auth = await getAuthClient();
-        const { google } = await import('googleapis');
-        const sheets = google.sheets({ version: 'v4', auth });
-
-        // Formatear la fecha correctamente
-        let formattedDate = '';
-        if (product.scheduledPublishDate) {
-          if (product.scheduledPublishDate instanceof Date) {
-            formattedDate = product.scheduledPublishDate.toISOString();
-          } else {
-            formattedDate = new Date(product.scheduledPublishDate).toISOString();
-          }
+        // Si se proporciona newStock, actualizar el stock
+        if (typeof newStock !== 'undefined') {
+          await updateProductStock(product.id, newStock);
+          product.stock = newStock; // Actualizar el stock en el objeto del producto
         }
-
-        const values = [
-          [
-            product.id, 
-            product.title || '', 
-            product.description || '', 
-            product.image || '', 
-            (product.price || 0).toString(),
-            formattedDate,
-            product.isScheduled ? 'TRUE' : 'FALSE',
-            product.categoryId || '',
-            (product.stock || 0).toString()
-          ],
-        ];
-
-        await sheets.spreadsheets.values.update({
-          spreadsheetId: SPREADSHEET_ID,
-          range: `${SHEET_NAME}!A${parseInt(product.id) + 1}:I${parseInt(product.id) + 1}`,
-          valueInputOption: 'USER_ENTERED',
-          requestBody: { values },
-        });
-        console.log('Product updated successfully with stock:', product.stock);
+        
+        // Actualizar el producto en la hoja
+        await updateProductInSheet(product);
+        
+        // Invalidar caché relacionado
+        await CacheManager.invalidateProduct(product.id);
+        if (product.categoryId) {
+          await CacheManager.invalidateCategory(product.categoryId);
+        }
       } catch (error) {
-        console.error('Error updating product in Google Sheets:', error);
-        throw new Error('Error al actualizar el producto. Por favor, intente nuevamente.');
+        console.error('Error updating product:', error);
+        throw error;
       }
     },
 
@@ -716,6 +733,7 @@ export const updateProductStock = async (productId: string, newStock: number): P
 };
 
 import useSWR from 'swr';
+import { CacheManager } from './cacheManager';
 
 // Cache tiempo en ms (5 minutos)
 const CACHE_TIME = 300000;

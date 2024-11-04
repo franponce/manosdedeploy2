@@ -1,38 +1,56 @@
-type CacheData = {
-  value: any;
+interface CacheItem<T> {
+  value: T;
   timestamp: number;
-};
+  ttl: number;
+}
 
-class Cache {
-  private cache: Map<string, CacheData>;
+export class Cache {
+  private cache: Map<string, CacheItem<any>>;
+  private static instance: Cache;
 
-  constructor() {
+  private constructor() {
     this.cache = new Map();
   }
 
-  async get(key: string): Promise<any | null> {
-    const data = this.cache.get(key);
-    if (!data) return null;
+  static getInstance(): Cache {
+    if (!Cache.instance) {
+      Cache.instance = new Cache();
+    }
+    return Cache.instance;
+  }
 
-    // Verificar si el cache expiró (5 minutos)
-    if (Date.now() - data.timestamp > 5 * 60 * 1000) {
+  async get<T>(key: string): Promise<T | null> {
+    const item = this.cache.get(key);
+    if (!item) return null;
+
+    const now = Date.now();
+    if (now - item.timestamp > item.ttl * 1000) {
       this.cache.delete(key);
       return null;
     }
 
-    return data.value;
+    return item.value as T;
   }
 
-  async set(key: string, value: any, ttlSeconds: number = 300): Promise<void> {
+  async set<T>(key: string, value: T, ttl: number = 300): Promise<void> {
     this.cache.set(key, {
       value,
       timestamp: Date.now(),
+      ttl,
     });
   }
 
   async delete(key: string): Promise<void> {
     this.cache.delete(key);
   }
+
+  async clear(): Promise<void> {
+    this.cache.clear();
+  }
+
+  async keys(): Promise<string[]> {
+    return Array.from(this.cache.keys());
+  }
 }
 
-export const cache = new Cache(); 
+export const cacheInstance = Cache.getInstance(); 
