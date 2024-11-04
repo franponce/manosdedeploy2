@@ -84,11 +84,6 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
         setIsLoggedIn(true);
         setIsAdmin(true);
         setUserName('Admin');
-        if (router.pathname === '/admin' && !hasRefreshedBefore && !hasRefreshed) {
-          localStorage.setItem('hasRefreshedAdmin', 'true');
-          setHasRefreshed(true);
-          window.location.reload();
-        }
       } else {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
           if (user) {
