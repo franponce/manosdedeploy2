@@ -162,6 +162,18 @@ const ProductDetail: React.FC = () => {
   const renderDescription = () => {
     if (!displayProduct?.description) return null;
 
+    // Función para limpiar saltos de línea excesivos y normalizar el contenido
+    const cleanDescription = (html: string) => {
+      return html
+        // Reemplazar múltiples saltos de línea con uno solo
+        .replace(/<p><br><\/p>/g, '')
+        .replace(/<p>\s*<\/p>/g, '')
+        // Asegurar que los elementos de lista estén bien formateados
+        .replace(/<\/li>\s*<li>/g, '</li><li>')
+        // Limpiar espacios en blanco excesivos
+        .trim();
+    };
+
     return (
       <Container 
         id="product-description" 
@@ -193,20 +205,32 @@ const ProductDetail: React.FC = () => {
                 lineHeight: 'tall',
                 marginBottom: 2,
                 width: "100%",
-                '& strong': { fontWeight: '600' },
-                '& em': { fontStyle: 'italic' }
+                textAlign: "left",
+                '&:empty': { display: 'none' }
               },
-              '& ul, & ol': {
+              '& ul': {
                 width: "100%",
                 paddingLeft: "1rem",
-                marginBottom: 3
+                marginBottom: 3,
+                listStyle: "disc"
               },
               '& li': {
-                marginBottom: 1
-              }
+                marginBottom: 1,
+                textAlign: "left"
+              },
+              '& strong': { fontWeight: '600' },
+              '& em': { fontStyle: 'italic' },
+              // Eliminar espacios en blanco excesivos
+              '& br': { 
+                display: 'none'
+              },
+              // Asegurar que no haya desplazamiento horizontal
+              overflowWrap: 'break-word',
+              wordWrap: 'break-word',
+              wordBreak: 'break-word'
             }}
             dangerouslySetInnerHTML={{ 
-              __html: displayProduct.description 
+              __html: cleanDescription(displayProduct.description) 
             }}
           />
         </VStack>
