@@ -18,6 +18,11 @@ import {
   IconButton,
   HStack,
   SkeletonText,
+  Accordion,
+  AccordionItem,
+  AccordionButton,
+  AccordionPanel,
+  AccordionIcon,
 } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
 import { useProduct } from '../../hooks/useProduct';
@@ -158,58 +163,58 @@ const ProductDetail: React.FC = () => {
     if (!displayProduct?.description) return null;
 
     return (
-      <Box 
-        maxH="300px" 
-        overflowY="auto"
-        borderRadius="md"
-        p={4}
-        bg="gray.50"
-        sx={{
-          '&::-webkit-scrollbar': {
-            width: '4px',
-          },
-          '&::-webkit-scrollbar-track': {
-            width: '6px',
-          },
-          '&::-webkit-scrollbar-thumb': {
-            background: 'gray.300',
-            borderRadius: '24px',
-          },
-          '& p': { 
-            marginBottom: '0.5em',
-            lineHeight: 'tall',
-          },
-          '& ul, & ol': { 
-            paddingLeft: '1.5em',
-            marginBottom: '0.5em',
-          },
-          '& li': { 
-            marginBottom: '0.25em',
-          },
-          '& strong': {
-            fontWeight: 'bold',
-          },
-          '& em': {
-            fontStyle: 'italic',
-          },
-          '& p:empty': {
-            display: 'none',
-          },
-          '& p:blank': {
-            display: 'none',
-          },
-          '& > *:last-child': {
-            marginBottom: 0,
-          },
-        }}
-      >
-        <Box
-          dangerouslySetInnerHTML={{ 
-            __html: displayProduct.description 
-          }}
-          fontSize="sm"
-          color="gray.700"
-        />
+      <Box>
+        <Accordion allowToggle>
+          <AccordionItem border="none">
+            <AccordionButton 
+              px={0} 
+              _hover={{ bg: 'transparent' }}
+            >
+              <Box flex="1" textAlign="left">
+                <Text fontWeight="medium">Descripción</Text>
+              </Box>
+              <AccordionIcon />
+            </AccordionButton>
+
+            <AccordionPanel pb={4}>
+              <Box
+                maxH="300px"
+                overflowY="auto"
+                sx={{
+                  '&::-webkit-scrollbar': {
+                    width: '2px',
+                  },
+                  '&::-webkit-scrollbar-thumb': {
+                    background: 'gray.200',
+                    borderRadius: '24px',
+                  },
+                  '& p': {
+                    fontSize: 'sm',
+                    lineHeight: 'tall',
+                    mb: 3,
+                  },
+                  '& ul, & ol': {
+                    pl: 4,
+                    mb: 3,
+                  },
+                  '& li': {
+                    mb: 1,
+                  },
+                  '& p:empty': {
+                    display: 'none'
+                  }
+                }}
+              >
+                <Box
+                  dangerouslySetInnerHTML={{ 
+                    __html: displayProduct.description 
+                  }}
+                  color="gray.700"
+                />
+              </Box>
+            </AccordionPanel>
+          </AccordionItem>
+        </Accordion>
       </Box>
     );
   };
