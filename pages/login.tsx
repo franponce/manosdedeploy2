@@ -196,54 +196,59 @@ const LoginPage: React.FC = () => {
         justifyContent="center"
         alignItems="center"
         bg="gray.50"
-        p={8}
         position="relative"
         order={{ base: 2, md: 2 }}
-        height="100%"
+        height="100vh"
+        py={20}
       >
-        <Box
-          backgroundColor="white"
-          borderRadius="full"
-          boxShadow="md"
-          boxSize="150px"
-          overflow="hidden"
-          position="relative"
-          mb={8}
-        >
-          <Image
-            src={`${siteInfo?.logoUrl}?${new Date().getTime()}`}
-            alt="Store logo"
-            objectFit="cover"
-            width="100%"
-            height="100%"
-            fallback={<Box bg="gray.200" w="100%" h="100%" borderRadius="full" />}
-          />
-        </Box>
-
         <Stack
-          align="center"
-          bg="white"
-          borderRadius="md"
-          boxShadow="sm"
-          p={8}
-          spacing={4}
-          textAlign="center"
-          width="100%"
-          maxWidth="500px"
+          spacing={8}
+          maxW="400px"
+          w="100%"
+          px={8}
         >
-          <Heading size="lg">{siteInfo?.title}</Heading>
-          <Text 
-            color="gray.600" 
-            fontSize="lg"
-            dangerouslySetInnerHTML={{ __html: siteInfo?.description || '' }}
-          />
-          {siteInfo?.description2 && (
+          <Box
+            backgroundColor="white"
+            borderRadius="full"
+            boxShadow="md"
+            boxSize="120px"
+            overflow="hidden"
+            position="relative"
+            mx="auto"
+          >
+            <Image
+              src={`${siteInfo?.logoUrl}?${new Date().getTime()}`}
+              alt="Store logo"
+              objectFit="cover"
+              width="100%"
+              height="100%"
+              fallback={<Box bg="gray.200" w="100%" h="100%" borderRadius="full" />}
+            />
+          </Box>
+
+          <Stack
+            align="center"
+            bg="white"
+            borderRadius="lg"
+            boxShadow="sm"
+            p={8}
+            spacing={4}
+            textAlign="center"
+          >
+            <Heading size="lg">{siteInfo?.title}</Heading>
             <Text 
               color="gray.600" 
-              fontSize="lg"
-              dangerouslySetInnerHTML={{ __html: siteInfo?.description2 || '' }}
+              fontSize="md"
+              dangerouslySetInnerHTML={{ __html: siteInfo?.description || '' }}
             />
-          )}
+            {siteInfo?.description2 && (
+              <Text 
+                color="gray.600" 
+                fontSize="md"
+                dangerouslySetInnerHTML={{ __html: siteInfo?.description2 || '' }}
+              />
+            )}
+          </Stack>
         </Stack>
       </Box>
     </Box>
