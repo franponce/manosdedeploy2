@@ -66,44 +66,29 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
   const [selectedCategory, setSelectedCategory] = React.useState("");
   const [productsStock, setProductsStock] = React.useState<Record<string, number>>({});
 
+  const handleAddToCart = async (product: Product) => {
+    try {
+      const currentStock = productsStock[product.id] ?? product.stock;
+      await addToCart({ ...product, stock: currentStock });
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo agregar el producto al carrito",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
   function handleEditCart(product: Product, action: "increment" | "decrement") {
     if (action === "increment") {
-      addToCart(product);
+      handleAddToCart(product);
     } else {
       removeFromCart(product);
     }
   }
-
-  const handleAddToCart = async (product: Product) => {
-    try {
-      // Verificar stock actual
-      const response = await fetch(`/api/products/${product.id}/stock`);
-      const { stock } = await response.json();
-      
-      const cartItem = cart.find(item => item.id === product.id);
-      if (cartItem && cartItem.quantity >= stock) {
-        toast({
-          title: "Stock máximo alcanzado",
-          description: `Solo hay ${stock} unidades disponibles`,
-          status: "warning",
-          duration: 3000,
-          isClosable: true,
-        });
-        return;
-      }
-
-      addToCart({ ...product, stock }); // Actualizamos el stock en el producto
-    } catch (error) {
-      console.error('Error verificando stock:', error);
-      toast({
-          title: "Error",
-          description: "No se pudo verificar el stock disponible",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-      });
-    }
-  };
 
   const renderStockStatus = (product: Product) => {
     const stock = typeof product.stock === 'number' ? product.stock : 0;
