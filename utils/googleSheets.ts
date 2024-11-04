@@ -715,3 +715,37 @@ export const updateProductStock = async (productId: string, newStock: number): P
   }
 };
 
+import useSWR from 'swr';
+
+// Cache tiempo en ms (5 minutos)
+const CACHE_TIME = 300000;
+
+// Función para obtener productos con cache
+export const useProductsWithCache = () => {
+  return useSWR('/api/products', {
+    fetcher: async (url) => {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Error fetching products');
+      return response.json();
+    },
+    revalidateOnFocus: false,
+    revalidateOnReconnect: false,
+    refreshInterval: CACHE_TIME,
+    dedupingInterval: CACHE_TIME
+  });
+};
+
+// Para el stock específico
+export const useProductStock = (productId: string) => {
+  return useSWR(`/api/products/${productId}/stock`, {
+    fetcher: async (url) => {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Error fetching stock');
+      return response.json();
+    },
+    revalidateOnFocus: false,
+    refreshInterval: CACHE_TIME,
+    dedupingInterval: CACHE_TIME
+  });
+};
+
