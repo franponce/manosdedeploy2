@@ -28,6 +28,7 @@ import { useCart } from '../../hooks/useCart';
 import { useRouter } from 'next/router';
 import { Container } from "@chakra-ui/react";
 import { FaEye, FaArrowLeft, FaTimes } from "react-icons/fa";
+import { useSiteInfo } from "@/hooks/useSiteInfo";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -65,6 +66,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
   const [searchTerm, setSearchTerm] = React.useState("");
   const [selectedCategory, setSelectedCategory] = React.useState("");
   const [productsStock, setProductsStock] = React.useState<Record<string, number>>({});
+  const { siteInfo } = useSiteInfo();
 
   const renderStockStatus = (product: Product) => {
     if (!product.stock || product.stock === 0) {
@@ -248,123 +250,139 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
 
   return (
     <>
-      <Stack spacing={6}>
-        <Flex direction={{ base: "column", md: "row" }} gap={4}>
-          <InputGroup>
-            <InputLeftElement pointerEvents="none">
-              <Icon as={SearchIcon} color="gray.300" />
-            </InputLeftElement>
-            <Input
-              placeholder="Buscar productos..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+      <Container maxW="container.xl" py={8}>
+        {/* Banner va aquí, al inicio del Container */}
+        {siteInfo?.banner && (
+          <Box mb={6}>
+            <Image
+              src={siteInfo.banner}
+              alt="Banner de la tienda"
+              width="100%"
+              height="auto"
+              borderRadius="lg"
             />
-          </InputGroup>
-          <Select
-            placeholder="Todas las categorías"
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-          >
-            {Array.isArray(categories) ? categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            )) : null}
-          </Select>
-        </Flex>
+          </Box>
+        )}
 
-        {isLoading ? (
-          <Grid
-            gridGap={8}
-            templateColumns={{
-              base: "repeat(auto-fill, minmax(240px, 1fr))",
-              sm: "repeat(auto-fill, minmax(280px, 1fr))",
-            }}
-          >
-            {Array.from({ length: 6 }).map((_, index) => (
-              <ProductCard 
-                key={index} 
-                product={{} as Product} 
-                onAdd={() => {}} 
-                isLoading={true} 
+        {/* Resto del contenido existente */}
+        <Stack spacing={6}>
+          <Flex direction={{ base: "column", md: "row" }} gap={4}>
+            <InputGroup>
+              <InputLeftElement pointerEvents="none">
+                <Icon as={SearchIcon} color="gray.300" />
+              </InputLeftElement>
+              <Input
+                placeholder="Buscar productos..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
-            ))}
-          </Grid>
-        ) : displayedProducts.length ? (
-          <Grid
-            gridGap={8}
-            templateColumns={{
-              base: "repeat(auto-fill, minmax(240px, 1fr))",
-              sm: "repeat(auto-fill, minmax(280px, 1fr))",
-            }}
-          >
-            {displayedProducts.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                onAdd={() => router.push(`/product/${product.id}`)}
-                isLoading={false}
-                buttonProps={{
-                  colorScheme: product.stock > 0 ? "blue" : "gray",
-                  isDisabled: !product.stock,
-                  children: "Ver detalle"
-                }}
-                stockStatusRenderer={(product) => (
-                  <Text
-                    color={product.stock > 0 ? "green.500" : "red.500"}
-                    fontWeight="medium"
-                    fontSize="sm"
-                    textAlign="center"
-                  >
-                    {product.stock > 0 ? "Stock disponible" : "Sin stock"}
-                  </Text>
-                )}
-              />
-            ))}
-          </Grid>
-        ) : (
-          <NoProductsFound />
-        )}
-        {isLoading && (
-          <Center mt={4}>
-            <Spinner size="xl" />
-          </Center>
-        )}
-        {Boolean(cart.length) && (
-          <Flex alignItems="center" bottom={4} justifyContent="center" position="sticky">
-            <Button
-              boxShadow="xl"
-              colorScheme="primary"
-              data-testid="show-cart"
-              size="lg"
-              width={{ base: "100%", sm: "fit-content" }}
-              onClick={() => toggleCart(true)}
+            </InputGroup>
+            <Select
+              placeholder="Todas las categorías"
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
             >
-              <Stack alignItems="center" direction="row" spacing={6}>
-                <Stack alignItems="center" direction="row" spacing={3}>
+              {Array.isArray(categories) ? categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              )) : null}
+            </Select>
+          </Flex>
+
+          {isLoading ? (
+            <Grid
+              gridGap={8}
+              templateColumns={{
+                base: "repeat(auto-fill, minmax(240px, 1fr))",
+                sm: "repeat(auto-fill, minmax(280px, 1fr))",
+              }}
+            >
+              {Array.from({ length: 6 }).map((_, index) => (
+                <ProductCard 
+                  key={index} 
+                  product={{} as Product} 
+                  onAdd={() => {}} 
+                  isLoading={true} 
+                />
+              ))}
+            </Grid>
+          ) : displayedProducts.length ? (
+            <Grid
+              gridGap={8}
+              templateColumns={{
+                base: "repeat(auto-fill, minmax(240px, 1fr))",
+                sm: "repeat(auto-fill, minmax(280px, 1fr))",
+              }}
+            >
+              {displayedProducts.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  onAdd={() => router.push(`/product/${product.id}`)}
+                  isLoading={false}
+                  buttonProps={{
+                    colorScheme: product.stock > 0 ? "blue" : "gray",
+                    isDisabled: !product.stock,
+                    children: "Ver detalle"
+                  }}
+                  stockStatusRenderer={(product) => (
+                    <Text
+                      color={product.stock > 0 ? "green.500" : "red.500"}
+                      fontWeight="medium"
+                      fontSize="sm"
+                      textAlign="center"
+                    >
+                      {product.stock > 0 ? "Stock disponible" : "Sin stock"}
+                    </Text>
+                  )}
+                />
+              ))}
+            </Grid>
+          ) : (
+            <NoProductsFound />
+          )}
+          {isLoading && (
+            <Center mt={4}>
+              <Spinner size="xl" />
+            </Center>
+          )}
+          {Boolean(cart.length) && (
+            <Flex alignItems="center" bottom={4} justifyContent="center" position="sticky">
+              <Button
+                boxShadow="xl"
+                colorScheme="primary"
+                data-testid="show-cart"
+                size="lg"
+                width={{ base: "100%", sm: "fit-content" }}
+                onClick={() => toggleCart(true)}
+              >
+                <Stack alignItems="center" direction="row" spacing={6}>
+                  <Stack alignItems="center" direction="row" spacing={3}>
+                    <Text fontSize="md" lineHeight={6}>
+                      Ver carrito
+                    </Text>
+                    <Text
+                      backgroundColor="rgba(0,0,0,0.25)"
+                      borderRadius="sm"
+                      color="gray.100"
+                      fontSize="xs"
+                      fontWeight="500"
+                      paddingX={2}
+                      paddingY={1}
+                    >
+                      {quantity} {quantity === 1 ? "item" : "items"}
+                    </Text>
+                  </Stack>
                   <Text fontSize="md" lineHeight={6}>
-                    Ver carrito
-                  </Text>
-                  <Text
-                    backgroundColor="rgba(0,0,0,0.25)"
-                    borderRadius="sm"
-                    color="gray.100"
-                    fontSize="xs"
-                    fontWeight="500"
-                    paddingX={2}
-                    paddingY={1}
-                  >
-                    {quantity} {quantity === 1 ? "item" : "items"}
+                    {total}
                   </Text>
                 </Stack>
-                <Text fontSize="md" lineHeight={6}>
-                  {total}
-                </Text>
-              </Stack>
-            </Button>
-          </Flex>
-        )}
-      </Stack>
+              </Button>
+            </Flex>
+          )}
+        </Stack>
+      </Container>
       <CartDrawer
         isOpen={isCartOpen}
         items={cart}
