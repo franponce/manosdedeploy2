@@ -166,37 +166,47 @@ const ProductDetail: React.FC = () => {
       <Box 
         id="product-description" 
         mt={3}
-        className="product-description"
+        width="100%"
+        maxWidth={{ base: "100%", md: "container.md" }}
+        mx="auto"
+        px={{ base: 4, md: 0 }}
       >
         <Box 
           className="user-content"
-          px={{ base: 0, md: 3 }}
           mb={4}
+          textAlign={{ base: "left", md: "left" }}
+          width="100%"
         >
           <Heading 
             as="h5" 
             size="sm"
             mb={3}
             fontWeight="600"
+            textAlign={{ base: "center", md: "left" }}
           >
             Descripción
           </Heading>
 
           <Box
             sx={{
+              width: "100%",
               '& p': {
-                fontSize: 'md',
+                fontSize: { base: "sm", md: "md" },
                 color: 'gray.700',
                 lineHeight: 'tall',
+                textAlign: "left",
+                marginBottom: 2,
                 '& strong': { fontWeight: '600' },
                 '& em': { fontStyle: 'italic' }
               },
               '& ul, & ol': {
                 pl: 4,
-                mb: 3
+                mb: 3,
+                width: "100%"
               },
               '& li': {
-                mb: 1
+                mb: 1,
+                textAlign: "left"
               }
             }}
             dangerouslySetInnerHTML={{ 
@@ -205,8 +215,10 @@ const ProductDetail: React.FC = () => {
           />
         </Box>
 
-        {/* Espacio para reviews u otra información adicional */}
-        <Box id="reviewsapp" />
+        <Box 
+          id="reviewsapp" 
+          width="100%"
+        />
       </Box>
     );
   };
