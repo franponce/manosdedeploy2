@@ -208,7 +208,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
   };
 
   const shouldShowHeader = React.useMemo(() => {
-    return !router.pathname.startsWith('/product');
+    return !router.pathname.startsWith('/product') && router.pathname !== '/login';
   }, [router.pathname]);
 
   if (isLoading) return <Box display="flex" justifyContent="center" alignItems="center" height="100vh"><Spinner /></Box>;

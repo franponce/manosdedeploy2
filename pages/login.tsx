@@ -14,7 +14,8 @@ import {
   InputRightElement,
   IconButton,
   Link,
-  Image
+  Image,
+  Stack
 } from '@chakra-ui/react';
 import { ViewIcon, ViewOffIcon } from '@chakra-ui/icons';
 import { getSiteInformation, loginUser, resetPassword } from '../utils/firebase';
@@ -115,58 +116,14 @@ const LoginPage: React.FC = () => {
       minHeight="calc(100vh - 70px)"
       gap={{ base: 8, md: 0 }}
     >
-      {/* Lado izquierdo - Header/Banner */}
-      <Box 
-        flex={{ base: "1", md: "1" }}
-        display="flex"
-        flexDirection="column"
-        justifyContent="center"
-        alignItems="center"
-        bg="gray.50"
-        p={8}
-        position="relative"
-      >
-        <Image
-          src={siteInfo?.bannerUrl || '/default-banner.jpg'}
-          alt="Store banner"
-          objectFit="cover"
-          width="100%"
-          height="300px"
-          borderRadius="lg"
-          mb={6}
-        />
-        <Box
-          backgroundColor="white"
-          borderRadius="full"
-          boxShadow="md"
-          boxSize="120px"
-          overflow="hidden"
-          position="relative"
-          mb={4}
-        >
-          <Image
-            src={siteInfo?.logoUrl || '/default-logo.png'}
-            alt="Store logo"
-            objectFit="cover"
-            width="100%"
-            height="100%"
-          />
-        </Box>
-        <Heading size="lg" textAlign="center" mb={2}>
-          {storeName}
-        </Heading>
-        <Text color="gray.600" textAlign="center">
-          {siteInfo?.description || 'Productos de skincare y maquillaje cruelty free 🌸'}
-        </Text>
-      </Box>
-
-      {/* Lado derecho - Formulario */}
+      {/* Lado izquierdo - Formulario */}
       <Box 
         flex={{ base: "1", md: "1" }}
         display="flex"
         alignItems="center"
         justifyContent="center"
         p={{ base: 4, md: 8 }}
+        order={{ base: 2, md: 1 }}
       >
         <VStack 
           spacing={6} 
@@ -229,6 +186,79 @@ const LoginPage: React.FC = () => {
             ¿Olvidaste tu contraseña?
           </Link>
         </VStack>
+      </Box>
+
+      {/* Lado derecho - Header/Banner */}
+      <Box 
+        flex={{ base: "1", md: "1" }}
+        display="flex"
+        flexDirection="column"
+        justifyContent="center"
+        alignItems="center"
+        bg="gray.50"
+        p={8}
+        position="relative"
+        order={{ base: 1, md: 2 }}
+      >
+        <Box mb={6} position="relative">
+          <Box
+            borderRadius="lg"
+            height={{ base: "200px", md: "300px" }}
+            overflow="hidden"
+            width="100%"
+            position="relative"
+          >
+            <Image
+              src={siteInfo?.bannerUrl || '/default-banner.jpg'}
+              alt="Store banner"
+              objectFit="cover"
+              width="100%"
+              height="100%"
+              fallback={<Box bg="gray.200" w="100%" h="100%" />}
+            />
+          </Box>
+        </Box>
+
+        <Box
+          backgroundColor="white"
+          borderRadius="full"
+          boxShadow="md"
+          boxSize="120px"
+          overflow="hidden"
+          position="relative"
+          mb={4}
+        >
+          <Image
+            src={siteInfo?.logoUrl || '/default-logo.png'}
+            alt="Store logo"
+            objectFit="cover"
+            width="100%"
+            height="100%"
+            fallback={<Box bg="gray.200" w="100%" h="100%" borderRadius="full" />}
+          />
+        </Box>
+
+        <Stack
+          align="center"
+          bg="white"
+          borderRadius="md"
+          boxShadow="sm"
+          p={4}
+          spacing={3}
+          textAlign="center"
+          width="100%"
+          maxWidth="600px"
+        >
+          <Heading size="lg">{siteInfo?.title || storeName}</Heading>
+          <Text color="gray.600" fontSize="md">
+            {siteInfo?.description || 'Productos de skincare y maquillaje cruelty free 🌸'}
+          </Text>
+          {siteInfo?.description2 && (
+            <Text color="gray.600" fontSize="md">
+              {siteInfo.description2}
+            </Text>
+          )}
+        </Stack>
       </Box>
     </Box>
   );
