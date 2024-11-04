@@ -31,6 +31,7 @@ import { INFORMATION } from '../../app/constants';
 import { getPaymentMethods, PaymentMethods } from '../../utils/firebase';
 import { FaArrowLeft, FaShoppingCart, FaWhatsapp } from 'react-icons/fa';
 import { useSiteInfo } from '@/hooks/useSiteInfo';
+import { StockManager } from '@/utils/stock/stockManager';
 
 interface Props {
   isOpen: boolean;
@@ -41,6 +42,7 @@ interface Props {
 }
 
 const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDecrement }) => {
+  const [stockErrors, setStockErrors] = useState<Record<string, boolean>>({});
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethods>({
     mercadoPago: false,
     cash: false,
@@ -95,23 +97,34 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
     window.open(whatsappURL, "_blank");
   };
 
-  const renderTitle = (item: CartItem) => {
-    return (
-      <Text
-        fontWeight="bold"
-        fontSize="sm"
-        lineHeight="short"
-        overflow="hidden"
-        textOverflow="ellipsis"
-        style={{
-          display: '-webkit-box',
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical',
-        }}
-      >
-        {item.title}
-      </Text>
-    );
+  const handleIncrement = async (item: CartItem) => {
+    try {
+      const canIncrement = await StockManager.validateStockIncrement(item.id, item.quantity);
+      
+      if (!canIncrement) {
+        setStockErrors(prev => ({ ...prev, [item.id]: true }));
+        toast({
+          title: "Stock máximo alcanzado",
+          description: "No hay más unidades disponibles de este producto",
+          status: "warning",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+      
+      setStockErrors(prev => ({ ...prev, [item.id]: false }));
+      onIncrement(item);
+    } catch (error) {
+      console.error('Error al validar stock:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo validar el stock disponible",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
 
   return (
@@ -142,18 +155,48 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
                       flexShrink={0}
                     />
                     <Box flex={1} minWidth={0}>
-                      {renderTitle(item)}
+                      <Text
+                        fontWeight="bold"
+                        fontSize="sm"
+                        lineHeight="short"
+                        overflow="hidden"
+                        textOverflow="ellipsis"
+                        style={{
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                        }}
+                      >
+                        {item.title}
+                      </Text>
                       <Text fontSize="sm">{parseCurrency(item.price)} {siteInfo?.currency}</Text>
                     </Box>
                     <HStack flexShrink={0}>
-                      <Button size="sm" onClick={() => onDecrement(item)}>-</Button>
+                      <Button 
+                        size="sm" 
+                        onClick={() => onDecrement(item)}
+                        isDisabled={item.quantity <= 1}
+                      >
+                        -
+                      </Button>
                       <Text>{item.quantity}</Text>
-                      <Button size="sm" onClick={() => onIncrement(item)}>+</Button>
+                      <Button 
+                        size="sm" 
+                        onClick={() => handleIncrement(item)}
+                        isDisabled={stockErrors[item.id]}
+                      >
+                        +
+                      </Button>
                     </HStack>
                   </Flex>
                 ))
               ) : (
                 <Text textAlign="center">Tu carrito está vacío</Text>
+              )}
+              {stockErrors[items[0]?.id] && (
+                <Text color="red.500" fontSize="xs">
+                  Stock máximo alcanzado
+                </Text>
               )}
 
               <Divider />
