@@ -145,7 +145,13 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
 
   const getWelcomeMessage = () => {
     if (router.pathname === '/login') {
-      return 'Simple E-commerce';
+      return (
+        <NextLink href="/" passHref>
+          <Link _hover={{ textDecoration: 'none' }}>
+            <Heading size="md">Simple E-commerce</Heading>
+          </Link>
+        </NextLink>
+      );
     }
 
     if (router.pathname.startsWith('/product')) {
@@ -206,6 +212,8 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
     return !router.pathname.startsWith('/product') && router.pathname !== '/login';
   }, [router.pathname]);
 
+  const shouldShowMenu = router.pathname !== '/login';
+
   if (isLoading) return <Box display="flex" justifyContent="center" alignItems="center" height="100vh"><Spinner /></Box>;
   if (isError) return <Box>Error al cargar la información del sitio</Box>;
 
@@ -260,10 +268,10 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
       >
         <Container maxWidth="container.xl" padding={4}>
           <Flex alignItems="center" justifyContent="space-between">
-            <Heading size="md">
+            <Box>
               {getWelcomeMessage()}
-            </Heading>
-            {isMounted && (
+            </Box>
+            {isMounted && shouldShowMenu && (
               <HamburgerMenu
                 isLoggedIn={isLoggedIn}
                 isAdmin={isAdmin}
