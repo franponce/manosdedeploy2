@@ -55,6 +55,7 @@ const ProductDetail: React.FC = () => {
   const { cart, addToCart, removeFromCart } = useCart();
   const [isCartOpen, toggleCart] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [pageUrl, setPageUrl] = useState<string>('');
 
   const { data: currentProduct } = useSWR(
     id ? `/api/products/${id}` : null,
@@ -124,10 +125,14 @@ const ProductDetail: React.FC = () => {
   const shareText = `¡Mira este producto! ${displayProduct?.title} 🛒`;
   const shareTextWithPrice = `¡Descubrí ${displayProduct?.title} por ${parseCurrency(displayProduct?.price || 0)}! 🛒`;
   const emailSubject = `Te comparto este producto de ${siteInfo?.storeName || 'nuestra tienda'}`;
-  const emailBody = `Hola! Encontré este producto que te puede interesar:\n\n${displayProduct?.title}\n${window.location.href}`;
+  const emailBody = `Hola! Encontré este producto que te puede interesar:\n\n${displayProduct?.title}\n${pageUrl}`;
+
+  useEffect(() => {
+    setPageUrl(window.location.href);
+  }, []);
 
   const handleCopyLink = () => {
-    const textToCopy = `¡Mirá este producto! ${displayProduct?.title}\n${window.location.href}`;
+    const textToCopy = `¡Mirá este producto! ${displayProduct?.title}\n${pageUrl}`;
     navigator.clipboard.writeText(textToCopy);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -318,7 +323,7 @@ const ProductDetail: React.FC = () => {
                     <HStack spacing={2}>
                       <Tooltip label="Compartir en WhatsApp">
                         <WhatsappShareButton
-                          url={window.location.href}
+                          url={pageUrl}
                           title={shareTextWithPrice}
                         >
                           <WhatsappIcon size={40} round />
@@ -327,7 +332,7 @@ const ProductDetail: React.FC = () => {
 
                       <Tooltip label="Compartir en Facebook">
                         <FacebookShareButton
-                          url={window.location.href}
+                          url={pageUrl}
                           quote={shareText}
                         >
                           <FacebookIcon size={40} round />
@@ -336,7 +341,7 @@ const ProductDetail: React.FC = () => {
 
                       <Tooltip label="Compartir en Twitter">
                         <TwitterShareButton
-                          url={window.location.href}
+                          url={pageUrl}
                           title={shareText}
                         >
                           <TwitterIcon size={40} round />
@@ -345,7 +350,7 @@ const ProductDetail: React.FC = () => {
 
                       <Tooltip label="Compartir por email">
                         <EmailShareButton
-                          url={window.location.href}
+                          url={pageUrl}
                           subject={emailSubject}
                           body={emailBody}
                         >
