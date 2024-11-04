@@ -189,15 +189,18 @@ if (typeof window === 'undefined') {
 
   googleSheetsApi = {
     getProducts: async (): Promise<Product[]> => {
+      const CACHE_KEY = 'products:all';
+      const CACHE_TTL = 300; // 5 minutos
+      
       try {
-        console.log('Starting getProducts in googleSheets.ts');
-        
-        // Verificar productos programados antes de obtenerlos
-        await checkAndUpdateScheduledProducts();
+        // Intentar obtener del caché
+        const cachedProducts = await cacheInstance.get<Product[]>(CACHE_KEY);
+        if (cachedProducts && cachedProducts.length > 0) {
+          return cachedProducts;
+        }
 
+        // Si no hay caché, obtener de Google Sheets
         const auth = await getAuthClient();
-        console.log('GoogleAuth instance created');
-
         const { google } = await import('googleapis');
         const sheets = google.sheets({ version: 'v4', auth });
 
@@ -206,29 +209,39 @@ if (typeof window === 'undefined') {
           range: PRODUCT_RANGE,
         });
 
-        console.log('Spreadsheet data fetched');
-
-        const rows = response.data.values;
-        if (!rows || rows.length === 0) {
+        if (!response.data.values) {
           return [];
         }
 
-        return rows
+        const products = response.data.values
           .map((row: any[]) => ({
             id: row[0],
             title: row[1],
             description: row[2],
-            currency: 'USD', 
+            currency: 'USD',
             image: row[3],
             price: parseFloat(row[4]) || 0,
             scheduledPublishDate: row[5] ? new Date(row[5].replace(' ', 'T')) : null,
             isScheduled: row[6] === 'TRUE',
             categoryId: row[7] || '',
-            stock: parseInt(row[8]) || 0, // Aseguramos que stock sea número
+            stock: parseInt(row[8]) || 0,
           }))
           .filter((product) => product.title && product.title.trim() !== '');
+
+        // Guardar en caché
+        await cacheInstance.set(CACHE_KEY, products, CACHE_TTL);
+        
+        return products;
       } catch (error) {
-        console.error('Error fetching products from Google Sheets:', error);
+        console.error('Error fetching products:', error);
+        
+        // En caso de error, intentar usar caché expirado
+        const expiredCache = await cacheInstance.get<Product[]>(CACHE_KEY, true);
+        if (expiredCache) {
+          console.log('Using expired cache due to error');
+          return expiredCache;
+        }
+        
         throw error;
       }
     },
@@ -734,6 +747,7 @@ export const updateProductStock = async (productId: string, newStock: number): P
 
 import useSWR from 'swr';
 import { CacheManager } from './cacheManager';
+import { cacheInstance } from './cache';
 
 // Cache tiempo en ms (5 minutos)
 const CACHE_TIME = 300000;

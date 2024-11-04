@@ -1,59 +1,52 @@
-interface CacheItem<T> {
-  value: T;
-  timestamp: number;
-  ttl: number;
-}
-
 export class Cache {
-  static get(key: string) {
-      throw new Error('Method not implemented.');
-  }
-  private cache: Map<string, CacheItem<any>>;
-  private static instance: Cache;
+  private static instance: Cache | null = null;
+  private cache: Map<string, any>;
+  private timestamps: Map<string, number>;
 
-  private constructor() {
+  constructor() {
     this.cache = new Map();
+    this.timestamps = new Map();
   }
 
-  static getInstance(): Cache {
+  public static getInstance(): Cache {
     if (!Cache.instance) {
       Cache.instance = new Cache();
     }
     return Cache.instance;
   }
 
-  async get<T>(key: string): Promise<T | null> {
-    const item = this.cache.get(key);
-    if (!item) return null;
+  public async get<T>(key: string, allowExpired: boolean = false): Promise<T | null> {
+    const value = this.cache.get(key);
+    const timestamp = this.timestamps.get(key);
 
-    const now = Date.now();
-    if (now - item.timestamp > item.ttl * 1000) {
-      this.cache.delete(key);
-      return null;
+    if (!value || !timestamp) return null;
+
+    if (allowExpired || timestamp > Date.now()) {
+      return value as T;
     }
 
-    return item.value as T;
+    this.delete(key);
+    return null;
   }
 
-  async set<T>(key: string, value: T, ttl: number = 300): Promise<void> {
-    this.cache.set(key, {
-      value,
-      timestamp: Date.now(),
-      ttl,
-    });
+  public async set<T>(key: string, value: T, ttl: number = 300): Promise<void> {
+    this.cache.set(key, value);
+    this.timestamps.set(key, Date.now() + (ttl * 1000));
   }
 
-  async delete(key: string): Promise<void> {
+  public delete(key: string): void {
     this.cache.delete(key);
+    this.timestamps.delete(key);
   }
 
-  async clear(): Promise<void> {
+  public clear(): void {
     this.cache.clear();
+    this.timestamps.clear();
   }
 
-  async keys(): Promise<string[]> {
+  public keys(): string[] {
     return Array.from(this.cache.keys());
   }
 }
 
-export const cacheInstance = Cache.getInstance(); 
+export const cacheInstance = Cache.getInstance();

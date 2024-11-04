@@ -1,56 +1,33 @@
-import { useCache } from './useCache';
-import { Product } from '../product/types';
+import { Product } from "@/product/types";
 
-const CACHE_KEYS = {
-  ALL_PRODUCTS: 'products:all',
-  PRODUCT: (id: string) => `products:${id}`,
-  CATEGORY_PRODUCTS: (categoryId: string) => `products:category:${categoryId}`,
-};
+import { useCache } from "./useCache";
 
-export function useProductsWithCache(config?: { 
-  categoryId?: string, 
-  forceValidate?: boolean 
-}) {
-  const cacheKey = config?.categoryId 
-    ? CACHE_KEYS.CATEGORY_PRODUCTS(config.categoryId)
-    : CACHE_KEYS.ALL_PRODUCTS;
-
+export function useProducts(config?: { forceValidate?: boolean }) {
   return useCache<Product[]>(
-    cacheKey,
+    'products',
     async () => {
       const response = await fetch('/api/products');
       if (!response.ok) throw new Error('Error fetching products');
-      const products = await response.json();
-      
-      if (config?.categoryId) {
-        return products.filter(
-          (product: Product) => product.categoryId === config.categoryId
-        );
-      }
-      
-      return products;
+      return response.json();
     },
     {
-      ttl: 300, // 5 minutos
+      ttl: 300,
       forceValidate: config?.forceValidate,
-      revalidateOnFocus: false,
-      revalidateIfStale: true,
     }
   );
 }
 
 export function useProductStock(productId: string) {
-  return useCache<{ stock: number }>(
-    CACHE_KEYS.PRODUCT(productId),
+  return useCache<number>(
+    `product:${productId}:stock`,
     async () => {
       const response = await fetch(`/api/products/${productId}/stock`);
       if (!response.ok) throw new Error('Error fetching stock');
       return response.json();
     },
     {
-      ttl: 60, // 1 minuto para el stock
-      revalidateOnFocus: true,
-      refreshInterval: 60000, // Actualizar cada minuto
+      ttl: 300,
+      revalidateOnFocus: false,
     }
   );
 } 

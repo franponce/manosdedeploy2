@@ -1,4 +1,4 @@
-import useSWR, { SWRConfiguration } from 'swr';
+import useSWR, { Key, SWRConfiguration } from 'swr';
 import { Cache, cacheInstance } from '../utils/cache';
 
 interface CacheConfig extends SWRConfiguration {
@@ -6,9 +6,21 @@ interface CacheConfig extends SWRConfiguration {
   forceValidate?: boolean;
 }
 
-export function useCache<T>(key: string, fetcher: () => Promise<T>, config?: CacheConfig) {
+interface CacheConfig {
+  ttl?: number;
+  forceValidate?: boolean;
+  revalidateOnFocus?: boolean;
+  revalidateIfStale?: boolean;
+  refreshInterval?: number;
+}
+
+export function useCache<T>(
+  key: Key,
+  fetcher: () => Promise<T>,
+  config?: CacheConfig
+) {
   const {
-    ttl = 300, // 5 minutos por defecto
+    ttl = 300,
     forceValidate = false,
     ...swrConfig
   } = config || {};
@@ -17,26 +29,25 @@ export function useCache<T>(key: string, fetcher: () => Promise<T>, config?: Cac
     key,
     async () => {
       try {
-        // Intentar obtener del caché primero
-        const cachedData = await cacheInstance.get<T>(key);
-        if (cachedData !== null && !forceValidate) {
-          return cachedData;
+        if (!forceValidate) {
+          const cachedData = await cacheInstance.get<T>(key?.toString() ?? '');
+          if (cachedData !== null) {
+            return cachedData;
+          }
         }
-
-        // Si no está en caché o se fuerza la validación, obtener datos frescos
         const freshData = await fetcher();
-        await cacheInstance.set(key, freshData, ttl);
+        await cacheInstance.set(key?.toString() ?? '', freshData, ttl);
         return freshData;
       } catch (error) {
         console.error('Cache error:', error);
-        return fetcher();
+        throw error;
       }
     },
     {
       revalidateOnFocus: false,
-      revalidateOnReconnect: true,
+      revalidateOnReconnect: false,
       dedupingInterval: ttl * 1000,
       ...swrConfig,
     }
   );
-} 
+}
