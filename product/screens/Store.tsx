@@ -248,6 +248,18 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
     throw new Error("Function not implemented.");
   }
 
+  const handleAddToCart = (product: Product) => {
+    addToCart(product);
+    toast({
+      title: "Producto agregado",
+      description: "El producto se agregó al carrito",
+      status: "success",
+      duration: 3000,
+      isClosable: true,
+    });
+    toggleCart(true); // Abrimos el drawer automáticamente
+  };
+
   return (
     <>
       <Container maxW="container.xl" py={8}>
@@ -319,13 +331,8 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
                 <ProductCard
                   key={product.id}
                   product={product}
-                  onAdd={() => router.push(`/product/${product.id}`)}
+                  onAdd={handleAddToCart}
                   isLoading={false}
-                  buttonProps={{
-                    colorScheme: product.stock > 0 ? "blue" : "gray",
-                    isDisabled: !product.stock,
-                    children: "Ver detalle"
-                  }}
                   stockStatusRenderer={(product) => (
                     <Text
                       color={product.stock > 0 ? "green.500" : "red.500"}
@@ -336,6 +343,11 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
                       {product.stock > 0 ? "Stock disponible" : "Sin stock"}
                     </Text>
                   )}
+                  buttonProps={{
+                    isDisabled: !product.stock,
+                    colorScheme: product.stock > 0 ? "blue" : "gray",
+                    children: product.stock > 0 ? "Agregar al carrito" : "Sin stock"
+                  }}
                 />
               ))}
             </Grid>
