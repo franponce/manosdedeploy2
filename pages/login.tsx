@@ -188,7 +188,7 @@ const LoginPage: React.FC = () => {
         </VStack>
       </Box>
 
-      {/* Lado derecho - Header/Banner */}
+      {/* Lado derecho - Logo y Descripción */}
       <Box 
         flex={{ base: "1", md: "1" }}
         display={{ base: "none", md: "flex" }}
@@ -199,34 +199,16 @@ const LoginPage: React.FC = () => {
         p={8}
         position="relative"
         order={{ base: 2, md: 2 }}
+        height="100%"
       >
-        <Box mb={6} position="relative">
-          <Box
-            borderRadius="lg"
-            height={{ base: "200px", md: "300px" }}
-            overflow="hidden"
-            width="100%"
-            position="relative"
-          >
-            <Image
-              src={`${siteInfo?.bannerUrl}?${new Date().getTime()}`}
-              alt="Store banner"
-              objectFit="cover"
-              width="100%"
-              height="100%"
-              fallback={<Box bg="gray.200" w="100%" h="100%" />}
-            />
-          </Box>
-        </Box>
-
         <Box
           backgroundColor="white"
           borderRadius="full"
           boxShadow="md"
-          boxSize="120px"
+          boxSize="150px"
           overflow="hidden"
           position="relative"
-          mb={4}
+          mb={8}
         >
           <Image
             src={`${siteInfo?.logoUrl}?${new Date().getTime()}`}
@@ -243,16 +225,24 @@ const LoginPage: React.FC = () => {
           bg="white"
           borderRadius="md"
           boxShadow="sm"
-          p={4}
-          spacing={3}
+          p={8}
+          spacing={4}
           textAlign="center"
           width="100%"
-          maxWidth="600px"
+          maxWidth="500px"
         >
           <Heading size="lg">{siteInfo?.title}</Heading>
-          <Text color="gray.600" fontSize="md" dangerouslySetInnerHTML={{ __html: siteInfo?.description || '' }} />
+          <Text 
+            color="gray.600" 
+            fontSize="lg"
+            dangerouslySetInnerHTML={{ __html: siteInfo?.description || '' }}
+          />
           {siteInfo?.description2 && (
-            <Text color="gray.600" fontSize="md" dangerouslySetInnerHTML={{ __html: siteInfo?.description2 || '' }} />
+            <Text 
+              color="gray.600" 
+              fontSize="lg"
+              dangerouslySetInnerHTML={{ __html: siteInfo?.description2 || '' }}
+            />
           )}
         </Stack>
       </Box>
