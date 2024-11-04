@@ -156,7 +156,7 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading: cardLoading, 
   };
 
   const renderStockStatus = () => {
-    if (stockLevels[product.id] === 0) {
+    if (!product.stock || product.stock === 0) {
       return (
         <Text 
           fontSize="sm" 
@@ -164,7 +164,7 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading: cardLoading, 
           fontWeight="bold"
           textAlign="center"
         >
-          Sin stock disponible
+          Sin stock
         </Text>
       );
     }
@@ -176,7 +176,7 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading: cardLoading, 
         fontWeight="bold"
         textAlign="center"
       >
-        Stock disponible: {stockLevels[product.id]} unidades
+        Stock disponible
       </Text>
     );
   };
