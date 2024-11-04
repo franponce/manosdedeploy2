@@ -237,26 +237,26 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
 
   return (
     <>
-      <Container maxW="container.xl" py={8}>
+      <Container maxW="container.xl" py={8} px={{ base: 4, md: 8 }}>
         {siteInfo?.banner && (
           <Box 
             mb={6} 
             position="relative" 
             overflow="hidden" 
             borderRadius="lg"
+            mx={{ base: -4, md: 0 }}
           >
             <Image
               src={siteInfo.banner}
               alt="Banner de la tienda"
               width="100%"
-              height="auto"
+              height={{ base: "150px", md: "200px" }}
               objectFit="cover"
               loading="eager"
             />
           </Box>
         )}
 
-        {/* Resto del contenido existente */}
         <Stack spacing={6}>
           <Flex direction={{ base: "column", md: "row" }} gap={4}>
             <InputGroup>
@@ -307,29 +307,42 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
                 sm: "repeat(auto-fill, minmax(280px, 1fr))",
               }}
             >
-              {displayedProducts.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  onAdd={handleAddToCart}
-                  isLoading={false}
-                  stockStatusRenderer={(product) => (
-                    <Text
-                      color={product.stock > 0 ? "green.500" : "red.500"}
-                      fontWeight="medium"
-                      fontSize="sm"
-                      textAlign="center"
-                    >
-                      {product.stock > 0 ? "Stock disponible" : "Sin stock"}
-                    </Text>
-                  )}
-                  buttonProps={{
-                    isDisabled: !product.stock,
-                    colorScheme: product.stock > 0 ? "blue" : "gray",
-                    children: product.stock > 0 ? "Agregar al carrito" : "Sin stock"
-                  }}
-                />
-              ))}
+              {displayedProducts.map((product, index) => {
+                const currentStock = productsStock[product.id] ?? product.stock;
+                
+                return (
+                  <Box
+                    key={product.id}
+                    ref={index === displayedProducts.length - 1 ? lastProductElementRef : null}
+                  >
+                    <ProductCard
+                      product={{
+                        ...product,
+                        stock: currentStock
+                      }}
+                      onAdd={handleAddToCart}
+                      isLoading={false}
+                      stockStatusRenderer={(product) => (
+                        <Text
+                          color={(productsStock[product.id] ?? product.stock) > 0 ? "green.500" : "red.500"}
+                          fontWeight="medium"
+                          fontSize="sm"
+                          textAlign="center"
+                        >
+                          {(productsStock[product.id] ?? product.stock) > 0 ? "Stock disponible" : "Sin stock"}
+                        </Text>
+                      )}
+                      buttonProps={{
+                        isDisabled: !(productsStock[product.id] ?? product.stock),
+                        colorScheme: (productsStock[product.id] ?? product.stock) > 0 ? "blue" : "gray",
+                        children: (productsStock[product.id] ?? product.stock) > 0 
+                          ? "Agregar al carrito" 
+                          : "Sin stock"
+                      }}
+                    />
+                  </Box>
+                );
+              })}
             </Grid>
           ) : (
             <NoProductsFound />
