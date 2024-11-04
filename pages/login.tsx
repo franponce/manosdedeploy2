@@ -15,11 +15,12 @@ import {
   IconButton,
   Link,
   Image,
-  Stack
+  Stack,
+  Spinner
 } from '@chakra-ui/react';
 import { ViewIcon, ViewOffIcon } from '@chakra-ui/icons';
 import { getSiteInformation, loginUser, resetPassword } from '../utils/firebase';
-import { useSiteInfo } from '@/context/SiteInfoContext';
+import { useSiteInfo } from '../hooks/useSiteInfo';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -28,7 +29,7 @@ const LoginPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const toast = useToast();
-  const { siteInfo } = useSiteInfo();
+  const { siteInfo, isLoading: siteInfoLoading } = useSiteInfo();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,6 +100,14 @@ const LoginPage: React.FC = () => {
   };
 
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
+
+  if (siteInfoLoading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+        <Spinner />
+      </Box>
+    );
+  }
 
   return (
     <Box 
