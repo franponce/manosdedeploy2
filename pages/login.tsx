@@ -13,27 +13,24 @@ import {
   InputGroup, 
   InputRightElement,
   IconButton,
-  Link
+  Link,
+  Image,
+  Stack,
+  Spinner,
+  Skeleton
 } from '@chakra-ui/react';
 import { ViewIcon, ViewOffIcon } from '@chakra-ui/icons';
 import { getSiteInformation, loginUser, resetPassword } from '../utils/firebase';
+import { useSiteInfo } from '../hooks/useSiteInfo';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [storeName, setStoreName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const toast = useToast();
-
-  useEffect(() => {
-    const fetchStoreName = async () => {
-      const siteInfo = await getSiteInformation();
-      setStoreName(siteInfo.title);
-    };
-    fetchStoreName();
-  }, []);
+  const { siteInfo, isLoading: siteInfoLoading } = useSiteInfo();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,48 +102,171 @@ const LoginPage: React.FC = () => {
 
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
 
+  if (siteInfoLoading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+        <Spinner />
+      </Box>
+    );
+  }
+
   return (
-    <Box margin="auto" maxWidth="400px" mt={8}>
-      <VStack spacing={4} align="stretch">
-        <Heading as="h1" size="xl">¡Hola de nuevo! 👋</Heading>
-        <Text fontSize="lg">Inicia sesión a <strong>{storeName}</strong></Text>
-        <form onSubmit={handleSubmit}>
-          <VStack spacing={4}>
-            <FormControl isRequired>
-              <FormLabel>Email o Usuario</FormLabel>
-              <Input 
-                type="text" 
-                value={email} 
-                onChange={(e) => setEmail(e.target.value)} 
-              />
-            </FormControl>
-            <FormControl isRequired>
-              <FormLabel>Contraseña</FormLabel>
-              <InputGroup>
-                <Input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+    <Box 
+      display="flex" 
+      flexDirection={{ base: "column", md: "row" }}
+      minHeight="calc(100vh - 70px)"
+      gap={{ base: 8, md: 0 }}
+    >
+      {/* Lado izquierdo - Formulario */}
+      <Box 
+        flex={{ base: "1", md: "1" }}
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+        p={{ base: 4, md: 8 }}
+        order={{ base: 1, md: 1 }}
+      >
+        <VStack 
+          spacing={6} 
+          align="stretch"
+          maxW="400px"
+          width="100%"
+        >
+          <Box>
+            <Heading as="h1" size="xl" mb={2}>¡Hola de nuevo! 👋</Heading>
+            <Text fontSize="lg">Inicia sesión a <strong>{siteInfo?.title}</strong></Text>
+          </Box>
+
+          <form onSubmit={handleSubmit}>
+            <VStack spacing={4}>
+              <FormControl isRequired>
+                <FormLabel>Email o Usuario</FormLabel>
+                <Input 
+                  type="text" 
+                  value={email} 
+                  onChange={(e) => setEmail(e.target.value)} 
                 />
-                <InputRightElement>
-                  <IconButton
-                    aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-                    icon={showPassword ? <ViewOffIcon /> : <ViewIcon />}
-                    onClick={togglePasswordVisibility}
-                    variant="ghost"
+              </FormControl>
+              
+              <FormControl isRequired>
+                <FormLabel>Contraseña</FormLabel>
+                <InputGroup>
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                   />
-                </InputRightElement>
-              </InputGroup>
-            </FormControl>
-            <Button colorScheme="blue" type="submit" width="full" isLoading={isLoading}>
-              Iniciar sesión
-            </Button>
-          </VStack>
-        </form>
-        <Link color="blue.500" onClick={handleResetPassword} textAlign="center">
-          ¿Olvidaste tu contraseña?
-        </Link>
-      </VStack>
+                  <InputRightElement>
+                    <IconButton
+                      aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                      icon={showPassword ? <ViewOffIcon /> : <ViewIcon />}
+                      onClick={togglePasswordVisibility}
+                      variant="ghost"
+                    />
+                  </InputRightElement>
+                </InputGroup>
+              </FormControl>
+
+              <Button 
+                colorScheme="blue" 
+                type="submit" 
+                width="full" 
+                isLoading={isLoading}
+              >
+                Iniciar sesión
+              </Button>
+            </VStack>
+          </form>
+
+          <Link 
+            color="blue.500" 
+            onClick={handleResetPassword} 
+            textAlign="center"
+            display="block"
+          >
+            ¿Olvidaste tu contraseña?
+          </Link>
+        </VStack>
+      </Box>
+
+      {/* Lado derecho - Logo y Descripción */}
+      <Box 
+        flex={{ base: "1", md: "1" }}
+        display={{ base: "none", md: "flex" }}
+        flexDirection="column"
+        justifyContent="center"
+        alignItems="center"
+        bg="gray.50"
+        position="relative"
+        order={{ base: 2, md: 2 }}
+        height="100vh"
+        py={20}
+      >
+        <Stack
+          spacing={8}
+          maxW="400px"
+          w="100%"
+          px={8}
+          bg="white"
+          borderRadius="3xl"
+          boxShadow="lg"
+          py={12}
+          mx={4}
+        >
+          <Skeleton isLoaded={!siteInfoLoading} borderRadius="full">
+            <Box
+              backgroundColor="white"
+              borderRadius="full"
+              boxShadow="md"
+              boxSize="120px"
+              overflow="hidden"
+              position="relative"
+              mx="auto"
+              mb={2}
+            >
+              <Image
+                src={siteInfo?.logoUrl}
+                alt="Store logo"
+                objectFit="cover"
+                width="100%"
+                height="100%"
+                loading="eager"
+              />
+            </Box>
+          </Skeleton>
+
+          <Stack
+            align="center"
+            spacing={6}
+            textAlign="center"
+            px={6}
+          >
+            <Skeleton isLoaded={!siteInfoLoading}>
+              <Heading size="lg">{siteInfo?.title}</Heading>
+            </Skeleton>
+            
+            <Skeleton isLoaded={!siteInfoLoading}>
+              <Text 
+                color="gray.600" 
+                fontSize="md"
+                lineHeight="tall"
+                dangerouslySetInnerHTML={{ __html: siteInfo?.description || '' }}
+              />
+            </Skeleton>
+            
+            {siteInfo?.description2 && (
+              <Skeleton isLoaded={!siteInfoLoading}>
+                <Text 
+                  color="gray.600" 
+                  fontSize="md"
+                  lineHeight="tall"
+                  dangerouslySetInnerHTML={{ __html: siteInfo?.description2 || '' }}
+                />
+              </Skeleton>
+            )}
+          </Stack>
+        </Stack>
+      </Box>
     </Box>
   );
 };
