@@ -13,7 +13,7 @@ class Cache {
     return Cache.instance;
   }
 
-  async get<T>(key: string): Promise<T | null> {
+  async get<T>(key: string, p0: boolean): Promise<T | null> {
     const item = this.cache.get(key);
     if (!item) return null;
 
