@@ -110,7 +110,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
 
     // Cleanup
     return () => window.removeEventListener('resize', checkWindowSize);
-  }, [isLoginPage]);
+  }, [router.pathname]);
 
   const handleLogout = async () => {
     try {
