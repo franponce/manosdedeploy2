@@ -21,17 +21,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const stock = await StockManager.getCurrentStock(id);
     const numericStock = Number(stock);
     
-    if (isNaN(numericStock)) {
-      return res.status(200).json({ stock: 0 });
-    }
+    return res.status(200).json({ 
+      stock: isNaN(numericStock) ? 0 : numericStock,
+      lastUpdate: new Date().toISOString()
+    });
 
-    // Si necesitas invalidar el cache
-    await CacheManager.invalidateStock(id);
-
-    return res.status(200).json({ stock: numericStock });
   } catch (error) {
     console.error('Error al obtener stock:', error);
-    // Devolver 0 en caso de error para evitar errores en el cliente
-    return res.status(200).json({ stock: 0 });
+    return res.status(200).json({ 
+      stock: 0,
+      lastUpdate: new Date().toISOString()
+    });
   }
 } 

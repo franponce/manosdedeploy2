@@ -32,6 +32,7 @@ import { getPaymentMethods, PaymentMethods } from '../../utils/firebase';
 import { FaArrowLeft, FaShoppingCart, FaWhatsapp } from 'react-icons/fa';
 import { useSiteInfo } from '@/hooks/useSiteInfo';
 import { StockManager } from '@/utils/stock/stockManager';
+import { useStock } from '@/hooks/useStock';
 
 interface Props {
   isOpen: boolean;
@@ -98,34 +99,21 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
   };
 
   const handleIncrement = async (item: CartItem) => {
-    try {
-      const canIncrement = await StockManager.validateStockIncrement(item.id, item.quantity);
-      
-      if (!canIncrement) {
-        setStockErrors(prev => ({ ...prev, [item.id]: true }));
-        toast({
-          title: "Stock máximo alcanzado",
-          description: "No hay más unidades disponibles de este producto",
-          status: "warning",
-          duration: 3000,
-          isClosable: true,
-        });
-        return;
-      }
-      
-      setStockErrors(prev => ({ ...prev, [item.id]: false }));
-      onIncrement(item);
-    } catch (error) {
-      console.error('Error al validar stock:', error);
+    const { stock } = useStock(item.id)
+    
+    if (item.quantity >= stock) {
       toast({
-        title: "Error",
-        description: "No se pudo validar el stock disponible",
-        status: "error",
+        title: "Stock máximo alcanzado",
+        description: "No hay más unidades disponibles",
+        status: "warning",
         duration: 3000,
         isClosable: true,
-      });
+      })
+      return
     }
-  };
+    
+    onIncrement(item)
+  }
 
   return (
     <Drawer isOpen={isOpen} placement="right" onClose={onClose} size="md">

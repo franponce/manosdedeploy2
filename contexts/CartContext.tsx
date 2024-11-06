@@ -2,6 +2,7 @@ import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { CartItem, Product } from '../product/types';
 import { useToast } from '@chakra-ui/react';
 import { useProductStock } from '../hooks/useProductCache';
+import { useStock } from '../hooks/useStock';
 
 interface CartState {
   items: CartItem[];
@@ -97,21 +98,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('cart', JSON.stringify(state.items));
   }, [state.items]);
 
-  const fetchStock = async (productId: string): Promise<number> => {
-    try {
-      const { data } = useProductStock(productId);
-      return data || 0;
-    } catch (error) {
-      console.error('Error fetching stock:', error);
-      return 0;
-    }
-  };
-
   const addToCart = async (product: Product) => {
     dispatch({ type: 'SET_LOADING', payload: true });
+    
     try {
-      const stock = await fetchStock(product.id);
-      const currentQuantity = state.items.find(item => item.id === product.id)?.quantity || 0;
+      const { stock } = useStock(product.id)
+      const currentQuantity = state.items.find(item => item.id === product.id)?.quantity || 0
 
       if (currentQuantity >= stock) {
         toast({
@@ -120,23 +112,24 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           status: "warning",
           duration: 3000,
           isClosable: true,
-        });
-        return;
+        })
+        return
       }
 
-      dispatch({ type: 'ADD_ITEM', payload: product });
-      dispatch({ type: 'TOGGLE_CART', payload: true });
+      dispatch({ type: 'ADD_ITEM', payload: product })
+      dispatch({ type: 'TOGGLE_CART', payload: true })
+      
     } catch (error) {
-      console.error('Error adding to cart:', error);
+      console.error('Error adding to cart:', error)
       toast({
         title: "Error",
         description: "No se pudo agregar el producto al carrito",
         status: "error",
         duration: 3000,
         isClosable: true,
-      });
+      })
     } finally {
-      dispatch({ type: 'SET_LOADING', payload: false });
+      dispatch({ type: 'SET_LOADING', payload: false })
     }
   };
 
