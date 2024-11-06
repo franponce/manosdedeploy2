@@ -20,7 +20,6 @@ export default async function handler(
       if (updatedProduct.stock !== undefined) {
         await StockManager.updateStock(id as string, Number(updatedProduct.stock));
       }
-
       // Invalidar caches
       await CacheManager.invalidateProducts(id as string);
       await CacheManager.invalidateStock(id as string);
