@@ -30,6 +30,7 @@ import { FaArrowLeft } from 'react-icons/fa';
 
 const MyApp = ({ Component, pageProps }: AppProps) => {
   const router = useRouter();
+  const isLoginPage = router.pathname === '/login';
   const [isLoggedIn, setIsLoggedIn] = React.useState(false);
   const [isAdmin, setIsAdmin] = React.useState(false);
   const [isMounted, setIsMounted] = React.useState(false);
@@ -110,7 +111,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
 
     // Cleanup
     return () => window.removeEventListener('resize', checkWindowSize);
-  }, [router.pathname]);
+  }, [isLoginPage]);
 
   const handleLogout = async () => {
     try {
@@ -129,8 +130,6 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
     router.push('/admin');
   };
 
-  const isLoginPage = router.pathname === '/login';
-
   const getWelcomeMessage = () => {
     if (router.pathname === '/store-config') {
       return (
@@ -142,9 +141,6 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
           Volver a la gestión de productos
         </Button>
       );
-    }
-    if (router.pathname === '/login') {
-      return 'Simple E-commerce';
     }
     if (router.pathname === '/admin') {
       if (isAdmin) {
@@ -199,7 +195,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
           </Container>
         </Box>
       )}
-      {!isLoginPage && (
+      {!isLoginPage ? (
         <Box
           position="fixed"
           top={0}
@@ -211,7 +207,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
         >
           <Container maxWidth="container.xl" padding={4}>
             <Flex alignItems="center" justifyContent="space-between">
-              <NextLink href="/" legacyBehavior>
+              <NextLink href="/" passHref>
                 <Heading as="a" size="md" cursor="pointer">
                   {getWelcomeMessage()}
                 </Heading>
@@ -223,6 +219,26 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
                   onLogout={handleLogout}
                 />
               )}
+            </Flex>
+          </Container>
+        </Box>
+      ) : (
+        <Box
+          position="fixed"
+          top={0}
+          left={0}
+          right={0}
+          zIndex={1000}
+          bg="white"
+          boxShadow="md"
+        >
+          <Container maxWidth="container.xl" padding={4}>
+            <Flex alignItems="center" justifyContent="center">
+              <NextLink href="/" passHref>
+                <Heading as="a" size="md" cursor="pointer">
+                  Simple E-commerce
+                </Heading>
+              </NextLink>
             </Flex>
           </Container>
         </Box>
