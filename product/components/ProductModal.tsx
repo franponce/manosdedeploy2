@@ -44,6 +44,7 @@ import { CATEGORY_CONSTANTS } from '../../utils/constants';
 import { useCategories } from '../../hooks/useCategories';
 import { mutate } from "swr";
 import { useRouter } from 'next/router';
+import { StockManager } from "../../utils/stock/stockManager";
 
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 
@@ -193,78 +194,32 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     }
   }, [toast]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!currentProduct) return;
-
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    
     try {
-      console.log('Estado actual antes de submit:', {
-        currentProduct,
-        description,
-        scheduledDate,
-        isScheduleOpen
+      // Validar que product existe
+      if (product && currentProduct.stock !== product.stock) {
+        await StockManager.updateStock(product.id, Number(currentProduct.stock));
+        // Solo invalidar cache si el producto existe
+        await mutate(`/api/products/${product.id}/stock`);
+      }
+
+      await onSubmit(currentProduct);
+      
+      toast({
+        title: "Éxito",
+        description: "Producto actualizado correctamente",
+        status: "success",
+        duration: 3000,
       });
-
-      // Validaciones
-      if (!currentProduct.title.trim()) {
-        toast({
-          title: "Error",
-          description: "El título es obligatorio",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-        return;
-      }
-
-      const price = parseFloat(currentProduct.price.toString());
-      if (isNaN(price) || price <= 0) {
-        toast({
-          title: "Error",
-          description: "Por favor, ingrese un precio válido mayor que 0.",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-        return;
-      }
-
-      if (isScheduleOpen && !scheduledDate) {
-        toast({
-          title: "Error",
-          description: "Por favor, seleccione una fecha y hora para la publicación programada.",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-        return;
-      }
-
-      const productToSubmit: Product = {
-        ...currentProduct,
-        title: currentProduct.title.trim(),
-        description: description,
-        image: currentProduct.image, // Mantenemos la imagen
-        price: price,
-        isScheduled: isScheduleOpen,
-        scheduledPublishDate: scheduledDate,
-        categoryId: currentProduct.categoryId || '',
-        stock: currentProduct.stock || 0,
-        lastStockUpdate: currentProduct.lastStockUpdate || new Date().toISOString(),
-        currency: currentProduct.currency || 'ARS'
-      };
-
-      console.log('Producto final a enviar:', productToSubmit);
-      await onSubmit(productToSubmit);
-      onClose();
     } catch (error) {
-      console.error("Error al guardar el producto:", error);
+      console.error('Error al actualizar producto:', error);
       toast({
         title: "Error",
-        description: "No se pudo guardar el producto. Por favor, intente de nuevo.",
+        description: "No se pudo actualizar el producto",
         status: "error",
         duration: 3000,
-        isClosable: true,
       });
     }
   };

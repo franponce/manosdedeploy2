@@ -174,9 +174,8 @@ if (typeof window === 'undefined') {
         valueInputOption: 'RAW',
         requestBody: { values },
       });
-
       // Invalidar caché después de actualizar
-      await CacheManager.invalidateProducts();
+      await CacheManager.invalidateProducts(product.id);
       if (product.categoryId) {
         await CacheManager.invalidateCategory(product.categoryId);
       }
@@ -256,9 +255,8 @@ if (typeof window === 'undefined') {
         
         // Actualizar el producto en la hoja
         await updateProductInSheet(product);
-        
         // Invalidar caché relacionado
-        await CacheManager.invalidateProducts();
+        await CacheManager.invalidateProducts(product.id);
         if (product.categoryId) {
           await CacheManager.invalidateCategory(product.categoryId);
         }
@@ -644,7 +642,6 @@ if (typeof window === 'undefined') {
 
 export const {
   getProducts,
-  updateProduct,
   createProduct,
   deleteProduct,
   getProductCount,
@@ -749,6 +746,7 @@ import useSWR from 'swr';
 import { CacheManager } from './cache/manager';
 import { CACHE_KEYS, CACHE_CONFIG } from './cache/config';
 import { cacheInstance } from './cache/instance';
+import { google } from 'googleapis';
 
 // Cache tiempo en ms (5 minutos)
 const CACHE_TIME = 300000;
@@ -780,5 +778,47 @@ export const useProductStock = (productId: string) => {
     refreshInterval: CACHE_CONFIG.REVALIDATION.INTERVAL.STOCK,
     dedupingInterval: CACHE_CONFIG.TTL.STOCK * 1000
   });
+};
+
+export const updateProduct = async (product: Product): Promise<void> => {
+  try {
+    console.log('Iniciando actualización en Google Sheets:', product);
+    
+    const auth = await getAuthClient();
+    const sheets = google.sheets({ version: 'v4', auth });
+    
+    // Obtener productos actuales
+    const products = await getProducts();
+    const productIndex = products.findIndex((p: Product) => p.id === product.id);
+    
+    if (productIndex === -1) {
+      throw new Error('Producto no encontrado');
+    }
+
+    // Actualizar en Google Sheets
+    const range = `${SHEET_NAME}!A${productIndex + 2}`;
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: SPREADSHEET_ID,
+      range,
+      valueInputOption: 'RAW',
+      requestBody: {
+        values: [[
+          product.id,
+          product.title,
+          product.description,
+          product.price,
+          product.image,
+          product.stock,
+          product.categoryId,
+          new Date().toISOString()
+        ]]
+      }
+    });
+
+    console.log('Producto actualizado en Google Sheets:', product);
+  } catch (error) {
+    console.error('Error en updateProduct:', error);
+    throw error;
+  }
 };
 

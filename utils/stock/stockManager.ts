@@ -1,6 +1,7 @@
 import { kv } from '@vercel/kv';
 import { getProducts, updateProduct } from '../googleSheets';
 import { Product } from '@/product/types';
+import { CacheManager } from '../../utils/cache/manager';
 
 export class StockManager {
   static STOCK_PREFIX: any;
@@ -50,6 +51,16 @@ export class StockManager {
         stock: newStock,
         lastStockUpdate: new Date().toISOString()
       });
+
+      if (this.CACHE_TTL) {
+        await kv.set(`${this.STOCK_PREFIX}${productId}`, newStock, { ex: this.CACHE_TTL });
+      } else {
+        await kv.set(`${this.STOCK_PREFIX}${productId}`, newStock);
+      }
+
+      await CacheManager.invalidateStock(productId);
+
+      console.log(`Stock actualizado para producto ${productId}: ${newStock}`);
     } catch (error) {
       console.error('Error al actualizar stock:', error);
       throw new Error('Error al actualizar stock');
