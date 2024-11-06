@@ -39,6 +39,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
   const [customScripts, setCustomScripts] = React.useState<string | null>(null);
   const [announcementBar, setAnnouncementBar] = React.useState<any>(null);
   const [hasRefreshed, setHasRefreshed] = React.useState(false);
+  const [shouldShowSiteInfo, setShouldShowSiteInfo] = React.useState(true);
 
   React.useEffect(() => {
     const checkAuthStatus = () => {
@@ -95,6 +96,22 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
     }
   }, [router.pathname, hasRefreshed]);
 
+  React.useEffect(() => {
+    // Verificar el ancho de la ventana solo en el cliente
+    const checkWindowSize = () => {
+      setShouldShowSiteInfo(!isLoginPage || (isLoginPage && window.innerWidth >= 768));
+    };
+
+    // Verificar inicialmente
+    checkWindowSize();
+
+    // Agregar listener para cambios de tamaño
+    window.addEventListener('resize', checkWindowSize);
+
+    // Cleanup
+    return () => window.removeEventListener('resize', checkWindowSize);
+  }, [isLoginPage]);
+
   const handleLogout = async () => {
     try {
       await logoutUser();
@@ -113,7 +130,6 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
   };
 
   const isLoginPage = router.pathname === '/login';
-  const shouldShowSiteInfo = !isLoginPage || (isLoginPage && window.innerWidth >= 768);
 
   const getWelcomeMessage = () => {
     if (router.pathname === '/store-config') {
