@@ -176,7 +176,7 @@ if (typeof window === 'undefined') {
       });
 
       // Invalidar caché después de actualizar
-      await CacheManager.invalidateProduct(product.id);
+      await CacheManager.invalidateProducts();
       if (product.categoryId) {
         await CacheManager.invalidateCategory(product.categoryId);
       }
@@ -194,7 +194,7 @@ if (typeof window === 'undefined') {
       
       try {
         // Intentar obtener del caché
-        const cachedProducts = await cacheInstance.get<Product[]>(CACHE_KEY);
+        const cachedProducts = await cacheInstance.get<Product[]>(CACHE_KEY, false);
         if (cachedProducts && cachedProducts.length > 0) {
           return cachedProducts;
         }
@@ -258,7 +258,7 @@ if (typeof window === 'undefined') {
         await updateProductInSheet(product);
         
         // Invalidar caché relacionado
-        await CacheManager.invalidateProduct(product.id);
+        await CacheManager.invalidateProducts();
         if (product.categoryId) {
           await CacheManager.invalidateCategory(product.categoryId);
         }
@@ -746,8 +746,9 @@ export const updateProductStock = async (productId: string, newStock: number): P
 };
 
 import useSWR from 'swr';
-import { CacheManager } from './cacheManager';
-import { cacheInstance } from './cache';
+import { CacheManager } from './cache/manager';
+import { CACHE_KEYS, CACHE_CONFIG } from './cache/config';
+import { cacheInstance } from './cache/instance';
 
 // Cache tiempo en ms (5 minutos)
 const CACHE_TIME = 300000;
@@ -760,10 +761,10 @@ export const useProductsWithCache = () => {
       if (!response.ok) throw new Error('Error fetching products');
       return response.json();
     },
-    revalidateOnFocus: false,
-    revalidateOnReconnect: false,
-    refreshInterval: CACHE_TIME,
-    dedupingInterval: CACHE_TIME
+    revalidateOnFocus: CACHE_CONFIG.REVALIDATION.ON_FOCUS,
+    revalidateOnReconnect: CACHE_CONFIG.REVALIDATION.ON_RECONNECT,
+    refreshInterval: CACHE_CONFIG.REVALIDATION.INTERVAL.PRODUCTS,
+    dedupingInterval: CACHE_CONFIG.TTL.PRODUCTS * 1000
   });
 };
 
@@ -775,9 +776,9 @@ export const useProductStock = (productId: string) => {
       if (!response.ok) throw new Error('Error fetching stock');
       return response.json();
     },
-    revalidateOnFocus: false,
-    refreshInterval: CACHE_TIME,
-    dedupingInterval: CACHE_TIME
+    revalidateOnFocus: CACHE_CONFIG.REVALIDATION.ON_FOCUS,
+    refreshInterval: CACHE_CONFIG.REVALIDATION.INTERVAL.STOCK,
+    dedupingInterval: CACHE_CONFIG.TTL.STOCK * 1000
   });
 };
 

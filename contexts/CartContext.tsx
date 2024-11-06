@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { CartItem, Product } from '../product/types';
 import { useToast } from '@chakra-ui/react';
+import { useProductStock } from '../hooks/useProductCache';
 
 interface CartState {
   items: CartItem[];
@@ -98,11 +99,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const fetchStock = async (productId: string): Promise<number> => {
     try {
-      const response = await fetch(`/api/products/${productId}/stock`);
-      if (!response.ok) throw new Error('Error al obtener stock');
-      const { stock } = await response.json();
-      dispatch({ type: 'SET_STOCK', payload: { id: productId, stock } });
-      return stock;
+      const { data } = useProductStock(productId);
+      return data || 0;
     } catch (error) {
       console.error('Error fetching stock:', error);
       return 0;

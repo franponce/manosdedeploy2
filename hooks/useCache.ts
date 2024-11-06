@@ -1,17 +1,10 @@
 import useSWR, { Key, SWRConfiguration } from 'swr';
-import { Cache, cacheInstance } from '../utils/cache';
+import { cacheInstance } from '../utils/cache/instance';
+import { CACHE_CONFIG } from '../utils/cache/config';
 
 interface CacheConfig extends SWRConfiguration {
   ttl?: number;
   forceValidate?: boolean;
-}
-
-interface CacheConfig {
-  ttl?: number;
-  forceValidate?: boolean;
-  revalidateOnFocus?: boolean;
-  revalidateIfStale?: boolean;
-  refreshInterval?: number;
 }
 
 export function useCache<T>(
@@ -20,7 +13,7 @@ export function useCache<T>(
   config?: CacheConfig
 ) {
   const {
-    ttl = 300,
+    ttl = CACHE_CONFIG.TTL.DEFAULT,
     forceValidate = false,
     ...swrConfig
   } = config || {};
@@ -30,7 +23,7 @@ export function useCache<T>(
     async () => {
       try {
         if (!forceValidate) {
-          const cachedData = await cacheInstance.get<T>(key?.toString() ?? '');
+          const cachedData = await cacheInstance.get<T>(key?.toString() ?? '', false);
           if (cachedData !== null) {
             return cachedData;
           }
@@ -44,8 +37,8 @@ export function useCache<T>(
       }
     },
     {
-      revalidateOnFocus: false,
-      revalidateOnReconnect: false,
+      revalidateOnFocus: CACHE_CONFIG.REVALIDATION.ON_FOCUS,
+      revalidateOnReconnect: CACHE_CONFIG.REVALIDATION.ON_RECONNECT,
       dedupingInterval: ttl * 1000,
       ...swrConfig,
     }

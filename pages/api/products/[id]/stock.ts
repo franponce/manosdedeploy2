@@ -1,5 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { StockManager } from '../../../../utils/stock/stockManager';
+import { CacheManager } from '../../../../utils/cache/manager';
+import { CACHE_KEYS } from '../../../../utils/cache/config';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { id } = req.query;
@@ -22,6 +24,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (isNaN(numericStock)) {
       return res.status(200).json({ stock: 0 });
     }
+
+    // Si necesitas invalidar el cache
+    await CacheManager.invalidateStock(id);
 
     return res.status(200).json({ stock: numericStock });
   } catch (error) {

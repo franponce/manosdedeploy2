@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { CartItem, Product } from '../product/types';
 import { useToast } from '@chakra-ui/react';
+import { useProductStock } from './useProductCache';
 
 interface CartContextType {
   cart: CartItem[];
@@ -33,8 +34,8 @@ export const useCart = (): CartContextType => {
 
   const addToCart = useCallback(async (product: Product) => {
     try {
-      const response = await fetch(`/api/products/${product.id}/stock`);
-      const { stock } = await response.json();
+      const { data: stockData } = useProductStock(product.id);
+      const stock = stockData || 0;
 
       if (stock === 0) {
         toast({
