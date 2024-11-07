@@ -10,16 +10,20 @@ import {
 import ProductManagement from "../product/components/ProductManagement";
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { FaArrowRight, FaStore, FaPlus } from 'react-icons/fa';
+import { FaArrowRight, FaStore, FaPlus, FaList } from 'react-icons/fa';
 import ProductModal from '../product/components/ProductModal';
 import { Product } from "../product/types";
 import { createProduct, updateProduct } from "../utils/googleSheets";
+import { CategoryManager } from '../product/components/CategoryManager';
+import { useCategories } from '../hooks/useCategories';
 
 const AdminPage: React.FC = () => {
   const router = useRouter();
   const toast = useToast();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
+  const { categories } = useCategories();
 
   const handleStoreSettings = () => {
     router.push('/store-config');
@@ -94,6 +98,14 @@ const AdminPage: React.FC = () => {
             Crear nuevo producto
           </Button>
           <Button
+            colorScheme="purple"
+            width={{ base: "full", sm: "auto" }}
+            leftIcon={<Icon as={FaList} />}
+            onClick={() => setIsCategoryManagerOpen(true)}
+          >
+            Gestionar Categorías
+          </Button>
+          <Button
             colorScheme="gray"
             onClick={handleStoreSettings}
             width={{ base: "full", sm: "auto" }}
@@ -112,8 +124,15 @@ const AdminPage: React.FC = () => {
           onClose={() => setIsModalOpen(false)}
           onSubmit={handleSubmit}
           product={null}
-          isLoading={isLoading} categories={[]}        />
+          isLoading={isLoading}
+          categories={categories || []}
+        />
       )}
+
+      <CategoryManager
+        isOpen={isCategoryManagerOpen}
+        onClose={() => setIsCategoryManagerOpen(false)}
+      />
     </Box>
   );
 };
