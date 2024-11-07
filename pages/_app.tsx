@@ -180,68 +180,50 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
           <script dangerouslySetInnerHTML={{ __html: customScripts }} />
         )}
       </Head>
-      {!isLoginPage && announcementBar && announcementBar.isEnabled && (
-        <Box bg="blue.500" color="white" py={2}>
-          <Container maxW="container.xl">
-            <Flex justify="space-between">
-              {[1, 2, 3].map((num) => (
-                announcementBar[`message${num}`] && (
-                  <Link key={num} href={announcementBar[`link${num}`]} isExternal>
-                    {announcementBar[`message${num}`]}
-                  </Link>
-                )
-              ))}
-            </Flex>
-          </Container>
-        </Box>
-      )}
-      {!isLoginPage ? (
-        <Box
-          position="fixed"
-          top={0}
-          left={0}
-          right={0}
-          zIndex={1000}
-          bg="white"
-          boxShadow="md"
-        >
-          <Container maxWidth="container.xl" padding={4}>
-            <Flex alignItems="center" justifyContent="space-between">
-              <NextLink href="/" passHref>
-                <Heading as="a" size="md" cursor="pointer">
-                  {getWelcomeMessage()}
-                </Heading>
-              </NextLink>
-              {isMounted && (
-                <HamburgerMenu
-                  isLoggedIn={isLoggedIn}
-                  isAdmin={isAdmin}
-                  onLogout={handleLogout}
-                />
-              )}
-            </Flex>
-          </Container>
-        </Box>
-      ) : (
-        <Box
-          position="fixed"
-          top={0}
-          left={0}
-          right={0}
-          zIndex={1000}
-          bg="white"
-          boxShadow="md"
-        >
-          <Container maxWidth="container.xl" padding={4}>
-            <Flex alignItems="center" justifyContent="center">
-              <NextLink href="/" passHref>
-                <Heading as="a" size="md" cursor="pointer">
-                  Simple E-commerce
-                </Heading>
-              </NextLink>
-            </Flex>
-          </Container>
-        </Box>
+      {!isLoginPage && (
+        <>
+          {announcementBar && announcementBar.isEnabled && (
+            <Box bg="blue.500" color="white" py={2}>
+              <Container maxW="container.xl">
+                <Flex justify="space-between">
+                  {[1, 2, 3].map((num) => (
+                    announcementBar[`message${num}`] && (
+                      <Link key={num} href={announcementBar[`link${num}`]} isExternal>
+                        {announcementBar[`message${num}`]}
+                      </Link>
+                    )
+                  ))}
+                </Flex>
+              </Container>
+            </Box>
+          )}
+          <Box
+            position="fixed"
+            top={0}
+            left={0}
+            right={0}
+            zIndex={1000}
+            bg="white"
+            boxShadow="md"
+          >
+            <Container maxWidth="container.xl" padding={4}>
+              <Flex alignItems="center" justifyContent="space-between">
+                <NextLink href="/" passHref>
+                  <Heading as="a" size="md" cursor="pointer">
+                    {getWelcomeMessage()}
+                  </Heading>
+                </NextLink>
+                {isMounted && (
+                  <HamburgerMenu
+                    isLoggedIn={isLoggedIn}
+                    isAdmin={isAdmin}
+                    onLogout={handleLogout}
+                  />
+                )}
+              </Flex>
+            </Container>
+          </Box>
+        </>
       )}
       <Box pt={isLoginPage ? 0 : "70px"}>
         <Container
@@ -250,6 +232,15 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
           maxWidth="container.xl"
           padding={4}
         >
+          {isLoginPage && (
+            <Flex alignItems="center" mb={4}>
+              <NextLink href="/" passHref>
+                <Heading as="a" size="md" cursor="pointer">
+                  Simple E-commerce
+                </Heading>
+              </NextLink>
+            </Flex>
+          )}
           {shouldShowSiteInfo && (
             <>
               <Box mb={6} position="relative">
