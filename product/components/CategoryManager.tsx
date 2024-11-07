@@ -59,8 +59,9 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
   const handleCreateCategory = async () => {
     if (!newCategoryName.trim()) {
       toast({
-        title: CATEGORY_CONSTANTS.ERROR_MESSAGES.EMPTY_NAME,
-        status: "warning",
+        title: "Error",
+        description: "El nombre de la categoría no puede estar vacío",
+        status: "error",
         duration: 3000,
       });
       return;
@@ -68,16 +69,22 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
 
     setIsLoading(true);
     try {
-      await createCategory(newCategoryName.trim());
+      console.log('Creando categoría:', newCategoryName); // Debug
+      const result = await createCategory(newCategoryName);
+      console.log('Resultado:', result); // Debug
+      
       setNewCategoryName('');
       toast({
-        title: "¡Categoría creada con éxito! 🎉",
+        title: "¡Categoría creada!",
+        description: `Se creó la categoría "${newCategoryName}" exitosamente`,
         status: "success",
         duration: 3000,
       });
     } catch (error) {
+      console.error('Error al crear categoría:', error);
       toast({
-        title: error instanceof Error ? error.message : "Error inesperado",
+        title: "Error",
+        description: error instanceof Error ? error.message : "No se pudo crear la categoría",
         status: "error",
         duration: 3000,
       });

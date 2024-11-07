@@ -22,7 +22,17 @@ export default async function handler(
         return res.status(200).json(categories);
 
       case 'POST':
-        const newCategory = await createCategory(req.body.name);
+        const { name } = req.body;
+        if (!name || typeof name !== 'string' || !name.trim()) {
+          return res.status(400).json({ 
+            message: 'Nombre de categoría inválido' 
+          });
+        }
+        
+        console.log('Creando categoría con nombre:', name); // Debug
+        const newCategory = await createCategory(name.trim());
+        console.log('Categoría creada:', newCategory); // Debug
+        
         return res.status(201).json(newCategory);
 
       case 'DELETE':
