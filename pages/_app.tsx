@@ -40,7 +40,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
   const [customScripts, setCustomScripts] = React.useState<string | null>(null);
   const [announcementBar, setAnnouncementBar] = React.useState<any>(null);
   const [hasRefreshed, setHasRefreshed] = React.useState(false);
-  const [shouldShowSiteInfo, setShouldShowSiteInfo] = React.useState(true);
+  const [shouldShowSiteInfo, setShouldShowSiteInfo] = React.useState(!isLoginPage);
 
   React.useEffect(() => {
     const checkAuthStatus = () => {
@@ -225,7 +225,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
           </Box>
         </>
       )}
-      <Box pt={isLoginPage ? 0 : "70px"}>
+      <Box pt={isLoginPage ? "20px" : "70px"}>
         <Container
           backgroundColor="white"
           borderRadius="sm"
