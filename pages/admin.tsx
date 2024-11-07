@@ -10,7 +10,7 @@ import {
 import ProductManagement from "../product/components/ProductManagement";
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { FaArrowRight, FaStore, FaPlus, FaList } from 'react-icons/fa';
+import { FaArrowRight, FaEye, FaPlus, FaList } from 'react-icons/fa';
 import ProductModal from '../product/components/ProductModal';
 import { Product } from "../product/types";
 import { createProduct, updateProduct } from "../utils/googleSheets";
@@ -65,6 +65,17 @@ const AdminPage: React.FC = () => {
 
   return (
     <Box margin="auto" maxWidth="1200px" padding={4}>
+      <Box display={{ base: 'block', md: 'none' }} mb={4}>
+        <Button
+          colorScheme="gray"
+          onClick={handleStoreSettings}
+          width="full"
+          rightIcon={<Icon as={FaArrowRight} />}
+        >
+          Ir a la configuración de la tienda
+        </Button>
+      </Box>
+
       <Flex
         direction={{ base: "column", md: "row" }}
         justifyContent="space-between"
@@ -79,14 +90,14 @@ const AdminPage: React.FC = () => {
           direction={{ base: "column", sm: "row" }}
           gap={4}
         >
-          <Link href="/" passHref>
+          <Link href="/?preview=true" passHref>
             <Button
               as="a"
               colorScheme="green"
               width={{ base: "full", sm: "auto" }}
-              leftIcon={<Icon as={FaStore} />}
+              leftIcon={<Icon as={FaEye} />}
             >
-              Ir a la tienda
+              Previsualizar tienda
             </Button>
           </Link>
           <Button
@@ -106,6 +117,7 @@ const AdminPage: React.FC = () => {
             Gestionar Categorías
           </Button>
           <Button
+            display={{ base: 'none', md: 'flex' }}
             colorScheme="gray"
             onClick={handleStoreSettings}
             width={{ base: "full", sm: "auto" }}
