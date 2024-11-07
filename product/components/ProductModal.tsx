@@ -35,6 +35,7 @@ import { useSiteInfo } from "@/hooks/useSiteInfo";
 import dynamic from 'next/dynamic';
 import 'react-quill/dist/quill.snow.css';
 import { createCategory } from "../../utils/googleSheets";
+import { CATEGORY_CONSTANTS } from '../../utils/constants';
 
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 
@@ -57,16 +58,18 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     currency: "ARS",
     isScheduled: false,
     scheduledPublishDate: null,
-    categoryId: "",
+    categoryId: ""
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const toast = useToast();
   const [scheduledDate, setScheduledDate] = useState<Date | null>(null);
+  const [lastStockUpdate] = useState<string>(new Date().toISOString());
   const { isOpen: isScheduleOpen, onToggle: toggleSchedule } = useDisclosure();
   const [isMobile] = useMediaQuery("(max-width: 48em)");
   const { siteInfo } = useSiteInfo();
   const [description, setDescription] = useState('');
   const [newCategoryName, setNewCategoryName] = useState("");
+  const [showNewCategoryInput, setShowNewCategoryInput] = useState(false);
 
   const MAX_TITLE_LENGTH = 60;
   const MAX_DESCRIPTION_LENGTH = 300;
@@ -76,9 +79,16 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
 
   useEffect(() => {
     if (product) {
-      setCurrentProduct(product);
+      setCurrentProduct({
+        ...product,
+        categoryId: product.categoryId || ""
+      });
       setImagePreview(product.image);
       setDescription(product.description || '');
+      if (product.scheduledPublishDate) {
+        setScheduledDate(new Date(product.scheduledPublishDate));
+        toggleSchedule();
+      }
     } else {
       setCurrentProduct({
         id: "",
@@ -89,10 +99,14 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
         currency: "ARS",
         isScheduled: false,
         scheduledPublishDate: null,
-        categoryId: "",
+        categoryId: ""
       });
       setImagePreview(null);
       setDescription('');
+      setScheduledDate(null);
+      if (isScheduleOpen) {
+        toggleSchedule();
+      }
     }
   }, [product]);
 
@@ -238,25 +252,35 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
 
   const handleCreateCategory = async () => {
     if (!newCategoryName.trim()) return;
+    
     try {
-      const newCategory = await createCategory({ name: newCategoryName });
-      setCurrentProduct({ ...currentProduct, categoryId: newCategory.id });
+      if (categories.length >= CATEGORY_CONSTANTS.MAX_CATEGORIES) {
+        toast({
+          title: "Límite alcanzado",
+          description: CATEGORY_CONSTANTS.ERROR_MESSAGES.EMPTY_NAME,
+          status: "info",
+          duration: 3000,
+        });
+        return;
+      }
+
+      const newCategory = await createCategory(newCategoryName.trim());
+      setCurrentProduct(prev => ({ ...prev, categoryId: newCategory.id }));
       setNewCategoryName("");
+      setShowNewCategoryInput(false);
+      
       toast({
-        title: "Categoría creada",
+        title: "¡Categoría creada! 🎉",
         description: "La nueva categoría se ha creado y seleccionado.",
         status: "success",
         duration: 3000,
-        isClosable: true,
       });
     } catch (error) {
-      console.error("Error creating category:", error);
       toast({
-        title: "Error",
-        description: "No se pudo crear la categoría.",
-        status: "error",
+        title: "No se pudo crear la categoría",
+        description: error instanceof Error ? error.message : "Error desconocido",
+        status: "warning",
         duration: 3000,
-        isClosable: true,
       });
     }
   };
