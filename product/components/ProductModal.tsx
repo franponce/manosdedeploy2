@@ -374,83 +374,20 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
             </FormControl>
             <FormControl>
               <FormLabel>Categoría</FormLabel>
-              <VStack align="stretch" spacing={2}>
-                <Select
-                  name="categoryId"
-                  value={currentProduct.categoryId}
-                  onChange={handleInputChange}
-                  isDisabled={categoriesLoading}
-                >
-                  <option value="">Sin categoría</option>
-                  {categories?.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
-                </Select>
-                
-                {categoriesLoading && (
-                  <Center py={2}>
-                    <Spinner size="sm" />
-                  </Center>
-                )}
-                
-                {!showNewCategoryInput ? (
-                  categories && categories.length < CATEGORY_CONSTANTS.MAX_CATEGORIES && (
-                    <Button
-                      size="sm"
-                      leftIcon={<AddIcon />}
-                      variant="outline"
-                      onClick={() => setShowNewCategoryInput(true)}
-                      isDisabled={categoriesLoading}
-                    >
-                      Crear nueva categoría
-                    </Button>
-                  )
-                ) : (
-                  <Box>
-                    <InputGroup size="md">
-                      <Input
-                        value={newCategoryName}
-                        onChange={(e) => setNewCategoryName(e.target.value)}
-                        placeholder="Nombre de la nueva categoría"
-                        maxLength={CATEGORY_CONSTANTS.MAX_NAME_LENGTH}
-                      />
-                      <InputRightElement width="4.5rem">
-                        <Text fontSize="xs" color="gray.500">
-                          {newCategoryName.length}/{CATEGORY_CONSTANTS.MAX_NAME_LENGTH}
-                        </Text>
-                      </InputRightElement>
-                    </InputGroup>
-                    <HStack mt={2} spacing={2}>
-                      <Button
-                        size="sm"
-                        colorScheme="purple"
-                        onClick={handleCreateCategory}
-                        isDisabled={!newCategoryName.trim()}
-                      >
-                        Crear y seleccionar
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => {
-                          setShowNewCategoryInput(false);
-                          setNewCategoryName('');
-                        }}
-                      >
-                        Cancelar
-                      </Button>
-                    </HStack>
-                  </Box>
-                )}
-                
-                {categories.length >= CATEGORY_CONSTANTS.MAX_CATEGORIES && (
-                  <Text fontSize="sm" color="orange.500">
-                    {CATEGORY_CONSTANTS.INFO_MESSAGES.CANNOT_CREATE}
-                  </Text>
-                )}
-              </VStack>
+              <Select
+                name="categoryId"
+                value={currentProduct.categoryId}
+                onChange={handleInputChange}
+                isDisabled={categoriesLoading}
+              >
+                <option value="">Sin categoría</option>
+                {categories?.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </Select>
+              {categoriesLoading && <Spinner size="sm" ml={2} />}
             </FormControl>
             <Button
               leftIcon={<TimeIcon />}

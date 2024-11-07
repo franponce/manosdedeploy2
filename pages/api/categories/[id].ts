@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { updateCategory } from '../../../utils/googleSheets';
+import { deleteCategory, updateCategory } from '../../../utils/googleSheets';
 
 export default async function handler(
   req: NextApiRequest,
@@ -7,22 +7,32 @@ export default async function handler(
 ) {
   const { id } = req.query;
 
-  if (req.method === 'PUT') {
-    try {
-      const { name } = req.body;
-      if (!name) {
-        return res.status(400).json({ message: 'Name is required' });
-      }
-      
-      const updatedCategory = await updateCategory(id as string, name);
-      res.status(200).json(updatedCategory);
-    } catch (error) {
-      res.status(500).json({ 
-        message: error instanceof Error ? error.message : 'Internal server error' 
-      });
+  if (!id || Array.isArray(id)) {
+    return res.status(400).json({ message: 'ID inválido' });
+  }
+
+  try {
+    switch (req.method) {
+      case 'PUT':
+        const { name } = req.body;
+        if (!name) {
+          return res.status(400).json({ message: 'El nombre es requerido' });
+        }
+        const updatedCategory = await updateCategory(id, name);
+        return res.status(200).json(updatedCategory);
+
+      case 'DELETE':
+        await deleteCategory(id);
+        return res.status(200).json({ message: 'Categoría eliminada exitosamente' });
+
+      default:
+        res.setHeader('Allow', ['PUT', 'DELETE']);
+        return res.status(405).json({ message: `Método ${req.method} no permitido` });
     }
-  } else {
-    res.setHeader('Allow', ['PUT']);
-    res.status(405).end(`Method ${req.method} Not Allowed`);
+  } catch (error) {
+    console.error('Error en API:', error);
+    return res.status(500).json({ 
+      message: error instanceof Error ? error.message : 'Error interno del servidor' 
+    });
   }
 } 

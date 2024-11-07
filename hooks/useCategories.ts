@@ -1,5 +1,13 @@
-import useSWR, { KeyedMutator } from 'swr';
+import useSWR from 'swr';
 import { Category } from '../product/types';
+
+const fetcher = async (url: string) => {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error('Error al cargar las categorías');
+  }
+  return response.json();
+};
 
 export function useCategories() {
   const { 
@@ -7,7 +15,10 @@ export function useCategories() {
     error, 
     isLoading,
     mutate 
-  } = useSWR<Category[]>('/api/categories');
+  } = useSWR<Category[]>('/api/categories', fetcher, {
+    revalidateOnFocus: true,
+    revalidateOnReconnect: true
+  });
 
   const createCategory = async (name: string): Promise<Category> => {
     try {
@@ -17,9 +28,13 @@ export function useCategories() {
         body: JSON.stringify({ name }),
       });
 
-      if (!response.ok) throw new Error('Error al crear la categoría');
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Error al crear la categoría');
+      }
+
       const newCategory = await response.json();
-      await mutate();
+      await mutate([...(categories || []), newCategory], false);
       return newCategory;
     } catch (error) {
       console.error('Error creating category:', error);
@@ -32,8 +47,16 @@ export function useCategories() {
       const response = await fetch(`/api/categories/${id}`, {
         method: 'DELETE',
       });
-      if (!response.ok) throw new Error('Error al eliminar la categoría');
-      await mutate();
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Error al eliminar la categoría');
+      }
+
+      await mutate(
+        categories?.filter(category => category.id !== id),
+        false
+      );
     } catch (error) {
       console.error('Error deleting category:', error);
       throw error;
@@ -47,9 +70,19 @@ export function useCategories() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name }),
       });
-      if (!response.ok) throw new Error('Error al actualizar la categoría');
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Error al actualizar la categoría');
+      }
+
       const updatedCategory = await response.json();
-      await mutate();
+      await mutate(
+        categories?.map(category => 
+          category.id === id ? updatedCategory : category
+        ),
+        false
+      );
       return updatedCategory;
     } catch (error) {
       console.error('Error updating category:', error);
