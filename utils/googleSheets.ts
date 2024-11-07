@@ -297,29 +297,52 @@ if (typeof window === 'undefined') {
       }
     },
 
-    createCategory: async (category: { name: string }): Promise<Category> => {
+    createCategory: async (name: string): Promise<Category> => {
       const auth = await getAuthClient();
       const { google } = await import('googleapis');
       const sheets = google.sheets({ version: 'v4', auth });
 
-      const categories = await googleSheetsApi.getCategories();
-      
-      if (categories.length >= 8) {
-        throw new Error('No se pueden crear más categorías. El límite es de 8 categorías.');
+      try {
+        // Generar ID único
+        const newId = Date.now().toString();
+
+        // Crear los valores para la nueva fila
+        const values = [[newId, name.trim()]];
+
+        console.log('Valores a insertar:', values); // Debug
+
+        // Insertar la nueva categoría
+        await sheets.spreadsheets.values.append({
+          spreadsheetId: SPREADSHEET_ID,
+          range: CATEGORY_RANGE,
+          valueInputOption: 'USER_ENTERED',
+          insertDataOption: 'INSERT_ROWS',
+          requestBody: {
+            values: values
+          }
+        });
+
+        // Verificar que se agregó correctamente
+        const response = await sheets.spreadsheets.values.get({
+          spreadsheetId: SPREADSHEET_ID,
+          range: CATEGORY_RANGE,
+        });
+
+        const rows = response.data.values || [];
+        const newRow = rows.find(row => row[0] === newId);
+
+        if (!newRow) {
+          throw new Error('Error verificando la nueva categoría');
+        }
+
+        return {
+          id: newId,
+          name: name.trim()
+        };
+      } catch (error) {
+        console.error('Error creating category:', error);
+        throw error;
       }
-
-      const newId = (Math.max(...categories.map((c: Category) => parseInt(c.id)), 0) + 1).toString();
-      const values = [[newId, category.name]];
-
-      await sheets.spreadsheets.values.append({
-        spreadsheetId: SPREADSHEET_ID,
-        range: CATEGORY_RANGE,
-        valueInputOption: 'USER_ENTERED',
-        insertDataOption: 'INSERT_ROWS',
-        requestBody: { values },
-      });
-
-      return { id: newId, name: category.name };
     },
 
     deleteCategory: async (id: string): Promise<void> => {
