@@ -340,13 +340,16 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
           padding={4}
         >
           {isLoginPage && (
-            <Flex alignItems="center" mb={4}>
-              <NextLink href="/" passHref>
-                <Heading as="a" size="md" cursor="pointer">
-                  Simple E-commerce
-                </Heading>
-              </NextLink>
-            </Flex>
+            <>
+              <Flex alignItems="center" mb={2}>
+                <NextLink href="/" passHref>
+                  <Heading as="a" size="md" cursor="pointer">
+                    Simple E-commerce
+                  </Heading>
+                </NextLink>
+              </Flex>
+              <Divider mb={4} borderColor="gray.300" />
+            </>
           )}
           {shouldShowSiteInfo && (
             <>
