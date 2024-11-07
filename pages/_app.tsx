@@ -26,11 +26,10 @@ import { auth, logoutUser } from '../utils/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { parseCookies, destroyCookie } from 'nookies';
 import HamburgerMenu from '../product/components/HamburgerMenu';
-import { FaArrowLeft } from 'react-icons/fa';
+import { FaArrowLeft, FaEye, FaArrowRight } from 'react-icons/fa';
 
 const MyApp = ({ Component, pageProps }: AppProps) => {
   const router = useRouter();
-  const isLoginPage = router.pathname === '/login';
   const [isLoggedIn, setIsLoggedIn] = React.useState(false);
   const [isAdmin, setIsAdmin] = React.useState(false);
   const [isMounted, setIsMounted] = React.useState(false);
@@ -40,7 +39,39 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
   const [customScripts, setCustomScripts] = React.useState<string | null>(null);
   const [announcementBar, setAnnouncementBar] = React.useState<any>(null);
   const [hasRefreshed, setHasRefreshed] = React.useState(false);
-  const [shouldShowSiteInfo, setShouldShowSiteInfo] = React.useState(!isLoginPage);
+  const [isPreviewMode, setIsPreviewMode] = React.useState(false);
+
+  const showPreviewBanner = React.useMemo(() => {
+    if (typeof window === 'undefined') return false;
+    
+    const isFromAdmin = router.query.preview === 'true' || localStorage.getItem('previewMode') === 'true';
+    const isStoreRoute = router.pathname === '/';
+    const isAuthorizedUser = isAdmin || isLoggedIn;
+
+    return isAuthorizedUser && (isStoreRoute || isFromAdmin);
+  }, [isAdmin, isLoggedIn, router.pathname, router.query.preview]);
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    if ((isAdmin || isLoggedIn) && router.pathname === '/') {
+      setIsPreviewMode(true);
+    } else if (router.query.preview === 'true') {
+      localStorage.setItem('previewMode', 'true');
+      setIsPreviewMode(true);
+    } else if (!router.pathname.startsWith('/') && router.pathname !== '/preview') {
+      localStorage.removeItem('previewMode');
+      setIsPreviewMode(false);
+    }
+  }, [router.pathname, router.query.preview, isAdmin, isLoggedIn]);
+
+  const handleClosePreview = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('previewMode');
+    }
+    setIsPreviewMode(false);
+    router.push('/admin');
+  };
 
   React.useEffect(() => {
     const checkAuthStatus = () => {
@@ -52,11 +83,6 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
         setIsLoggedIn(true);
         setIsAdmin(true);
         setUserName('Admin');
-        if (router.pathname === '/admin' && !hasRefreshedBefore && !hasRefreshed) {
-          localStorage.setItem('hasRefreshedAdmin', 'true');
-          setHasRefreshed(true);
-          window.location.reload();
-        }
       } else {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
           if (user) {
@@ -97,22 +123,6 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
     }
   }, [router.pathname, hasRefreshed]);
 
-  React.useEffect(() => {
-    // Verificar el ancho de la ventana solo en el cliente
-    const checkWindowSize = () => {
-      setShouldShowSiteInfo(!isLoginPage || (isLoginPage && window.innerWidth >= 768));
-    };
-
-    // Verificar inicialmente
-    checkWindowSize();
-
-    // Agregar listener para cambios de tamaño
-    window.addEventListener('resize', checkWindowSize);
-
-    // Cleanup
-    return () => window.removeEventListener('resize', checkWindowSize);
-  }, [isLoginPage]);
-
   const handleLogout = async () => {
     try {
       await logoutUser();
@@ -130,27 +140,81 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
     router.push('/admin');
   };
 
+  const isAdminRoute = router.pathname === '/admin' || router.pathname === '/store-config';
+
   const getWelcomeMessage = () => {
+    if (router.pathname === '/login') {
+      return (
+        <NextLink href="/" passHref>
+          <Link _hover={{ textDecoration: 'none' }}>
+            <Heading size="md">Simple E-commerce</Heading>
+          </Link>
+        </NextLink>
+      );
+    }
+
+    if (router.pathname.startsWith('/product')) {
+      return (
+        <Button
+          leftIcon={<Icon as={FaArrowLeft} />}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            router.back();
+          }}
+          colorScheme="blue"
+          size="md"
+          boxShadow="sm"
+          _hover={{
+            transform: 'translateY(-2px)',
+            boxShadow: 'md',
+          }}
+          transition="all 0.2s"
+          alignSelf="flex-start"
+          px={6}
+        >
+          <Text fontWeight="bold">Volver a la tienda</Text>
+        </Button>
+      );
+    }
+    
     if (router.pathname === '/store-config') {
       return (
         <Button
           leftIcon={<Icon as={FaArrowLeft} />}
-          onClick={handleBackToAdmin}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            router.push('/admin');
+          }}
           variant="outline"
+          alignSelf="flex-start"
+          mb={4}
         >
-          Volver a la gestión de productos
+          <Text fontWeight="bold">Volver a la gestión de productos</Text>
         </Button>
       );
     }
+    
     if (router.pathname === '/admin') {
       if (isAdmin) {
-        return `Qué lindo verte de nuevo por acá, Admin`;
+        return <Text fontWeight="bold">Qué lindo verte de nuevo por acá, Admin</Text>;
       } else if (isLoggedIn) {
-        return `Qué lindo verte de nuevo por acá, ${userName}`;
+        return <Text fontWeight="bold">Qué lindo verte de nuevo por acá, {userName}</Text>;
       }
     }
-    return 'Te damos la bienvenida';
+    
+    return <Text fontWeight="bold">Te damos la bienvenida</Text>;
   };
+
+  const shouldShowHeader = React.useMemo(() => {
+    return !router.pathname.startsWith('/product') && router.pathname !== '/login';
+  }, [router.pathname]);
+
+  const shouldShowMenu = router.pathname !== '/login';
+
+  const isLoginPage = router.pathname === '/login';
+  const shouldShowSiteInfo = !isLoginPage;
 
   if (isLoading) return <Box display="flex" justifyContent="center" alignItems="center" height="100vh"><Spinner /></Box>;
   if (isError) return <Box>Error al cargar la información del sitio</Box>;
@@ -208,11 +272,9 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
           >
             <Container maxWidth="container.xl" padding={4}>
               <Flex alignItems="center" justifyContent="space-between">
-                <NextLink href="/" passHref>
-                  <Heading as="a" size="md" cursor="pointer">
-                    {getWelcomeMessage()}
-                  </Heading>
-                </NextLink>
+                <Box>
+                  {getWelcomeMessage()}
+                </Box>
                 {isMounted && (
                   <HamburgerMenu
                     isLoggedIn={isLoggedIn}
@@ -224,6 +286,51 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
             </Container>
           </Box>
         </>
+      )}
+      {showPreviewBanner && (
+        <Box
+          position="sticky"
+          top="70px"
+          zIndex={999}
+          bg="blue.50"
+          py={{ base: 2, md: 3 }}
+          borderBottom="1px"
+          borderColor="blue.100"
+        >
+          <Container maxW="container.xl">
+            <Flex
+              justify={{ base: "center", sm: "space-between" }}
+              align="center"
+              px={4}
+              direction={{ base: "column", sm: "row" }}
+              gap={{ base: 2, sm: 0 }}
+            >
+              <Flex 
+                align="center" 
+                gap={2}
+                textAlign={{ base: "center", sm: "left" }}
+              >
+                <Icon as={FaEye} color="blue.500" display={{ base: "none", sm: "block" }} />
+                <Text 
+                  color="blue.700"
+                  fontSize={{ base: "sm", md: "md" }}
+                >
+                  Estás visualizando la tienda como un cliente.
+                </Text>
+              </Flex>
+              <Button
+                size={{ base: "xs", md: "sm" }}
+                colorScheme="blue"
+                variant="link"
+                rightIcon={<Icon as={FaArrowRight} />}
+                onClick={handleClosePreview}
+                fontSize={{ base: "sm", md: "md" }}
+              >
+                Volver al administrador
+              </Button>
+            </Flex>
+          </Container>
+        </Box>
       )}
       <Box pt={isLoginPage ? "20px" : "70px"}>
         <Container
@@ -312,7 +419,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
                           justifyContent="center"
                           width={8}
                         >
-                          <Image 
+                          <Image
                             alt={`${social.name} icon`}
                             src={`https://icongr.am/fontawesome/${social.name}.svg?size=20&color=ffffff`}
                           />
