@@ -31,9 +31,15 @@ export default async function handler(
         
         console.log('Creando categoría con nombre:', name); // Debug
         const newCategory = await createCategory(name.trim());
-        console.log('Categoría creada:', newCategory); // Debug
         
-        return res.status(201).json(newCategory);
+        // Asegurarnos que la respuesta incluya tanto id como name
+        const response = {
+          id: newCategory.id,
+          name: name.trim()
+        };
+        
+        console.log('Categoría creada:', response); // Debug
+        return res.status(201).json(response);
 
       case 'DELETE':
         const { id } = req.query;
