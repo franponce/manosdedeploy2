@@ -360,7 +360,6 @@ const ProductManagement: React.FC<{ onCreateProduct: () => void }> = ({ onCreate
         onSubmit={handleSubmit}
         product={currentProduct}
         isLoading={isLoading}
-        categories={categories}
       />
     </Box>
   );

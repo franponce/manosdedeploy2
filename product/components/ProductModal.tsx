@@ -28,6 +28,7 @@ import {
   InputGroup,
   InputRightElement,
   HStack,
+  Spinner,
 } from "@chakra-ui/react";
 import { TimeIcon, AddIcon } from "@chakra-ui/icons";
 import imageCompression from "browser-image-compression";
@@ -39,6 +40,7 @@ import dynamic from 'next/dynamic';
 import 'react-quill/dist/quill.snow.css';
 import { createCategory } from "../../utils/googleSheets";
 import { CATEGORY_CONSTANTS } from '../../utils/constants';
+import { useCategories } from '@/hooks/useCategories';
 
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 
@@ -48,10 +50,9 @@ interface ProductModalProps {
   onSubmit: (product: Product) => Promise<void>;
   product: Product | null;
   isLoading: boolean;
-  categories: Category[];
 }
 
-const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, product, isLoading, categories }) => {
+const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, product, isLoading: submitLoading }) => {
   const [currentProduct, setCurrentProduct] = useState<Product>({
     id: "",
     title: "",
@@ -79,6 +80,8 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
   const MAX_IMAGE_SIZE_MB = 5;
   const TARGET_WIDTH = 800;
   const TARGET_HEIGHT = 800;
+
+  const { categories, isLoading: categoriesLoading, createCategory, mutate: mutateCategories } = useCategories();
 
   useEffect(() => {
     if (product) {
@@ -112,6 +115,12 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
       }
     }
   }, [product]);
+
+  useEffect(() => {
+    if (isOpen) {
+      mutateCategories();
+    }
+  }, [isOpen, mutateCategories]);
 
   const handleProductImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -254,21 +263,13 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
   };
 
   const handleCreateCategory = async () => {
-    if (!newCategoryName.trim()) {
-      toast({
-        title: "Error",
-        description: "El nombre de la categoría no puede estar vacío",
-        status: "error",
-        duration: 3000,
-      });
-      return;
-    }
-
+    if (!newCategoryName.trim()) return;
+    
     try {
       if (categories.length >= CATEGORY_CONSTANTS.MAX_CATEGORIES) {
         toast({
           title: "Límite alcanzado",
-          description: "Se ha alcanzado el número máximo de categorías permitidas.",
+          description: CATEGORY_CONSTANTS.ERROR_MESSAGES.LIMIT_REACHED,
           status: "info",
           duration: 3000,
         });
@@ -276,6 +277,10 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
       }
 
       const newCategory = await createCategory(newCategoryName.trim());
+      
+      // Actualizar el estado local y la caché de SWR
+      await mutateCategories();
+      
       setCurrentProduct(prev => ({ ...prev, categoryId: newCategory.id }));
       setNewCategoryName("");
       setShowNewCategoryInput(false);
@@ -374,22 +379,30 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                   name="categoryId"
                   value={currentProduct.categoryId}
                   onChange={handleInputChange}
+                  isDisabled={categoriesLoading}
                 >
                   <option value="">Sin categoría</option>
-                  {categories.map((category) => (
+                  {categories?.map((category) => (
                     <option key={category.id} value={category.id}>
                       {category.name}
                     </option>
                   ))}
                 </Select>
                 
+                {categoriesLoading && (
+                  <Center py={2}>
+                    <Spinner size="sm" />
+                  </Center>
+                )}
+                
                 {!showNewCategoryInput ? (
-                  categories.length < CATEGORY_CONSTANTS.MAX_CATEGORIES && (
+                  categories && categories.length < CATEGORY_CONSTANTS.MAX_CATEGORIES && (
                     <Button
                       size="sm"
                       leftIcon={<AddIcon />}
                       variant="outline"
                       onClick={() => setShowNewCategoryInput(true)}
+                      isDisabled={categoriesLoading}
                     >
                       Crear nueva categoría
                     </Button>
@@ -500,7 +513,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
             colorScheme="blue"
             mr={3}
             type="submit"
-            isLoading={isLoading}
+            isLoading={submitLoading}
           >
             {currentProduct.id ? "Actualizar" : "Crear"}
           </Button>

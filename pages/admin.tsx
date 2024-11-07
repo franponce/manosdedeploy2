@@ -137,7 +137,6 @@ const AdminPage: React.FC = () => {
           onSubmit={handleSubmit}
           product={null}
           isLoading={isLoading}
-          categories={categories || []}
         />
       )}
 
