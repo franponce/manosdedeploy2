@@ -25,8 +25,11 @@ import {
   NumberInputField,
   Textarea,
   Select,
+  InputGroup,
+  InputRightElement,
+  HStack,
 } from "@chakra-ui/react";
-import { TimeIcon } from "@chakra-ui/icons";
+import { TimeIcon, AddIcon } from "@chakra-ui/icons";
 import imageCompression from "browser-image-compression";
 import { Product, Category } from "../types";
 import DatePicker from "react-datepicker";
@@ -68,7 +71,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
   const [isMobile] = useMediaQuery("(max-width: 48em)");
   const { siteInfo } = useSiteInfo();
   const [description, setDescription] = useState('');
-  const [newCategoryName, setNewCategoryName] = useState("");
+  const [newCategoryName, setNewCategoryName] = useState('');
   const [showNewCategoryInput, setShowNewCategoryInput] = useState(false);
 
   const MAX_TITLE_LENGTH = 60;
@@ -251,13 +254,21 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
   };
 
   const handleCreateCategory = async () => {
-    if (!newCategoryName.trim()) return;
-    
+    if (!newCategoryName.trim()) {
+      toast({
+        title: "Error",
+        description: "El nombre de la categoría no puede estar vacío",
+        status: "error",
+        duration: 3000,
+      });
+      return;
+    }
+
     try {
       if (categories.length >= CATEGORY_CONSTANTS.MAX_CATEGORIES) {
         toast({
           title: "Límite alcanzado",
-          description: CATEGORY_CONSTANTS.ERROR_MESSAGES.EMPTY_NAME,
+          description: "Se ha alcanzado el número máximo de categorías permitidas.",
           status: "info",
           duration: 3000,
         });
@@ -286,15 +297,15 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <Modal isOpen={isOpen} onClose={onClose} size="xl">
       <ModalOverlay />
-      <ModalContent maxW={{ base: "95%", sm: "600px" }}>
+      <ModalContent as="form" onSubmit={handleSubmit}>
         <ModalHeader>
-          {currentProduct.id ? "Editar Producto" : "Crear Nuevo Producto"}
+          {currentProduct.id ? "Editar Producto" : "Crear Producto"}
         </ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          <VStack spacing={4} as="form" onSubmit={handleSubmit}>
+          <VStack spacing={4}>
             <FormControl>
               <FormLabel>Título</FormLabel>
               <Input
@@ -358,29 +369,75 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
             </FormControl>
             <FormControl>
               <FormLabel>Categoría</FormLabel>
-              <Select
-                name="categoryId"
-                value={currentProduct.categoryId}
-                onChange={handleInputChange}
-              >
-                <option value="">Sin categoría</option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </Select>
-            </FormControl>
-            <FormControl>
-              <FormLabel>Nueva categoría</FormLabel>
-              <Input
-                value={newCategoryName}
-                onChange={(e) => setNewCategoryName(e.target.value)}
-                placeholder="Nombre de la nueva categoría"
-              />
-              <Button mt={2} onClick={handleCreateCategory}>
-                Crear y seleccionar categoría
-              </Button>
+              <VStack align="stretch" spacing={2}>
+                <Select
+                  name="categoryId"
+                  value={currentProduct.categoryId}
+                  onChange={handleInputChange}
+                >
+                  <option value="">Sin categoría</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </Select>
+                
+                {!showNewCategoryInput ? (
+                  categories.length < CATEGORY_CONSTANTS.MAX_CATEGORIES && (
+                    <Button
+                      size="sm"
+                      leftIcon={<AddIcon />}
+                      variant="outline"
+                      onClick={() => setShowNewCategoryInput(true)}
+                    >
+                      Crear nueva categoría
+                    </Button>
+                  )
+                ) : (
+                  <Box>
+                    <InputGroup size="md">
+                      <Input
+                        value={newCategoryName}
+                        onChange={(e) => setNewCategoryName(e.target.value)}
+                        placeholder="Nombre de la nueva categoría"
+                        maxLength={CATEGORY_CONSTANTS.MAX_NAME_LENGTH}
+                      />
+                      <InputRightElement width="4.5rem">
+                        <Text fontSize="xs" color="gray.500">
+                          {newCategoryName.length}/{CATEGORY_CONSTANTS.MAX_NAME_LENGTH}
+                        </Text>
+                      </InputRightElement>
+                    </InputGroup>
+                    <HStack mt={2} spacing={2}>
+                      <Button
+                        size="sm"
+                        colorScheme="purple"
+                        onClick={handleCreateCategory}
+                        isDisabled={!newCategoryName.trim()}
+                      >
+                        Crear y seleccionar
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setShowNewCategoryInput(false);
+                          setNewCategoryName('');
+                        }}
+                      >
+                        Cancelar
+                      </Button>
+                    </HStack>
+                  </Box>
+                )}
+                
+                {categories.length >= CATEGORY_CONSTANTS.MAX_CATEGORIES && (
+                  <Text fontSize="sm" color="orange.500">
+                    {CATEGORY_CONSTANTS.INFO_MESSAGES.CANNOT_CREATE}
+                  </Text>
+                )}
+              </VStack>
             </FormControl>
             <Button
               leftIcon={<TimeIcon />}
@@ -440,12 +497,12 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
         </ModalBody>
         <ModalFooter>
           <Button
-            colorScheme={isScheduleOpen ? "green" : "blue"}
+            colorScheme="blue"
             mr={3}
-            onClick={handleSubmit}
+            type="submit"
             isLoading={isLoading}
           >
-            {isScheduleOpen ? "Guardar y programar" : (currentProduct.id ? "Actualizar" : "Crear")}
+            {currentProduct.id ? "Actualizar" : "Crear"}
           </Button>
           <Button variant="ghost" onClick={onClose}>
             Cancelar
