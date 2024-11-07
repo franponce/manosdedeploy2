@@ -303,12 +303,25 @@ if (typeof window === 'undefined') {
       const sheets = google.sheets({ version: 'v4', auth });
 
       try {
-        // Generar ID único
-        const newId = Date.now().toString();
+        // Primero obtener todas las categorías existentes
+        const response = await sheets.spreadsheets.values.get({
+          spreadsheetId: SPREADSHEET_ID,
+          range: CATEGORY_RANGE,
+        });
+
+        const rows = response.data.values || [];
+        
+        // Encontrar el ID más alto y sumar 1
+        const maxId = rows.reduce((max, row) => {
+          const currentId = parseInt(row[0] || '0');
+          return currentId > max ? currentId : max;
+        }, 0);
+        
+        const newId = (maxId + 1).toString();
+        console.log('Nuevo ID generado:', newId); // Debug
 
         // Crear los valores para la nueva fila
         const values = [[newId, name.trim()]];
-
         console.log('Valores a insertar:', values); // Debug
 
         // Insertar la nueva categoría
@@ -323,13 +336,13 @@ if (typeof window === 'undefined') {
         });
 
         // Verificar que se agregó correctamente
-        const response = await sheets.spreadsheets.values.get({
+        const verifyResponse = await sheets.spreadsheets.values.get({
           spreadsheetId: SPREADSHEET_ID,
           range: CATEGORY_RANGE,
         });
 
-        const rows = response.data.values || [];
-        const newRow = rows.find(row => row[0] === newId);
+        const newRows = verifyResponse.data.values || [];
+        const newRow = newRows.find(row => row[0] === newId);
 
         if (!newRow) {
           throw new Error('Error verificando la nueva categoría');
