@@ -8,8 +8,9 @@ const fetcher = (url: string) => fetch(url).then(res => {
 
 export function useCategories() {
   const { data: categories, error, mutate } = useSWR<Category[]>('/api/categories', fetcher, {
-    refreshInterval: 5000,
+    refreshInterval: 3000,
     revalidateOnFocus: true,
+    revalidateOnMount: true,
   });
 
   const createCategory = async (name: string) => {
@@ -17,7 +18,7 @@ export function useCategories() {
       const response = await fetch('/api/categories', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name }),
+        body: JSON.stringify({ name: name.trim() }),
       });
 
       if (!response.ok) {
@@ -26,7 +27,9 @@ export function useCategories() {
       }
       
       const newCategory = await response.json();
-      await mutate([...(categories || []), newCategory], false);
+      
+      await mutate();
+      
       return newCategory;
     } catch (error) {
       console.error('Error creating category:', error);
