@@ -26,6 +26,8 @@ import {
   InputGroup,
   InputRightElement,
   HStack,
+  useBreakpointValue,
+  Stack,
 } from '@chakra-ui/react';
 import { DeleteIcon, EditIcon } from '@chakra-ui/icons';
 import { Category } from '../types';
@@ -47,6 +49,12 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
   const [editingName, setEditingName] = useState('');
   const toast = useToast();
   const { categories, createCategory, deleteCategory, updateCategory } = useCategories();
+
+  // Ajustes responsive
+  const modalSize = useBreakpointValue({ base: 'full', md: 'xl' });
+  const tableSize = useBreakpointValue({ base: 'sm', md: 'md' });
+  const buttonSize = useBreakpointValue({ base: 'sm', md: 'md' });
+  const stackDirection = useBreakpointValue({ base: 'column', sm: 'row' }) as 'column' | 'row';
 
   const handleCreateCategory = async () => {
     if (!newCategoryName.trim()) {
@@ -144,28 +152,47 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="xl">
+    <Modal 
+      isOpen={isOpen} 
+      onClose={onClose} 
+      size={modalSize}
+      motionPreset="slideInBottom"
+    >
       <ModalOverlay />
-      <ModalContent>
+      <ModalContent 
+        margin={{ base: 0, md: 'auto' }}
+        borderRadius={{ base: 0, md: 'md' }}
+        h={{ base: '100vh', md: 'auto' }}
+      >
         <ModalHeader>
           <VStack align="start" spacing={1}>
-            <Text fontSize="2xl">Gestionar Categorías</Text>
-            <Text fontSize="sm" color={categories.length >= CATEGORY_CONSTANTS.MAX_CATEGORIES ? "orange.500" : "gray.500"}>
+            <Text fontSize={{ base: 'xl', md: '2xl' }}>Gestionar Categorías</Text>
+            <Text 
+              fontSize="sm" 
+              color={categories.length >= CATEGORY_CONSTANTS.MAX_CATEGORIES ? "orange.500" : "gray.500"}
+            >
               {CATEGORY_CONSTANTS.INFO_MESSAGES.LIMIT_INFO(categories.length)}
             </Text>
           </VStack>
         </ModalHeader>
-        <ModalCloseButton />
+        <ModalCloseButton size={buttonSize} />
         <ModalBody>
-          <VStack spacing={6} pb={4}>
+          <VStack 
+            spacing={6} 
+            pb={4}
+            h={{ base: 'calc(100vh - 140px)', md: 'auto' }}
+            overflowY="auto"
+          >
             {categories.length >= CATEGORY_CONSTANTS.MAX_CATEGORIES ? (
               <Alert status="info" borderRadius="md">
                 <AlertIcon />
-                <Text>{CATEGORY_CONSTANTS.INFO_MESSAGES.CANNOT_CREATE}</Text>
+                <Text fontSize={{ base: 'sm', md: 'md' }}>
+                  {CATEGORY_CONSTANTS.INFO_MESSAGES.CANNOT_CREATE}
+                </Text>
               </Alert>
             ) : (
               <Box width="100%">
-                <InputGroup>
+                <InputGroup size={buttonSize}>
                   <Input
                     placeholder="Nombre de la categoría"
                     value={newCategoryName}
@@ -185,13 +212,14 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
                   isLoading={isLoading}
                   isDisabled={!newCategoryName.trim()}
                   width="100%"
+                  size={buttonSize}
                 >
                   Crear Categoría
                 </Button>
               </Box>
             )}
-            <Box width="100%">
-              <Table variant="simple">
+            <Box width="100%" overflowX="auto">
+              <Table variant="simple" size={tableSize}>
                 <Thead>
                   <Tr>
                     <Th>ID</Th>
@@ -203,7 +231,9 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
                   {categories.map((category) => (
                     <Tr key={category.id}>
                       <Td>
-                        <Badge colorScheme="purple">{category.id}</Badge>
+                        <Badge colorScheme="purple" fontSize={{ base: 'xs', md: 'sm' }}>
+                          {category.id}
+                        </Badge>
                       </Td>
                       <Td>
                         {editingId === category.id ? (
@@ -211,17 +241,22 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
                             value={editingName}
                             onChange={(e) => setEditingName(e.target.value)}
                             maxLength={CATEGORY_CONSTANTS.MAX_NAME_LENGTH}
+                            size={buttonSize}
                           />
                         ) : (
-                          category.name
+                          <Text fontSize={{ base: 'sm', md: 'md' }}>{category.name}</Text>
                         )}
                       </Td>
                       <Td>
-                        <HStack spacing={2}>
+                        <Stack 
+                          direction={stackDirection} 
+                          spacing={2}
+                          justify="flex-end"
+                        >
                           {editingId === category.id ? (
                             <>
                               <Button
-                                size="sm"
+                                size={buttonSize}
                                 colorScheme="green"
                                 onClick={() => handleSaveEdit(category.id)}
                                 isLoading={isLoading}
@@ -229,7 +264,7 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
                                 Guardar
                               </Button>
                               <Button
-                                size="sm"
+                                size={buttonSize}
                                 onClick={() => {
                                   setEditingId(null);
                                   setEditingName('');
@@ -244,7 +279,7 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
                                 <IconButton
                                   aria-label="Editar categoría"
                                   icon={<EditIcon />}
-                                  size="sm"
+                                  size={buttonSize}
                                   onClick={() => handleEditCategory(category.id)}
                                 />
                               </Tooltip>
@@ -253,14 +288,14 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
                                   aria-label="Eliminar categoría"
                                   icon={<DeleteIcon />}
                                   colorScheme="red"
-                                  size="sm"
+                                  size={buttonSize}
                                   isLoading={isLoading}
                                   onClick={() => handleDeleteCategory(category.id)}
                                 />
                               </Tooltip>
                             </>
                           )}
-                        </HStack>
+                        </Stack>
                       </Td>
                     </Tr>
                   ))}
