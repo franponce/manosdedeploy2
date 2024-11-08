@@ -39,8 +39,14 @@ import {
 } from 'next-share';
 import useSWR from 'swr';
 import { Product, CartItem } from '@/product/types';
+import { NextPage } from 'next';
 
-const ProductDetail: React.FC = () => {
+// Definir el tipo para páginas con layout personalizado
+type NextPageWithLayout = NextPage & {
+  getLayout?: (page: React.ReactElement) => React.ReactElement;
+};
+
+const ProductDetail: NextPageWithLayout = () => {
   const router = useRouter();
   const { id } = router.query;
   const { product, isLoading, error } = useProduct(id as string);
@@ -375,5 +381,8 @@ const ProductDetail: React.FC = () => {
     </>
   );
 };
+
+// Ahora TypeScript reconocerá la propiedad getLayout
+ProductDetail.getLayout = (page: React.ReactElement) => page;
 
 export default ProductDetail; 

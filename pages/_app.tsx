@@ -27,8 +27,18 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { parseCookies, destroyCookie } from 'nookies';
 import HamburgerMenu from '../product/components/HamburgerMenu';
 import { FaArrowLeft, FaEye, FaArrowRight } from 'react-icons/fa';
+import type { NextPage } from 'next';
+import Layout from "@/app/layout";
 
-const MyApp = ({ Component, pageProps }: AppProps) => {
+type NextPageWithLayout = NextPage & {
+  getLayout?: (page: React.ReactElement) => React.ReactElement;
+};
+
+type AppPropsWithLayout = AppProps & {
+  Component: NextPageWithLayout;
+};
+
+const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
   const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = React.useState(false);
   const [isAdmin, setIsAdmin] = React.useState(false);
@@ -218,6 +228,8 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
 
   if (isLoading) return <Box display="flex" justifyContent="center" alignItems="center" height="100vh"><Spinner /></Box>;
   if (isError) return <Box>Error al cargar la información del sitio</Box>;
+
+  const getLayout = Component.getLayout ?? ((page) => <Layout>{page}</Layout>);
 
   return (
     <ChakraProvider theme={theme}>
