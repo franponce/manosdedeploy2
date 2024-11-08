@@ -76,7 +76,7 @@ const ProductDetail: NextPageWithLayout = () => {
 
   const handleBack = () => {
     saveScrollPosition();
-    router.back();
+    router.push('/');
   };
   const handleAddToCart = () => {
     if (!displayProduct) return;
@@ -194,12 +194,14 @@ const ProductDetail: NextPageWithLayout = () => {
     <>
       <Container maxW="container.xl" py={8}>
         <Button
-          leftIcon={<FaArrowLeft />}
-          variant="ghost"
-          mb={4}
+          leftIcon={<Icon as={FaArrowLeft} />}
           onClick={handleBack}
+          colorScheme="blue"
+          variant="solid"
+          size="md"
+          width={{ base: "full", sm: "auto" }}
         >
-          Volver
+          Volver a la tienda
         </Button>
 
         <VStack spacing={8} align="stretch">
