@@ -169,6 +169,11 @@ const ProductDetail: NextPageWithLayout = () => {
     );
   };
 
+  const handleBackToStore = () => {
+    sessionStorage.setItem('lastViewedProductId', id as string);
+    router.push('/');
+  };
+
   if (error) {
     return (
       <Container maxW="container.xl" py={8}>
@@ -210,7 +215,7 @@ const ProductDetail: NextPageWithLayout = () => {
         <Container maxW="container.xl" py={4}>
           <Button
             leftIcon={<Icon as={FaArrowLeft} />}
-            onClick={() => router.push('/')}
+            onClick={handleBackToStore}
             colorScheme="blue"
             variant="ghost"
             size="md"

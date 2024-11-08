@@ -103,6 +103,18 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
     }
   }, [products, page, searchTerm, selectedCategory]);
 
+  React.useEffect(() => {
+    const lastViewedProductId = sessionStorage.getItem('lastViewedProductId');
+    if (lastViewedProductId && displayedProducts.length > 0) {
+      const productElement = document.getElementById(`product-${lastViewedProductId}`);
+      if (productElement) {
+        productElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Limpiar el ID guardado después de scrollear
+        sessionStorage.removeItem('lastViewedProductId');
+      }
+    }
+  }, [displayedProducts]);
+
   const total = React.useMemo(
     () => parseCurrency(cart.reduce((total, product) => total + product.price * product.quantity, 0)),
     [cart]
@@ -231,6 +243,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
               <Box
                 key={product.id}
                 ref={index === displayedProducts.length - 1 ? lastProductElementRef : null}
+                id={`product-${product.id}`}
               >
                 <ProductCard
                   product={product}
