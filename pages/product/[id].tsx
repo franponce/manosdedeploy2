@@ -37,11 +37,9 @@ import {
   EmailShareButton,
   EmailIcon
 } from 'next-share';
-import useSWR from 'swr';
 import { Product, CartItem } from '@/product/types';
 import { NextPage } from 'next';
 
-// Definir el tipo para páginas con layout personalizado
 type NextPageWithLayout = NextPage & {
   getLayout?: (page: React.ReactElement) => React.ReactElement;
 };
@@ -58,16 +56,7 @@ const ProductDetail: NextPageWithLayout = () => {
   const [copied, setCopied] = useState(false);
   const [pageUrl, setPageUrl] = useState<string>('');
 
-  const { data: currentProduct } = useSWR(
-    id ? `/api/products/${id}` : null,
-    null,
-    {
-      refreshInterval: 10000,
-      fallbackData: product
-    }
-  );
-
-  const displayProduct = currentProduct || product;
+  const displayProduct = product;
 
   const total = useMemo(
     () => parseCurrency((Array.isArray(cart) ? cart : []).reduce(
@@ -89,8 +78,8 @@ const ProductDetail: NextPageWithLayout = () => {
     saveScrollPosition();
     router.back();
   };
-
   const handleAddToCart = () => {
+    if (!displayProduct) return;
     addToCart(displayProduct);
     toast({
       title: "Producto agregado",
@@ -137,55 +126,41 @@ const ProductDetail: NextPageWithLayout = () => {
     };
 
     return (
-      <Container 
-        id="product-description" 
-        maxW={{ base: "100%", md: "container.md" }}
-        p={0}
-        centerContent
-      >
-        <VStack 
-          width="full"
-          spacing={4}
-          align="stretch"
-          px={{ base: 4, md: 6 }}
-        >
-          <Box
-            width="full"
-            sx={{
-              '& p': {
-                fontSize: { base: "sm", md: "md" },
-                color: 'gray.700',
-                lineHeight: 'tall',
-                marginBottom: 2,
-                width: "100%",
-                textAlign: "left",
-                '&:empty': { display: 'none' }
-              },
-              '& ul': {
-                width: "100%",
-                paddingLeft: "1rem",
-                marginBottom: 3,
-                listStyle: "disc"
-              },
-              '& li': {
-                marginBottom: 1,
-                textAlign: "left"
-              },
-              '& strong': { fontWeight: '600' },
-              '& em': { fontStyle: 'italic' },
-              '& br': { 
-                display: 'none'
-              },
-              overflowWrap: 'break-word',
-              wordWrap: 'break-word',
-              wordBreak: 'break-word'
-            }}
-            dangerouslySetInnerHTML={{ 
-              __html: cleanDescription(displayProduct.description) 
-            }}
-          />
-        </VStack>
-      </Container>
+      <Box
+        width="full"
+        sx={{
+          '& p': {
+            fontSize: { base: "sm", md: "md" },
+            color: 'gray.700',
+            lineHeight: 'tall',
+            marginBottom: 2,
+            width: "100%",
+            textAlign: "left",
+            '&:empty': { display: 'none' }
+          },
+          '& ul': {
+            width: "100%",
+            paddingLeft: "1rem",
+            marginBottom: 3,
+            listStyle: "disc"
+          },
+          '& li': {
+            marginBottom: 1,
+            textAlign: "left"
+          },
+          '& strong': { fontWeight: '600' },
+          '& em': { fontStyle: 'italic' },
+          '& br': { 
+            display: 'none'
+          },
+          overflowWrap: 'break-word',
+          wordWrap: 'break-word',
+          wordBreak: 'break-word'
+        }}
+        dangerouslySetInnerHTML={{ 
+          __html: cleanDescription(displayProduct.description) 
+        }}
+      />
     );
   };
 
@@ -226,7 +201,7 @@ const ProductDetail: NextPageWithLayout = () => {
         >
           Volver
         </Button>
-        
+
         <VStack spacing={8} align="stretch">
           <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={8}>
             <GridItem>
@@ -382,7 +357,6 @@ const ProductDetail: NextPageWithLayout = () => {
   );
 };
 
-// Ahora TypeScript reconocerá la propiedad getLayout
 ProductDetail.getLayout = (page: React.ReactElement) => page;
 
 export default ProductDetail; 
