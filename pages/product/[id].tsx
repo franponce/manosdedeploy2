@@ -50,7 +50,6 @@ const ProductDetail: NextPageWithLayout = () => {
   const { product, isLoading, error } = useProduct(id as string);
   const { siteInfo } = useSiteInfo();
   const toast = useToast();
-  const { saveScrollPosition } = useScrollPosition(id as string);
   const { cart, addToCart, removeFromCart } = useCart();
   const [isCartOpen, toggleCart] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -74,12 +73,7 @@ const ProductDetail: NextPageWithLayout = () => {
     [cart]
   );
 
-  const handleBack = () => {
-    saveScrollPosition();
-    router.push('/');
-  };
-
-  function handleEditCart(product: Product | CartItem, action: "increment" | "decrement") {
+  const handleEditCart = (product: Product | CartItem, action: "increment" | "decrement") => {
     const cartItem: CartItem = 'quantity' in product 
       ? product as CartItem
       : { ...product, quantity: 1 };
@@ -89,7 +83,7 @@ const ProductDetail: NextPageWithLayout = () => {
     } else {
       removeFromCart(cartItem);
     }
-  }
+  };
 
   const handleAddToCart = () => {
     if (!displayProduct) return;
@@ -204,17 +198,6 @@ const ProductDetail: NextPageWithLayout = () => {
   return (
     <>
       <Container maxW="container.xl" py={8}>
-        <Button
-          leftIcon={<Icon as={FaArrowLeft} />}
-          onClick={handleBack}
-          colorScheme="blue"
-          variant="solid"
-          size="md"
-          width={{ base: "full", sm: "auto" }}
-        >
-          Volver a la tienda
-        </Button>
-
         <VStack spacing={8} align="stretch">
           <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={8}>
             <GridItem>
