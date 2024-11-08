@@ -78,9 +78,28 @@ const ProductDetail: NextPageWithLayout = () => {
     saveScrollPosition();
     router.push('/');
   };
+
+  function handleEditCart(product: Product | CartItem, action: "increment" | "decrement") {
+    const cartItem: CartItem = 'quantity' in product 
+      ? product as CartItem
+      : { ...product, quantity: 1 };
+
+    if (action === "increment") {
+      addToCart(cartItem);
+    } else {
+      removeFromCart(cartItem);
+    }
+  }
+
   const handleAddToCart = () => {
     if (!displayProduct) return;
-    addToCart(displayProduct);
+    
+    const cartItem: CartItem = {
+      ...displayProduct,
+      quantity: 1
+    };
+    
+    addToCart(cartItem);
     toast({
       title: "Producto agregado",
       description: "El producto se agregó al carrito",
@@ -89,14 +108,6 @@ const ProductDetail: NextPageWithLayout = () => {
       isClosable: true,
     });
   };
-
-  function handleEditCart(product: Product, action: "increment" | "decrement") {
-    if (action === "increment") {
-      addToCart(product);
-    } else {
-      removeFromCart(product);
-    }
-  }
 
   const shareText = `¡Mira este producto! ${displayProduct?.title} 🛒`;
   const shareTextWithPrice = `¡Descubrí ${displayProduct?.title} por ${parseCurrency(displayProduct?.price || 0)}! 🛒`;
