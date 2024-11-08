@@ -224,7 +224,8 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
   const shouldShowMenu = router.pathname !== '/login';
 
   const isLoginPage = router.pathname === '/login';
-  const shouldShowSiteInfo = !isLoginPage;
+  const isProductDetail = router.pathname.startsWith('/product/');
+  const shouldShowSiteInfo = !isLoginPage && !isProductDetail;
 
   if (isLoading) return <Box display="flex" justifyContent="center" alignItems="center" height="100vh"><Spinner /></Box>;
   if (isError) return <Box>Error al cargar la información del sitio</Box>;
@@ -256,7 +257,7 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
           <script dangerouslySetInnerHTML={{ __html: customScripts }} />
         )}
       </Head>
-      {!isLoginPage && (
+      {!isLoginPage && !isProductDetail && (
         <>
           {announcementBar && announcementBar.isEnabled && (
             <Box bg="blue.500" color="white" py={2}>
@@ -344,7 +345,7 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
           </Container>
         </Box>
       )}
-      <Box pt={isLoginPage ? "20px" : "70px"}>
+      <Box pt={isLoginPage || isProductDetail ? "20px" : "70px"}>
         <Container
           backgroundColor="white"
           borderRadius="sm"
@@ -446,7 +447,7 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
               </Flex>
             </>
           )}
-          <Component {...pageProps} />
+          {getLayout(<Component {...pageProps} />)}
           <Divider marginY={4} />
           <Text textAlign="center">
             © Copyright {new Date().getFullYear()}. Hecho con ♥ Simple Ecommerce
