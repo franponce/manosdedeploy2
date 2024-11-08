@@ -7,17 +7,21 @@ export function useCart() {
   const [cart, setCart] = useState<CartItem[]>([]);
 
   useEffect(() => {
-    const savedCart = localStorage.getItem(CART_STORAGE_KEY);
-    if (savedCart) {
-      setCart(JSON.parse(savedCart));
+    if (typeof window !== 'undefined') {
+      const savedCart = localStorage.getItem(CART_STORAGE_KEY);
+      if (savedCart) {
+        try {
+          const parsedCart = JSON.parse(savedCart);
+          setCart(Array.isArray(parsedCart) ? parsedCart : []);
+        } catch {
+          setCart([]);
+        }
+      }
     }
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
-  }, [cart]);
-
   const addToCart = (product: Product) => {
+    if (!product) return;
     setCart(prevCart => {
       const existingItem = prevCart.find(item => item.id === product.id);
       if (existingItem) {
@@ -32,6 +36,7 @@ export function useCart() {
   };
 
   const removeFromCart = (product: Product) => {
+    if (!product) return;
     setCart(prevCart => {
       const existingItem = prevCart.find(item => item.id === product.id);
       if (existingItem?.quantity === 1) {
@@ -46,7 +51,7 @@ export function useCart() {
   };
 
   return {
-    cart,
+    cart: Array.isArray(cart) ? cart : [],
     addToCart,
     removeFromCart
   };

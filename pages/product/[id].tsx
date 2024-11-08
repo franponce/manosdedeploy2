@@ -64,12 +64,18 @@ const ProductDetail: React.FC = () => {
   const displayProduct = currentProduct || product;
 
   const total = useMemo(
-    () => parseCurrency(cart.reduce((total: number, item: CartItem) => total + item.price * item.quantity, 0)),
+    () => parseCurrency((Array.isArray(cart) ? cart : []).reduce(
+      (total: number, item: CartItem) => total + (item?.price || 0) * (item?.quantity || 0), 
+      0
+    )),
     [cart]
   );
 
   const quantity = useMemo(
-    () => cart.reduce((acc: number, item: CartItem) => acc + item.quantity, 0),
+    () => (Array.isArray(cart) ? cart : []).reduce(
+      (acc: number, item: CartItem) => acc + (item?.quantity || 0), 
+      0
+    ),
     [cart]
   );
 
