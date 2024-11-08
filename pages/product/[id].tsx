@@ -1,0 +1,373 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import {
+  Box,
+  Container,
+  Image,
+  Text,
+  Button,
+  VStack,
+  Heading,
+  Grid,
+  GridItem,
+  Skeleton,
+  useToast,
+  Icon,
+  Flex,
+  Stack,
+  Tooltip,
+  IconButton,
+  HStack,
+  SkeletonText,
+} from '@chakra-ui/react';
+import { useRouter } from 'next/router';
+import { useProduct } from '../../hooks/useProduct';
+import { useSiteInfo } from '../../hooks/useSiteInfo';
+import { parseCurrency } from '../../utils/currency';
+import { FaArrowLeft, FaShoppingCart, FaCopy } from 'react-icons/fa';
+import { useScrollPosition } from '../../hooks/useScrollPosition';
+import { useCart } from '../../hooks/useCart';
+import CartDrawer from '@/product/components/CartDrawer';
+import {
+  WhatsappShareButton,
+  WhatsappIcon,
+  FacebookShareButton,
+  FacebookIcon,
+  TwitterShareButton,
+  TwitterIcon,
+  EmailShareButton,
+  EmailIcon
+} from 'next-share';
+import useSWR from 'swr';
+import { Product, CartItem } from '@/product/types';
+
+const ProductDetail: React.FC = () => {
+  const router = useRouter();
+  const { id } = router.query;
+  const { product, isLoading, error } = useProduct(id as string);
+  const { siteInfo } = useSiteInfo();
+  const toast = useToast();
+  const { saveScrollPosition } = useScrollPosition(id as string);
+  const { cart, addToCart, removeFromCart } = useCart();
+  const [isCartOpen, toggleCart] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [pageUrl, setPageUrl] = useState<string>('');
+
+  const { data: currentProduct } = useSWR(
+    id ? `/api/products/${id}` : null,
+    null,
+    {
+      refreshInterval: 10000,
+      fallbackData: product
+    }
+  );
+
+  const displayProduct = currentProduct || product;
+
+  const total = useMemo(
+    () => parseCurrency(cart.reduce((total: number, item: CartItem) => total + item.price * item.quantity, 0)),
+    [cart]
+  );
+
+  const quantity = useMemo(
+    () => cart.reduce((acc: number, item: CartItem) => acc + item.quantity, 0),
+    [cart]
+  );
+
+  const handleBack = () => {
+    saveScrollPosition();
+    router.back();
+  };
+
+  const handleAddToCart = () => {
+    addToCart(displayProduct);
+    toast({
+      title: "Producto agregado",
+      description: "El producto se agregó al carrito",
+      status: "success",
+      duration: 3000,
+      isClosable: true,
+    });
+  };
+
+  function handleEditCart(product: Product, action: "increment" | "decrement") {
+    if (action === "increment") {
+      addToCart(product);
+    } else {
+      removeFromCart(product);
+    }
+  }
+
+  const shareText = `¡Mira este producto! ${displayProduct?.title} 🛒`;
+  const shareTextWithPrice = `¡Descubrí ${displayProduct?.title} por ${parseCurrency(displayProduct?.price || 0)}! 🛒`;
+  const emailSubject = `Te comparto este producto de ${siteInfo?.storeName || 'nuestra tienda'}`;
+  const emailBody = `Hola! Encontré este producto que te puede interesar:\n\n${displayProduct?.title}\n${pageUrl}`;
+
+  useEffect(() => {
+    setPageUrl(window.location.href);
+  }, []);
+
+  const handleCopyLink = () => {
+    const textToCopy = `¡Mirá este producto! ${displayProduct?.title}\n${pageUrl}`;
+    navigator.clipboard.writeText(textToCopy);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const renderDescription = () => {
+    if (!displayProduct?.description) return null;
+
+    const cleanDescription = (html: string) => {
+      return html
+        .replace(/<p><br><\/p>/g, '')
+        .replace(/<p>\s*<\/p>/g, '')
+        .replace(/<\/li>\s*<li>/g, '</li><li>')
+        .trim();
+    };
+
+    return (
+      <Container 
+        id="product-description" 
+        maxW={{ base: "100%", md: "container.md" }}
+        p={0}
+        centerContent
+      >
+        <VStack 
+          width="full"
+          spacing={4}
+          align="stretch"
+          px={{ base: 4, md: 6 }}
+        >
+          <Box
+            width="full"
+            sx={{
+              '& p': {
+                fontSize: { base: "sm", md: "md" },
+                color: 'gray.700',
+                lineHeight: 'tall',
+                marginBottom: 2,
+                width: "100%",
+                textAlign: "left",
+                '&:empty': { display: 'none' }
+              },
+              '& ul': {
+                width: "100%",
+                paddingLeft: "1rem",
+                marginBottom: 3,
+                listStyle: "disc"
+              },
+              '& li': {
+                marginBottom: 1,
+                textAlign: "left"
+              },
+              '& strong': { fontWeight: '600' },
+              '& em': { fontStyle: 'italic' },
+              '& br': { 
+                display: 'none'
+              },
+              overflowWrap: 'break-word',
+              wordWrap: 'break-word',
+              wordBreak: 'break-word'
+            }}
+            dangerouslySetInnerHTML={{ 
+              __html: cleanDescription(displayProduct.description) 
+            }}
+          />
+        </VStack>
+      </Container>
+    );
+  };
+
+  if (error) {
+    return (
+      <Container maxW="container.xl" py={8}>
+        <VStack spacing={6} align="stretch">
+          <Box
+            textAlign="center"
+            py={10}
+            borderRadius="lg"
+            bg="gray.50"
+            p={8}
+          >
+            <Heading size="lg" mb={4} color="gray.600">
+              Producto no encontrado
+            </Heading>
+            <Text mb={6} color="gray.500">
+              Lo sentimos, el producto que buscas no está disponible en este momento.
+            </Text>
+            <Button colorScheme="blue" onClick={() => router.push('/')}>
+              Ver otros productos
+            </Button>
+          </Box>
+        </VStack>
+      </Container>
+    );
+  }
+
+  return (
+    <>
+      <Container maxW="container.xl" py={8}>
+        <Button
+          leftIcon={<FaArrowLeft />}
+          variant="ghost"
+          mb={4}
+          onClick={handleBack}
+        >
+          Volver
+        </Button>
+        
+        <VStack spacing={8} align="stretch">
+          <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={8}>
+            <GridItem>
+              <Skeleton isLoaded={!isLoading} height="400px">
+                <Image
+                  src={displayProduct?.image}
+                  alt={displayProduct?.title}
+                  objectFit="contain"
+                  width="100%"
+                  height="100%"
+                />
+              </Skeleton>
+            </GridItem>
+
+            <GridItem>
+              <VStack spacing={6} align="stretch">
+                <Skeleton isLoaded={!isLoading}>
+                  <Heading as="h1" size="xl">
+                    {displayProduct?.title}
+                  </Heading>
+                </Skeleton>
+
+                <Skeleton isLoaded={!isLoading}>
+                  <Text fontSize="2xl" fontWeight="bold">
+                    {parseCurrency(displayProduct?.price || 0)}
+                  </Text>
+                </Skeleton>
+
+                <Skeleton isLoaded={!isLoading}>
+                  <Button
+                    size="lg"
+                    colorScheme="blue"
+                    leftIcon={<Icon as={FaShoppingCart} />}
+                    onClick={handleAddToCart}
+                    width="full"
+                  >
+                    Agregar al carrito
+                  </Button>
+                </Skeleton>
+
+                <Skeleton isLoaded={!isLoading}>
+                  <Box>
+                    <Text mb={2} fontWeight="medium">Compartir producto:</Text>
+                    <HStack spacing={2}>
+                      <Tooltip label="Compartir en WhatsApp">
+                        <WhatsappShareButton
+                          url={pageUrl}
+                          title={shareTextWithPrice}
+                        >
+                          <WhatsappIcon size={40} round />
+                        </WhatsappShareButton>
+                      </Tooltip>
+
+                      <Tooltip label="Compartir en Facebook">
+                        <FacebookShareButton
+                          url={pageUrl}
+                          quote={shareText}
+                        >
+                          <FacebookIcon size={40} round />
+                        </FacebookShareButton>
+                      </Tooltip>
+
+                      <Tooltip label="Compartir en Twitter">
+                        <TwitterShareButton
+                          url={pageUrl}
+                          title={shareText}
+                        >
+                          <TwitterIcon size={40} round />
+                        </TwitterShareButton>
+                      </Tooltip>
+
+                      <Tooltip label="Compartir por email">
+                        <EmailShareButton
+                          url={pageUrl}
+                          subject={emailSubject}
+                          body={emailBody}
+                        >
+                          <EmailIcon size={40} round />
+                        </EmailShareButton>
+                      </Tooltip>
+
+                      <Tooltip label={copied ? "¡Copiado!" : "Copiar enlace"}>
+                        <IconButton
+                          aria-label="Copiar enlace"
+                          icon={<FaCopy />}
+                          onClick={handleCopyLink}
+                          size="lg"
+                          colorScheme={copied ? "green" : "gray"}
+                          rounded="full"
+                        />
+                      </Tooltip>
+                    </HStack>
+                  </Box>
+                </Skeleton>
+
+                <Box>
+                  <Skeleton isLoaded={!isLoading}>
+                    <Text fontWeight="medium" mb={2}>Descripción:</Text>
+                  </Skeleton>
+                  <SkeletonText isLoaded={!isLoading} noOfLines={4} spacing={4}>
+                    {renderDescription()}
+                  </SkeletonText>
+                </Box>
+              </VStack>
+            </GridItem>
+          </Grid>
+        </VStack>
+      </Container>
+
+      {Boolean(cart.length) && (
+        <Flex alignItems="center" bottom={4} justifyContent="center" position="sticky">
+          <Button
+            boxShadow="xl"
+            colorScheme="primary"
+            data-testid="show-cart"
+            size="lg"
+            width={{ base: "100%", sm: "fit-content" }}
+            onClick={() => toggleCart(true)}
+          >
+            <Stack alignItems="center" direction="row" spacing={6}>
+              <Stack alignItems="center" direction="row" spacing={3}>
+                <Text fontSize="md" lineHeight={6}>
+                  Ver carrito
+                </Text>
+                <Text
+                  backgroundColor="rgba(0,0,0,0.25)"
+                  borderRadius="sm"
+                  color="gray.100"
+                  fontSize="xs"
+                  fontWeight="500"
+                  paddingX={2}
+                  paddingY={1}
+                >
+                  {quantity} {quantity === 1 ? "item" : "items"}
+                </Text>
+              </Stack>
+              <Text fontSize="md" lineHeight={6}>
+                {total}
+              </Text>
+            </Stack>
+          </Button>
+        </Flex>
+      )}
+
+      <CartDrawer
+        isOpen={isCartOpen}
+        items={cart}
+        onClose={() => toggleCart(false)}
+        onDecrement={(product) => handleEditCart(product, "decrement")}
+        onIncrement={(product) => handleEditCart(product, "increment")}
+      />
+    </>
+  );
+};
+
+export default ProductDetail; 

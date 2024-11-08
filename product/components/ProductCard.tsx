@@ -9,11 +9,11 @@ import {
   Skeleton,
   SkeletonText,
   useMediaQuery,
-  Tooltip,
+  Link,
 } from '@chakra-ui/react';
 import { Product } from '../types';
 import { parseCurrency } from '../../utils/currency';
-import { useSiteInfo } from '../../hooks/useSiteInfo';
+import { useRouter } from 'next/router';
 
 interface Props {
   product: Product;
@@ -21,41 +21,44 @@ interface Props {
   isLoading: boolean;
 }
 
-const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading }) => {
-  const { siteInfo } = useSiteInfo();
+const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading: cardLoading }) => {
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [isTitleExpanded, setIsTitleExpanded] = useState(false);
   const [isMobile] = useMediaQuery("(max-width: 48em)");
+  const router = useRouter();
 
-  if (!product && !isLoading) {
-    return null;
-  }
-
-  const toggleDescription = () => {
-    setIsDescriptionExpanded(!isDescriptionExpanded);
-  };
-
-  const toggleTitle = () => {
-    setIsTitleExpanded(!isTitleExpanded);
+  const handleProductClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    router.push(`/product/${product.id}`);
   };
 
   const renderTitle = () => {
+    const titleContent = (
+      <Text
+        fontWeight="bold"
+        fontSize="lg"
+        noOfLines={isTitleExpanded ? undefined : 2}
+        cursor="pointer"
+        _hover={{ color: "blue.500" }}
+        onClick={handleProductClick}
+      >
+        {product.title || 'Untitled Product'}
+      </Text>
+    );
+
     if (isMobile) {
       return (
         <Box>
-          <Text
-            fontWeight="bold"
-            fontSize="lg"
-            noOfLines={isTitleExpanded ? undefined : 2}
-          >
-            {product.title || 'Untitled Product'}
-          </Text>
+          {titleContent}
           {product.title && product.title.length > 50 && (
             <Button
               size="xs"
               variant="link"
               color="blue.500"
-              onClick={toggleTitle}
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsTitleExpanded(!isTitleExpanded);
+              }}
               mt={1}
             >
               {isTitleExpanded ? "Ver menos" : "Ver título completo"}
@@ -63,45 +66,53 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading }) => {
           )}
         </Box>
       );
-    } else {
-      return (
-        <Box
-          onMouseEnter={() => setIsTitleExpanded(true)}
-          onMouseLeave={() => setIsTitleExpanded(false)}
-        >
-          <Text
-            fontWeight="bold"
-            fontSize="lg"
-            noOfLines={isTitleExpanded ? undefined : 2}
-          >
-            {product.title || 'Untitled Product'}
-          </Text>
-        </Box>
-      );
     }
+
+    return (
+      <Box
+        onMouseEnter={() => setIsTitleExpanded(true)}
+        onMouseLeave={() => setIsTitleExpanded(false)}
+      >
+        {titleContent}
+      </Box>
+    );
   };
 
   const renderDescription = () => {
+    const truncateText = (html: string, maxLength: number) => {
+      if (html.length <= maxLength) return html;
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = html;
+      const text = tempDiv.textContent || tempDiv.innerText;
+      return text.slice(0, maxLength) + '...';
+    };
+
     return (
       <Box>
-        <div
-          dangerouslySetInnerHTML={{ __html: product.description || 'No description available' }}
-          style={{
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            display: '-webkit-box',
-            WebkitLineClamp: isDescriptionExpanded ? 'unset' : 3,
-            WebkitBoxOrient: 'vertical',
-            lineHeight: '1.5em',
-            maxHeight: isDescriptionExpanded ? 'none' : '4.5em', // 3 líneas
+        <Box
+          sx={{
+            '& p': { marginBottom: '0.5em' },
+            '& ul, & ol': { paddingLeft: '1.5em', marginBottom: '0.5em' },
+            '& li': { marginBottom: '0.25em' }
           }}
-        />
+        >
+          <div
+            dangerouslySetInnerHTML={{ 
+              __html: isDescriptionExpanded 
+                ? product.description 
+                : truncateText(product.description || '', 150)
+            }}
+          />
+        </Box>
         {product.description && product.description.length > 150 && (
           <Button
             size="xs"
             variant="link"
             color="blue.500"
-            onClick={toggleDescription}
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsDescriptionExpanded(!isDescriptionExpanded);
+            }}
             mt={1}
           >
             {isDescriptionExpanded ? "Ver menos" : "Ver más"}
@@ -112,22 +123,30 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading }) => {
   };
 
   return (
-    <Box borderWidth={1} borderRadius="lg" overflow="hidden">
+    <Box 
+      borderWidth={1} 
+      borderRadius="lg" 
+      overflow="hidden"
+      transition="transform 0.2s"
+      _hover={{ transform: 'translateY(-4px)', boxShadow: 'lg' }}
+    >
       <AspectRatio ratio={1}>
-        {isLoading ? (
+        {cardLoading ? (
           <Skeleton />
         ) : (
-          <Image 
-            src={product.image || 'https://via.placeholder.com/500'} 
-            alt={product.title || 'Product image'} 
-            objectFit="cover" 
-            fallbackSrc="https://via.placeholder.com/500"
-          />
+          <Link as="div" onClick={handleProductClick} cursor="pointer">
+            <Image 
+              src={product.image || 'https://via.placeholder.com/500'} 
+              alt={product.title || 'Product image'} 
+              objectFit="cover" 
+              fallbackSrc="https://via.placeholder.com/500"
+            />
+          </Link>
         )}
       </AspectRatio>
       <Box p={4}>
         <Stack spacing={2}>
-          {isLoading ? (
+          {cardLoading ? (
             <>
               <SkeletonText noOfLines={2} spacing="4" />
               <SkeletonText noOfLines={3} spacing="4" />
@@ -139,10 +158,14 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading }) => {
               {renderTitle()}
               {renderDescription()}
               <Text fontWeight="bold" fontSize="xl">
-                {parseCurrency(product.price || 0)} {siteInfo?.currency}
+                {parseCurrency(product.price || 0)}
               </Text>
-              <Button colorScheme="blue" onClick={() => onAdd(product)}>
-                Agregar al carrito
+              <Button
+                colorScheme="blue"
+                onClick={handleProductClick}
+                width="full"
+              >
+                Ver detalle
               </Button>
             </>
           )}

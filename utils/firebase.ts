@@ -26,6 +26,7 @@ const storage = getStorage(app);
 const auth = getAuth(app);
 
 export interface SiteInformation {
+  storeName: string;
   title: string;
   description: string;
   description2: string;
@@ -56,6 +57,7 @@ export const DEFAULT_SITE_INFORMATION: SiteInformation = {
   bannerUrl: "/default-banner.jpg",
   currency: 'ARS',
   exchangeRates: {},
+  storeName: ""
 };
 
 export interface PaymentMethods {
