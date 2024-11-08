@@ -197,7 +197,30 @@ const ProductDetail: NextPageWithLayout = () => {
 
   return (
     <>
-      <Container maxW="container.xl" py={8}>
+      <Box 
+        as="header" 
+        position="fixed"
+        top="0"
+        left="0"
+        right="0"
+        bg="white"
+        boxShadow="sm"
+        zIndex="sticky"
+      >
+        <Container maxW="container.xl" py={4}>
+          <Button
+            leftIcon={<Icon as={FaArrowLeft} />}
+            onClick={() => router.push('/')}
+            colorScheme="blue"
+            variant="ghost"
+            size="md"
+          >
+            Volver a la tienda
+          </Button>
+        </Container>
+      </Box>
+
+      <Container maxW="container.xl" py={8} mt="60px">
         <VStack spacing={8} align="stretch">
           <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={8}>
             <GridItem>
