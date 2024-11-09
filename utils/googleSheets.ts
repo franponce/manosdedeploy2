@@ -129,6 +129,7 @@ if (typeof window === 'undefined') {
             scheduledPublishDate: row[5] ? new Date(row[5].replace(' ', 'T')) : null,
             isScheduled: row[6] === 'TRUE',
             categoryId: row[7] || '',
+            createdAt: row[8] || new Date().toISOString()
           }))
           .filter((product) => product.title && product.title.trim() !== '');
       } catch (error) {
@@ -152,7 +153,8 @@ if (typeof window === 'undefined') {
             product.price.toString(),
             product.scheduledPublishDate ? formatLocalDateTime(product.scheduledPublishDate) : '',
             product.isScheduled ? 'TRUE' : 'FALSE',
-            product.categoryId
+            product.categoryId,
+            product.createdAt
           ],
         ];
 
@@ -186,7 +188,8 @@ if (typeof window === 'undefined') {
             product.price.toString(),
             product.scheduledPublishDate ? formatLocalDateTime(product.scheduledPublishDate) : '',
             product.isScheduled ? 'TRUE' : 'FALSE',
-            product.categoryId || ''
+            product.categoryId || '',
+            product.createdAt
           ]
         ];
 

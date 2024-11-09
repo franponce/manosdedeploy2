@@ -53,17 +53,18 @@ interface ProductModalProps {
 }
 
 const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, product, isLoading: submitLoading }) => {
-  const [currentProduct, setCurrentProduct] = useState<Product>({
-    id: "",
-    title: "",
-    description: "",
-    image: "",
-    price: 0,
-    currency: "ARS",
-    isScheduled: false,
-    scheduledPublishDate: null,
-    categoryId: ""
-  });
+  const [currentProduct, setCurrentProduct] = useState<Product>(() => ({
+    id: product?.id || '',
+    title: product?.title || '',
+    description: product?.description || '',
+    image: product?.image || '',
+    price: product?.price || 0,
+    currency: product?.currency || 'ARS',
+    isScheduled: product?.isScheduled || false,
+    scheduledPublishDate: product?.scheduledPublishDate || null,
+    categoryId: product?.categoryId || '',
+    createdAt: product?.createdAt || new Date().toISOString()
+  }));
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const toast = useToast();
   const [scheduledDate, setScheduledDate] = useState<Date | null>(null);
@@ -105,7 +106,8 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
         currency: "ARS",
         isScheduled: false,
         scheduledPublishDate: null,
-        categoryId: ""
+        categoryId: "",
+        createdAt: new Date().toISOString()
       });
       setImagePreview(null);
       setDescription('');
@@ -181,6 +183,11 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setCurrentProduct(prev => ({
+      ...prev,
+      id: prev.id || generateId(),
+      createdAt: prev.createdAt || new Date().toISOString()
+    }));
     if (!currentProduct) return;
 
     const price = parseFloat(currentProduct.price.toString());
@@ -514,3 +521,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
 };
 
 export default ProductModal;
+function generateId(): string {
+  throw new Error("Function not implemented.");
+}
+

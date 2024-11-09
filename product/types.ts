@@ -7,7 +7,8 @@ export interface Product {
   currency: string;
   isScheduled: boolean;
   scheduledPublishDate: Date | null;
-  categoryId: string; 
+  categoryId: string;
+  createdAt: string;
 }
 
 export interface CartItem extends Product {
@@ -17,4 +18,18 @@ export interface CartItem extends Product {
 export interface Category {
   id: string;
   name: string;
+}
+
+export interface ProductOrder {
+  id: string;
+  position: number;
+  categoryId?: string;
+  updatedAt: string;
+}
+
+export interface ProductOrderSettings {
+  defaultSort: 'position' | 'newest' | 'price_asc' | 'price_desc' | 'name';
+  categorySort?: {
+    [categoryId: string]: 'position' | 'newest' | 'price_asc' | 'price_desc' | 'name';
+  }
 }
