@@ -22,7 +22,9 @@ import ProductModal from "./ProductModal";
 import { Product } from "../types";
 import { createProduct, updateProduct } from "../../utils/googleSheets";
 import { ProductOrderModal } from './ProductOrderModal';
-import { useProducts } from '../../hooks/useProducts';
+import useSWR from 'swr';
+
+const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 const AdminPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -30,7 +32,7 @@ const AdminPage: React.FC = () => {
   const router = useRouter();
   const toast = useToast();
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
-  const { products, mutate: mutateProducts } = useProducts();
+  const { data: products, mutate } = useSWR<Product[]>('/api/products', fetcher);
 
   const handleStoreSettings = () => {
     router.push('/store-config');
@@ -80,10 +82,19 @@ const AdminPage: React.FC = () => {
         body: JSON.stringify({ products: orderedProducts }),
       });
       
-      await mutateProducts();
+      await mutate();
+      toast({
+        title: "Orden actualizado",
+        status: "success",
+        duration: 2000,
+      });
     } catch (error) {
       console.error('Error saving order:', error);
-      throw error;
+      toast({
+        title: "Error al actualizar el orden",
+        status: "error",
+        duration: 2000,
+      });
     }
   };
 
