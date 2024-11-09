@@ -13,7 +13,7 @@ import {
   Icon,
   useToast,
 } from "@chakra-ui/react";
-import { FaArrowRight, FaStore, FaPlus } from 'react-icons/fa';
+import { FaArrowRight, FaStore, FaPlus, FaSort } from 'react-icons/fa';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import ProductManagement from "./ProductManagement";
@@ -21,12 +21,16 @@ import CustomScripts from "./CustomScripts";
 import ProductModal from "./ProductModal";
 import { Product } from "../types";
 import { createProduct, updateProduct } from "../../utils/googleSheets";
+import { ProductOrderModal } from './ProductOrderModal';
+import { useProducts } from '../../hooks/useProducts';
 
 const AdminPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const toast = useToast();
+  const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
+  const { products, mutate: mutateProducts } = useProducts();
 
   const handleStoreSettings = () => {
     router.push('/store-config');
@@ -63,6 +67,23 @@ const AdminPage: React.FC = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleSaveOrder = async (orderedProducts: Product[]) => {
+    try {
+      await fetch('/api/products/reorder', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ products: orderedProducts }),
+      });
+      
+      await mutateProducts();
+    } catch (error) {
+      console.error('Error saving order:', error);
+      throw error;
     }
   };
 
@@ -147,6 +168,24 @@ const AdminPage: React.FC = () => {
           onSubmit={handleSubmit}
           product={null}
           isLoading={isLoading}
+        />
+      )}
+
+      <Button
+        leftIcon={<Icon as={FaSort} />}
+        onClick={() => setIsOrderModalOpen(true)}
+        colorScheme="purple"
+        mb={4}
+      >
+        Ordenar productos
+      </Button>
+
+      {isOrderModalOpen && products && (
+        <ProductOrderModal
+          isOpen={isOrderModalOpen}
+          onClose={() => setIsOrderModalOpen(false)}
+          products={products}
+          onSaveOrder={handleSaveOrder}
         />
       )}
     </Box>
