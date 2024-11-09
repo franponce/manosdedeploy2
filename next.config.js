@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ['icongr.am', 'firebasestorage.googleapis.com'],
+    domains: ['icongr.am', 'firebasestorage.googleapis.com', 'drive.google.com', 'lh3.googleusercontent.com'],
   },
   webpack: (config, { isServer }) => {
     if (!isServer) {
@@ -13,6 +13,9 @@ const nextConfig = {
         net: false,
         tls: false,
         http2: false,
+        constants: false,
+        stream: false,
+        zlib: false,
       };
     }
     return config;
