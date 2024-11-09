@@ -1,3 +1,4 @@
+import { google } from 'googleapis';
 import { Category, Product } from '../product/types';
 
 let googleSheetsApi: any;
@@ -513,6 +514,32 @@ if (typeof window === 'undefined') {
     },
   };
 }
+
+// Agregar esta función para actualizar el orden en Google Sheets
+export const updateProductOrder = async (products: Product[]) => {
+  const auth = await getAuthClient();
+  const sheets = google.sheets({ version: 'v4', auth });
+
+  // Asumiendo que tenemos una columna 'position' en la hoja
+  const values = products.map((product, index) => [
+    product.id,
+    index + 1 // position
+  ]);
+
+  try {
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: process.env.SPREADSHEET_ID,
+      range: 'Products!A2:B', // Ajusta según tu estructura
+      valueInputOption: 'RAW',
+      requestBody: {
+        values
+      }
+    });
+  } catch (error) {
+    console.error('Error updating product order:', error);
+    throw new Error('Failed to update product order');
+  }
+};
 
 export const {
   getProducts,
