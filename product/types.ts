@@ -5,9 +5,9 @@ export interface Product {
   image: string;
   price: number;
   currency: string;
+  categoryId: string;
   isScheduled: boolean;
   scheduledPublishDate: Date | null;
-  categoryId: string;
   isHidden: boolean;
 }
 

@@ -37,6 +37,9 @@ async function getAuthClient() {
 export async function getProducts(): Promise<Product[]> {
   if (typeof window !== 'undefined') {
     const response = await fetch('/api/products');
+    if (!response.ok) {
+      throw new Error('Failed to fetch products');
+    }
     return response.json();
   }
 
@@ -62,7 +65,7 @@ export async function getProducts(): Promise<Product[]> {
         categoryId: row[6],
         isScheduled: row[7] === 'TRUE',
         scheduledPublishDate: row[7] === 'TRUE' ? new Date(row[8]) : null,
-        isHidden: row[8] === 'TRUE'
+        isHidden: row[9] === 'TRUE'
       }))
       .filter((product) => product.title && product.title.trim() !== '');
   } catch (error) {
@@ -209,6 +212,16 @@ export async function toggleProductVisibility(productIds: string[], hide: boolea
 }
 
 export async function getCategories(): Promise<Category[]> {
+  if (typeof window !== 'undefined') {
+    // Si estamos en el cliente, hacemos la llamada al API
+    const response = await fetch('/api/categories');
+    if (!response.ok) {
+      throw new Error('Failed to fetch categories');
+    }
+    return response.json();
+  }
+
+  // Si estamos en el servidor, usamos la implementación original
   try {
     const auth = await getAuthClient();
     const { google } = await import('googleapis');
