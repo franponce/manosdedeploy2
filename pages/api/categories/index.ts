@@ -28,9 +28,8 @@ export default async function handler(
             message: 'Nombre de categoría inválido' 
           });
         }
-        
         console.log('Creando categoría con nombre:', name); // Debug
-        const newCategory = await createCategory(name.trim());
+        const newCategory = await createCategory({ name: name.trim() });
         
         console.log('Categoría creada:', newCategory); // Debug
         return res.status(201).json(newCategory);
