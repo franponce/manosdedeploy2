@@ -7,7 +7,8 @@ export interface Product {
   currency: string;
   isScheduled: boolean;
   scheduledPublishDate: Date | null;
-  categoryId: string; 
+  categoryId: string;
+  isHidden: boolean;
 }
 
 export interface CartItem extends Product {

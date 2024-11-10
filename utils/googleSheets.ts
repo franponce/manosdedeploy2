@@ -129,6 +129,7 @@ if (typeof window === 'undefined') {
             scheduledPublishDate: row[5] ? new Date(row[5].replace(' ', 'T')) : null,
             isScheduled: row[6] === 'TRUE',
             categoryId: row[7] || '',
+            isHidden: row[8] === 'TRUE',
           }))
           .filter((product) => product.title && product.title.trim() !== '');
       } catch (error) {
@@ -444,6 +445,30 @@ if (typeof window === 'undefined') {
       const products = await googleSheetsApi.getProducts();
       return products.length;
     },
+
+    toggleProductVisibility: async (productIds: string[], hide: boolean): Promise<void> => {
+      try {
+        const auth = await getAuthClient();
+        const { google } = await import('googleapis');
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        const batchUpdates = productIds.map(id => ({
+          range: `La Libre Web - Catálogo online rev 2021 - products!I${parseInt(id) + 1}`,
+          values: [[hide ? 'TRUE' : 'FALSE']]
+        }));
+
+        await sheets.spreadsheets.values.batchUpdate({
+          spreadsheetId: SPREADSHEET_ID,
+          requestBody: {
+            valueInputOption: 'USER_ENTERED',
+            data: batchUpdates
+          }
+        });
+      } catch (error) {
+        console.error('Error toggling product visibility:', error);
+        throw error;
+      }
+    },
   };
 } else {
   googleSheetsApi = {
@@ -508,17 +533,42 @@ if (typeof window === 'undefined') {
       const products = await googleSheetsApi.getProducts();
       return products.length;
     },
+    toggleProductVisibility: async (productIds: string[], hide: boolean) => {
+      const response = await fetch('/api/products/visibility', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productIds, hide }),
+      });
+      if (!response.ok) throw new Error('Failed to toggle product visibility');
+    },
   };
 }
 
-export const {
-  getProducts,
-  updateProduct,
-  createProduct,
-  deleteProduct,
-  getProductCount,
-  getCategories,
-  createCategory,
-  deleteCategory,
-  updateCategory,
-} = googleSheetsApi;
+// Exportar todas las funciones individualmente
+export const getProducts = async (): Promise<Product[]> => {
+  return googleSheetsApi.getProducts();
+};
+
+export const createProduct = async (product: Product): Promise<void> => {
+  return googleSheetsApi.createProduct(product);
+};
+
+export const updateProduct = async (product: Product): Promise<void> => {
+  return googleSheetsApi.updateProduct(product);
+};
+
+export const deleteProduct = async (id: string): Promise<void> => {
+  return googleSheetsApi.deleteProduct(id);
+};
+
+export const getCategories = async (): Promise<Category[]> => {
+  return googleSheetsApi.getCategories();
+};
+
+export const createCategory = async (category: { name: string }): Promise<void> => {
+  return googleSheetsApi.createCategory(category);
+};
+
+export const toggleProductVisibility = async (productIds: string[], hide: boolean): Promise<void> => {
+  return googleSheetsApi.toggleProductVisibility(productIds, hide);
+};

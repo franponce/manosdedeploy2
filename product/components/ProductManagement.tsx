@@ -19,11 +19,19 @@ import {
   Badge,
   Spinner,
   Tooltip,
+  Checkbox,
 } from "@chakra-ui/react";
 import { SearchIcon } from "@chakra-ui/icons";
 import { FaTrash } from "react-icons/fa";
 import ProductModal from "./ProductModal";
-import { getProducts, createProduct, updateProduct, deleteProduct, getCategories } from "../../utils/googleSheets";
+import {
+  getProducts,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+  getCategories,
+  toggleProductVisibility
+} from "../../utils/googleSheets";
 import { Product, Category } from "../types";
 import useSWR, { mutate } from 'swr';
 
@@ -55,6 +63,8 @@ const ProductManagement: React.FC<{ onCreateProduct: () => void }> = ({ onCreate
   const toast = useToast();
 
   const [categories, setCategories] = useState<Category[]>([]);
+
+  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
 
   useEffect(() => {
     fetchCategories();
@@ -205,6 +215,34 @@ const ProductManagement: React.FC<{ onCreateProduct: () => void }> = ({ onCreate
     return text.substring(0, maxLength).trim() + '...';
   };
 
+  const handleToggleVisibility = async (hide: boolean) => {
+    try {
+      await toggleProductVisibility(selectedProducts, hide);
+      toast({
+        title: "Éxito",
+        description: `Productos ${hide ? 'ocultados' : 'mostrados'} exitosamente`,
+        status: "success",
+      });
+      setSelectedProducts([]);
+      // Recargar productos
+      mutate('/api/products');
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo cambiar la visibilidad de los productos",
+        status: "error",
+      });
+    }
+  };
+
+  const handleProductSelect = (productId: string) => {
+    setSelectedProducts(prev => 
+      prev.includes(productId) 
+        ? prev.filter(id => id !== productId)
+        : [...prev, productId]
+    );
+  };
+
   return (
     <Box>
       <Flex direction="column" mb={6}>
@@ -256,6 +294,14 @@ const ProductManagement: React.FC<{ onCreateProduct: () => void }> = ({ onCreate
               overflow="hidden"
               position="relative"
             >
+              <Checkbox
+                position="absolute"
+                top={2}
+                right={2}
+                zIndex={1}
+                isChecked={selectedProducts.includes(product.id)}
+                onChange={() => handleProductSelect(product.id)}
+              />
               {isProductScheduled(product) && (
                 <Badge 
                   colorScheme="purple" 
@@ -265,6 +311,17 @@ const ProductManagement: React.FC<{ onCreateProduct: () => void }> = ({ onCreate
                   zIndex="1"
                 >
                   Producto programado
+                </Badge>
+              )}
+              {product.isHidden && (
+                <Badge 
+                  colorScheme="red" 
+                  position="absolute" 
+                  top="2" 
+                  left="2" 
+                  zIndex="1"
+                >
+                  Oculto
                 </Badge>
               )}
               <AspectRatio ratio={1}>
@@ -361,6 +418,22 @@ const ProductManagement: React.FC<{ onCreateProduct: () => void }> = ({ onCreate
         product={currentProduct}
         isLoading={isLoading}
       />
+      {selectedProducts.length > 0 && (
+        <Flex mb={4} gap={2}>
+          <Button
+            colorScheme="blue"
+            onClick={() => handleToggleVisibility(true)}
+          >
+            Ocultar seleccionados ({selectedProducts.length})
+          </Button>
+          <Button
+            colorScheme="green"
+            onClick={() => handleToggleVisibility(false)}
+          >
+            Mostrar seleccionados ({selectedProducts.length})
+          </Button>
+        </Flex>
+      )}
     </Box>
   );
 };

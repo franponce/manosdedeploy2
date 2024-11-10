@@ -62,7 +62,8 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     currency: "ARS",
     isScheduled: false,
     scheduledPublishDate: null,
-    categoryId: ""
+    categoryId: "",
+    isHidden: false
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const toast = useToast();
@@ -87,7 +88,8 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     if (product) {
       setCurrentProduct({
         ...product,
-        categoryId: product.categoryId || ""
+        categoryId: product.categoryId || "",
+        isHidden: product.isHidden || false
       });
       setImagePreview(product.image);
       setDescription(product.description || '');
@@ -105,7 +107,8 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
         currency: "ARS",
         isScheduled: false,
         scheduledPublishDate: null,
-        categoryId: ""
+        categoryId: "",
+        isHidden: false
       });
       setImagePreview(null);
       setDescription('');
