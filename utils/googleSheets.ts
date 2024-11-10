@@ -168,6 +168,23 @@ export async function deleteProduct(id: string): Promise<void> {
 }
 
 export async function toggleProductVisibility(productIds: string[], hide: boolean): Promise<void> {
+  if (typeof window !== 'undefined') {
+    // Si estamos en el cliente, hacemos la llamada al API
+    const response = await fetch('/api/products/visibility', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ productIds, hide }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to toggle product visibility');
+    }
+    return;
+  }
+
+  // Si estamos en el servidor, usamos la implementación original
   try {
     const auth = await getAuthClient();
     const { google } = await import('googleapis');

@@ -222,15 +222,23 @@ const ProductManagement: React.FC<{ onCreateProduct: () => void }> = ({ onCreate
         title: "Éxito",
         description: `Productos ${hide ? 'ocultados' : 'mostrados'} exitosamente`,
         status: "success",
+        duration: 3000,
+        isClosable: true,
       });
-      setSelectedProducts([]);
-      // Recargar productos
+      
+      // Recargar los productos
       mutate('/api/products');
+      
+      // Limpiar selección
+      setSelectedProducts([]);
     } catch (error) {
+      console.error('Error toggling visibility:', error);
       toast({
         title: "Error",
         description: "No se pudo cambiar la visibilidad de los productos",
         status: "error",
+        duration: 3000,
+        isClosable: true,
       });
     }
   };
