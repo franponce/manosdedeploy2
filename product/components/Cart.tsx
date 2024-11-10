@@ -14,23 +14,23 @@ import {
   IconButton,
   Box,
 } from '@chakra-ui/react';
-import { AddIcon, MinusIcon } from '@chakra-ui/icons';
+import { AddIcon, MinusIcon, DeleteIcon } from '@chakra-ui/icons';
 import { CartItem } from '../types';
 
-interface Props {
+interface CartProps {
   isOpen: boolean;
   onClose: () => void;
   items: CartItem[];
-  onIncrement: (item: CartItem) => void;
-  onDecrement: (item: CartItem) => void;
+  onUpdateQuantity: (productId: string, quantity: number) => void;
+  onRemoveItem: (productId: string) => void;
 }
 
-const CartDrawer: React.FC<Props> = ({
+const Cart: React.FC<CartProps> = ({
   isOpen,
   onClose,
   items,
-  onIncrement,
-  onDecrement,
+  onUpdateQuantity,
+  onRemoveItem,
 }) => {
   const total = items.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -54,21 +54,28 @@ const CartDrawer: React.FC<Props> = ({
                   <Flex justify="space-between" align="center">
                     <Box flex="1">
                       <Text fontWeight="bold">{item.title}</Text>
-                      <Text>${item.price}</Text>
+                      <Text>${item.price.toFixed(2)}</Text>
                     </Box>
                     <Flex align="center" gap={2}>
                       <IconButton
                         aria-label="Decrease quantity"
                         icon={<MinusIcon />}
                         size="sm"
-                        onClick={() => onDecrement(item)}
+                        onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}
                       />
                       <Text>{item.quantity}</Text>
                       <IconButton
                         aria-label="Increase quantity"
                         icon={<AddIcon />}
                         size="sm"
-                        onClick={() => onIncrement(item)}
+                        onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
+                      />
+                      <IconButton
+                        aria-label="Remove item"
+                        icon={<DeleteIcon />}
+                        size="sm"
+                        colorScheme="red"
+                        onClick={() => onRemoveItem(item.id)}
                       />
                     </Flex>
                   </Flex>
@@ -98,4 +105,4 @@ const CartDrawer: React.FC<Props> = ({
   );
 };
 
-export default CartDrawer;
+export default Cart; 

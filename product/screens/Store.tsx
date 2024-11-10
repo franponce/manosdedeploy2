@@ -24,6 +24,7 @@ import { editCart } from "../selectors";
 import { parseCurrency } from "../../utils/currency";
 import useSWR, { mutate } from 'swr';
 import { useCart } from '../../hooks/useCart';
+import { useProducts } from '../../hooks/useProducts';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -40,14 +41,21 @@ const CART_EXPIRY_TIME = 24 * 60 * 60 * 1000; // 24 horas en milisegundos
 const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCategories }) => {
   const { cart, addToCart, removeFromCart } = useCart();
   const toast = useToast();
-  const [isCartOpen, toggleCart] = React.useState<boolean>(false);
+  const [isCartOpen, setIsCartOpen] = React.useState<boolean>(false);
   const [page, setPage] = React.useState(1);
   const [displayedProducts, setDisplayedProducts] = React.useState<Product[]>([]);
   const [hasMore, setHasMore] = React.useState(true);
   const observer = React.useRef<IntersectionObserver | null>(null);
-  const { data: products, error, isLoading } = useSWR<Product[]>('/api/products', fetcher, {
+  const { 
+    data: products, 
+    mutate,
+    isLoading,
+    error: isError 
+  } = useSWR<Product[]>('/api/products', fetcher, {
     fallbackData: initialProducts,
-    refreshInterval: 60000, // Actualizar cada minuto
+    refreshInterval: 5000,
+    revalidateOnFocus: true,
+    dedupingInterval: 3000,
   });
   const { data: categories } = useSWR<Category[]>('/api/categories', fetcher, {
     fallbackData: initialCategories,
@@ -62,10 +70,11 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
     observer.current = new IntersectionObserver(entries => {
       if (entries[0].isIntersecting && hasMore) {
         setPage(prevPage => prevPage + 1);
+        mutate();
       }
     });
     if (node) observer.current.observe(node);
-  }, [isLoading, hasMore]);
+  }, [isLoading, hasMore, mutate]);
 
   React.useEffect(() => {
     const checkScheduledProducts = () => {
@@ -122,18 +131,21 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
 
   const quantity = React.useMemo(() => cart.reduce((acc, item) => acc + item.quantity, 0), [cart]);
 
-  function handleEditCart(product: Product, action: "increment" | "decrement") {
+  const handleIncrement = (product: Product) => {
     const cartItem: CartItem = {
       ...product,
       quantity: 1
     };
-    
-    if (action === "increment") {
-      addToCart(cartItem);
-    } else {
-      removeFromCart(cartItem);
-    }
-  }
+    addToCart(cartItem);
+  };
+
+  const handleDecrement = (product: Product) => {
+    const cartItem: CartItem = {
+      ...product,
+      quantity: 1
+    };
+    removeFromCart(cartItem);
+  };
 
   const NoProductsFound = () => {
     if (selectedCategory && !searchTerm) {
@@ -190,7 +202,46 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
     }
   };
 
-  if (error) return <div>Failed to load products</div>;
+  React.useEffect(() => {
+    const intervalId = setInterval(() => {
+      revalidateProducts();
+    }, 30000); // Revalidar cada 30 segundos
+
+    return () => clearInterval(intervalId);
+  }, [revalidateProducts]);
+
+  React.useEffect(() => {
+    const handleFocus = () => {
+      revalidateProducts();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [revalidateProducts]);
+
+  const visibleProducts = React.useMemo(() => {
+    return products?.filter(product => !product.isHidden) || [];
+  }, [products]);
+
+  // Efecto para revalidar cuando el componente se monta y cuando recupera el foco
+  React.useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        mutate();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // Revalidación inicial
+    mutate();
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [mutate]);
+
+  if (isError) return <div>Failed to load products</div>;
 
   return (
     <>
@@ -231,7 +282,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
               <ProductCard key={index} product={{} as Product} onAdd={() => {}} isLoading={true} />
             ))}
           </Grid>
-        ) : displayedProducts.length ? (
+        ) : visibleProducts.length ? (
           <Grid
             gridGap={8}
             templateColumns={{
@@ -239,15 +290,15 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
               sm: "repeat(auto-fill, minmax(280px, 1fr))",
             }}
           >
-            {displayedProducts.map((product, index) => (
+            {visibleProducts.map((product, index) => (
               <Box
                 key={product.id}
-                ref={index === displayedProducts.length - 1 ? lastProductElementRef : null}
+                ref={index === visibleProducts.length - 1 ? lastProductElementRef : null}
                 id={`product-${product.id}`}
               >
                 <ProductCard
                   product={product}
-                  onAdd={(product) => handleEditCart(product, "increment")}
+                  onAdd={handleIncrement}
                   isLoading={false}
                 />
               </Box>
@@ -266,45 +317,29 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
             <Button
               boxShadow="xl"
               colorScheme="primary"
-              data-testid="show-cart"
+              onClick={() => setIsCartOpen(true)}
               size="lg"
               width={{ base: "100%", sm: "fit-content" }}
-              onClick={() => toggleCart(true)}
             >
-              <Stack alignItems="center" direction="row" spacing={6}>
-                <Stack alignItems="center" direction="row" spacing={3}>
-                  <Text fontSize="md" lineHeight={6}>
-                    Ver carrito
-                  </Text>
-                  <Text
-                    backgroundColor="rgba(0,0,0,0.25)"
-                    borderRadius="sm"
-                    color="gray.100"
-                    fontSize="xs"
-                    fontWeight="500"
-                    paddingX={2}
-                    paddingY={1}
-                  >
-                    {quantity} {quantity === 1 ? "item" : "items"}
-                  </Text>
-                </Stack>
-                <Text fontSize="md" lineHeight={6}>
-                  {total}
-                </Text>
-              </Stack>
+              Ver carrito ({cart.reduce((acc, item) => acc + item.quantity, 0)} items)
             </Button>
           </Flex>
         )}
       </Stack>
+
       <CartDrawer
         isOpen={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
         items={cart}
-        onClose={() => toggleCart(false)}
-        onDecrement={(product) => handleEditCart(product, "decrement")}
-        onIncrement={(product) => handleEditCart(product, "increment")}
+        onIncrement={(item) => addToCart(item)}
+        onDecrement={(item) => removeFromCart(item)}
       />
     </>
   );
 };
 
 export default StoreScreen;
+function revalidateProducts() {
+  throw new Error("Function not implemented.");
+}
+

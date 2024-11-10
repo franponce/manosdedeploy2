@@ -14,6 +14,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     await googleSheets.toggleProductVisibility(productIds, hide);
+
+    // Forzar revalidación de la caché
+    res.revalidate('/api/products');
+    
     return res.status(200).json({ success: true });
   } catch (error) {
     console.error('Error:', error);
