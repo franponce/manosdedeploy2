@@ -19,6 +19,8 @@ export function useCategories() {
     revalidateOnFocus: true,
     revalidateOnReconnect: true,
     dedupingInterval: 5000,
+    shouldRetryOnError: true,
+    errorRetryCount: 3,
     onError: (error) => {
       console.error('Error fetching categories:', error);
     }

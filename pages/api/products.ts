@@ -5,21 +5,22 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-  res.setHeader('Pragma', 'no-cache');
-  res.setHeader('Expires', '0');
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    res.setHeader('Allow', ['GET', 'HEAD']);
+    return res.status(405).json({ message: `Método ${req.method} no permitido` });
+  }
 
   try {
-    if (req.method === 'GET') {
-      const products = await getProducts();
-      if (!products) {
-        throw new Error('No se pudieron obtener los productos');
-      }
-      return res.status(200).json(products);
+    const products = await getProducts();
+    if (!products) {
+      throw new Error('No se pudieron obtener los productos');
     }
 
-    res.setHeader('Allow', ['GET']);
-    return res.status(405).json({ message: `Método ${req.method} no permitido` });
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    
+    return res.status(200).json(products);
   } catch (error: unknown) {
     console.error('Error en API de productos:', error);
     const errorMessage = error instanceof Error ? error.message : 'Error interno del servidor';
