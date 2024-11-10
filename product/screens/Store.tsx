@@ -204,20 +204,20 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
 
   React.useEffect(() => {
     const intervalId = setInterval(() => {
-      revalidateProducts();
-    }, 30000); // Revalidar cada 30 segundos
+      mutate();
+    }, 30000);
 
     return () => clearInterval(intervalId);
-  }, [revalidateProducts]);
+  }, [mutate]);
 
   React.useEffect(() => {
     const handleFocus = () => {
-      revalidateProducts();
+      mutate();
     };
 
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
-  }, [revalidateProducts]);
+  }, [mutate]);
 
   const visibleProducts = React.useMemo(() => {
     return products?.filter(product => !product.isHidden) || [];
@@ -339,7 +339,4 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
 };
 
 export default StoreScreen;
-function revalidateProducts() {
-  throw new Error("Function not implemented.");
-}
 
