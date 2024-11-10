@@ -17,7 +17,11 @@ export function useCategories() {
     mutate 
   } = useSWR<Category[]>('/api/categories', fetcher, {
     revalidateOnFocus: true,
-    revalidateOnReconnect: true
+    revalidateOnReconnect: true,
+    dedupingInterval: 5000,
+    onError: (error) => {
+      console.error('Error fetching categories:', error);
+    }
   });
 
   const createCategory = async (name: string): Promise<Category> => {

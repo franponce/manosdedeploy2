@@ -25,6 +25,7 @@ import { parseCurrency } from "../../utils/currency";
 import useSWR, { mutate } from 'swr';
 import { useCart } from '../../hooks/useCart';
 import { useProducts } from '../../hooks/useProducts';
+import { useCategories } from '../../hooks/useCategories';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -56,11 +57,15 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
     refreshInterval: 5000,
     revalidateOnFocus: true,
     dedupingInterval: 3000,
+    onError: (error) => {
+      console.error('Error fetching products:', error);
+    }
   });
-  const { data: categories } = useSWR<Category[]>('/api/categories', fetcher, {
-    fallbackData: initialCategories,
-    refreshInterval: 60000,
-  });
+  const { 
+    categories, 
+    isLoading: categoriesLoading, 
+    error: categoriesError 
+  } = useCategories();
   const [searchTerm, setSearchTerm] = React.useState("");
   const [selectedCategory, setSelectedCategory] = React.useState("");
 
@@ -233,13 +238,16 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     
-    // Revalidación inicial
-    mutate();
-
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [mutate]);
+
+  React.useEffect(() => {
+    if (categoriesError) {
+      console.error('Error loading categories:', categoriesError);
+    }
+  }, [categoriesError]);
 
   if (isError) return <div>Failed to load products</div>;
 
