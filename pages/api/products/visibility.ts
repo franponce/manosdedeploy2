@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { googleSheetsApi } from '../../../utils/googleSheets';
+import * as googleSheets from '../../../utils/googleSheets';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -13,7 +13,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ message: 'productIds must be an array' });
     }
 
-    await googleSheetsApi.toggleProductVisibility(productIds, hide);
+    await googleSheets.toggleProductVisibility(productIds, hide);
     res.status(200).json({ success: true });
   } catch (error) {
     console.error('Error:', error);
