@@ -145,6 +145,16 @@ if (typeof window === 'undefined') {
         const { google } = await import('googleapis');
         const sheets = google.sheets({ version: 'v4', auth });
 
+        // Primero obtenemos todos los productos para encontrar el índice correcto
+        const response = await sheets.spreadsheets.values.get({
+          spreadsheetId: SPREADSHEET_ID,
+          range: PRODUCT_RANGE,
+        });
+
+        const rows = response.data.values || [];
+        const rowIndex = rows.findIndex(row => row[0] === product.id);
+
+        if (rowIndex === -1) {
         const values = [
           [
             product.id,
