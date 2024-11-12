@@ -122,12 +122,9 @@ if (typeof window === 'undefined') {
   };
 
   googleSheetsApi = {
-    getProducts: async (): Promise<Product[]> => {
+    getProducts: async (forStore: boolean = false): Promise<Product[]> => {
       try {
-        await checkAndUpdateScheduledProducts();
-
         const auth = await getAuthClient();
-        const { google } = await import('googleapis');
         const sheets = google.sheets({ version: 'v4', auth });
 
         const response = await sheets.spreadsheets.values.get({
@@ -136,13 +133,32 @@ if (typeof window === 'undefined') {
         });
 
         const rows = response.data.values;
-        if (!rows || rows.length === 0) {
-          return [];
+        if (!rows) return [];
+
+        const products = rows.map(formatProduct);
+
+        // Si es para la tienda, filtramos los productos
+        if (forStore) {
+          return products.filter(product => {
+            // Producto debe estar visible
+            if (!product.isVisible) return false;
+
+            // Si está programado, verificar la fecha
+            if (product.isScheduled && product.scheduledPublishDate) {
+              const publishDate = new Date(product.scheduledPublishDate);
+              const now = new Date();
+              // Solo mostrar si la fecha programada ya pasó
+              return publishDate <= now;
+            }
+
+            // Si no está programado y es visible, mostrarlo
+            return true;
+          });
         }
 
-        return rows.map(formatProduct);
+        return products;
       } catch (error) {
-        console.error('Error fetching products from Google Sheets:', error);
+        console.error('Error fetching products:', error);
         throw error;
       }
     },

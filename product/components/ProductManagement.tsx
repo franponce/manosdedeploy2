@@ -1,13 +1,6 @@
 import React, { useState } from 'react';
 import {
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
-  Button,
-  IconButton,
+  Grid,
   Box,
   Flex,
   Input,
@@ -15,9 +8,14 @@ import {
   InputLeftElement,
   Select,
   Spinner,
-  Image,
   useToast,
+  Text,
+  Badge,
+  IconButton,
   Tooltip,
+  VStack,
+  HStack,
+  Image,
 } from '@chakra-ui/react';
 import { SearchIcon } from '@chakra-ui/icons';
 import { FaEdit, FaTrash, FaCopy } from 'react-icons/fa';
@@ -91,86 +89,83 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ onCreateProduct }
         </Select>
       </Flex>
 
-      <Box overflowX="auto">
-        <Table variant="simple">
-          <Thead>
-            <Tr>
-              <Th>Imagen</Th>
-              <Th>Título</Th>
-              <Th>Precio</Th>
-              <Th>Categoría</Th>
-              <Th>Visible</Th>
-              <Th>Acciones</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            {isLoading ? (
-              <Tr>
-                <Td colSpan={6}>
-                  <Flex justify="center" py={4}>
-                    <Spinner />
-                  </Flex>
-                </Td>
-              </Tr>
-            ) : (
-              filteredProducts?.map((product) => (
-                <Tr key={product.id}>
-                  <Td>
-                    <Image
-                      src={product.image}
-                      alt={product.title}
-                      boxSize="50px"
-                      objectFit="cover"
-                      borderRadius="md"
-                      fallbackSrc="/placeholder-image.jpg"
+      {isLoading ? (
+        <Flex justify="center" py={4}>
+          <Spinner />
+        </Flex>
+      ) : (
+        <Grid
+          templateColumns="repeat(auto-fill, minmax(250px, 1fr))"
+          gap={6}
+          padding={4}
+        >
+          {filteredProducts?.map((product) => (
+            <Box
+              key={product.id}
+              borderWidth="1px"
+              borderRadius="lg"
+              overflow="hidden"
+              position="relative"
+            >
+              <Image
+                src={product.image}
+                alt={product.title}
+                height="200px"
+                width="100%"
+                objectFit="cover"
+                fallbackSrc="/placeholder-image.jpg"
+              />
+              
+              <Box position="absolute" top={2} right={2}>
+                <VisibilityToggle
+                  isVisible={product.isVisible}
+                  onChange={() => handleVisibilityToggle(product)}
+                />
+              </Box>
+
+              <VStack p={4} align="stretch" spacing={2}>
+                <Text fontWeight="bold" noOfLines={2}>
+                  {product.title}
+                </Text>
+                <Text color="blue.600" fontSize="xl">
+                  {parseCurrency(product.price)}
+                </Text>
+                <Badge colorScheme="purple">
+                  {categories?.find(cat => cat.id === product.categoryId)?.name || 'Sin categoría'}
+                </Badge>
+
+                <HStack spacing={2} justify="flex-end">
+                  <Tooltip label="Editar">
+                    <IconButton
+                      aria-label="Editar producto"
+                      icon={<FaEdit />}
+                      size="sm"
+                      onClick={() => {/* Implementar edición */}}
                     />
-                  </Td>
-                  <Td>{product.title}</Td>
-                  <Td>{parseCurrency(product.price)}</Td>
-                  <Td>
-                    {categories?.find(cat => cat.id === product.categoryId)?.name || '-'}
-                  </Td>
-                  <Td>
-                    <VisibilityToggle
-                      isVisible={product.isVisible}
-                      onChange={() => handleVisibilityToggle(product)}
+                  </Tooltip>
+                  <Tooltip label="Duplicar">
+                    <IconButton
+                      aria-label="Duplicar producto"
+                      icon={<FaCopy />}
+                      size="sm"
+                      onClick={() => {/* Implementar duplicación */}}
                     />
-                  </Td>
-                  <Td>
-                    <Flex gap={2}>
-                      <Tooltip label="Editar">
-                        <IconButton
-                          aria-label="Editar producto"
-                          icon={<FaEdit />}
-                          size="sm"
-                          onClick={() => {/* Implementar edición */}}
-                        />
-                      </Tooltip>
-                      <Tooltip label="Duplicar">
-                        <IconButton
-                          aria-label="Duplicar producto"
-                          icon={<FaCopy />}
-                          size="sm"
-                          onClick={() => {/* Implementar duplicación */}}
-                        />
-                      </Tooltip>
-                      <Tooltip label="Eliminar">
-                        <IconButton
-                          aria-label="Eliminar producto"
-                          icon={<FaTrash />}
-                          size="sm"
-                          colorScheme="red"
-                          onClick={() => {/* Implementar eliminación */}}
-                        />
-                      </Tooltip>
-                    </Flex>
-                  </Td>
-                </Tr>
-              ))
-            )}
-          </Tbody>
-        </Table>
-      </Box>
+                  </Tooltip>
+                  <Tooltip label="Eliminar">
+                    <IconButton
+                      aria-label="Eliminar producto"
+                      icon={<FaTrash />}
+                      size="sm"
+                      colorScheme="red"
+                      onClick={() => {/* Implementar eliminación */}}
+                    />
+                  </Tooltip>
+                </HStack>
+              </VStack>
+            </Box>
+          ))}
+        </Grid>
+      )}
     </Box>
   );
 };

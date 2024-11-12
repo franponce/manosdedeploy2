@@ -9,13 +9,13 @@ const fetcher = async (url: string) => {
   return response.json();
 };
 
-export function useProducts() {
+export function useProducts(forStore: boolean = false) {
   const { 
     data: products, 
     error, 
     isLoading,
     mutate 
-  } = useSWR<Product[]>('/api/products', fetcher);
+  } = useSWR<Product[]>(`/api/products${forStore ? '?store=true' : ''}`, fetcher);
 
   const updateProductVisibility = async (product: Product, isVisible: boolean) => {
     try {
@@ -25,12 +25,7 @@ export function useProducts() {
         body: JSON.stringify({ isVisible })
       });
 
-      mutate(
-        products?.map(p => 
-          p.id === product.id ? { ...p, isVisible } : p
-        ),
-        false
-      );
+      mutate();
     } catch (error) {
       mutate();
       throw error;

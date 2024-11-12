@@ -7,7 +7,7 @@ import {
   Text,
   Box,
   Heading,
-  useToast,
+  useToast as ChakraToast,
   Center,
   Spinner,
   Input,
@@ -24,6 +24,8 @@ import { editCart } from "../selectors";
 import { parseCurrency } from "../../utils/currency";
 import useSWR, { mutate } from 'swr';
 import { useCart } from '../../hooks/useCart';
+import { useProducts } from '../../hooks/useProducts';
+import { useCategories } from '../../hooks/useCategories';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -37,24 +39,18 @@ interface StoreScreenProps {
 const CART_STORAGE_KEY = 'simple-ecommerce-cart';
 const CART_EXPIRY_TIME = 24 * 60 * 60 * 1000; // 24 horas en milisegundos
 
-const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCategories }) => {
-  const { cart, addToCart, removeFromCart } = useCart();
-  const toast = useToast();
+const StoreScreen: React.FC = () => {
+  const { products, isLoading } = useProducts(true); // Indicamos que es para la tienda
+  const [searchTerm, setSearchTerm] = React.useState("");
+  const [selectedCategory, setSelectedCategory] = React.useState("");
+  const { categories } = useCategories();
+  const [cart, setCart] = React.useState<CartItem[]>([]);
+  const toast = ChakraToast();
   const [isCartOpen, toggleCart] = React.useState<boolean>(false);
   const [page, setPage] = React.useState(1);
   const [displayedProducts, setDisplayedProducts] = React.useState<Product[]>([]);
   const [hasMore, setHasMore] = React.useState(true);
   const observer = React.useRef<IntersectionObserver | null>(null);
-  const { data: products, error, isLoading } = useSWR<Product[]>('/api/products', fetcher, {
-    fallbackData: initialProducts,
-    refreshInterval: 60000, // Actualizar cada minuto
-  });
-  const { data: categories } = useSWR<Category[]>('/api/categories', fetcher, {
-    fallbackData: initialCategories,
-    refreshInterval: 60000,
-  });
-  const [searchTerm, setSearchTerm] = React.useState("");
-  const [selectedCategory, setSelectedCategory] = React.useState("");
 
   const lastProductElementRef = React.useCallback((node: HTMLDivElement | null) => {
     if (isLoading) return;
@@ -136,9 +132,9 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
     };
     
     if (action === "increment") {
-      addToCart(cartItem);
+      setCart(prevCart => [...prevCart, cartItem]);
     } else {
-      removeFromCart(cartItem);
+      setCart(prevCart => prevCart.filter(item => item.id !== product.id));
     }
   }
 
@@ -197,7 +193,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
     }
   };
 
-  if (error) return <div>Failed to load products</div>;
+  if (isLoading) return <div>Loading products...</div>;
 
   return (
     <>

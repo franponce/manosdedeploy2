@@ -7,7 +7,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   switch (req.method) {
     case 'GET':
       try {
-        const products = await getProducts();
+        const { store } = req.query;
+        const products = await getProducts(store === 'true');
         res.status(200).json(products);
       } catch (error) {
         console.error('Error fetching products:', error);
