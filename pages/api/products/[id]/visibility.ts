@@ -10,10 +10,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const { id } = req.query;
     const { isVisible } = req.body;
 
-    if (typeof id !== 'string' || typeof isVisible !== 'boolean') {
-      return res.status(400).json({ message: 'Invalid parameters' });
-    }
-
     const auth = new google.auth.GoogleAuth({
       credentials: {
         client_email: process.env.GOOGLE_CLIENT_EMAIL,
@@ -24,7 +20,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const sheets = google.sheets({ version: 'v4', auth });
 
-    // 1. Primero encontramos la fila del producto
+    // Encontrar la fila del producto
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: process.env.GOOGLE_SHEET_ID,
       range: 'La Libre Web - Catálogo online rev 2021 - products!A:I',
@@ -37,7 +33,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(404).json({ message: 'Product not found' });
     }
 
-    // 2. Actualizamos la columna I con el nuevo valor de visibilidad
+    // Solo actualizar la columna I (visibilidad)
     await sheets.spreadsheets.values.update({
       spreadsheetId: process.env.GOOGLE_SHEET_ID,
       range: `La Libre Web - Catálogo online rev 2021 - products!I${rowIndex + 2}`,

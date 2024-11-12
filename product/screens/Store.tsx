@@ -107,19 +107,15 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
 
   React.useEffect(() => {
     if (products) {
-      let filteredProducts = products.filter(product => {
-        const isValidProduct = Boolean(
-          product?.id &&
-          product?.title &&
-          product?.image &&
-          product?.price &&
-          !product?.isScheduled
-        );
-
-        const isVisibleProduct = product.isVisible !== false;
-
-        return isValidProduct && isVisibleProduct;
-      });
+      let filteredProducts = products.filter(product =>
+        product && 
+        product.id && 
+        product.title && 
+        product.image && 
+        product.price && 
+        !product.isScheduled &&
+        product.isVisible !== false
+      );
 
       if (searchTerm) {
         filteredProducts = filteredProducts.filter(product =>
