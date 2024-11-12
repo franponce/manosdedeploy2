@@ -107,7 +107,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
           !product?.isScheduled
         );
 
-        const isVisibleProduct = product?.isVisible !== false; // Si isVisible es undefined, lo consideramos como true
+        const isVisibleProduct = product.isVisible === true;
 
         return isValidProduct && isVisibleProduct;
       });

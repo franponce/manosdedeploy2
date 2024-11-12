@@ -17,6 +17,7 @@ import {
 import { Product } from '../types';
 import { parseCurrency } from '../../utils/currency';
 import { useRouter } from 'next/router';
+import { VisibilityToggle } from './VisibilityToggle';
 
 interface Props {
   product: Product;
@@ -178,6 +179,12 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading: cardLoading, 
           )}
         </Stack>
       </Box>
+      {isAdminView && (
+        <VisibilityToggle
+          isVisible={product.isVisible ?? true}
+          productId={product.id}
+        />
+      )}
     </Box>
   );
 };
