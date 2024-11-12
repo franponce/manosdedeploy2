@@ -26,7 +26,16 @@ import useSWR, { mutate } from 'swr';
 import { useCart } from '../../hooks/useCart';
 import { SWR_KEYS } from '../constants';
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+const fetcher = async (url: string) => {
+  const response = await fetch(url);
+  const data = await response.json();
+  
+  // Asegurarnos de que isVisible se interprete correctamente
+  return data.map((product: Product) => ({
+    ...product,
+    isVisible: product.isVisible === undefined ? true : product.isVisible === true
+  }));
+};
 
 const PRODUCTS_PER_PAGE = 12;
 
@@ -107,7 +116,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
           !product?.isScheduled
         );
 
-        const isVisibleProduct = product.isVisible === true;
+        const isVisibleProduct = product.isVisible !== false;
 
         return isValidProduct && isVisibleProduct;
       });
@@ -162,48 +171,48 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
   }
 
   const NoProductsFound = () => {
-    if (selectedCategory && !searchTerm) {
+    if (!searchTerm && !selectedCategory) {
       return (
-        <Center flexDirection="column" p={8} bg="gray.50" borderRadius="lg" boxShadow="sm">
+        <Center flexDirection="column" p={8} bg="gray.50" borderRadius="lg">
           <Box 
             as="span" 
             fontSize="6xl" 
-            mb={4} 
+            mb={4}
             role="img" 
-            aria-label="Categoría vacía"
-            className="empty-category-emoji"
+            aria-label="No hay productos"
           >
             📦
           </Box>
-          <Heading as="h3" size="md" textAlign="center" mb={2}>
-            No hay productos disponibles en esta categoría
+          <Heading size="md" mb={2} textAlign="center">
+            No hay productos disponibles
           </Heading>
-          <Text color="gray.600" textAlign="center" maxW="md">
-            Por favor, intenta con otra categoría o vuelve más tarde.
+          <Text color="gray.600" textAlign="center">
+            Los productos pueden estar temporalmente ocultos o no disponibles.
           </Text>
         </Center>
       );
     }
 
     return (
-      <Center flexDirection="column" p={8} bg="gray.50" borderRadius="lg" boxShadow="sm">
+      <Center flexDirection="column" p={8} bg="gray.50" borderRadius="lg">
         <Box 
           as="span" 
           fontSize="6xl" 
-          mb={4} 
+          mb={4}
           role="img" 
           aria-label="Buscando"
-          className="thinking-emoji"
         >
           🔍
         </Box>
-        <Heading as="h3" size="md" textAlign="center" mb={2}>
+        <Heading size="md" mb={2} textAlign="center">
           No se encontraron productos
         </Heading>
-        <Text color="gray.600" textAlign="center" maxW="md">
+        <Text color="gray.600" textAlign="center">
           {searchTerm 
             ? "No hay productos que coincidan con tu búsqueda."
-            : "No hay productos disponibles en este momento."}
+            : selectedCategory 
+              ? "No hay productos en esta categoría."
+              : "No hay productos disponibles en este momento."}
         </Text>
         {searchTerm && (
           <Button 
