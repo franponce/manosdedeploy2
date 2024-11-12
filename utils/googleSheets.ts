@@ -1,6 +1,4 @@
 import { Category, Product } from '../product/types';
-import { google } from 'googleapis';
-import { formatDateToString, parseStringToDate } from './dates';
 
 let googleSheetsApi: any;
 
@@ -34,7 +32,7 @@ async function getAuthClient() {
 if (typeof window === 'undefined') {
   // Constantes del servidor
   const SPREADSHEET_ID = process.env.GOOGLE_SHEET_ID;
-  const PRODUCT_RANGE = 'La Libre Web - Catálogo online rev 2021 - products!A2:I';
+  const PRODUCT_RANGE = 'La Libre Web - Catálogo online rev 2021 - products!A2:H';
   const CATEGORY_RANGE = 'Categories!A2:B';
   const PRODUCT_LIMIT = 30;
 
@@ -101,70 +99,11 @@ if (typeof window === 'undefined') {
     }
   };
 
-  const formatProduct = (row: any[]): Product => {
-    // Convertir la fecha de publicación programada a string si existe
-    const scheduledDate = row[10] ? row[10].toString() : null;
-
-    return {
-      id: row[0],
-      title: row[1],
-      description: row[2],
-      price: Number(row[3]),
-      image: row[4],
-      categoryId: row[5],
-      createdAt: row[6],
-      updatedAt: row[7],
-      isVisible: row[8] === 'TRUE',
-      isScheduled: row[9] === 'TRUE',
-      scheduledPublishDate: scheduledDate,
-      currency: row[11] || 'ARS'
-    };
-  };
-
   googleSheetsApi = {
-    getProducts: async (forStore: boolean = false): Promise<Product[]> => {
+    getProducts: async (): Promise<Product[]> => {
       try {
-        const auth = await getAuthClient();
-        const sheets = google.sheets({ version: 'v4', auth });
+        await checkAndUpdateScheduledProducts();
 
-        const response = await sheets.spreadsheets.values.get({
-          spreadsheetId: SPREADSHEET_ID,
-          range: PRODUCT_RANGE,
-        });
-
-        const rows = response.data.values;
-        if (!rows) return [];
-
-        const products = rows.map(formatProduct);
-
-        // Si es para la tienda, filtramos los productos
-        if (forStore) {
-          return products.filter(product => {
-            // Producto debe estar visible
-            if (!product.isVisible) return false;
-
-            // Si está programado, verificar la fecha
-            if (product.isScheduled && product.scheduledPublishDate) {
-              const publishDate = new Date(product.scheduledPublishDate);
-              const now = new Date();
-              // Solo mostrar si la fecha programada ya pasó
-              return publishDate <= now;
-            }
-
-            // Si no está programado y es visible, mostrarlo
-            return true;
-          });
-        }
-
-        return products;
-      } catch (error) {
-        console.error('Error fetching products:', error);
-        throw error;
-      }
-    },
-
-    updateProduct: async (product: Product): Promise<Product> => {
-      try {
         const auth = await getAuthClient();
         const { google } = await import('googleapis');
         const sheets = google.sheets({ version: 'v4', auth });
@@ -175,76 +114,93 @@ if (typeof window === 'undefined') {
         });
 
         const rows = response.data.values;
-        if (!rows) throw new Error('No products found');
+        if (!rows || rows.length === 0) {
+          return [];
+        }
 
-        const rowIndex = rows.findIndex(row => row[0] === product.id);
-        if (rowIndex === -1) throw new Error('Product not found');
+        return rows
+          .map((row: any[]) => ({
+            id: row[0],
+            title: row[1],
+            description: row[2],
+            currency: 'USD',
+            image: row[3],
+            price: parseFloat(row[4]) || 0,
+            scheduledPublishDate: row[5] ? new Date(row[5].replace(' ', 'T')) : null,
+            isScheduled: row[6] === 'TRUE',
+            categoryId: row[7] || '',
+          }))
+          .filter((product) => product.title && product.title.trim() !== '');
+      } catch (error) {
+        console.error('Error fetching products from Google Sheets:', error);
+        throw error;
+      }
+    },
 
-        // La fecha programada ya viene como string desde el producto
+    updateProduct: async (product: Product): Promise<void> => {
+      try {
+        const auth = await getAuthClient();
+        const { google } = await import('googleapis');
+        const sheets = google.sheets({ version: 'v4', auth });
+
         const values = [
           [
             product.id,
             product.title,
             product.description,
-            product.price.toString(),
             product.image,
-            product.categoryId || '',
-            rows[rowIndex][6], // mantener createdAt original
-            new Date().toISOString(), // actualizar updatedAt
-            product.isVisible ? 'TRUE' : 'FALSE',
+            product.price.toString(),
+            product.scheduledPublishDate ? formatLocalDateTime(product.scheduledPublishDate) : '',
             product.isScheduled ? 'TRUE' : 'FALSE',
-            product.scheduledPublishDate || '', // ya es string o null
-            product.currency || 'ARS'
-          ]
+            product.categoryId
+          ],
         ];
 
         await sheets.spreadsheets.values.update({
           spreadsheetId: SPREADSHEET_ID,
-          range: `La Libre Web - Catálogo online rev 2021 - products!A${rowIndex + 2}:L${rowIndex + 2}`,
-          valueInputOption: 'RAW',
+          range: `La Libre Web - Catálogo online rev 2021 - products!A${parseInt(product.id) + 1}:H${parseInt(product.id) + 1}`,
+          valueInputOption: 'USER_ENTERED',
           requestBody: { values },
         });
-
-        return product;
       } catch (error) {
-        console.error('Error updating product:', error);
+        console.error('Error updating product in Google Sheets:', error);
         throw error;
       }
     },
 
-    createProduct: async (product: Product): Promise<Product> => {
+    createProduct: async (product: Product): Promise<string> => {
       try {
         const auth = await getAuthClient();
         const { google } = await import('googleapis');
         const sheets = google.sheets({ version: 'v4', auth });
 
+        const currentProducts = await googleSheetsApi.getProducts();
+        const newId = (Math.max(...currentProducts.map((p: Product) => parseInt(p.id)), 0) + 1).toString();
+
         const values = [
           [
-            product.id,
+            newId,
             product.title,
             product.description,
-            product.price.toString(),
             product.image,
-            product.categoryId || '',
-            new Date().toISOString(), // createdAt
-            new Date().toISOString(), // updatedAt
-            product.isVisible ? 'TRUE' : 'FALSE',
+            product.price.toString(),
+            product.scheduledPublishDate ? formatLocalDateTime(product.scheduledPublishDate) : '',
             product.isScheduled ? 'TRUE' : 'FALSE',
-            product.scheduledPublishDate || '', // ya es string o null
-            product.currency || 'ARS'
+            product.categoryId || ''
           ]
         ];
 
         await sheets.spreadsheets.values.append({
           spreadsheetId: SPREADSHEET_ID,
           range: PRODUCT_RANGE,
-          valueInputOption: 'RAW',
+          valueInputOption: 'USER_ENTERED',
+          insertDataOption: 'INSERT_ROWS',
           requestBody: { values },
         });
 
-        return product;
+        return newId;
       } catch (error) {
-        console.error('Error creating product:', error);
+        console.error('Error in createProduct:', error);
         throw error;
       }
     },
@@ -488,39 +444,6 @@ if (typeof window === 'undefined') {
       const products = await googleSheetsApi.getProducts();
       return products.length;
     },
-
-    updateProductVisibility: async (id: string, isVisible: boolean) => {
-      const { google } = await import('googleapis');
-      const auth = await getAuthClient();
-      const sheets = google.sheets({ version: 'v4', auth });
-      
-      try {
-        const response = await sheets.spreadsheets.values.get({
-          spreadsheetId: SPREADSHEET_ID,
-          range: PRODUCT_RANGE,
-        });
-
-        const rows = response.data.values;
-        if (!rows) throw new Error('No se encontraron productos');
-
-        const rowIndex = rows.findIndex(row => row[0] === id);
-        if (rowIndex === -1) throw new Error('Producto no encontrado');
-
-        await sheets.spreadsheets.values.update({
-          spreadsheetId: SPREADSHEET_ID,
-          range: `La Libre Web - Catálogo online rev 2021 - products!I${rowIndex + 2}`,
-          valueInputOption: 'RAW',
-          requestBody: {
-            values: [[isVisible ? 'TRUE' : 'FALSE']]
-          }
-        });
-
-        return { success: true };
-      } catch (error) {
-        console.error('Error updating product visibility:', error);
-        throw error;
-      }
-    },
   };
 } else {
   googleSheetsApi = {
@@ -585,15 +508,6 @@ if (typeof window === 'undefined') {
       const products = await googleSheetsApi.getProducts();
       return products.length;
     },
-    updateProductVisibility: async (id: string, isVisible: boolean) => {
-      const response = await fetch(`/api/products/${id}/visibility`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isVisible }),
-      });
-      if (!response.ok) throw new Error('Failed to update product visibility');
-      return response.json();
-    },
   };
 }
 
@@ -607,5 +521,4 @@ export const {
   createCategory,
   deleteCategory,
   updateCategory,
-  updateProductVisibility,
 } = googleSheetsApi;
