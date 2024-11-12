@@ -110,7 +110,7 @@ if (typeof window === 'undefined') {
 
         const response = await sheets.spreadsheets.values.get({
           spreadsheetId: SPREADSHEET_ID,
-          range: PRODUCT_RANGE,
+          range: 'La Libre Web - Catálogo online rev 2021 - products!A2:I',
         });
 
         const rows = response.data.values;
@@ -129,6 +129,7 @@ if (typeof window === 'undefined') {
             scheduledPublishDate: row[5] ? new Date(row[5].replace(' ', 'T')) : null,
             isScheduled: row[6] === 'TRUE',
             categoryId: row[7] || '',
+            isVisible: row[8] === undefined ? true : row[8] === 'TRUE',
           }))
           .filter((product) => product.title && product.title.trim() !== '');
       } catch (error) {
@@ -186,7 +187,8 @@ if (typeof window === 'undefined') {
             product.price.toString(),
             product.scheduledPublishDate ? formatLocalDateTime(product.scheduledPublishDate) : '',
             product.isScheduled ? 'TRUE' : 'FALSE',
-            product.categoryId || ''
+            product.categoryId || '',
+            'TRUE'
           ]
         ];
 

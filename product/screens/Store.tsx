@@ -89,17 +89,25 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
 
   React.useEffect(() => {
     if (products) {
-      let filteredProducts = products
-        .filter(product => 
-          product.isVisible === true && 
-          product.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
-          (!selectedCategory || product.categoryId === selectedCategory)
-        );
+      let filteredProducts = products.filter(product =>
+        product && 
+        product.id && 
+        product.title && 
+        product.image && 
+        product.price && 
+        !product.isScheduled &&
+        product.isVisible &&
+        product.title.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+
+      if (selectedCategory) {
+        filteredProducts = filteredProducts.filter(product => product.categoryId === selectedCategory);
+      }
 
       setDisplayedProducts(filteredProducts.slice(0, page * PRODUCTS_PER_PAGE));
       setHasMore(page * PRODUCTS_PER_PAGE < filteredProducts.length);
     }
-  }, [products, searchTerm, selectedCategory, page]);
+  }, [products, page, searchTerm, selectedCategory]);
 
   React.useEffect(() => {
     const lastViewedProductId = sessionStorage.getItem('lastViewedProductId');
@@ -226,16 +234,13 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
             }}
           >
             {Array.from({ length: 6 }).map((_, index) => (
-              <ProductCard
-                key={`skeleton-${index}`}
-                product={{} as Product}
-                onAdd={() => {}}
-                isLoading={true}
-                onEdit={() => {}}
-                onDelete={() => {}}
-                onVisibilityToggle={() => {}}
-                isAdminView={false}
-              />
+              <ProductCard key={index} product={{} as Product} onAdd={() => { } } isLoading={true} onEdit={function (product: Product): void {
+                throw new Error("Function not implemented.");
+              } } onDelete={function (id: string): void {
+                throw new Error("Function not implemented.");
+              } } onVisibilityToggle={function (id: string, isVisible: boolean): void {
+                throw new Error("Function not implemented.");
+              } } />
             ))}
           </Grid>
         ) : displayedProducts.length ? (
@@ -246,20 +251,22 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
               sm: "repeat(auto-fill, minmax(280px, 1fr))",
             }}
           >
-            {displayedProducts.map((product) => (
+            {displayedProducts.map((product, index) => (
               <Box
-                key={`product-${product.id}`}
+                key={product.id}
+                ref={index === displayedProducts.length - 1 ? lastProductElementRef : null}
                 id={`product-${product.id}`}
               >
                 <ProductCard
                   product={product}
                   onAdd={(product) => handleEditCart(product, "increment")}
-                  isLoading={false}
-                  onEdit={() => {}}
-                  onDelete={() => {}}
-                  onVisibilityToggle={() => {}}
-                  isAdminView={false}
-                />
+                  isLoading={false} onEdit={function (product: Product): void {
+                    throw new Error("Function not implemented.");
+                  } } onDelete={function (id: string): void {
+                    throw new Error("Function not implemented.");
+                  } } onVisibilityToggle={function (id: string, isVisible: boolean): void {
+                    throw new Error("Function not implemented.");
+                  } }                />
               </Box>
             ))}
           </Grid>
