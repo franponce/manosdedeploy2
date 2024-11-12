@@ -4,19 +4,49 @@ import {
   FormControl,
   Tooltip,
   HStack,
-  Icon
+  Icon,
+  useToast,
 } from '@chakra-ui/react';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { updateProductVisibility } from '../../utils/googleSheets';
+import { mutate } from 'swr';
+import { SWR_KEYS } from '../constants';
 
 interface VisibilityToggleProps {
   isVisible: boolean;
-  onChange: () => void;
+  productId: string;
 }
 
 export const VisibilityToggle: React.FC<VisibilityToggleProps> = ({ 
   isVisible, 
-  onChange 
+  productId 
 }) => {
+  const toast = useToast();
+  const [isUpdating, setIsUpdating] = React.useState(false);
+
+  const handleToggle = async () => {
+    setIsUpdating(true);
+    try {
+      await updateProductVisibility(productId, !isVisible);
+      // Revalidar los datos inmediatamente
+      await mutate(SWR_KEYS.PRODUCTS);
+      
+      toast({
+        title: "Visibilidad actualizada",
+        status: "success",
+        duration: 2000,
+      });
+    } catch (error) {
+      toast({
+        title: "Error al actualizar visibilidad",
+        status: "error",
+        duration: 3000,
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   return (
     <FormControl display="flex" alignItems="center">
       <HStack spacing={2}>
@@ -28,9 +58,10 @@ export const VisibilityToggle: React.FC<VisibilityToggleProps> = ({
         </Tooltip>
         <Switch
           isChecked={isVisible}
-          onChange={onChange}
+          onChange={handleToggle}
           colorScheme="green"
           size="md"
+          isDisabled={isUpdating}
         />
       </HStack>
     </FormControl>

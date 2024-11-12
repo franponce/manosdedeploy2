@@ -129,7 +129,7 @@ if (typeof window === 'undefined') {
             scheduledPublishDate: row[5] ? new Date(row[5].replace(' ', 'T')) : null,
             isScheduled: row[6] === 'TRUE',
             categoryId: row[7] || '',
-            isVisible: row[8] === undefined ? true : row[8] === 'TRUE',
+            isVisible: row[8] ? row[8].toUpperCase() === 'TRUE' : true,
           }))
           .filter((product) => product.title && product.title.trim() !== '');
       } catch (error) {

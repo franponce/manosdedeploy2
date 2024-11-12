@@ -24,6 +24,7 @@ import { editCart } from "../selectors";
 import { parseCurrency } from "../../utils/currency";
 import useSWR, { mutate } from 'swr';
 import { useCart } from '../../hooks/useCart';
+import { SWR_KEYS } from '../constants';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -45,14 +46,22 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
   const [displayedProducts, setDisplayedProducts] = React.useState<Product[]>([]);
   const [hasMore, setHasMore] = React.useState(true);
   const observer = React.useRef<IntersectionObserver | null>(null);
-  const { data: products, error, isLoading } = useSWR<Product[]>('/api/products', fetcher, {
-    fallbackData: initialProducts,
-    refreshInterval: 60000, // Actualizar cada minuto
-  });
-  const { data: categories } = useSWR<Category[]>('/api/categories', fetcher, {
-    fallbackData: initialCategories,
-    refreshInterval: 60000,
-  });
+  const { data: products, error, isLoading } = useSWR<Product[]>(
+    SWR_KEYS.PRODUCTS, 
+    fetcher, 
+    {
+      fallbackData: initialProducts,
+      refreshInterval: 60000, // Actualizar cada minuto
+    }
+  );
+  const { data: categories } = useSWR<Category[]>(
+    SWR_KEYS.CATEGORIES, 
+    fetcher, 
+    {
+      fallbackData: initialCategories,
+      refreshInterval: 60000,
+    }
+  );
   const [searchTerm, setSearchTerm] = React.useState("");
   const [selectedCategory, setSelectedCategory] = React.useState("");
 
