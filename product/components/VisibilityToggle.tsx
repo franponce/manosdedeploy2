@@ -27,8 +27,18 @@ export const VisibilityToggle: React.FC<VisibilityToggleProps> = ({
   const handleToggle = async () => {
     setIsUpdating(true);
     try {
-      await updateProductVisibility(productId, !isVisible);
-      await mutate(SWR_KEYS.PRODUCTS); // Revalidar datos después de actualizar
+      const response = await updateProductVisibility(productId, !isVisible);
+      
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      await mutate(
+        SWR_KEYS.PRODUCTS,
+        async () => {
+          const res = await fetch(SWR_KEYS.PRODUCTS);
+          return res.json();
+        },
+        { revalidate: true }
+      );
       
       toast({
         title: isVisible ? "Producto ocultado" : "Producto visible",
@@ -36,8 +46,10 @@ export const VisibilityToggle: React.FC<VisibilityToggleProps> = ({
         duration: 2000,
       });
     } catch (error) {
+      console.error('Error toggling visibility:', error);
       toast({
         title: "Error al cambiar visibilidad",
+        description: "Por favor, intenta nuevamente",
         status: "error",
         duration: 3000,
       });
