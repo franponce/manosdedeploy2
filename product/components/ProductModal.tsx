@@ -29,6 +29,7 @@ import {
   InputRightElement,
   HStack,
   Spinner,
+  Switch,
 } from "@chakra-ui/react";
 import { TimeIcon, AddIcon } from "@chakra-ui/icons";
 import imageCompression from "browser-image-compression";
@@ -62,7 +63,8 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     currency: "ARS",
     isScheduled: false,
     scheduledPublishDate: null,
-    categoryId: ""
+    categoryId: "",
+    isVisible: true
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const toast = useToast();
@@ -105,7 +107,8 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
         currency: "ARS",
         isScheduled: false,
         scheduledPublishDate: null,
-        categoryId: ""
+        categoryId: "",
+        isVisible: true
       });
       setImagePreview(null);
       setDescription('');
@@ -493,6 +496,19 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                 </Box>
               </FormControl>
             </Collapse>
+            <FormControl display="flex" alignItems="center">
+              <FormLabel htmlFor="isVisible" mb="0">
+                Visible en tienda
+              </FormLabel>
+              <Switch
+                id="isVisible"
+                isChecked={currentProduct.isVisible}
+                onChange={(e) => setCurrentProduct(prev => ({
+                  ...prev,
+                  isVisible: e.target.checked
+                }))}
+              />
+            </FormControl>
           </VStack>
         </ModalBody>
         <ModalFooter>

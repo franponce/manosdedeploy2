@@ -90,13 +90,9 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
   React.useEffect(() => {
     if (products) {
       let filteredProducts = products.filter(product =>
-        product && product.id && product.title && product.image && product.price && !product.isScheduled &&
-        product.title.toLowerCase().includes(searchTerm.toLowerCase())
+        product.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        (!selectedCategory || product.categoryId === selectedCategory)
       );
-
-      if (selectedCategory) {
-        filteredProducts = filteredProducts.filter(product => product.categoryId === selectedCategory);
-      }
 
       setDisplayedProducts(filteredProducts.slice(0, page * PRODUCTS_PER_PAGE));
       setHasMore(page * PRODUCTS_PER_PAGE < filteredProducts.length);
@@ -189,14 +185,6 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
       );
     }
   };
-
-  const filteredProducts = React.useMemo(() => {
-    return products?.filter(product => 
-      product.isVisible && 
-      product.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      (!selectedCategory || product.categoryId === selectedCategory)
-    ) || [];
-  }, [products, searchTerm, selectedCategory]);
 
   if (error) return <div>Failed to load products</div>;
 
