@@ -91,7 +91,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
     if (products) {
       let filteredProducts = products
         .filter(product => 
-          product.isVisible && 
+          product.isVisible === true && 
           product.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
           (!selectedCategory || product.categoryId === selectedCategory)
         );
