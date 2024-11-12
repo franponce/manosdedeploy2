@@ -1,3 +1,4 @@
+import { mutate } from 'swr';
 import { Category, Product } from '../product/types';
 
 let googleSheetsApi: any;
@@ -140,32 +141,47 @@ if (typeof window === 'undefined') {
 
     updateProduct: async (product: Product): Promise<void> => {
       try {
-        const auth = await getAuthClient();
-        const { google } = await import('googleapis');
-        const sheets = google.sheets({ version: 'v4', auth });
+        // 1. Primero verificamos si el producto existe
+        const response = await fetch(`/api/products/${product.id}`);
+        if (!response.ok) {
+          throw new Error('Producto no encontrado');
+        }
 
-        const values = [
-          [
-            product.id,
-            product.title,
-            product.description,
-            product.image,
-            product.price.toString(),
-            product.scheduledPublishDate ? formatLocalDateTime(product.scheduledPublishDate) : '',
-            product.isScheduled ? 'TRUE' : 'FALSE',
-            product.categoryId
-          ],
-        ];
-
-        await sheets.spreadsheets.values.update({
-          spreadsheetId: SPREADSHEET_ID,
-          range: `La Libre Web - Catálogo online rev 2021 - products!A${parseInt(product.id) + 1}:H${parseInt(product.id) + 1}`,
-          valueInputOption: 'USER_ENTERED',
-          requestBody: { values },
+        // 2. Realizamos la actualización con retry y timeout
+        const updateResponse = await fetch(`/api/products/${product.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(product),
+          // Agregamos signal para manejar el timeout
+          signal: AbortSignal.timeout(30000), // 30 segundos
         });
+
+        if (!updateResponse.ok) {
+          throw new Error('Error al actualizar producto');
+        }
+
+        // 3. Verificamos que la actualización fue exitosa
+        const verifyResponse = await fetch(`/api/products/${product.id}`);
+        if (!verifyResponse.ok) {
+          throw new Error('Error al verificar la actualización');
+        }
+        // 4. Invalidamos la caché de SWR
+        await mutate<Product[]>(
+          '/api/products',
+          async (currentData: Product[] | undefined) => {
+            if (!currentData) return [];
+            return currentData.map(p =>
+              p.id === product.id ? { ...product } : p
+            );
+          },
+          false // No revalidate immediately
+        );
+
       } catch (error) {
-        console.error('Error updating product in Google Sheets:', error);
-        throw error;
+        console.error('Error en updateProduct:', error);
+        throw new Error('Error al actualizar producto');
       }
     },
 

@@ -1,29 +1,90 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
-import { getProducts } from '../../../utils/googleSheets';
+import { NextApiRequest, NextApiResponse } from 'next';
+import { google } from 'googleapis';
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  const { id } = req.query;
-
-  if (!id || Array.isArray(id)) {
-    return res.status(400).json({ message: 'ID inválido' });
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (!['GET', 'PUT'].includes(req.method || '')) {
+    return res.status(405).json({ message: 'Method not allowed' });
   }
 
   try {
-    const products = await getProducts();
-    const product = products.find((p: any) => p.id === id);
+    const { id } = req.query;
+    
+    const auth = new google.auth.GoogleAuth({
+      credentials: {
+        client_email: process.env.GOOGLE_CLIENT_EMAIL,
+        private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+      },
+      scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+    });
 
-    if (!product) {
-      return res.status(404).json({ message: 'Producto no encontrado' });
+    const sheets = google.sheets({ version: 'v4', auth });
+
+    // Obtener datos actuales
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: process.env.GOOGLE_SHEET_ID,
+      range: 'La Libre Web - Catálogo online rev 2021 - products!A:I',
+    });
+
+    const rows = response.data.values || [];
+    const productIndex = rows.findIndex(row => row[0] === id);
+
+    if (productIndex === -1) {
+      return res.status(404).json({ message: 'Product not found' });
     }
+
+    if (req.method === 'PUT') {
+      const product = req.body;
+      
+      // Actualizar la fila existente
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: process.env.GOOGLE_SHEET_ID,
+        range: `La Libre Web - Catálogo online rev 2021 - products!A${productIndex + 2}:I${productIndex + 2}`,
+        valueInputOption: 'RAW',
+        requestBody: {
+          values: [[
+            product.id,
+            product.title,
+            product.description,
+            product.image,
+            product.price.toString(),
+            product.scheduledPublishDate || '',
+            product.isScheduled ? 'TRUE' : 'FALSE',
+            product.categoryId || '',
+            product.isVisible ? 'TRUE' : 'FALSE'
+          ]]
+        }
+      });
+
+      // Verificar la actualización
+      const verifyResponse = await sheets.spreadsheets.values.get({
+        spreadsheetId: process.env.GOOGLE_SHEET_ID,
+        range: `La Libre Web - Catálogo online rev 2021 - products!A${productIndex + 2}:I${productIndex + 2}`,
+      });
+
+      if (!verifyResponse.data.values?.[0]) {
+        throw new Error('Failed to verify update');
+      }
+
+      return res.status(200).json({ message: 'Product updated successfully' });
+    }
+
+    // GET request
+    const productData = rows[productIndex];
+    const product = {
+      id: productData[0],
+      title: productData[1],
+      description: productData[2],
+      image: productData[3],
+      price: parseFloat(productData[4]) || 0,
+      scheduledPublishDate: productData[5] || null,
+      isScheduled: productData[6] === 'TRUE',
+      categoryId: productData[7] || '',
+      isVisible: productData[8] ? productData[8].toUpperCase() === 'TRUE' : true,
+    };
 
     return res.status(200).json(product);
   } catch (error) {
-    console.error('Error en API:', error);
-    return res.status(500).json({ 
-      message: error instanceof Error ? error.message : 'Error interno del servidor' 
-    });
+    console.error('Error handling request:', error);
+    return res.status(500).json({ message: 'Internal server error' });
   }
 } 
