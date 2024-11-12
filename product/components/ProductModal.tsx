@@ -41,6 +41,7 @@ import 'react-quill/dist/quill.snow.css';
 import { createCategory } from "../../utils/googleSheets";
 import { CATEGORY_CONSTANTS } from '../../utils/constants';
 import { useCategories } from '@/hooks/useCategories';
+import { formatDateToString, parseStringToDate } from '@/utils/dates';
 
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 
@@ -51,18 +52,18 @@ interface ProductModalProps {
   product: Product | null;
   isLoading: boolean;
 }
-
 const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, product, isLoading: submitLoading }) => {
   const [currentProduct, setCurrentProduct] = useState<Product>({
     id: "",
     title: "",
-    description: "",
+    description: "", 
     image: "",
     price: 0,
     currency: "ARS",
     isScheduled: false,
     scheduledPublishDate: null,
-    categoryId: ""
+    categoryId: "",
+    isVisible: true 
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const toast = useToast();
@@ -105,7 +106,8 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
         currency: "ARS",
         isScheduled: false,
         scheduledPublishDate: null,
-        categoryId: ""
+        categoryId: "",
+        isVisible: true
       });
       setImagePreview(null);
       setDescription('');
@@ -183,36 +185,13 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     e.preventDefault();
     if (!currentProduct) return;
 
-    const price = parseFloat(currentProduct.price.toString());
-    if (isNaN(price) || price <= 0) {
-      toast({
-        title: "Error",
-        description: "Por favor, ingrese un precio válido mayor que 0.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
-    if (isScheduleOpen && !scheduledDate) {
-      toast({
-        title: "Error",
-        description: "Por favor, seleccione una fecha y hora para la publicación programada.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
     try {
       const productToSubmit: Product = {
         ...currentProduct,
         description: description,
-        price,
+        price: parseFloat(currentProduct.price.toString()),
         isScheduled: isScheduleOpen,
-        scheduledPublishDate: isScheduleOpen && scheduledDate ? scheduledDate : null,
+        scheduledPublishDate: isScheduleOpen ? formatDateToString(scheduledDate) : null,
       };
 
       await onSubmit(productToSubmit);
@@ -238,8 +217,8 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     setScheduledDate(date);
     setCurrentProduct(prev => ({
       ...prev,
-      scheduledPublishDate: date,
-      isScheduled: date !== null,
+      scheduledPublishDate: formatDateToString(date),
+      isScheduled: !!date
     }));
   };
 

@@ -90,12 +90,19 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
   React.useEffect(() => {
     if (products) {
       let filteredProducts = products.filter(product =>
-        product && product.id && product.title && product.image && product.price && !product.isScheduled &&
+        product && 
+        product.id && 
+        product.title && 
+        product.image && 
+        product.price && 
+        product.isVisible &&
         product.title.toLowerCase().includes(searchTerm.toLowerCase())
       );
 
       if (selectedCategory) {
-        filteredProducts = filteredProducts.filter(product => product.categoryId === selectedCategory);
+        filteredProducts = filteredProducts.filter(product => 
+          product.categoryId === selectedCategory
+        );
       }
 
       setDisplayedProducts(filteredProducts.slice(0, page * PRODUCTS_PER_PAGE));

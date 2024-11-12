@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getProducts, createProduct, updateProduct, deleteProduct } from '../../utils/googleSheets';
 import { Product } from '../../product/types';
+import { formatDateToString } from '@/utils/dates';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   switch (req.method) {
@@ -17,10 +18,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     case 'POST':
       try {
         const productData = req.body as Product;
-        if (productData.scheduledPublishDate) {
-          productData.scheduledPublishDate = new Date(productData.scheduledPublishDate);
-        }
-        const newProduct = await createProduct(productData);
+        const newProduct = await createProduct({
+          ...productData,
+          scheduledPublishDate: productData.scheduledPublishDate || null
+        });
         res.status(201).json(newProduct);
       } catch (error) {
         console.error('Error creating product:', error);
