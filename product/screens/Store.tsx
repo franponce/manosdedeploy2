@@ -89,19 +89,30 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
 
   React.useEffect(() => {
     if (products) {
-      let filteredProducts = products.filter(product =>
-        product && 
-        product.id && 
-        product.title && 
-        product.image && 
-        product.price && 
-        !product.isScheduled &&
-        product.isVisible &&
-        product.title.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      let filteredProducts = products.filter(product => {
+        const isValidProduct = Boolean(
+          product?.id &&
+          product?.title &&
+          product?.image &&
+          product?.price &&
+          !product?.isScheduled
+        );
+
+        const isVisibleProduct = product?.isVisible !== false; // Si isVisible es undefined, lo consideramos como true
+
+        return isValidProduct && isVisibleProduct;
+      });
+
+      if (searchTerm) {
+        filteredProducts = filteredProducts.filter(product =>
+          product.title.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      }
 
       if (selectedCategory) {
-        filteredProducts = filteredProducts.filter(product => product.categoryId === selectedCategory);
+        filteredProducts = filteredProducts.filter(product => 
+          product.categoryId === selectedCategory
+        );
       }
 
       setDisplayedProducts(filteredProducts.slice(0, page * PRODUCTS_PER_PAGE));
@@ -156,44 +167,46 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
             📦
           </Box>
           <Heading as="h3" size="md" textAlign="center" mb={2}>
-            Aún no hay productos en esta categoría
+            No hay productos disponibles en esta categoría
           </Heading>
           <Text color="gray.600" textAlign="center" maxW="md">
-            Estamos trabajando para agregar nuevos productos. ¡Te invitamos a seguir navegando!
+            Por favor, intenta con otra categoría o vuelve más tarde.
           </Text>
-        </Center>
-      );
-    } else {
-      return (
-        <Center flexDirection="column" p={8} bg="gray.50" borderRadius="lg" boxShadow="sm">
-          <Box 
-            as="span" 
-            fontSize="6xl" 
-            mb={4} 
-            role="img" 
-            aria-label="Buscando"
-            className="thinking-emoji"
-          >
-            🔍
-          </Box>
-          <Heading as="h3" size="md" textAlign="center" mb={2}>
-            No se encontraron productos
-          </Heading>
-          <Text color="gray.600" textAlign="center" maxW="md">
-            que coincidan con tu búsqueda. Intenta con otros términos o categorías.
-          </Text>
-          {searchTerm && (
-            <Button 
-              mt={4} 
-              colorScheme="blue" 
-              onClick={() => setSearchTerm("")}
-            >
-              Limpiar búsqueda
-            </Button>
-          )}
         </Center>
       );
     }
+
+    return (
+      <Center flexDirection="column" p={8} bg="gray.50" borderRadius="lg" boxShadow="sm">
+        <Box 
+          as="span" 
+          fontSize="6xl" 
+          mb={4} 
+          role="img" 
+          aria-label="Buscando"
+          className="thinking-emoji"
+        >
+          🔍
+        </Box>
+        <Heading as="h3" size="md" textAlign="center" mb={2}>
+          No se encontraron productos
+        </Heading>
+        <Text color="gray.600" textAlign="center" maxW="md">
+          {searchTerm 
+            ? "No hay productos que coincidan con tu búsqueda."
+            : "No hay productos disponibles en este momento."}
+        </Text>
+        {searchTerm && (
+          <Button 
+            mt={4} 
+            colorScheme="blue" 
+            onClick={() => setSearchTerm("")}
+          >
+            Limpiar búsqueda
+          </Button>
+        )}
+      </Center>
+    );
   };
 
   if (error) return <div>Failed to load products</div>;
@@ -234,13 +247,27 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
             }}
           >
             {Array.from({ length: 6 }).map((_, index) => (
-              <ProductCard key={index} product={{} as Product} onAdd={() => { } } isLoading={true} onEdit={function (product: Product): void {
-                throw new Error("Function not implemented.");
-              } } onDelete={function (id: string): void {
-                throw new Error("Function not implemented.");
-              } } onVisibilityToggle={function (id: string, isVisible: boolean): void {
-                throw new Error("Function not implemented.");
-              } } />
+              <ProductCard
+                key={`skeleton-${index}`}
+                product={{
+                  id: `skeleton-${index}`,
+                  title: '',
+                  description: '',
+                  image: '',
+                  price: 0,
+                  currency: 'ARS',
+                  isScheduled: false,
+                  scheduledPublishDate: null,
+                  categoryId: '',
+                  isVisible: true
+                }}
+                onAdd={() => {}}
+                isLoading={true}
+                onEdit={() => {}}
+                onDelete={() => {}}
+                onVisibilityToggle={() => {}}
+                isAdminView={false}
+              />
             ))}
           </Grid>
         ) : displayedProducts.length ? (
