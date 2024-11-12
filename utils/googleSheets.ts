@@ -444,6 +444,39 @@ if (typeof window === 'undefined') {
       const products = await googleSheetsApi.getProducts();
       return products.length;
     },
+
+    updateProductVisibility: async (productId: string, isVisible: boolean): Promise<void> => {
+      const auth = await getAuthClient();
+      const { google } = await import('googleapis');
+      const sheets = google.sheets({ version: 'v4', auth });
+
+      try {
+        const response = await sheets.spreadsheets.values.get({
+          spreadsheetId: SPREADSHEET_ID,
+          range: 'Products!A2:H',
+        });
+
+        const rows = response.data.values || [];
+        const rowIndex = rows.findIndex(row => row[0] === productId);
+
+        if (rowIndex === -1) {
+          throw new Error('Producto no encontrado');
+        }
+
+        // Asumiendo que la columna de visibilidad es la H (índice 7)
+        await sheets.spreadsheets.values.update({
+          spreadsheetId: SPREADSHEET_ID,
+          range: `Products!H${rowIndex + 2}`,
+          valueInputOption: 'RAW',
+          requestBody: {
+            values: [[isVisible]]
+          }
+        });
+      } catch (error) {
+        console.error('Error updating product visibility:', error);
+        throw error;
+      }
+    }
   };
 } else {
   googleSheetsApi = {
@@ -521,4 +554,5 @@ export const {
   createCategory,
   deleteCategory,
   updateCategory,
+  updateProductVisibility,
 } = googleSheetsApi;

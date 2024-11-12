@@ -23,7 +23,7 @@ import {
 import { SearchIcon } from "@chakra-ui/icons";
 import { FaTrash } from "react-icons/fa";
 import ProductModal from "./ProductModal";
-import { getProducts, createProduct, updateProduct, deleteProduct, getCategories } from "../../utils/googleSheets";
+import { getProducts, createProduct, updateProduct, deleteProduct, getCategories, updateProductVisibility } from "../../utils/googleSheets";
 import { Product, Category } from "../types";
 import useSWR, { mutate } from 'swr';
 
@@ -203,6 +203,36 @@ const ProductManagement: React.FC<{ onCreateProduct: () => void }> = ({ onCreate
   const truncateText = (text: string, maxLength: number) => {
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength).trim() + '...';
+  };
+
+  const handleVisibilityToggle = async (productId: string, isVisible: boolean) => {
+    try {
+      await updateProductVisibility(productId, isVisible);
+      
+      // Actualizar el estado local optimistamente
+      mutate(
+        products?.map(p => 
+          p.id === productId ? { ...p, isVisible } : p
+        ),
+        false
+      );
+
+      toast({
+        title: "Éxito",
+        description: `Producto ${isVisible ? 'visible' : 'oculto'} en la tienda`,
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar la visibilidad del producto",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
 
   return (

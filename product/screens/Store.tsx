@@ -190,6 +190,14 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
     }
   };
 
+  const filteredProducts = React.useMemo(() => {
+    return products?.filter(product => 
+      product.isVisible && 
+      product.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
+      (!selectedCategory || product.categoryId === selectedCategory)
+    ) || [];
+  }, [products, searchTerm, selectedCategory]);
+
   if (error) return <div>Failed to load products</div>;
 
   return (
@@ -228,7 +236,17 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
             }}
           >
             {Array.from({ length: 6 }).map((_, index) => (
-              <ProductCard key={index} product={{} as Product} onAdd={() => {}} isLoading={true} />
+              <ProductCard
+                key={index}
+                product={{} as Product}
+                onAdd={() => { } }
+                isLoading={true} onEdit={function (product: Product): void {
+                  throw new Error("Function not implemented.");
+                } } onDelete={function (id: string): void {
+                  throw new Error("Function not implemented.");
+                } } onVisibilityToggle={function (id: string, isVisible: boolean): void {
+                  throw new Error("Function not implemented.");
+                } }              />
             ))}
           </Grid>
         ) : displayedProducts.length ? (
@@ -248,8 +266,13 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
                 <ProductCard
                   product={product}
                   onAdd={(product) => handleEditCart(product, "increment")}
-                  isLoading={false}
-                />
+                  isLoading={false} onEdit={function (product: Product): void {
+                    throw new Error("Function not implemented.");
+                  } } onDelete={function (id: string): void {
+                    throw new Error("Function not implemented.");
+                  } } onVisibilityToggle={function (id: string, isVisible: boolean): void {
+                    throw new Error("Function not implemented.");
+                  } }                />
               </Box>
             ))}
           </Grid>
