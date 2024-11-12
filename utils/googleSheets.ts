@@ -145,7 +145,7 @@ if (typeof window === 'undefined') {
         const { google } = await import('googleapis');
         const sheets = google.sheets({ version: 'v4', auth });
 
-        // Primero obtenemos todos los productos para encontrar el índice correcto
+        // Obtener todos los productos para encontrar el índice correcto
         const response = await sheets.spreadsheets.values.get({
           spreadsheetId: SPREADSHEET_ID,
           range: PRODUCT_RANGE,
@@ -155,6 +155,12 @@ if (typeof window === 'undefined') {
         const rowIndex = rows.findIndex(row => row[0] === product.id);
 
         if (rowIndex === -1) {
+          throw new Error('Producto no encontrado');
+        }
+
+        // Calcular la fila real (añadimos 2 porque empezamos desde A2)
+        const actualRow = rowIndex + 2;
+
         const values = [
           [
             product.id,
@@ -166,15 +172,26 @@ if (typeof window === 'undefined') {
             product.isScheduled ? 'TRUE' : 'FALSE',
             product.categoryId,
             product.isVisible ? 'TRUE' : 'FALSE'
-          ],
+          ]
         ];
 
+        // Actualizar la fila
         await sheets.spreadsheets.values.update({
           spreadsheetId: SPREADSHEET_ID,
-          range: `La Libre Web - Catálogo online rev 2021 - products!A${parseInt(product.id) + 1}:I${parseInt(product.id) + 1}`,
+          range: `La Libre Web - Catálogo online rev 2021 - products!A${actualRow}:I${actualRow}`,
           valueInputOption: 'USER_ENTERED',
-          requestBody: { values },
+          requestBody: { values }
         });
+
+        // Verificar la actualización
+        const verifyResponse = await sheets.spreadsheets.values.get({
+          spreadsheetId: SPREADSHEET_ID,
+          range: `La Libre Web - Catálogo online rev 2021 - products!A${actualRow}:I${actualRow}`
+        });
+
+        if (!verifyResponse.data.values?.[0]) {
+          throw new Error('Error al verificar la actualización');
+        }
       } catch (error) {
         console.error('Error updating product in Google Sheets:', error);
         throw error;
