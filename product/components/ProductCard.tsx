@@ -28,7 +28,7 @@ interface Props {
   isAdminView?: boolean;
 }
 
-const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading: cardLoading, onEdit, onDelete, onVisibilityToggle, isAdminView = true }) => {
+const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading: cardLoading, onEdit, onDelete, onVisibilityToggle, isAdminView = false }) => {
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [isTitleExpanded, setIsTitleExpanded] = useState(false);
   const [isMobile] = useMediaQuery("(max-width: 48em)");
@@ -152,18 +152,6 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading: cardLoading, 
         )}
       </AspectRatio>
       <Box p={4}>
-        {isAdminView && (
-          <FormControl display="flex" alignItems="center" mb={4}>
-            <FormLabel htmlFor={`visibility-${product.id}`} mb="0">
-              Visible en tienda
-            </FormLabel>
-            <Switch
-              id={`visibility-${product.id}`}
-              isChecked={product.isVisible}
-              onChange={(e) => onVisibilityToggle(product.id, e.target.checked)}
-            />
-          </FormControl>
-        )}
         <Stack spacing={2}>
           {cardLoading ? (
             <>

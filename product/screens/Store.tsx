@@ -260,13 +260,12 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
                 <ProductCard
                   product={product}
                   onAdd={(product) => handleEditCart(product, "increment")}
-                  isLoading={false} onEdit={function (product: Product): void {
-                    throw new Error("Function not implemented.");
-                  } } onDelete={function (id: string): void {
-                    throw new Error("Function not implemented.");
-                  } } onVisibilityToggle={function (id: string, isVisible: boolean): void {
-                    throw new Error("Function not implemented.");
-                  } }                />
+                  isLoading={false}
+                  onEdit={() => {}}
+                  onDelete={() => {}}
+                  onVisibilityToggle={() => {}}
+                  isAdminView={false}
+                />
               </Box>
             ))}
           </Grid>
