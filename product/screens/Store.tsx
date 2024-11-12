@@ -23,6 +23,7 @@ import CartDrawer from "../components/CartDrawer";
 import { parseCurrency } from "../../utils/currency";
 import { useProducts } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
+import React from "react";
 
 interface StoreScreenProps {
   initialProducts: Product[];
@@ -40,6 +41,31 @@ const StoreScreen: React.FC<StoreScreenProps> = ({
   const [selectedCategory, setSelectedCategory] = useState('');
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [displayedProducts, setDisplayedProducts] = React.useState<Product[]>([]);
+
+  // Efecto para filtrar productos
+  React.useEffect(() => {
+    if (products) {
+      let filteredProducts = products.filter(product =>
+        product && 
+        product.id && 
+        product.title && 
+        product.image && 
+        product.price && 
+        !product.isScheduled &&
+        product.isVisible && // Agregamos esta condición
+        product.title.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+
+      if (selectedCategory) {
+        filteredProducts = filteredProducts.filter(product => 
+          product.categoryId === selectedCategory
+        );
+      }
+
+      setDisplayedProducts(filteredProducts);
+    }
+  }, [products, searchTerm, selectedCategory]);
 
   return (
     <Stack spacing={6}>
