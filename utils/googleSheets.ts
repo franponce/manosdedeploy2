@@ -455,7 +455,7 @@ if (typeof window === 'undefined') {
       try {
         const response = await sheets.spreadsheets.values.get({
           spreadsheetId: SPREADSHEET_ID,
-          range: 'Products!A2:H',
+          range: 'La Libre Web - Catálogo online rev 2021 - products!A2:I',
         });
 
         const rows = response.data.values || [];
@@ -465,13 +465,12 @@ if (typeof window === 'undefined') {
           throw new Error('Producto no encontrado');
         }
 
-        // Asumiendo que la columna de visibilidad es la H (índice 7)
         await sheets.spreadsheets.values.update({
           spreadsheetId: SPREADSHEET_ID,
-          range: `Products!H${rowIndex + 2}`,
+          range: `La Libre Web - Catálogo online rev 2021 - products!I${rowIndex + 2}`,
           valueInputOption: 'RAW',
           requestBody: {
-            values: [[isVisible]]
+            values: [[isVisible.toString().toUpperCase()]]
           }
         });
       } catch (error) {
@@ -542,6 +541,14 @@ if (typeof window === 'undefined') {
     getProductCount: async () => {
       const products = await googleSheetsApi.getProducts();
       return products.length;
+    },
+    updateProductVisibility: async (productId: string, isVisible: boolean) => {
+      const response = await fetch(`/api/products/${productId}/visibility`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isVisible }),
+      });
+      if (!response.ok) throw new Error('Failed to update product visibility');
     },
   };
 }
