@@ -24,58 +24,38 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const sheets = google.sheets({ version: 'v4', auth });
 
-    // 1. Primero obtenemos todos los productos
+    // Obtener todos los productos
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: process.env.GOOGLE_SHEET_ID,
       range: 'La Libre Web - Catálogo online rev 2021 - products!A2:I',
     });
 
     const rows = response.data.values || [];
-    
-    // 2. Encontrar el índice exacto del producto por ID
     const productIndex = rows.findIndex(row => row[0] === id);
 
     if (productIndex === -1) {
       return res.status(404).json({ message: 'Product not found' });
     }
 
-    // 3. Calcular la fila real en la hoja (añadir 2 porque empezamos desde A2)
-    const rowNumber = productIndex + 2;
+    // Obtener la fila actual del producto
+    const currentRow = rows[productIndex];
 
-    // 4. Actualizar solo la columna I para ese producto específico
+    // Actualizar la visibilidad en la fila
+    currentRow[8] = isVisible ? 'TRUE' : 'FALSE';
+
+    // Actualizar toda la fila en el sheet
     await sheets.spreadsheets.values.update({
       spreadsheetId: process.env.GOOGLE_SHEET_ID,
-      range: `La Libre Web - Catálogo online rev 2021 - products!I${rowNumber}`,
+      range: `La Libre Web - Catálogo online rev 2021 - products!A${productIndex + 2}:I${productIndex + 2}`,
       valueInputOption: 'RAW',
       requestBody: {
-        values: [[isVisible ? 'TRUE' : 'FALSE']]
+        values: [currentRow]
       }
     });
 
-    // 5. Verificar que la actualización fue exitosa
-    const verificationResponse = await sheets.spreadsheets.values.get({
-      spreadsheetId: process.env.GOOGLE_SHEET_ID,
-      range: `La Libre Web - Catálogo online rev 2021 - products!I${rowNumber}`,
-    });
-
-    const updatedValue = verificationResponse.data.values?.[0]?.[0];
-    
-    if (updatedValue !== (isVisible ? 'TRUE' : 'FALSE')) {
-      throw new Error('Verification failed: Value was not updated correctly');
-    }
-
-    return res.status(200).json({ 
-      message: 'Visibility updated successfully',
-      productId: id,
-      isVisible: isVisible,
-      rowNumber: rowNumber
-    });
-
+    return res.status(200).json({ message: 'Product updated successfully' });
   } catch (error) {
-    console.error('Error updating product visibility:', error);
-    return res.status(500).json({ 
-      message: 'Internal server error',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    });
+    console.error('Error updating product:', error);
+    return res.status(500).json({ message: 'Internal server error' });
   }
 } 
