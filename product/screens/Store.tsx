@@ -227,16 +227,15 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
           >
             {Array.from({ length: 6 }).map((_, index) => (
               <ProductCard
-                key={index}
+                key={`skeleton-${index}`}
                 product={{} as Product}
-                onAdd={() => { } }
-                isLoading={true} onEdit={function (product: Product): void {
-                  throw new Error("Function not implemented.");
-                } } onDelete={function (id: string): void {
-                  throw new Error("Function not implemented.");
-                } } onVisibilityToggle={function (id: string, isVisible: boolean): void {
-                  throw new Error("Function not implemented.");
-                } }              />
+                onAdd={() => {}}
+                isLoading={true}
+                onEdit={() => {}}
+                onDelete={() => {}}
+                onVisibilityToggle={() => {}}
+                isAdminView={false}
+              />
             ))}
           </Grid>
         ) : displayedProducts.length ? (
@@ -247,10 +246,9 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
               sm: "repeat(auto-fill, minmax(280px, 1fr))",
             }}
           >
-            {displayedProducts.map((product, index) => (
+            {displayedProducts.map((product) => (
               <Box
-                key={product.id}
-                ref={index === displayedProducts.length - 1 ? lastProductElementRef : null}
+                key={`product-${product.id}`}
                 id={`product-${product.id}`}
               >
                 <ProductCard
