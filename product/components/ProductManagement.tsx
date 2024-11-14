@@ -21,10 +21,10 @@ import {
   Tooltip,
 } from "@chakra-ui/react";
 import { SearchIcon } from "@chakra-ui/icons";
-import { FaTrash } from "react-icons/fa";
+import { FaTrash, FaEye, FaEyeSlash } from "react-icons/fa";
 import ProductModal from "./ProductModal";
-import { getProducts, createProduct, updateProduct, deleteProduct, getCategories, updateProductVisibility } from "../../utils/googleSheets";
-import { Product, Category } from "../types";
+import { getProducts, createProduct, updateProduct, deleteProduct } from "../../utils/googleSheets";
+import { Product } from "../types";
 import useSWR, { mutate } from 'swr';
 
 const PRODUCT_LIMIT = 30;
@@ -41,6 +41,8 @@ const ProductManagement: React.FC<{ onCreateProduct: () => void }> = ({ onCreate
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const observer = useRef<IntersectionObserver | null>(null);
+  const toast = useToast();
+
   const lastProductElementRef = useCallback((node: HTMLDivElement | null) => {
     if (isLoading) return;
     if (observer.current) observer.current.disconnect();
@@ -52,23 +54,6 @@ const ProductManagement: React.FC<{ onCreateProduct: () => void }> = ({ onCreate
     if (node) observer.current.observe(node);
   }, [isLoading, hasMore]);
 
-  const toast = useToast();
-
-  const [categories, setCategories] = useState<Category[]>([]);
-
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
-  const fetchCategories = async () => {
-    try {
-      const fetchedCategories = await getCategories();
-      setCategories(fetchedCategories);
-    } catch (error) {
-      console.error("Error fetching categories:", error);
-    }
-  };
-
   const fetchProducts = useCallback(async () => {
     try {
       const fetchedProducts = await getProducts();
@@ -78,7 +63,7 @@ const ProductManagement: React.FC<{ onCreateProduct: () => void }> = ({ onCreate
       console.error("Error fetching products:", error);
       toast({
         title: "Error",
-        description: "Failed to fetch products",
+        description: "No se pudieron cargar los productos",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -106,7 +91,7 @@ const ProductManagement: React.FC<{ onCreateProduct: () => void }> = ({ onCreate
   }, [searchTerm, products]);
 
   useEffect(() => {
-    const PRODUCTS_PER_PAGE = 10; // Definir PRODUCTS_PER_PAGE como una constante
+    const PRODUCTS_PER_PAGE = 10;
     setDisplayedProducts(filteredProducts.slice(0, page * PRODUCTS_PER_PAGE));
     setHasMore(page * PRODUCTS_PER_PAGE < filteredProducts.length);
   }, [filteredProducts, page]);
@@ -132,12 +117,40 @@ const ProductManagement: React.FC<{ onCreateProduct: () => void }> = ({ onCreate
         console.error("Error deleting product:", error);
         toast({
           title: "Error",
-          description: "Failed to delete product",
+          description: "No se pudo eliminar el producto",
           status: "error",
           duration: 3000,
           isClosable: true,
         });
       }
+    }
+  };
+
+  const handleToggleVisibility = async (product: Product) => {
+    try {
+      const updatedProduct = {
+        ...product,
+        isVisible: !product.isVisible
+      };
+      await updateProduct(updatedProduct);
+      await fetchProducts();
+      
+      toast({
+        title: "Visibilidad actualizada",
+        description: `El producto ahora está ${updatedProduct.isVisible ? 'visible' : 'oculto'} en la tienda`,
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error("Error updating product visibility:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar la visibilidad del producto",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
     }
   };
 
@@ -152,11 +165,8 @@ const ProductManagement: React.FC<{ onCreateProduct: () => void }> = ({ onCreate
       setIsModalOpen(false);
       setCurrentProduct(null);
       
-      // Actualizar la caché de SWR con el nuevo producto
-      mutate('/api/products', async (currentData: any) => {
-        const updatedProducts = currentData ? [...currentData, product] : [product];
-        return updatedProducts;
-      }, false);
+      await mutate('/api/products');
+      await fetchProducts();
 
       toast({
         title: "Éxito",
@@ -205,36 +215,6 @@ const ProductManagement: React.FC<{ onCreateProduct: () => void }> = ({ onCreate
     return text.substring(0, maxLength).trim() + '...';
   };
 
-  const handleVisibilityToggle = async (productId: string, isVisible: boolean) => {
-    try {
-      await updateProductVisibility(productId, isVisible);
-      
-      // Actualizar el estado local optimistamente
-      mutate(
-        products?.map(p => 
-          p.id === productId ? { ...p, isVisible } : p
-        ),
-        false
-      );
-
-      toast({
-        title: "Éxito",
-        description: `Producto ${isVisible ? 'visible' : 'oculto'} en la tienda`,
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "No se pudo actualizar la visibilidad del producto",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    }
-  };
-
   return (
     <Box>
       <Flex direction="column" mb={6}>
@@ -272,7 +252,7 @@ const ProductManagement: React.FC<{ onCreateProduct: () => void }> = ({ onCreate
             No se encontraron productos
           </Heading>
           <Text color="gray.600" textAlign="center" maxW="md">
-             que coincidan con tu búsqueda. Intenta con otros términos o crea un nuevo producto.
+            que coincidan con tu búsqueda. Intenta con otros términos o crea un nuevo producto.
           </Text>
         </Center>
       ) : (
@@ -286,17 +266,17 @@ const ProductManagement: React.FC<{ onCreateProduct: () => void }> = ({ onCreate
               overflow="hidden"
               position="relative"
             >
-              {isProductScheduled(product) && (
-                <Badge 
-                  colorScheme="purple" 
-                  position="absolute" 
-                  top="2" 
-                  left="2" 
-                  zIndex="1"
-                >
-                  Producto programado
+              <Flex position="absolute" top="2" left="2" zIndex="1" gap={2}>
+                {isProductScheduled(product) && (
+                  <Badge colorScheme="purple">
+                    Producto programado
+                  </Badge>
+                )}
+                <Badge colorScheme={product.isVisible ? "green" : "red"}>
+                  {product.isVisible ? "Visible" : "Oculto"}
                 </Badge>
-              )}
+              </Flex>
+              
               <AspectRatio ratio={1}>
                 <Image
                   src={product.image}
@@ -359,7 +339,7 @@ const ProductManagement: React.FC<{ onCreateProduct: () => void }> = ({ onCreate
                 <Text fontWeight="bold" mb={4}>
                   ${product.price.toFixed(2)}
                 </Text>
-                <HStack spacing={4}>
+                <HStack spacing={2}>
                   <Button 
                     colorScheme="red" 
                     onClick={() => handleDelete(product.id)}
@@ -367,9 +347,21 @@ const ProductManagement: React.FC<{ onCreateProduct: () => void }> = ({ onCreate
                   >
                     Eliminar
                   </Button>
-                  <Button colorScheme="blue" onClick={() => handleEdit(product)}>
+                  <Button 
+                    colorScheme="blue" 
+                    onClick={() => handleEdit(product)}
+                  >
                     Editar
                   </Button>
+                  <Tooltip label={product.isVisible ? "Ocultar producto" : "Mostrar producto"}>
+                    <Button
+                      colorScheme={product.isVisible ? "green" : "gray"}
+                      onClick={() => handleToggleVisibility(product)}
+                      leftIcon={<Icon as={product.isVisible ? FaEye : FaEyeSlash} />}
+                    >
+                      {product.isVisible ? "Visible" : "Oculto"}
+                    </Button>
+                  </Tooltip>
                 </HStack>
               </Box>
             </Box>

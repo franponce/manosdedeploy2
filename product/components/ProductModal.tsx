@@ -28,7 +28,6 @@ import {
   InputGroup,
   InputRightElement,
   HStack,
-  Spinner,
   Switch,
 } from "@chakra-ui/react";
 import { TimeIcon, AddIcon } from "@chakra-ui/icons";
@@ -39,7 +38,6 @@ import "react-datepicker/dist/react-datepicker.css";
 import { useSiteInfo } from "@/hooks/useSiteInfo";
 import dynamic from 'next/dynamic';
 import 'react-quill/dist/quill.snow.css';
-import { createCategory } from "../../utils/googleSheets";
 import { CATEGORY_CONSTANTS } from '../../utils/constants';
 import { useCategories } from '@/hooks/useCategories';
 
@@ -69,7 +67,6 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const toast = useToast();
   const [scheduledDate, setScheduledDate] = useState<Date | null>(null);
-  const [lastStockUpdate] = useState<string>(new Date().toISOString());
   const { isOpen: isScheduleOpen, onToggle: toggleSchedule } = useDisclosure();
   const [isMobile] = useMediaQuery("(max-width: 48em)");
   const { siteInfo } = useSiteInfo();
@@ -89,7 +86,8 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     if (product) {
       setCurrentProduct({
         ...product,
-        categoryId: product.categoryId || ""
+        categoryId: product.categoryId || "",
+        isVisible: product.isVisible ?? true
       });
       setImagePreview(product.image);
       setDescription(product.description || '');
@@ -140,11 +138,9 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
 
       const compressedFile = await imageCompression(file, options);
       
-      // Crear un canvas para redimensionar la imagen si es necesario
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       
-      // Calcular las nuevas dimensiones manteniendo la proporción
       let newWidth = img.width;
       let newHeight = img.height;
       if (newWidth > TARGET_WIDTH || newHeight > TARGET_HEIGHT) {
@@ -158,7 +154,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
       
       ctx?.drawImage(img, 0, 0, newWidth, newHeight);
       
-      const base64 = canvas.toDataURL('image/jpeg', 0.7); // Ajusta la calidad si es necesario
+      const base64 = canvas.toDataURL('image/jpeg', 0.7);
       
       setImagePreview(base64);
       setCurrentProduct((prev) => ({ ...prev, image: base64 }));
@@ -237,6 +233,10 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     setCurrentProduct(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleVisibilityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCurrentProduct(prev => ({ ...prev, isVisible: e.target.checked }));
+  };
+
   const handleDateChange = (date: Date | null) => {
     setScheduledDate(date);
     setCurrentProduct(prev => ({
@@ -280,10 +280,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
       }
 
       const newCategory = await createCategory(newCategoryName.trim());
-      
-      // Actualizar el estado local y la caché de SWR
       await mutateCategories();
-      
       setCurrentProduct(prev => ({ ...prev, categoryId: newCategory.id }));
       setNewCategoryName("");
       setShowNewCategoryInput(false);
@@ -314,6 +311,17 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
         <ModalCloseButton />
         <ModalBody>
           <VStack spacing={4}>
+            <FormControl display="flex" alignItems="center">
+              <FormLabel htmlFor="isVisible" mb="0">
+                Visible en la tienda
+              </FormLabel>
+              <Switch
+                id="isVisible"
+                isChecked={currentProduct.isVisible}
+                onChange={handleVisibilityChange}
+              />
+            </FormControl>
+
             <FormControl>
               <FormLabel>Título</FormLabel>
               <Input
@@ -326,6 +334,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                 {`${currentProduct.title.length}/${MAX_TITLE_LENGTH}`}
               </Text>
             </FormControl>
+
             <FormControl>
               <FormLabel>Descripción</FormLabel>
               <Box border="1px" borderColor="gray.200" borderRadius="md">
@@ -340,6 +349,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                 {`${description.replace(/<[^>]*>/g, '').length}/${MAX_DESCRIPTION_LENGTH}`}
               </Text>
             </FormControl>
+
             <FormControl>
               <FormLabel>Imagen</FormLabel>
               <Text fontSize="sm" color="gray.600" mb={2}>
@@ -357,6 +367,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                 onChange={handleProductImageUpload}
               />
             </FormControl>
+
             {imagePreview && (
               <Image
                 src={imagePreview}
@@ -365,6 +376,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                 objectFit="contain"
               />
             )}
+
             <FormControl>
               <FormLabel>Precio ({siteInfo?.currency})</FormLabel>
               <Input
@@ -375,6 +387,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                 onChange={handleInputChange}
               />
             </FormControl>
+
             <FormControl>
               <FormLabel>Categoría</FormLabel>
               <VStack align="stretch" spacing={2}>
@@ -442,6 +455,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                 )}
               </VStack>
             </FormControl>
+
             <Button
               leftIcon={<TimeIcon />}
               variant="outline"
@@ -451,6 +465,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
             >
               {isScheduleOpen ? "Cancelar programación" : "Programar publicación"}
             </Button>
+
             <Collapse in={isScheduleOpen} animateOpacity>
               <FormControl>
                 <Center mb={4}>
@@ -496,19 +511,6 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                 </Box>
               </FormControl>
             </Collapse>
-            <FormControl display="flex" alignItems="center">
-              <FormLabel htmlFor="isVisible" mb="0">
-                Visible en tienda
-              </FormLabel>
-              <Switch
-                id="isVisible"
-                isChecked={currentProduct.isVisible}
-                onChange={(e) => setCurrentProduct(prev => ({
-                  ...prev,
-                  isVisible: e.target.checked
-                }))}
-              />
-            </FormControl>
           </VStack>
         </ModalBody>
         <ModalFooter>
