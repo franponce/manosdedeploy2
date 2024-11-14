@@ -215,6 +215,50 @@ const ProductManagement: React.FC<{ onCreateProduct: () => void }> = ({ onCreate
     return text.substring(0, maxLength).trim() + '...';
   };
 
+  const formatScheduledDate = (date: string | null | undefined) => {
+    if (!date) return '';
+    const scheduledDate = new Date(date);
+    return scheduledDate.toLocaleString('es-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const checkAndUpdateScheduledProducts = useCallback(async () => {
+    const now = new Date();
+    const productsToUpdate = products.filter(product => 
+      product.isScheduled && 
+      product.scheduledPublishDate && 
+      new Date(product.scheduledPublishDate) <= now
+    );
+
+    for (const product of productsToUpdate) {
+      try {
+        await updateProduct({
+          ...product,
+          isScheduled: false,
+          scheduledPublishDate: null,
+          isVisible: true // El producto se hace visible automáticamente
+        });
+      } catch (error) {
+        console.error(`Error actualizando producto programado ${product.id}:`, error);
+      }
+    }
+
+    if (productsToUpdate.length > 0) {
+      await fetchProducts(); // Actualizar la lista después de los cambios
+    }
+  }, [products]);
+
+  // Ejecutar la verificación cada minuto
+  useEffect(() => {
+    const interval = setInterval(checkAndUpdateScheduledProducts, 60000);
+    return () => clearInterval(interval);
+  }, [checkAndUpdateScheduledProducts]);
+
   return (
     <Box>
       <Flex direction="column" mb={6}>
@@ -266,11 +310,16 @@ const ProductManagement: React.FC<{ onCreateProduct: () => void }> = ({ onCreate
               overflow="hidden"
               position="relative"
             >
-              <Flex position="absolute" top="2" left="2" zIndex="1" gap={2}>
+              <Flex position="absolute" top="2" left="2" zIndex="1" direction="column" gap={2}>
                 {isProductScheduled(product) && (
-                  <Badge colorScheme="purple">
-                    Producto programado
-                  </Badge>
+                  <>
+                    <Badge colorScheme="purple">
+                      Producto programado
+                    </Badge>
+                    <Badge colorScheme="blue" fontSize="xs">
+                      Se publicará el {product.scheduledPublishDate ? formatScheduledDate(product.scheduledPublishDate.toString()) : ''}
+                    </Badge>
+                  </>
                 )}
                 <Badge colorScheme={product.isVisible ? "green" : "red"}>
                   {product.isVisible ? "Visible" : "Oculto"}

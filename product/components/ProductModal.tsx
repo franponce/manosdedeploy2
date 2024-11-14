@@ -301,6 +301,17 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     }
   };
 
+  const formatScheduleInfo = () => {
+    if (!scheduledDate) return '';
+    return scheduledDate.toLocaleString('es-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl">
       <ModalOverlay />
@@ -469,7 +480,14 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
             <Collapse in={isScheduleOpen} animateOpacity>
               <FormControl>
                 <Center mb={4}>
-                  <Text fontWeight="bold">Fecha y hora de publicación</Text>
+                  <VStack spacing={2}>
+                    <Text fontWeight="bold">Fecha y hora de publicación</Text>
+                    {scheduledDate && (
+                      <Text fontSize="sm" color="blue.600">
+                        Este producto se publicará automáticamente el {formatScheduleInfo()}
+                      </Text>
+                    )}
+                  </VStack>
                 </Center>
                 <Box 
                   border="1px" 
