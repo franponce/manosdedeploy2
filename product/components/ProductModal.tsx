@@ -303,13 +303,18 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
 
   const formatScheduleInfo = () => {
     if (!scheduledDate) return '';
-    return scheduledDate.toLocaleString('es-ES', {
+    
+    const options: Intl.DateTimeFormatOptions = {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
-    });
+      minute: '2-digit',
+      hour12: false,
+      timeZone: 'America/Argentina/Buenos_Aires'
+    };
+
+    return new Intl.DateTimeFormat('es-AR', options).format(scheduledDate);
   };
 
   return (

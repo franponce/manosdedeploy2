@@ -189,8 +189,17 @@ const ProductManagement: React.FC<{ onCreateProduct: () => void }> = ({ onCreate
     }
   };
 
-  const isProductScheduled = (product: Product) => {
-    return product.isScheduled && product.scheduledPublishDate && new Date(product.scheduledPublishDate) > new Date();
+  const isProductScheduled = (product: Product): boolean => {
+    if (!product.isScheduled || !product.scheduledPublishDate) return false;
+    
+    const scheduledDate = new Date(product.scheduledPublishDate);
+    const now = new Date();
+    
+    const argentinaTime = new Date(now.toLocaleString('en-US', {
+      timeZone: 'America/Argentina/Buenos_Aires'
+    }));
+    
+    return scheduledDate > argentinaTime;
   };
 
   const [expandedTitles, setExpandedTitles] = useState<{ [key: string]: boolean }>({});
@@ -217,14 +226,19 @@ const ProductManagement: React.FC<{ onCreateProduct: () => void }> = ({ onCreate
 
   const formatScheduledDate = (date: string | null | undefined) => {
     if (!date) return '';
+    
     const scheduledDate = new Date(date);
-    return scheduledDate.toLocaleString('es-ES', {
+    const options: Intl.DateTimeFormatOptions = {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
-    });
+      minute: '2-digit',
+      hour12: false,
+      timeZone: 'America/Argentina/Buenos_Aires'
+    };
+
+    return new Intl.DateTimeFormat('es-AR', options).format(scheduledDate);
   };
 
   const checkAndUpdateScheduledProducts = useCallback(async () => {
