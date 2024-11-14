@@ -14,6 +14,7 @@ import {
   Spinner,
   Button,
   Icon,
+  useToast,
 } from "@chakra-ui/react";
 import { AppProps } from "next/app";
 import { Global, css } from "@emotion/react";
@@ -26,7 +27,7 @@ import { auth, logoutUser } from '../utils/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { parseCookies, destroyCookie } from 'nookies';
 import HamburgerMenu from '../product/components/HamburgerMenu';
-import { FaArrowLeft, FaEye, FaArrowRight } from 'react-icons/fa';
+import { FaArrowLeft, FaEye, FaArrowRight, FaLink } from 'react-icons/fa';
 import type { NextPage } from 'next';
 import Layout from "@/app/layout";
 
@@ -50,6 +51,7 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
   const [announcementBar, setAnnouncementBar] = React.useState<any>(null);
   const [hasRefreshed, setHasRefreshed] = React.useState(false);
   const [isPreviewMode, setIsPreviewMode] = React.useState(false);
+  const toast = useToast();
 
   const showPreviewBanner = React.useMemo(() => {
     if (typeof window === 'undefined') return false;
@@ -226,6 +228,28 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
   const isLoginPage = router.pathname === '/login';
   const isProductDetail = router.pathname.startsWith('/product/');
   const shouldShowSiteInfo = !isLoginPage && !isProductDetail;
+
+  const handleCopyLink = () => {
+    const url = window.location.origin;
+    navigator.clipboard.writeText(url).then(() => {
+      toast({
+        title: "¡Enlace copiado!",
+        description: "El enlace de la tienda se copió al portapapeles",
+        status: "success",
+        duration: 2000,
+        isClosable: true,
+      });
+    }).catch((err) => {
+      console.error('Error al copiar:', err);
+      toast({
+        title: "Error al copiar",
+        description: "No se pudo copiar el enlace",
+        status: "error",
+        duration: 2000,
+        isClosable: true,
+      });
+    });
+  };
 
   if (isLoading) return <Box display="flex" justifyContent="center" alignItems="center" height="100vh"><Spinner /></Box>;
   if (isError) return <Box>Error al cargar la información del sitio</Box>;
@@ -442,6 +466,22 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
                         </Flex>
                       </Link>
                     ))}
+                    <Flex
+                      as="button"
+                      onClick={handleCopyLink}
+                      alignItems="center"
+                      backgroundColor="#df7777"
+                      borderRadius="full"
+                      color="white"
+                      height={8}
+                      justifyContent="center"
+                      width={8}
+                      cursor="pointer"
+                      _hover={{ opacity: 0.8 }}
+                      transition="opacity 0.2s"
+                    >
+                      <Icon as={FaLink} boxSize="20px" />
+                    </Flex>
                   </Stack>
                 </Stack>
               </Flex>
