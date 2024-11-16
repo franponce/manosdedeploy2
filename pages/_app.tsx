@@ -154,6 +154,7 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
   };
 
   const isAdminRoute = router.pathname === '/admin' || router.pathname === '/store-config';
+  const isStoreConfigRoute = router.pathname === '/store-config';
 
   const getWelcomeMessage = () => {
     if (router.pathname === '/login') {
@@ -417,7 +418,7 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
                 </Box>
               </Box>
               
-              {isAdminRoute ? (
+              {isAdminRoute && !isStoreConfigRoute ? (
                 <SiteInfoCollapsible 
                   siteInfo={{
                     ...siteInfo,
@@ -425,7 +426,7 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
                   }} 
                   onCopyLink={handleCopyLink}
                 />
-              ) : (
+              ) : !isAdminRoute && (
                 <Flex
                   direction="column"
                   align="center"
