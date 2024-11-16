@@ -25,6 +25,8 @@ import { parseCurrency } from "../../utils/currency";
 import useSWR, { mutate } from 'swr';
 import { useCart } from '../../hooks/useCart';
 import { SWR_KEYS } from '../constants';
+import SiteInfoBanner from '../../components/SiteInfoBanner';
+import { useSiteInfo } from '../../hooks/useSiteInfo';
 
 const fetcher = async (url: string) => {
   const response = await fetch(url);
@@ -73,6 +75,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
   );
   const [searchTerm, setSearchTerm] = React.useState("");
   const [selectedCategory, setSelectedCategory] = React.useState("");
+  const { siteInfo } = useSiteInfo();
 
   const lastProductElementRef = React.useCallback((node: HTMLDivElement | null) => {
     if (isLoading) return;
@@ -238,6 +241,8 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
   return (
     <>
       <Stack spacing={6}>
+        <SiteInfoBanner siteInfo={siteInfo} />
+        
         <Flex direction={{ base: "column", md: "row" }} gap={4}>
           <InputGroup>
             <InputLeftElement pointerEvents="none">
