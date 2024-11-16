@@ -75,17 +75,6 @@ const AdminPage: React.FC = () => {
 
   return (
     <Box margin="auto" maxWidth="1200px" padding={4}>
-      <Box display={{ base: 'block', md: 'none' }} mb={4}>
-        <Button
-          colorScheme="gray"
-          onClick={handleStoreSettings}
-          width="full"
-          leftIcon={<Icon as={FaCog} />}
-        >
-          Ir a la configuración
-        </Button>
-      </Box>
-
       <Flex
         direction={{ base: "column", md: "row" }}
         justifyContent="space-between"
