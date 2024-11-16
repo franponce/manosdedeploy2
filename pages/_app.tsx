@@ -259,13 +259,6 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
   if (isError) return <Box>Error al cargar la información del sitio</Box>;
 
   const getLayout = Component.getLayout ?? ((page) => {
-    if (router.pathname === '/admin') {
-      return (
-        <Container maxWidth="container.xl" padding={4}>
-          {page}
-        </Container>
-      );
-    }
     return <Layout>{page}</Layout>;
   });
 
@@ -383,7 +376,15 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
         </Box>
       )}
       {router.pathname === '/admin' ? (
-        getLayout(<Component {...pageProps} />)
+        <Box>
+          <Container maxWidth="container.xl" padding={4}>
+            <Component {...pageProps} />
+          </Container>
+          <Divider marginY={4} />
+          <Text textAlign="center">
+            © Copyright {new Date().getFullYear()}. Hecho con ♥ Simple Ecommerce
+          </Text>
+        </Box>
       ) : (
         <Box pt={isLoginPage || isProductDetail ? "20px" : "70px"}>
           <Container
@@ -392,139 +393,7 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
             maxWidth="container.xl"
             padding={4}
           >
-            {isLoginPage && (
-              <>
-                <Flex alignItems="center" mb={2}>
-                  <NextLink href="/" passHref>
-                    <Heading as="a" size="md" cursor="pointer">
-                      Simple E-commerce
-                    </Heading>
-                  </NextLink>
-                </Flex>
-                <Divider mb={4} borderColor="gray.300" />
-              </>
-            )}
-            {shouldShowSiteInfo && (
-              <>
-                {!isAdminRoute && (
-                  <Box 
-                    mb={6} 
-                    position="relative"
-                  >
-                    <Box
-                      borderRadius="lg"
-                      height={{ md: "300px" }}
-                      overflow="hidden"
-                      width="100%"
-                      position="relative"
-                    >
-                      <Image
-                        src={bannerError ? "/default-banner.jpg" : `${siteInfo?.bannerUrl}?${new Date().getTime()}`}
-                        alt="Header image"
-                        objectFit="cover"
-                        width="100%"
-                        height="100%"
-                        onError={() => setBannerError(true)}
-                        fallback={<Box bg="gray.200" w="100%" h="100%" />}
-                      />
-                    </Box>
-                  </Box>
-                )}
-                
-                {isAdminRoute && !isStoreConfigRoute ? (
-                  <SiteInfoCollapsible 
-                    siteInfo={{
-                      ...siteInfo,
-                      logoUrl
-                    }} 
-                    onCopyLink={handleCopyLink}
-                  />
-                ) : !isAdminRoute && (
-                  <Flex
-                    direction="column"
-                    align="center"
-                    justify="center"
-                    mb={6}
-                  >
-                    <Box
-                      backgroundColor="white"
-                      borderRadius="full"
-                      boxShadow="md"
-                      boxSize="120px"
-                      overflow="hidden"
-                      position="relative"
-                      mb={4}
-                    >
-                      <Image
-                        src={logoUrl}
-                        alt="Avatar"
-                        objectFit="cover"
-                        width="100%"
-                        height="100%"
-                        loading="eager"
-                        fallback={<Box bg="gray.200" w="100%" h="100%" borderRadius="full" />}
-                      />
-                    </Box>
-                    <Stack
-                      align="center"
-                      bg="white"
-                      borderRadius="md"
-                      boxShadow="sm"
-                      p={4}
-                      spacing={3}
-                      textAlign="center"
-                      width="100%"
-                      maxWidth="600px"
-                    >
-                      <Heading size="lg">{siteInfo?.title}</Heading>
-                      <Text color="gray.600" fontSize="md" dangerouslySetInnerHTML={{ __html: siteInfo?.description || '' }} />
-                      <Text color="gray.600" fontSize="md" dangerouslySetInnerHTML={{ __html: siteInfo?.description2 || '' }} />
-                      <Stack direction="row" mt={2} spacing={2} justify="center">
-                        {siteInfo?.social?.map((social) => (
-                          <Link key={social.name} href={social.url} isExternal>
-                            <Flex
-                              alignItems="center"
-                              backgroundColor="#df7777"
-                              borderRadius="full"
-                              color="white"
-                              height={8}
-                              justifyContent="center"
-                              width={8}
-                            >
-                              <Image
-                                alt={`${social.name} icon`}
-                                src={`https://icongr.am/fontawesome/${social.name}.svg?size=20&color=ffffff`}
-                              />
-                            </Flex>
-                          </Link>
-                        ))}
-                        <Flex
-                          as="button"
-                          onClick={handleCopyLink}
-                          alignItems="center"
-                          backgroundColor="#df7777"
-                          borderRadius="full"
-                          color="white"
-                          height={8}
-                          justifyContent="center"
-                          width={8}
-                          cursor="pointer"
-                          _hover={{ opacity: 0.8 }}
-                          transition="opacity 0.2s"
-                        >
-                          <Icon as={FaLink} boxSize="20px" />
-                        </Flex>
-                      </Stack>
-                    </Stack>
-                  </Flex>
-                )}
-              </>
-            )}
             {getLayout(<Component {...pageProps} />)}
-            <Divider marginY={4} />
-            <Text textAlign="center">
-              © Copyright {new Date().getFullYear()}. Hecho con ♥ Simple Ecommerce
-            </Text>
           </Container>
         </Box>
       )}
