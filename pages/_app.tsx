@@ -394,29 +394,30 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
           )}
           {shouldShowSiteInfo && (
             <>
-              <Box 
-                mb={6} 
-                position="relative"
-                display={{ base: isAdminRoute ? 'none' : 'block', md: 'block' }}
-              >
-                <Box
-                  borderRadius="lg"
-                  height={{ md: "300px" }}
-                  overflow="hidden"
-                  width="100%"
+              {!isAdminRoute && (
+                <Box 
+                  mb={6} 
                   position="relative"
                 >
-                  <Image
-                    src={bannerError ? "/default-banner.jpg" : `${siteInfo?.bannerUrl}?${new Date().getTime()}`}
-                    alt="Header image"
-                    objectFit="cover"
+                  <Box
+                    borderRadius="lg"
+                    height={{ md: "300px" }}
+                    overflow="hidden"
                     width="100%"
-                    height="100%"
-                    onError={() => setBannerError(true)}
-                    fallback={<Box bg="gray.200" w="100%" h="100%" />}
-                  />
+                    position="relative"
+                  >
+                    <Image
+                      src={bannerError ? "/default-banner.jpg" : `${siteInfo?.bannerUrl}?${new Date().getTime()}`}
+                      alt="Header image"
+                      objectFit="cover"
+                      width="100%"
+                      height="100%"
+                      onError={() => setBannerError(true)}
+                      fallback={<Box bg="gray.200" w="100%" h="100%" />}
+                    />
+                  </Box>
                 </Box>
-              </Box>
+              )}
               
               {isAdminRoute && !isStoreConfigRoute ? (
                 <SiteInfoCollapsible 
