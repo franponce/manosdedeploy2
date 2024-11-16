@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Flex,
   Box,
@@ -22,6 +22,8 @@ interface SiteInfoCollapsibleProps {
 const SiteInfoCollapsible: React.FC<SiteInfoCollapsibleProps> = ({ siteInfo, onCopyLink }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
+  const logoUrl = useMemo(() => siteInfo?.logoUrl || '', [siteInfo?.logoUrl]);
+
   return (
     <Box 
       as="button" 
@@ -41,11 +43,12 @@ const SiteInfoCollapsible: React.FC<SiteInfoCollapsibleProps> = ({ siteInfo, onC
             flexShrink={0}
           >
             <Image
-              src={`${siteInfo?.logoUrl}?${new Date().getTime()}`}
+              src={logoUrl}
               alt="Logo"
               objectFit="cover"
               width="100%"
               height="100%"
+              loading="eager"
               fallback={<Box bg="gray.200" w="100%" h="100%" borderRadius="full" />}
             />
           </Box>

@@ -252,6 +252,8 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
     });
   };
 
+  const logoUrl = React.useMemo(() => siteInfo?.logoUrl || '', [siteInfo?.logoUrl]);
+
   if (isLoading) return <Box display="flex" justifyContent="center" alignItems="center" height="100vh"><Spinner /></Box>;
   if (isError) return <Box>Error al cargar la información del sitio</Box>;
 
@@ -417,7 +419,10 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
               
               {isAdminRoute ? (
                 <SiteInfoCollapsible 
-                  siteInfo={siteInfo} 
+                  siteInfo={{
+                    ...siteInfo,
+                    logoUrl
+                  }} 
                   onCopyLink={handleCopyLink}
                 />
               ) : (
@@ -437,11 +442,12 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
                     mb={4}
                   >
                     <Image
-                      src={`${siteInfo?.logoUrl}?${new Date().getTime()}`}
+                      src={logoUrl}
                       alt="Avatar"
                       objectFit="cover"
                       width="100%"
                       height="100%"
+                      loading="eager"
                       fallback={<Box bg="gray.200" w="100%" h="100%" borderRadius="full" />}
                     />
                   </Box>
