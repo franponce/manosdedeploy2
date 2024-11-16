@@ -6,11 +6,21 @@ import {
   Flex,
   Icon,
   useToast,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
 } from "@chakra-ui/react";
 import ProductManagement from "../product/components/ProductManagement";
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { FaArrowRight, FaEye, FaPlus, FaList } from 'react-icons/fa';
+import { 
+  FaCog, 
+  FaEye, 
+  FaPlus, 
+  FaTags, 
+  FaChevronDown 
+} from 'react-icons/fa';
 import ProductModal from '../product/components/ProductModal';
 import { Product } from "../product/types";
 import { createProduct, updateProduct } from "../utils/googleSheets";
@@ -70,9 +80,9 @@ const AdminPage: React.FC = () => {
           colorScheme="gray"
           onClick={handleStoreSettings}
           width="full"
-          rightIcon={<Icon as={FaArrowRight} />}
+          leftIcon={<Icon as={FaCog} />}
         >
-          Ir a la configuración de la tienda
+          Ir a la configuración
         </Button>
       </Box>
 
@@ -90,16 +100,14 @@ const AdminPage: React.FC = () => {
           direction={{ base: "column", sm: "row" }}
           gap={4}
         >
-          <Link href="/?preview=true" passHref>
-            <Button
-              as="a"
-              colorScheme="green"
-              width={{ base: "full", sm: "auto" }}
-              leftIcon={<Icon as={FaEye} />}
-            >
-              Previsualizar tienda
-            </Button>
-          </Link>
+          <Button
+            colorScheme="gray"
+            width={{ base: "full", sm: "auto" }}
+            leftIcon={<Icon as={FaCog} />}
+            onClick={handleStoreSettings}
+          >
+            Ir a la configuración
+          </Button>
           <Button
             colorScheme="blue"
             width={{ base: "full", sm: "auto" }}
@@ -108,23 +116,29 @@ const AdminPage: React.FC = () => {
           >
             Crear nuevo producto
           </Button>
-          <Button
-            colorScheme="purple"
-            width={{ base: "full", sm: "auto" }}
-            leftIcon={<Icon as={FaList} />}
-            onClick={() => setIsCategoryManagerOpen(true)}
-          >
-            Gestionar Categorías
-          </Button>
-          <Button
-            display={{ base: 'none', md: 'flex' }}
-            colorScheme="gray"
-            onClick={handleStoreSettings}
-            width={{ base: "full", sm: "auto" }}
-            rightIcon={<Icon as={FaArrowRight} />}
-          >
-            Ir a la configuración de la tienda
-          </Button>
+          <Menu>
+            <MenuButton
+              as={Button}
+              rightIcon={<FaChevronDown />}
+              colorScheme="purple"
+              width={{ base: "full", sm: "auto" }}
+            >
+              Ver más
+            </MenuButton>
+            <MenuList>
+              <Link href="/?preview=true" passHref>
+                <MenuItem icon={<Icon as={FaEye} />}>
+                  Previsualizar tienda
+                </MenuItem>
+              </Link>
+              <MenuItem 
+                icon={<Icon as={FaTags} />}
+                onClick={() => setIsCategoryManagerOpen(true)}
+              >
+                Gestionar Categorías
+              </MenuItem>
+            </MenuList>
+          </Menu>
         </Flex>
       </Flex>
 
