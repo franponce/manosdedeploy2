@@ -375,19 +375,15 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
           </Container>
         </Box>
       )}
-      {router.pathname === '/admin' ? (
-        <Box>
-          <Container maxWidth="container.xl" padding={4}>
-            <Component {...pageProps} />
-          </Container>
-          <Divider marginY={4} />
-          <Text textAlign="center" pb={4}>
-            © Copyright {new Date().getFullYear()}. Hecho con ♥ Simple Ecommerce
-          </Text>
-        </Box>
-      ) : (
-        <Box>
-          <Box pt={isLoginPage || isProductDetail ? "20px" : "70px"}>
+      <Box display="flex" flexDirection="column" minHeight="100vh">
+        {router.pathname === '/admin' ? (
+          <Box flex="1">
+            <Container maxWidth="container.xl" padding={4}>
+              <Component {...pageProps} />
+            </Container>
+          </Box>
+        ) : (
+          <Box flex="1" pt={isLoginPage || isProductDetail ? "20px" : "70px"}>
             <Container
               backgroundColor="white"
               borderRadius="sm"
@@ -397,12 +393,16 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
               {getLayout(<Component {...pageProps} />)}
             </Container>
           </Box>
+        )}
+
+        {/* Footer común para todas las rutas */}
+        <Box mt="auto">
           <Divider marginY={4} />
           <Text textAlign="center" pb={4}>
             © Copyright {new Date().getFullYear()}. Hecho con ♥ Simple Ecommerce
           </Text>
         </Box>
-      )}
+      </Box>
     </ChakraProvider>
   );
 };
