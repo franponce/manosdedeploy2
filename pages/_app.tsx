@@ -258,7 +258,12 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
   if (isLoading) return <Box display="flex" justifyContent="center" alignItems="center" height="100vh"><Spinner /></Box>;
   if (isError) return <Box>Error al cargar la información del sitio</Box>;
 
-  const getLayout = Component.getLayout ?? ((page) => <Layout>{page}</Layout>);
+  const getLayout = Component.getLayout ?? ((page) => {
+    if (router.pathname === '/admin') {
+      return page;
+    }
+    return <Layout>{page}</Layout>;
+  });
 
   return (
     <ChakraProvider theme={theme}>
