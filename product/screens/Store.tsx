@@ -32,11 +32,15 @@ const fetcher = async (url: string) => {
   const response = await fetch(url);
   const data = await response.json();
   
-  // Asegurarnos de que isVisible se interprete correctamente
-  return data.map((product: Product) => ({
-    ...product,
-    isVisible: product.isVisible === undefined ? true : product.isVisible === true
-  }));
+  return data
+    .map((product: Product) => ({
+      ...product,
+      isVisible: product.isVisible === undefined ? true : product.isVisible === true
+    }))
+    .sort((a: Product, b: Product) => {
+      // Ordenar por el ID numérico (que refleja el orden en la hoja)
+      return parseInt(a.id) - parseInt(b.id);
+    });
 };
 
 const PRODUCTS_PER_PAGE = 12;

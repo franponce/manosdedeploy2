@@ -19,7 +19,8 @@ import {
   FaEye, 
   FaPlus, 
   FaTags, 
-  FaChevronDown 
+  FaChevronDown, 
+  FaSort 
 } from 'react-icons/fa';
 import ProductModal from '../product/components/ProductModal';
 import { Product } from "../product/types";
@@ -28,6 +29,7 @@ import { CategoryManager } from '../product/components/CategoryManager';
 import { useCategories } from '../hooks/useCategories';
 import SiteInfoCollapsible from '../components/SiteInfoCollapsible';
 import { useSiteInfo } from '../hooks/useSiteInfo';
+import ProductOrderManager from '../product/components/ProductOrderManager';
 
 const AdminPage: React.FC = () => {
   const router = useRouter();
@@ -37,6 +39,7 @@ const AdminPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
   const { categories } = useCategories();
+  const [isProductOrderOpen, setIsProductOrderOpen] = useState(false);
 
   const handleStoreSettings = () => {
     router.push('/store-config');
@@ -162,6 +165,12 @@ const AdminPage: React.FC = () => {
               >
                 Gestionar Categorías
               </MenuItem>
+              <MenuItem 
+                icon={<Icon as={FaSort} />}
+                onClick={() => setIsProductOrderOpen(true)}
+              >
+                Orden de productos
+              </MenuItem>
             </MenuList>
           </Menu>
         </Flex>
@@ -182,6 +191,11 @@ const AdminPage: React.FC = () => {
       <CategoryManager
         isOpen={isCategoryManagerOpen}
         onClose={() => setIsCategoryManagerOpen(false)}
+      />
+
+      <ProductOrderManager
+        isOpen={isProductOrderOpen}
+        onClose={() => setIsProductOrderOpen(false)}
       />
     </Box>
   );

@@ -506,6 +506,39 @@ if (typeof window === 'undefined') {
         console.error('Error updating product visibility:', error);
         throw error;
       }
+    },
+
+    updateProductOrder: async (orderedIds: string[]): Promise<void> => {
+      const auth = await getAuthClient();
+      const { google } = await import('googleapis');
+      const sheets = google.sheets({ version: 'v4', auth });
+
+      try {
+        // Actualizar la columna J con el nuevo orden
+        await sheets.spreadsheets.values.update({
+          spreadsheetId: SPREADSHEET_ID,
+          range: 'La Libre Web - Catálogo online rev 2021 - products!J2:J',
+          valueInputOption: 'RAW',
+          requestBody: {
+            values: orderedIds.map(id => [id])
+          }
+        });
+
+        // Reordenar las filas según el nuevo orden
+        const values = orderedIds.map((id, index) => [(index + 1).toString()]);
+        
+        await sheets.spreadsheets.values.update({
+          spreadsheetId: SPREADSHEET_ID,
+          range: 'La Libre Web - Catálogo online rev 2021 - products!A2:A',
+          valueInputOption: 'RAW',
+          requestBody: {
+            values
+          }
+        });
+      } catch (error) {
+        console.error('Error updating product order:', error);
+        throw error;
+      }
     }
   };
 } else {
@@ -579,6 +612,14 @@ if (typeof window === 'undefined') {
       });
       if (!response.ok) throw new Error('Failed to update product visibility');
     },
+    updateProductOrder: async (orderedIds: string[]) => {
+      const response = await fetch('/api/products/order', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderedIds }),
+      });
+      if (!response.ok) throw new Error('Failed to update product order');
+    },
   };
 }
 
@@ -593,4 +634,5 @@ export const {
   deleteCategory,
   updateCategory,
   updateProductVisibility,
+  updateProductOrder,
 } = googleSheetsApi;
