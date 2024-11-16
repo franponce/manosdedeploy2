@@ -26,10 +26,13 @@ import { Product } from "../product/types";
 import { createProduct, updateProduct } from "../utils/googleSheets";
 import { CategoryManager } from '../product/components/CategoryManager';
 import { useCategories } from '../hooks/useCategories';
+import SiteInfoCollapsible from '../components/SiteInfoCollapsible';
+import { useSiteInfo } from '../hooks/useSiteInfo';
 
 const AdminPage: React.FC = () => {
   const router = useRouter();
   const toast = useToast();
+  const { siteInfo } = useSiteInfo();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
@@ -73,13 +76,41 @@ const AdminPage: React.FC = () => {
     }
   };
 
+  const handleCopyLink = () => {
+    const url = window.location.origin;
+    navigator.clipboard.writeText(url).then(() => {
+      toast({
+        title: "¡Enlace copiado!",
+        description: "El enlace de la tienda se copió al portapapeles",
+        status: "success",
+        duration: 2000,
+        isClosable: true,
+      });
+    }).catch((err) => {
+      console.error('Error al copiar:', err);
+      toast({
+        title: "Error al copiar",
+        description: "No se pudo copiar el enlace",
+        status: "error",
+        duration: 2000,
+        isClosable: true,
+      });
+    });
+  };
+
   return (
     <Box margin="auto" maxWidth="1200px" padding={4}>
+      <SiteInfoCollapsible 
+        siteInfo={siteInfo}
+        onCopyLink={handleCopyLink}
+      />
+      
       <Flex
         direction={{ base: "column", md: "row" }}
         justifyContent="space-between"
         alignItems={{ base: "stretch", md: "center" }}
         mb={8}
+        mt={8}
         gap={4}
       >
         <Heading as="h1" size="xl" mb={{ base: 4, md: 0 }}>
