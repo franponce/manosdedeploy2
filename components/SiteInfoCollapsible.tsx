@@ -10,8 +10,9 @@ import {
   Icon,
   Collapse,
   HStack,
+  Center,
 } from "@chakra-ui/react";
-import { FaLink, FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { FaLink } from "react-icons/fa";
 
 interface SiteInfoCollapsibleProps {
   siteInfo: any;
@@ -28,11 +29,11 @@ const SiteInfoCollapsible: React.FC<SiteInfoCollapsibleProps> = ({ siteInfo, onC
       onClick={() => setIsExpanded(!isExpanded)}
       _hover={{ bg: "gray.50" }}
       transition="background 0.2s"
-      p={2}
+      p={4}
       borderRadius="md"
     >
-      <Flex align="center" justify="space-between">
-        <HStack spacing={4}>
+      <Center>
+        <HStack spacing={4} align="center">
           <Box
             borderRadius="full"
             boxSize="50px"
@@ -50,13 +51,22 @@ const SiteInfoCollapsible: React.FC<SiteInfoCollapsibleProps> = ({ siteInfo, onC
           </Box>
           <Heading size="md">{siteInfo?.title}</Heading>
         </HStack>
-        <Icon as={isExpanded ? FaChevronUp : FaChevronDown} />
-      </Flex>
+      </Center>
 
       <Collapse in={isExpanded} animateOpacity>
-        <Box pt={4}>
-          <Text color="gray.600" mb={2} dangerouslySetInnerHTML={{ __html: siteInfo?.description || '' }} />
-          <Text color="gray.600" mb={4} dangerouslySetInnerHTML={{ __html: siteInfo?.description2 || '' }} />
+        <Box pt={6}>
+          <Text 
+            color="gray.600" 
+            mb={2} 
+            textAlign="center"
+            dangerouslySetInnerHTML={{ __html: siteInfo?.description || '' }} 
+          />
+          <Text 
+            color="gray.600" 
+            mb={4} 
+            textAlign="center"
+            dangerouslySetInnerHTML={{ __html: siteInfo?.description2 || '' }} 
+          />
           
           <Stack direction="row" spacing={2} justify="center">
             {siteInfo?.social?.map((social: any) => (
