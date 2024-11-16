@@ -260,7 +260,13 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
 
   const getLayout = Component.getLayout ?? ((page) => {
     if (router.pathname === '/admin') {
-      return page;
+      return (
+        <Box pt="20px">
+          <Container maxWidth="container.xl" padding={4}>
+            {page}
+          </Container>
+        </Box>
+      );
     }
     return <Layout>{page}</Layout>;
   });
