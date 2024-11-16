@@ -381,20 +381,26 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
             <Component {...pageProps} />
           </Container>
           <Divider marginY={4} />
-          <Text textAlign="center">
+          <Text textAlign="center" pb={4}>
             © Copyright {new Date().getFullYear()}. Hecho con ♥ Simple Ecommerce
           </Text>
         </Box>
       ) : (
-        <Box pt={isLoginPage || isProductDetail ? "20px" : "70px"}>
-          <Container
-            backgroundColor="white"
-            borderRadius="sm"
-            maxWidth="container.xl"
-            padding={4}
-          >
-            {getLayout(<Component {...pageProps} />)}
-          </Container>
+        <Box>
+          <Box pt={isLoginPage || isProductDetail ? "20px" : "70px"}>
+            <Container
+              backgroundColor="white"
+              borderRadius="sm"
+              maxWidth="container.xl"
+              padding={4}
+            >
+              {getLayout(<Component {...pageProps} />)}
+            </Container>
+          </Box>
+          <Divider marginY={4} />
+          <Text textAlign="center" pb={4}>
+            © Copyright {new Date().getFullYear()}. Hecho con ♥ Simple Ecommerce
+          </Text>
         </Box>
       )}
     </ChakraProvider>
