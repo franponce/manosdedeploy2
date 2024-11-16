@@ -99,7 +99,12 @@ const AdminPage: React.FC = () => {
   };
 
   return (
-    <Box margin="auto" maxWidth="1200px" padding={4}>
+    <Box 
+      margin="auto" 
+      maxWidth="1200px" 
+      padding={4}
+      pt="90px"
+    >
       <SiteInfoCollapsible 
         siteInfo={siteInfo}
         onCopyLink={handleCopyLink}
