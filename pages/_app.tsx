@@ -30,6 +30,7 @@ import HamburgerMenu from '../product/components/HamburgerMenu';
 import { FaArrowLeft, FaEye, FaArrowRight, FaLink } from 'react-icons/fa';
 import type { NextPage } from 'next';
 import Layout from "@/app/layout";
+import SiteInfoCollapsible from '../components/SiteInfoCollapsible';
 
 type NextPageWithLayout = NextPage & {
   getLayout?: (page: React.ReactElement) => React.ReactElement;
@@ -390,7 +391,11 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
           )}
           {shouldShowSiteInfo && (
             <>
-              <Box mb={6} position="relative">
+              <Box 
+                mb={6} 
+                position="relative"
+                display={{ base: isAdminRoute ? 'none' : 'block', md: 'block' }}
+              >
                 <Box
                   borderRadius="lg"
                   height={{ md: "300px" }}
@@ -409,82 +414,90 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
                   />
                 </Box>
               </Box>
-              <Flex
-                direction="column"
-                align="center"
-                justify="center"
-                mb={6}
-              >
-                <Box
-                  backgroundColor="white"
-                  borderRadius="full"
-                  boxShadow="md"
-                  boxSize="120px"
-                  overflow="hidden"
-                  position="relative"
-                  mb={4}
-                >
-                  <Image
-                    src={`${siteInfo?.logoUrl}?${new Date().getTime()}`}
-                    alt="Avatar"
-                    objectFit="cover"
-                    width="100%"
-                    height="100%"
-                    fallback={<Box bg="gray.200" w="100%" h="100%" borderRadius="full" />}
-                  />
-                </Box>
-                <Stack
+              
+              {isAdminRoute ? (
+                <SiteInfoCollapsible 
+                  siteInfo={siteInfo} 
+                  onCopyLink={handleCopyLink}
+                />
+              ) : (
+                <Flex
+                  direction="column"
                   align="center"
-                  bg="white"
-                  borderRadius="md"
-                  boxShadow="sm"
-                  p={4}
-                  spacing={3}
-                  textAlign="center"
-                  width="100%"
-                  maxWidth="600px"
+                  justify="center"
+                  mb={6}
                 >
-                  <Heading size="lg">{siteInfo?.title}</Heading>
-                  <Text color="gray.600" fontSize="md" dangerouslySetInnerHTML={{ __html: siteInfo?.description || '' }} />
-                  <Text color="gray.600" fontSize="md" dangerouslySetInnerHTML={{ __html: siteInfo?.description2 || '' }} />
-                  <Stack direction="row" mt={2} spacing={2} justify="center">
-                    {siteInfo?.social?.map((social) => (
-                      <Link key={social.name} href={social.url} isExternal>
-                        <Flex
-                          alignItems="center"
-                          backgroundColor="#df7777"
-                          borderRadius="full"
-                          color="white"
-                          height={8}
-                          justifyContent="center"
-                          width={8}
-                        >
-                          <Image
-                            alt={`${social.name} icon`}
-                            src={`https://icongr.am/fontawesome/${social.name}.svg?size=20&color=ffffff`}
-                          />
-                        </Flex>
-                      </Link>
-                    ))}
-                    <Flex
-                      as="button"
-                      onClick={handleCopyLink}
-                      alignItems="center"
-                      backgroundColor="#df7777"
-                      borderRadius="full"
-                      color="white"
-                      height={8}
-                      justifyContent="center"
-                      width={8}
-                      cursor="pointer"
-                      _hover={{ opacity: 0.8 }}
-                      transition="opacity 0.2s"
-                    >
-                      <Icon as={FaLink} boxSize="20px" />
-                    </Flex>
+                  <Box
+                    backgroundColor="white"
+                    borderRadius="full"
+                    boxShadow="md"
+                    boxSize="120px"
+                    overflow="hidden"
+                    position="relative"
+                    mb={4}
+                  >
+                    <Image
+                      src={`${siteInfo?.logoUrl}?${new Date().getTime()}`}
+                      alt="Avatar"
+                      objectFit="cover"
+                      width="100%"
+                      height="100%"
+                      fallback={<Box bg="gray.200" w="100%" h="100%" borderRadius="full" />}
+                    />
+                  </Box>
+                  <Stack
+                    align="center"
+                    bg="white"
+                    borderRadius="md"
+                    boxShadow="sm"
+                    p={4}
+                    spacing={3}
+                    textAlign="center"
+                    width="100%"
+                    maxWidth="600px"
+                  >
+                    <Heading size="lg">{siteInfo?.title}</Heading>
+                    <Text color="gray.600" fontSize="md" dangerouslySetInnerHTML={{ __html: siteInfo?.description || '' }} />
+                    <Text color="gray.600" fontSize="md" dangerouslySetInnerHTML={{ __html: siteInfo?.description2 || '' }} />
+                    <Stack direction="row" mt={2} spacing={2} justify="center">
+                      {siteInfo?.social?.map((social) => (
+                        <Link key={social.name} href={social.url} isExternal>
+                          <Flex
+                            alignItems="center"
+                            backgroundColor="#df7777"
+                            borderRadius="full"
+                            color="white"
+                            height={8}
+                            justifyContent="center"
+                            width={8}
+                          >
+                            <Image
+                              alt={`${social.name} icon`}
+                              src={`https://icongr.am/fontawesome/${social.name}.svg?size=20&color=ffffff`}
+                            />
+                          </Flex>
+                        </Link>
+                      ))}
+                      <Flex
+                        as="button"
+                        onClick={handleCopyLink}
+                        alignItems="center"
+                        backgroundColor="#df7777"
+                        borderRadius="full"
+                        color="white"
+                        height={8}
+                        justifyContent="center"
+                        width={8}
+                        cursor="pointer"
+                        _hover={{ opacity: 0.8 }}
+                        transition="opacity 0.2s"
+                      >
+                        <Icon as={FaLink} boxSize="20px" />
+                      </Flex>
+                    </Stack>
                   </Stack>
-                </Stack>
-              </Flex>
+                </Flex>
+              )}
             </>
           )}
           {getLayout(<Component {...pageProps} />)}
