@@ -236,13 +236,17 @@ const AdminPage: React.FC = () => {
       <CategoryManager
         isOpen={isCategoryManagerOpen}
         onClose={() => setIsCategoryManagerOpen(false)}
-        modalProps={{ zIndex: 1600 }}
+        modalProps={{ 
+          zIndex: 2000, 
+        }}
       />
 
       <ProductOrderManager
         isOpen={isProductOrderOpen}
         onClose={() => setIsProductOrderOpen(false)}
-        modalProps={{ zIndex: 1600 }}
+        modalProps={{ 
+          zIndex: 2000, 
+        }}
       />
     </Box>
   );
