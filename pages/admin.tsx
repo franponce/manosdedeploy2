@@ -10,6 +10,11 @@ import {
   MenuButton,
   MenuList,
   MenuItem,
+  Center,
+  HStack,
+  Skeleton,
+  SkeletonCircle,
+  SkeletonText,
 } from "@chakra-ui/react";
 import ProductManagement from "../product/components/ProductManagement";
 import Link from 'next/link';
@@ -34,7 +39,7 @@ import ProductOrderManager from '../product/components/ProductOrderManager';
 const AdminPage: React.FC = () => {
   const router = useRouter();
   const toast = useToast();
-  const { siteInfo } = useSiteInfo();
+  const { siteInfo, isLoading: isSiteInfoLoading } = useSiteInfo();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
@@ -108,10 +113,21 @@ const AdminPage: React.FC = () => {
       padding={4}
       pt="90px"
     >
-      <SiteInfoCollapsible 
-        siteInfo={siteInfo}
-        onCopyLink={handleCopyLink}
-      />
+      {isSiteInfoLoading ? (
+        <Box p={4} borderRadius="md" boxShadow="sm">
+          <Center>
+            <HStack spacing={4} align="center">
+              <SkeletonCircle size="50px" />
+              <Skeleton height="24px" width="200px" />
+            </HStack>
+          </Center>
+        </Box>
+      ) : (
+        <SiteInfoCollapsible 
+          siteInfo={siteInfo}
+          onCopyLink={handleCopyLink}
+        />
+      )}
       
       <Flex
         direction={{ base: "column", md: "row" }}

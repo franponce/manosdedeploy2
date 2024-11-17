@@ -245,6 +245,18 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
   return (
     <>
       <Stack spacing={6}>
+        <Box 
+          bg="gray.100" 
+          p={4} 
+          borderRadius="md" 
+          mb={4}
+          display={{ base: 'none', md: 'block' }}
+        >
+          <Text textAlign="center" color="gray.600">
+            ¡Bienvenido a nuestra tienda! Aquí encontrarás todos nuestros productos.
+          </Text>
+        </Box>
+
         <SiteInfoBanner siteInfo={siteInfo} />
         
         <Flex direction={{ base: "column", md: "row" }} gap={4}>

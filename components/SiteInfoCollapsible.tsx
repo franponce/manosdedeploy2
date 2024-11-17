@@ -11,6 +11,9 @@ import {
   Collapse,
   HStack,
   Center,
+  Skeleton,
+  SkeletonCircle,
+  SkeletonText,
 } from "@chakra-ui/react";
 import { FaLink } from "react-icons/fa";
 
@@ -23,6 +26,19 @@ const SiteInfoCollapsible: React.FC<SiteInfoCollapsibleProps> = ({ siteInfo, onC
   const [isExpanded, setIsExpanded] = useState(false);
 
   const logoUrl = useMemo(() => siteInfo?.logoUrl || '', [siteInfo?.logoUrl]);
+
+  if (!siteInfo) {
+    return (
+      <Box p={4} borderRadius="md" boxShadow="sm">
+        <Center>
+          <HStack spacing={4} align="center">
+            <SkeletonCircle size="50px" />
+            <Skeleton height="24px" width="200px" />
+          </HStack>
+        </Center>
+      </Box>
+    );
+  }
 
   return (
     <Box 
