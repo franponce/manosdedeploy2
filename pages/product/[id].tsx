@@ -231,10 +231,14 @@ const ProductDetail: NextPageWithLayout = () => {
           <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={8}>
             <GridItem>
               <Skeleton isLoaded={!isLoading} height="400px">
-                <ImageCarousel 
-                  images={displayProduct?.images.filter(Boolean) || []} 
-                  autoPlayInterval={4000}
-                />
+                {displayProduct ? (
+                  <ImageCarousel 
+                    images={displayProduct.images.filter(Boolean)} 
+                    autoPlayInterval={4000}
+                  />
+                ) : (
+                  <Box height="400px" bg="gray.100" />
+                )}
               </Skeleton>
             </GridItem>
 

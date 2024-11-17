@@ -1,27 +1,17 @@
-import useSWR from 'swr';
 import { Product } from '../product/types';
+import useSWR from 'swr';
 
-const fetcher = async (url: string) => {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error('Error al cargar el producto');
-  }
-  return response.json();
-};
-
-export function useProduct(id: string | undefined) {
-  const { data: product, error, isLoading } = useSWR<Product>(
-    id ? `/api/products/${id}` : null,
-    fetcher,
-    {
-      revalidateOnFocus: false,
-      shouldRetryOnError: false
-    }
+export const useProduct = (id: string) => {
+  const { data, error } = useSWR<Product>(
+    id ? `/api/products/${id}` : null
   );
 
   return {
-    product,
-    isLoading,
+    product: data ? {
+      ...data,
+      images: Array.isArray(data.images) ? data.images : []
+    } : undefined,
+    isLoading: !error && !data,
     error
   };
-} 
+}; 
