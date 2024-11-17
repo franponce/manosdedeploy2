@@ -110,6 +110,18 @@ const AdminPage: React.FC = () => {
     });
   };
 
+  const handleToggleHiddenProducts = () => {
+    setShowHiddenProducts(!showHiddenProducts);
+    toast({
+      title: showHiddenProducts ? "Mostrando solo productos visibles" : "Mostrando todos los productos",
+      description: "El listado se está actualizando...",
+      status: "info",
+      duration: 2000,
+      isClosable: true,
+      position: "top",
+    });
+  };
+
   return (
     <Box 
       margin="auto" 
@@ -193,7 +205,7 @@ const AdminPage: React.FC = () => {
               </MenuItem>
               <MenuItem 
                 icon={<Icon as={FaBox} />}
-                onClick={() => setShowHiddenProducts(!showHiddenProducts)}
+                onClick={handleToggleHiddenProducts}
               >
                 <Flex justify="space-between" align="center" width="100%">
                   <Text>Ver productos ocultos</Text>
