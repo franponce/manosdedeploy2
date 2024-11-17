@@ -164,7 +164,7 @@ const AdminPage: React.FC = () => {
           >
             Crear nuevo producto
           </Button>
-          <Menu>
+          <Menu closeOnSelect={false}>
             <MenuButton
               as={Button}
               rightIcon={<FaChevronDown />}
@@ -193,6 +193,8 @@ const AdminPage: React.FC = () => {
               </MenuItem>
               <MenuItem 
                 icon={<Icon as={FaBox} />}
+                onClick={(e) => e.preventDefault()}
+                closeOnSelect={false}
               >
                 <Flex justify="space-between" align="center" width="100%">
                   <Text>Ver productos ocultos</Text>
