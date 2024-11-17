@@ -65,7 +65,7 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
     <Box 
       position="relative" 
       width="100%"
-      height={variant === 'product' ? "400px" : "200px"}
+      height="400px"
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
