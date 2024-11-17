@@ -146,9 +146,8 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading: cardLoading, 
           <Link as="div" onClick={handleProductClick} cursor="pointer">
             <Box position="relative">
               <ImageCarousel 
-                images={product.images}
-                variant="store"
-              />
+                  images={product.images}
+                  variant="store" title={''}              />
             </Box>
           </Link>
         )}

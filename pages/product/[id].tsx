@@ -243,8 +243,7 @@ const ProductDetail: NextPageWithLayout = () => {
                 {product ? (
                   <ImageCarousel 
                     images={product.images || []}
-                    variant="detail"
-                  />
+                    variant="detail" title={''}                  />
                 ) : (
                   <Box height="400px" bg="gray.100" display="flex" alignItems="center" justifyContent="center">
                     <Text color="gray.500">Cargando producto...</Text>
