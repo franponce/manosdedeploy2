@@ -123,7 +123,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
         const isValidProduct = Boolean(
           product?.id &&
           product?.title &&
-          product?.image &&
+          product?.images &&
           product?.price &&
           !product?.isScheduled
         );
@@ -286,7 +286,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
                   id: `skeleton-${index}`,
                   title: '',
                   description: '',
-                  image: '',
+                  images: [],
                   price: 0,
                   currency: 'ARS',
                   isScheduled: false,

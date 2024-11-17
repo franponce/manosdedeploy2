@@ -2,7 +2,7 @@ export interface Product {
   id: string;
   title: string;
   description: string;
-  image: string;
+  images: string[];
   price: number;
   currency: string;
   isScheduled: boolean;

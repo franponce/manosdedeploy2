@@ -138,7 +138,7 @@ const ProductOrderManager: React.FC<ProductOrderManagerProps> = ({ isOpen, onClo
                         #{index + 1}
                       </Text>
                       <Image
-                        src={product.image}
+                        src={product.images[0]}
                         alt={product.title}
                         boxSize="50px"
                         objectFit="cover"

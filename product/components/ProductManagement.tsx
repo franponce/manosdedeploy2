@@ -342,7 +342,7 @@ const ProductManagement: React.FC<{ onCreateProduct: () => void }> = ({ onCreate
               
               <AspectRatio ratio={1}>
                 <Image
-                  src={product.image}
+                  src={product.images[0]}
                   alt={product.title}
                   objectFit="cover"
                 />

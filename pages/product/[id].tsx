@@ -39,6 +39,7 @@ import {
 } from 'next-share';
 import { Product, CartItem } from '@/product/types';
 import { NextPage } from 'next';
+import ImageCarousel from '@/product/components/ImageCarousel';
 
 type NextPageWithLayout = NextPage & {
   getLayout?: (page: React.ReactElement) => React.ReactElement;
@@ -230,12 +231,9 @@ const ProductDetail: NextPageWithLayout = () => {
           <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={8}>
             <GridItem>
               <Skeleton isLoaded={!isLoading} height="400px">
-                <Image
-                  src={displayProduct?.image}
-                  alt={displayProduct?.title}
-                  objectFit="contain"
-                  width="100%"
-                  height="100%"
+                <ImageCarousel 
+                  images={displayProduct?.images.filter(Boolean) || []} 
+                  autoPlayInterval={4000}
                 />
               </Skeleton>
             </GridItem>

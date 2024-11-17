@@ -18,6 +18,7 @@ import { Product } from '../types';
 import { parseCurrency } from '../../utils/currency';
 import { useRouter } from 'next/router';
 import { VisibilityToggle } from './VisibilityToggle';
+import ImageCarousel from './ImageCarousel';
 
 interface Props {
   product: Product;
@@ -143,11 +144,9 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading: cardLoading, 
           <Skeleton />
         ) : (
           <Link as="div" onClick={handleProductClick} cursor="pointer">
-            <Image 
-              src={product.image || 'https://via.placeholder.com/500'} 
-              alt={product.title || 'Product image'} 
-              objectFit="cover" 
-              fallbackSrc="https://via.placeholder.com/500"
+            <ImageCarousel 
+              images={product.images.filter(Boolean)} 
+              autoPlayInterval={5000}
             />
           </Link>
         )}

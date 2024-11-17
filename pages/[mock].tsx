@@ -31,7 +31,7 @@ export const getStaticProps: GetStaticProps = async (context) => {
         typeof product.id === "string" &&
         typeof product.title === "string" &&
         typeof product.description === "string" &&
-        typeof product.image === "string" &&
+        typeof product.images === "object" &&
         typeof product.price === "number"
     );
 

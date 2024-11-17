@@ -52,17 +52,19 @@ interface ProductModalProps {
 }
 
 const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, product, isLoading: submitLoading }) => {
-  const [currentProduct, setCurrentProduct] = useState<Product>({
-    id: "",
-    title: "",
-    description: "",
-    image: "",
-    price: 0,
-    currency: "ARS",
-    isScheduled: false,
-    scheduledPublishDate: null,
-    categoryId: "",
-    isVisible: true
+  const [currentProduct, setCurrentProduct] = useState<Product>(() => {
+    return product || {
+      id: '',
+      title: '',
+      description: '',
+      images: ['', '', ''],
+      price: 0,
+      currency: 'ARS',
+      isScheduled: false,
+      scheduledPublishDate: null,
+      categoryId: '',
+      isVisible: true,
+    };
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const toast = useToast();
@@ -89,7 +91,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
         categoryId: product.categoryId || "",
         isVisible: product.isVisible ?? true
       });
-      setImagePreview(product.image);
+      setImagePreview(product.images[0] || null);
       setDescription(product.description || '');
       if (product.scheduledPublishDate) {
         setScheduledDate(new Date(product.scheduledPublishDate));
@@ -100,7 +102,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
         id: "",
         title: "",
         description: "",
-        image: "",
+        images: ['', '', ''],
         price: 0,
         currency: "ARS",
         isScheduled: false,
@@ -123,7 +125,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     }
   }, [isOpen, mutateCategories]);
 
-  const handleProductImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleProductImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -156,8 +158,11 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
       
       const base64 = canvas.toDataURL('image/jpeg', 0.7);
       
-      setImagePreview(base64);
-      setCurrentProduct((prev) => ({ ...prev, image: base64 }));
+      setCurrentProduct(prev => {
+        const newImages = [...prev.images];
+        newImages[index] = base64;
+        return { ...prev, images: newImages };
+      });
 
       toast({
         title: "Imagen cargada",
@@ -176,7 +181,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
         isClosable: true,
       });
     }
-  }, [toast]);
+  }, [toast, currentProduct.images]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -366,32 +371,40 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
               </Text>
             </FormControl>
 
-            <FormControl>
-              <FormLabel>Imagen</FormLabel>
+            <VStack spacing={4} align="stretch">
               <Text fontSize="sm" color="gray.600" mb={2}>
-                Recomendaciones 😉:
+                Recomendaciones para las imágenes 😉:
                 <br />
-                • Intenta que tu imagen sea cuadrada.
+                • Intenta que tus imágenes sean cuadradas.
                 <br />
                 • Las medidas recomendadas son de 800x800 px.
                 <br />
-                • No debe pesar más de 5MB.
+                • Cada imagen no debe pesar más de 5MB.
+                <br />
+                • Puedes subir hasta 3 imágenes.
               </Text>
-              <Input
-                type="file"
-                accept="image/*"
-                onChange={handleProductImageUpload}
-              />
-            </FormControl>
 
-            {imagePreview && (
-              <Image
-                src={imagePreview}
-                alt="Preview"
-                maxHeight="200px"
-                objectFit="contain"
-              />
-            )}
+              {[0, 1, 2].map((index) => (
+                <FormControl key={index}>
+                  <FormLabel>Imagen {index + 1} {index === 0 && "(Principal)"}</FormLabel>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleProductImageUpload(e, index)}
+                  />
+                  {currentProduct.images[index] && (
+                    <Box mt={2}>
+                      <Image
+                        src={currentProduct.images[index]}
+                        alt={`Preview ${index + 1}`}
+                        maxH="200px"
+                        objectFit="contain"
+                      />
+                    </Box>
+                  )}
+                </FormControl>
+              ))}
+            </VStack>
 
             <FormControl>
               <FormLabel>Precio ({siteInfo?.currency})</FormLabel>
