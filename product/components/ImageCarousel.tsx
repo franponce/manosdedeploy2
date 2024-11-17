@@ -7,6 +7,7 @@ import {
   IconButton,
   useBreakpointValue,
   Text,
+  Spinner,
 } from '@chakra-ui/react';
 import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
 
@@ -21,12 +22,25 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [hasCompletedAutoplay, setHasCompletedAutoplay] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const autoplayTimeoutRef = useRef<NodeJS.Timeout>();
   const filteredImages = images.filter(Boolean);
   const imageSize = useBreakpointValue({ 
     base: variant === 'detail' ? "350px" : "300px",
     md: variant === 'detail' ? "500px" : "300px" 
   });
+
+  useEffect(() => {
+    // Verificar que las imágenes estén cargadas
+    if (filteredImages.length > 0) {
+      const imgElement = document.createElement('img');
+      imgElement.onload = () => setIsLoading(false);
+      imgElement.onerror = () => setIsLoading(false);
+      imgElement.src = filteredImages[currentIndex];
+    } else {
+      setIsLoading(false);
+    }
+  }, [filteredImages, currentIndex]);
 
   // Autoplay solo una vez
   useEffect(() => {
@@ -43,7 +57,7 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
           } else {
             setHasCompletedAutoplay(true);
           }
-        }, 3000); // 3 segundos entre cada imagen
+        }, 3000);
       };
 
       runAutoplay();
@@ -56,11 +70,26 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
     };
   }, [filteredImages.length, hasCompletedAutoplay]);
 
+  if (isLoading) {
+    return (
+      <Box
+        height={imageSize}
+        bg="gray.50"
+        borderRadius="md"
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+      >
+        <Spinner color="blue.500" size="xl" />
+      </Box>
+    );
+  }
+
   if (!filteredImages.length) {
     return (
       <Box
         height={imageSize}
-        bg="gray.100"
+        bg="gray.50"
         borderRadius="md"
         display="flex"
         alignItems="center"
@@ -97,6 +126,17 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
         width="100%"
         height="100%"
         bg="white"
+        fallback={
+          <Box
+            height="100%"
+            bg="gray.100"
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
+          >
+            <Text color="gray.500">Error al cargar la imagen</Text>
+          </Box>
+        }
       />
 
       {/* Flechas de navegación solo en detalle */}

@@ -241,13 +241,15 @@ const ProductDetail: NextPageWithLayout = () => {
           <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={8}>
             <GridItem>
               <Skeleton isLoaded={!isLoading} height="400px">
-                {product && product.images ? (
+                {product ? (
                   <ImageCarousel 
-                    images={product.images}
+                    images={product.images || []}
                     variant="detail"
                   />
                 ) : (
-                  <Box height="400px" bg="gray.100" />
+                  <Box height="400px" bg="gray.100" display="flex" alignItems="center" justifyContent="center">
+                    <Text color="gray.500">Cargando producto...</Text>
+                  </Box>
                 )}
               </Skeleton>
             </GridItem>
