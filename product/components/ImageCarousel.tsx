@@ -19,15 +19,25 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, title, variant })
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
 
   const processImageSrc = (src: string) => {
-    if (src.includes('|||')) {
-      return src.split('|||')[0];
-    }
-    return src;
+    return src.split('|||')[0].trim();
   };
 
   const processedImages = useMemo(() => {
-    return images.map(url => processImageSrc(url));
+    return images.filter(Boolean).map(url => processImageSrc(url));
   }, [images]);
+
+  const dimensions = {
+    product: {
+      container: { width: "100%", height: "auto", maxHeight: "600px" },
+      image: { width: "100%", height: "auto", maxHeight: "600px" }
+    },
+    store: {
+      container: { width: "100%", height: "auto", maxHeight: "300px" },
+      image: { width: "100%", height: "auto", maxHeight: "300px" }
+    }
+  };
+
+  const currentDimensions = variant === 'product' ? dimensions.product : dimensions.store;
 
   const showNavigation = useBreakpointValue({ base: false, md: true });
 
@@ -71,15 +81,13 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, title, variant })
     setIsAutoPlaying(true);
   };
 
-  const containerHeight = variant === 'product' ? '400px' : '200px';
-
   if (!processedImages.length) return null;
 
   return (
     <Box
       position="relative"
-      width="100%"
-      height={containerHeight}
+      {...currentDimensions.container}
+      overflow="hidden"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
@@ -92,8 +100,7 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, title, variant })
             display: index === currentImageIndex ? 'block' : 'none'
           }}
           objectFit="contain"
-          width="100%"
-          height="100%"
+          {...currentDimensions.image}
           opacity={index === currentImageIndex ? 1 : 0}
           transition="opacity 0.5s ease-in-out"
           loading="lazy"
