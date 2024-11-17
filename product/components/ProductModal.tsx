@@ -332,17 +332,6 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
         <ModalCloseButton />
         <ModalBody>
           <VStack spacing={4}>
-            <FormControl display="flex" alignItems="center">
-              <FormLabel htmlFor="isVisible" mb="0">
-                Visible en la tienda
-              </FormLabel>
-              <Switch
-                id="isVisible"
-                isChecked={currentProduct.isVisible}
-                onChange={handleVisibilityChange}
-              />
-            </FormControl>
-
             <FormControl>
               <FormLabel>Título</FormLabel>
               <Input
@@ -494,6 +483,17 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
             >
               {isScheduleOpen ? "Cancelar programación" : "Programar publicación"}
             </Button>
+
+            <FormControl display="flex" alignItems="center">
+              <FormLabel htmlFor="isVisible" mb="0">
+                Visible en la tienda
+              </FormLabel>
+              <Switch
+                id="isVisible"
+                isChecked={currentProduct.isVisible}
+                onChange={handleVisibilityChange}
+              />
+            </FormControl>
 
             <Collapse in={isScheduleOpen} animateOpacity>
               <FormControl>
