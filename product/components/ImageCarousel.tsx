@@ -4,7 +4,8 @@ import {
   Image,
   Flex,
   IconButton,
-  useBreakpointValue
+  useBreakpointValue,
+  SimpleGrid
 } from '@chakra-ui/react';
 import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
 
@@ -22,32 +23,53 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, title, variant })
     return images.filter(Boolean).map(url => url.split('|||')[0].trim());
   }, [images]);
 
-  const handleNext = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setCurrentImageIndex((prev) => 
-      prev === processedImages.length - 1 ? 0 : prev + 1
-    );
-  };
+  useEffect(() => {
+    if (processedImages.length <= 1) return;
 
-  const handlePrevious = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setCurrentImageIndex((prev) => 
-      prev === 0 ? processedImages.length - 1 : prev - 1
-    );
-  };
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prev) => {
+        if (prev === processedImages.length - 1) {
+          clearInterval(interval);
+          return prev;
+        }
+        return prev + 1;
+      });
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [processedImages.length]);
 
   return (
-    <Box position="relative">
-      <Image
-        src={processedImages[currentImageIndex]}
-        alt={`${title} - Imagen ${currentImageIndex + 1}`}
+    <Box position="relative" width="100%">
+      <Flex 
+        overflowX="hidden" 
         width="100%"
-        height="auto"
-        maxHeight={variant === 'product' ? "600px" : "300px"}
-        objectFit="contain"
-        loading="lazy"
-        pointerEvents="none"
-      />
+        position="relative"
+        paddingTop={variant === 'product' ? "100%" : "100%"}
+      >
+        <SimpleGrid 
+          columns={processedImages.length > 1 ? 2 : 1} 
+          spacing={2} 
+          width="100%"
+          position="absolute"
+          top="0"
+          left="0"
+          height="100%"
+        >
+          {processedImages.map((imageUrl, index) => (
+            <Image
+              key={index}
+              src={imageUrl}
+              alt={`${title} - Imagen ${index + 1}`}
+              width="100%"
+              height="100%"
+              objectFit="contain"
+              loading="lazy"
+              pointerEvents="none"
+            />
+          ))}
+        </SimpleGrid>
+      </Flex>
 
       {isDesktop && processedImages.length > 1 && (
         <>
@@ -58,7 +80,12 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, title, variant })
             left="0"
             top="50%"
             transform="translateY(-50%)"
-            onClick={handlePrevious}
+            onClick={(e) => {
+              e.stopPropagation();
+              setCurrentImageIndex(prev => 
+                prev === 0 ? processedImages.length - 1 : prev - 1
+              );
+            }}
             bg="whiteAlpha.700"
             _hover={{ bg: "whiteAlpha.900" }}
           />
@@ -69,7 +96,12 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, title, variant })
             right="0"
             top="50%"
             transform="translateY(-50%)"
-            onClick={handleNext}
+            onClick={(e) => {
+              e.stopPropagation();
+              setCurrentImageIndex(prev => 
+                prev === processedImages.length - 1 ? 0 : prev + 1
+              );
+            }}
             bg="whiteAlpha.700"
             _hover={{ bg: "whiteAlpha.900" }}
           />
@@ -77,7 +109,14 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, title, variant })
       )}
 
       {processedImages.length > 1 && (
-        <Flex justify="center" mt={2} gap={2}>
+        <Flex 
+          justify="center" 
+          position="absolute" 
+          bottom="2" 
+          left="0" 
+          right="0" 
+          gap={2}
+        >
           {processedImages.map((_, index) => (
             <Box
               key={index}
