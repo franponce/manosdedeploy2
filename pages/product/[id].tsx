@@ -210,6 +210,8 @@ const ProductDetail: NextPageWithLayout = () => {
     );
   }
 
+  console.log('Product images from API:', product?.images);
+
   return (
     <>
       <Box 
