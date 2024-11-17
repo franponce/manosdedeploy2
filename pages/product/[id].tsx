@@ -48,7 +48,7 @@ type NextPageWithLayout = NextPage & {
 const ProductDetail: NextPageWithLayout = () => {
   const router = useRouter();
   const { id } = router.query;
-  const { product, isLoading, error } = useProduct(id as string);
+  const { product, isLoading, error } = useProduct(id ? id as string : null);
   const { siteInfo } = useSiteInfo();
   const toast = useToast();
   const { cart, addToCart, removeFromCart } = useCart();
@@ -56,7 +56,21 @@ const ProductDetail: NextPageWithLayout = () => {
   const [copied, setCopied] = useState(false);
   const [pageUrl, setPageUrl] = useState<string>('');
 
-  const displayProduct = product;
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setPageUrl(window.location.href);
+    }
+  }, []);
+
+  if (!id) {
+    return (
+      <Container maxW="container.xl" py={8}>
+        <VStack spacing={6} align="stretch">
+          <Skeleton height="400px" />
+        </VStack>
+      </Container>
+    );
+  }
 
   const total = useMemo(
     () => parseCurrency((Array.isArray(cart) ? cart : []).reduce(
@@ -87,10 +101,10 @@ const ProductDetail: NextPageWithLayout = () => {
   };
 
   const handleAddToCart = () => {
-    if (!displayProduct) return;
+    if (!product) return;
     
     const cartItem: CartItem = {
-      ...displayProduct,
+      ...product,
       quantity: 1
     };
     
@@ -104,24 +118,20 @@ const ProductDetail: NextPageWithLayout = () => {
     });
   };
 
-  const shareText = `¡Mira este producto! ${displayProduct?.title} 🛒`;
-  const shareTextWithPrice = `¡Descubrí ${displayProduct?.title} por ${parseCurrency(displayProduct?.price || 0)}! 🛒`;
+  const shareText = `¡Mira este producto! ${product?.title} 🛒`;
+  const shareTextWithPrice = `¡Descubrí ${product?.title} por ${parseCurrency(product?.price || 0)}! 🛒`;
   const emailSubject = `Te comparto este producto de ${siteInfo?.storeName || 'nuestra tienda'}`;
-  const emailBody = `Hola! Encontré este producto que te puede interesar:\n\n${displayProduct?.title}\n${pageUrl}`;
-
-  useEffect(() => {
-    setPageUrl(window.location.href);
-  }, []);
+  const emailBody = `Hola! Encontré este producto que te puede interesar:\n\n${product?.title}\n${pageUrl}`;
 
   const handleCopyLink = () => {
-    const textToCopy = `¡Mirá este producto! ${displayProduct?.title}\n${pageUrl}`;
+    const textToCopy = `¡Mirá este producto! ${product?.title}\n${pageUrl}`;
     navigator.clipboard.writeText(textToCopy);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   const renderDescription = () => {
-    if (!displayProduct?.description) return null;
+    if (!product?.description) return null;
 
     const cleanDescription = (html: string) => {
       return html
@@ -164,7 +174,7 @@ const ProductDetail: NextPageWithLayout = () => {
           wordBreak: 'break-word'
         }}
         dangerouslySetInnerHTML={{ 
-          __html: cleanDescription(displayProduct.description) 
+          __html: cleanDescription(product.description) 
         }}
       />
     );
@@ -231,9 +241,9 @@ const ProductDetail: NextPageWithLayout = () => {
           <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={8}>
             <GridItem>
               <Skeleton isLoaded={!isLoading} height="400px">
-                {displayProduct ? (
+                {product && product.images ? (
                   <ImageCarousel 
-                    images={displayProduct.images.filter(Boolean)} 
+                    images={product.images.filter(Boolean)} 
                     autoPlayInterval={4000}
                   />
                 ) : (
@@ -246,13 +256,13 @@ const ProductDetail: NextPageWithLayout = () => {
               <VStack spacing={6} align="stretch">
                 <Skeleton isLoaded={!isLoading}>
                   <Heading as="h1" size="xl">
-                    {displayProduct?.title}
+                    {product?.title}
                   </Heading>
                 </Skeleton>
 
                 <Skeleton isLoaded={!isLoading}>
                   <Text fontSize="2xl" fontWeight="bold">
-                    {parseCurrency(displayProduct?.price || 0)}
+                    {parseCurrency(product?.price || 0)}
                   </Text>
                 </Skeleton>
 
