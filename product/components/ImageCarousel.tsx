@@ -8,7 +8,11 @@ interface ImageCarouselProps {
   variant: string;
 }
 
-const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, title, variant }) => {
+const ImageCarousel: React.FC<ImageCarouselProps> = ({ 
+  images = [], 
+  title,
+  variant 
+}) => {
   console.log('ImageCarousel received images:', images);
   console.log('Variant:', variant);
 
@@ -18,7 +22,15 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, title, variant })
 
   const processedImages = images
     .filter(Boolean)
-    .map(url => url.split('|||')[0].trim());
+    .map(url => {
+      try {
+        return url.split('|||')[0].trim();
+      } catch (e) {
+        console.error('Error processing image URL:', url);
+        return null;
+      }
+    })
+    .filter(Boolean);
 
   console.log('Processed images:', processedImages);
 
@@ -53,6 +65,17 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, title, variant })
     setTouchStart(null);
   };
 
+  // Si no hay imágenes, mostrar placeholder
+  if (!processedImages.length) {
+    return (
+      <div className="relative aspect-square w-full">
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+          <span>No image available</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <Box 
       position="relative" 
@@ -62,7 +85,7 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, title, variant })
       onTouchEnd={handleTouchEnd}
     >
       <Image
-        src={processedImages[currentIndex]}
+        src={processedImages[currentIndex] || undefined}
         alt={`${title} - Imagen ${currentIndex + 1}`}
         width="100%"
         height="100%"
