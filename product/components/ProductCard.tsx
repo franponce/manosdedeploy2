@@ -152,10 +152,10 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading: cardLoading, 
           <Link as="div" onClick={handleProductClick} cursor="pointer">
             <Box position="relative">
               <ImageCarousel 
-                  images={product.images}
-                  variant="store"
-                  title={''}
-                  onImageClick={handleClick}
+                images={product.images}
+                title={''}
+                variant="store"
+                onNavigate={() => router.push(`/product/${product.id}`)}
               />
             </Box>
           </Link>

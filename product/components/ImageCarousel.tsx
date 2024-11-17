@@ -12,20 +12,57 @@ interface ImageCarouselProps {
   images: string[];
   title: string;
   variant: string;
-  onImageClick?: (e: React.MouseEvent) => void;
+  onNavigate?: () => void;
 }
 
-const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, title, variant, onImageClick }) => {
+const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, title, variant, onNavigate }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
-
-  const processImageSrc = (src: string) => {
-    return src.split('|||')[0].trim();
-  };
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
   const processedImages = useMemo(() => {
-    return images.filter(Boolean).map(url => processImageSrc(url));
+    return images.filter(Boolean).map(url => url.split('|||')[0].trim());
   }, [images]);
+
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe) {
+      handleNext();
+    }
+    if (isRightSwipe) {
+      handlePrevious();
+    }
+  };
+
+  const handleNext = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setCurrentImageIndex((prev) => 
+      prev === processedImages.length - 1 ? 0 : prev + 1
+    );
+  };
+
+  const handlePrevious = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setCurrentImageIndex((prev) => 
+      prev === 0 ? processedImages.length - 1 : prev - 1
+    );
+  };
 
   const dimensions = {
     product: {
@@ -39,82 +76,43 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, title, variant, o
   };
 
   const currentDimensions = variant === 'product' ? dimensions.product : dimensions.store;
-
   const showNavigation = useBreakpointValue({ base: false, md: true });
 
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-
-    if (isAutoPlaying && processedImages.length > 1) {
-      interval = setInterval(() => {
-        setCurrentImageIndex((prevIndex) =>
-          prevIndex === processedImages.length - 1 ? 0 : prevIndex + 1
-        );
-      }, 3000);
-    }
-
-    return () => {
-      if (interval) {
-        clearInterval(interval);
-      }
-    };
-  }, [isAutoPlaying, processedImages.length]);
-
-  const handlePrevious = () => {
-    setIsAutoPlaying(false);
-    setCurrentImageIndex((prevIndex) =>
-      prevIndex === 0 ? processedImages.length - 1 : prevIndex - 1
-    );
-  };
-
-  const handleNext = () => {
-    setIsAutoPlaying(false);
-    setCurrentImageIndex((prevIndex) =>
-      prevIndex === processedImages.length - 1 ? 0 : prevIndex + 1
-    );
-  };
-
-  const handleMouseEnter = () => {
-    setIsAutoPlaying(false);
-  };
-
-  const handleMouseLeave = () => {
-    setIsAutoPlaying(true);
-  };
-  const handleImageClick = (e: React.MouseEvent) => {
-    const target = e.target as HTMLElement;
-    if (onImageClick && !target.closest('button')) {
-      onImageClick(e);
-    }
-  };
-
-  if (!processedImages.length) return null;
-
   return (
-    <Box
-      position="relative"
+    <Box 
+      position="relative" 
       {...currentDimensions.container}
       overflow="hidden"
-      onClick={handleImageClick}
-      cursor={onImageClick ? "pointer" : "default"}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
     >
-      {processedImages.map((imageUrl, index) => (
-        <Image
-          key={index}
-          src={imageUrl}
-          alt={`${title} - Imagen ${index + 1}`}
-          style={{
-            display: index === currentImageIndex ? 'block' : 'none'
-          }}
-          objectFit="contain"
-          {...currentDimensions.image}
-          opacity={index === currentImageIndex ? 1 : 0}
-          transition="opacity 0.5s ease-in-out"
-          loading="lazy"
-        />
-      ))}
+      <Flex
+        transition="transform 0.3s ease-in-out"
+        transform={`translateX(-${currentImageIndex * 100}%)`}
+        width={`${processedImages.length * 100}%`}
+      >
+        {processedImages.map((imageUrl, index) => (
+          <Box
+            key={index}
+            width={`${100 / processedImages.length}%`}
+            height="100%"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onNavigate) onNavigate();
+            }}
+          >
+            <Image
+              src={imageUrl}
+              alt={`${title} - Imagen ${index + 1}`}
+              objectFit="contain"
+              width="100%"
+              height="100%"
+              loading="lazy"
+            />
+          </Box>
+        ))}
+      </Flex>
 
       {showNavigation && processedImages.length > 1 && (
         <>
@@ -125,13 +123,9 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, title, variant, o
             left="0"
             top="50%"
             transform="translateY(-50%)"
-            onClick={(e) => {
-              e.stopPropagation();
-              handlePrevious();
-            }}
+            onClick={handlePrevious}
             bg="whiteAlpha.700"
             _hover={{ bg: "whiteAlpha.900" }}
-            size="lg"
           />
           <IconButton
             aria-label="Next image"
@@ -140,13 +134,9 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, title, variant, o
             right="0"
             top="50%"
             transform="translateY(-50%)"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleNext();
-            }}
+            onClick={handleNext}
             bg="whiteAlpha.700"
             _hover={{ bg: "whiteAlpha.900" }}
-            size="lg"
           />
         </>
       )}
@@ -167,8 +157,8 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, title, variant, o
               borderRadius="full"
               bg={index === currentImageIndex ? "white" : "whiteAlpha.400"}
               cursor="pointer"
-              onClick={() => {
-                setIsAutoPlaying(false);
+              onClick={(e) => {
+                e.stopPropagation();
                 setCurrentImageIndex(index);
               }}
             />
