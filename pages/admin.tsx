@@ -185,7 +185,7 @@ const AdminPage: React.FC = () => {
             >
               Ver más
             </MenuButton>
-            <MenuList zIndex={1500}>
+            <MenuList>
               <Link href="/?preview=true" passHref>
                 <MenuItem icon={<Icon as={FaEye} />}>
                   Previsualizar tienda
