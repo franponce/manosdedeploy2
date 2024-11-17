@@ -45,6 +45,18 @@ type NextPageWithLayout = NextPage & {
   getLayout?: (page: React.ReactElement) => React.ReactElement;
 };
 
+const calculateTotal = (cart: CartItem[]) => 
+  parseCurrency((Array.isArray(cart) ? cart : []).reduce(
+    (total: number, item: CartItem) => total + (item?.price || 0) * (item?.quantity || 0), 
+    0
+  ));
+
+const calculateQuantity = (cart: CartItem[]) => 
+  (Array.isArray(cart) ? cart : []).reduce(
+    (acc: number, item: CartItem) => acc + (item?.quantity || 0), 
+    0
+  );
+
 const ProductDetail: NextPageWithLayout = () => {
   const router = useRouter();
   const { id } = router.query;
@@ -72,21 +84,8 @@ const ProductDetail: NextPageWithLayout = () => {
     );
   }
 
-  const total = useMemo(
-    () => parseCurrency((Array.isArray(cart) ? cart : []).reduce(
-      (total: number, item: CartItem) => total + (item?.price || 0) * (item?.quantity || 0), 
-      0
-    )),
-    [cart]
-  );
-
-  const quantity = useMemo(
-    () => (Array.isArray(cart) ? cart : []).reduce(
-      (acc: number, item: CartItem) => acc + (item?.quantity || 0), 
-      0
-    ),
-    [cart]
-  );
+  const total = calculateTotal(cart);
+  const quantity = calculateQuantity(cart);
 
   const handleEditCart = (product: Product | CartItem, action: "increment" | "decrement") => {
     const cartItem: CartItem = 'quantity' in product 

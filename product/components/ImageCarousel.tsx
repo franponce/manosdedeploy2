@@ -22,7 +22,7 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [hasCompletedAutoplay, setHasCompletedAutoplay] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loadedImages, setLoadedImages] = useState<boolean[]>([]);
   const autoplayTimeoutRef = useRef<NodeJS.Timeout>();
   const filteredImages = images.filter(Boolean);
   const imageSize = useBreakpointValue({ 
@@ -30,37 +30,49 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
     md: variant === 'detail' ? "500px" : "300px" 
   });
 
+  // Precarga de imágenes
   useEffect(() => {
-    // Verificar que las imágenes estén cargadas
     if (filteredImages.length > 0) {
-      const imgElement = document.createElement('img');
-      imgElement.onload = () => setIsLoading(false);
-      imgElement.onerror = () => setIsLoading(false);
-      imgElement.src = filteredImages[currentIndex];
-    } else {
-      setIsLoading(false);
+      const loadStates = new Array(filteredImages.length).fill(false);
+      
+      filteredImages.forEach((src, index) => {
+        const img = new HTMLImageElement();
+        img.onload = () => {
+          setLoadedImages(prev => {
+            const newStates = [...prev];
+            newStates[index] = true;
+            return newStates;
+          });
+        };
+        img.src = src;
+      });
+
+      setLoadedImages(loadStates);
     }
-  }, [filteredImages, currentIndex]);
+  }, [filteredImages]);
 
   // Autoplay solo una vez
   useEffect(() => {
-    if (!hasCompletedAutoplay && filteredImages.length > 1) {
+    if (!hasCompletedAutoplay && filteredImages.length > 1 && loadedImages[currentIndex]) {
       let currentIdx = 0;
       
       const runAutoplay = () => {
         autoplayTimeoutRef.current = setTimeout(() => {
-          currentIdx++;
-          setCurrentIndex(currentIdx);
-          
           if (currentIdx < filteredImages.length - 1) {
-            runAutoplay();
+            currentIdx++;
+            setCurrentIndex(currentIdx);
+            if (loadedImages[currentIdx]) {
+              runAutoplay();
+            }
           } else {
             setHasCompletedAutoplay(true);
           }
         }, 3000);
       };
 
-      runAutoplay();
+      if (loadedImages[0]) {
+        runAutoplay();
+      }
     }
 
     return () => {
@@ -68,22 +80,7 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
         clearTimeout(autoplayTimeoutRef.current);
       }
     };
-  }, [filteredImages.length, hasCompletedAutoplay]);
-
-  if (isLoading) {
-    return (
-      <Box
-        height={imageSize}
-        bg="gray.50"
-        borderRadius="md"
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-      >
-        <Spinner color="blue.500" size="xl" />
-      </Box>
-    );
-  }
+  }, [filteredImages.length, hasCompletedAutoplay, loadedImages]);
 
   if (!filteredImages.length) {
     return (
@@ -119,25 +116,25 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
       overflow="hidden"
       height={imageSize}
     >
-      <Image
-        src={filteredImages[currentIndex]}
-        alt={`Imagen del producto ${currentIndex + 1}`}
-        objectFit="contain"
-        width="100%"
-        height="100%"
-        bg="white"
-        fallback={
-          <Box
-            height="100%"
-            bg="gray.100"
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-          >
-            <Text color="gray.500">Error al cargar la imagen</Text>
-          </Box>
-        }
-      />
+      {loadedImages[currentIndex] ? (
+        <Image
+          src={filteredImages[currentIndex]}
+          alt={`Imagen del producto ${currentIndex + 1}`}
+          objectFit="contain"
+          width="100%"
+          height="100%"
+          bg="white"
+        />
+      ) : (
+        <Flex
+          height="100%"
+          alignItems="center"
+          justifyContent="center"
+          bg="gray.50"
+        >
+          <Spinner color="blue.500" size="xl" />
+        </Flex>
+      )}
 
       {/* Flechas de navegación solo en detalle */}
       {variant === 'detail' && filteredImages.length > 1 && (
