@@ -134,7 +134,7 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
                 items.map((item) => (
                   <Flex key={item.id} justify="space-between" align="flex-start">
                     <Image 
-                      src={item.image} 
+                      src={item.images} 
                       alt={item.title} 
                       boxSize="50px" 
                       objectFit="cover" 
