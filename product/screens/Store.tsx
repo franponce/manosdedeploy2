@@ -15,6 +15,7 @@ import {
   InputGroup,
   InputLeftElement,
   Icon,
+  Image,
 } from "@chakra-ui/react";
 import { SearchIcon } from "@chakra-ui/icons";
 import { CartItem, Product, Category } from "../types";
@@ -80,6 +81,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
   const [searchTerm, setSearchTerm] = React.useState("");
   const [selectedCategory, setSelectedCategory] = React.useState("");
   const { siteInfo } = useSiteInfo();
+  const [bannerError, setBannerError] = React.useState(false);
 
   const lastProductElementRef = React.useCallback((node: HTMLDivElement | null) => {
     if (isLoading) return;
@@ -246,15 +248,21 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
     <>
       <Stack spacing={6}>
         <Box 
-          bg="gray.100" 
-          p={4} 
-          borderRadius="md" 
-          mb={4}
-          display={{ base: 'none', md: 'block' }}
+          borderRadius="lg"
+          height={{ md: "300px" }}
+          overflow="hidden"
+          width="100%"
+          position="relative"
         >
-          <Text textAlign="center" color="gray.600">
-            ¡Bienvenido a nuestra tienda! Aquí encontrarás todos nuestros productos.
-          </Text>
+          <Image
+            src={bannerError ? "/default-banner.jpg" : `${siteInfo?.bannerUrl}?${new Date().getTime()}`}
+            alt="Header image"
+            objectFit="cover"
+            width="100%"
+            height="100%"
+            onError={() => setBannerError(true)}
+            fallback={<Box bg="gray.200" w="100%" h="100%" />}
+          />
         </Box>
 
         <SiteInfoBanner siteInfo={siteInfo} />
