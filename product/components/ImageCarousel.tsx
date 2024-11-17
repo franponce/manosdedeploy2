@@ -12,9 +12,10 @@ interface ImageCarouselProps {
   images: string[];
   title: string;
   variant: string;
+  onImageClick?: (e: React.MouseEvent) => void;
 }
 
-const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, title, variant }) => {
+const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, title, variant, onImageClick }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
 
@@ -80,6 +81,12 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, title, variant })
   const handleMouseLeave = () => {
     setIsAutoPlaying(true);
   };
+  const handleImageClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (onImageClick && !target.closest('button')) {
+      onImageClick(e);
+    }
+  };
 
   if (!processedImages.length) return null;
 
@@ -88,6 +95,8 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, title, variant })
       position="relative"
       {...currentDimensions.container}
       overflow="hidden"
+      onClick={handleImageClick}
+      cursor={onImageClick ? "pointer" : "default"}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
@@ -116,7 +125,10 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, title, variant })
             left="0"
             top="50%"
             transform="translateY(-50%)"
-            onClick={handlePrevious}
+            onClick={(e) => {
+              e.stopPropagation();
+              handlePrevious();
+            }}
             bg="whiteAlpha.700"
             _hover={{ bg: "whiteAlpha.900" }}
             size="lg"
@@ -128,7 +140,10 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, title, variant })
             right="0"
             top="50%"
             transform="translateY(-50%)"
-            onClick={handleNext}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleNext();
+            }}
             bg="whiteAlpha.700"
             _hover={{ bg: "whiteAlpha.900" }}
             size="lg"

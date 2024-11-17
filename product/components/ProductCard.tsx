@@ -41,6 +41,12 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading: cardLoading, 
     router.push(`/product/${product.id}`);
   };
 
+  const handleClick = (e: React.MouseEvent) => {
+    if (onAdd) {
+      onAdd(product);
+    }
+  };
+
   const renderTitle = () => {
     const titleContent = (
       <Text
@@ -147,7 +153,10 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading: cardLoading, 
             <Box position="relative">
               <ImageCarousel 
                   images={product.images}
-                  variant="store" title={''}              />
+                  variant="store"
+                  title={''}
+                  onImageClick={handleClick}
+              />
             </Box>
           </Link>
         )}
