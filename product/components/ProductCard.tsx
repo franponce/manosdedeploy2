@@ -155,7 +155,6 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading: cardLoading, 
                 images={product.images}
                 title={''}
                 variant="store"
-                onNavigate={() => router.push(`/product/${product.id}`)}
               />
             </Box>
           </Link>
