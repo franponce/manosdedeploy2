@@ -193,17 +193,13 @@ const AdminPage: React.FC = () => {
               </MenuItem>
               <MenuItem 
                 icon={<Icon as={FaBox} />}
-                onClick={(e) => e.preventDefault()}
-                closeOnSelect={false}
+                onClick={() => setShowHiddenProducts(!showHiddenProducts)}
               >
                 <Flex justify="space-between" align="center" width="100%">
                   <Text>Ver productos ocultos</Text>
                   <Switch 
                     isChecked={showHiddenProducts}
-                    onChange={(e) => {
-                      e.stopPropagation();
-                      setShowHiddenProducts(!showHiddenProducts);
-                    }}
+                    pointerEvents="none"
                     size="sm"
                   />
                 </Flex>
@@ -228,11 +224,13 @@ const AdminPage: React.FC = () => {
       <CategoryManager
         isOpen={isCategoryManagerOpen}
         onClose={() => setIsCategoryManagerOpen(false)}
+        modalProps={{ zIndex: 1600 }}
       />
 
       <ProductOrderManager
         isOpen={isProductOrderOpen}
         onClose={() => setIsProductOrderOpen(false)}
+        modalProps={{ zIndex: 1600 }}
       />
     </Box>
   );

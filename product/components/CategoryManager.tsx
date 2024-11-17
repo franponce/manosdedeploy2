@@ -37,11 +37,16 @@ import { CATEGORY_CONSTANTS } from '../../utils/constants';
 interface CategoryManagerProps {
   isOpen: boolean;
   onClose: () => void;
+  modalProps?: {
+    zIndex?: number;
+    [key: string]: any;
+  };
 }
 
 export const CategoryManager: React.FC<CategoryManagerProps> = ({
   isOpen,
   onClose,
+  modalProps = {}
 }) => {
   const [newCategoryName, setNewCategoryName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -164,6 +169,7 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
       onClose={onClose} 
       size={modalSize}
       motionPreset="slideInBottom"
+      {...modalProps}
     >
       <ModalOverlay />
       <ModalContent 

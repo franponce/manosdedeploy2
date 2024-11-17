@@ -27,9 +27,17 @@ import { getProducts, updateProductOrder } from '../../utils/googleSheets';
 interface ProductOrderManagerProps {
   isOpen: boolean;
   onClose: () => void;
+  modalProps?: {
+    zIndex?: number;
+    [key: string]: any;
+  };
 }
 
-const ProductOrderManager: React.FC<ProductOrderManagerProps> = ({ isOpen, onClose }) => {
+const ProductOrderManager: React.FC<ProductOrderManagerProps> = ({ 
+  isOpen, 
+  onClose,
+  modalProps = {} 
+}) => {
   const toast = useToast();
   const { data: products, error, isLoading } = useSWR<Product[]>(
     SWR_KEYS.PRODUCTS,
@@ -110,7 +118,7 @@ const ProductOrderManager: React.FC<ProductOrderManagerProps> = ({ isOpen, onClo
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="xl">
+    <Modal isOpen={isOpen} onClose={onClose} {...modalProps}>
       <ModalOverlay />
       <ModalContent maxH="90vh">
         <ModalHeader>Ordenar Productos</ModalHeader>
