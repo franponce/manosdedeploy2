@@ -134,11 +134,11 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
                 items.map((item) => (
                   <Flex key={item.id} justify="space-between" align="flex-start">
                     <Image 
-                      src={item.images} 
+                      src={item.images[0]} 
                       alt={item.title} 
                       boxSize="50px" 
                       objectFit="cover" 
-                      mr={2} 
+                      mr={2}
                       flexShrink={0}
                     />
                     <Box flex={1} minWidth={0}>
