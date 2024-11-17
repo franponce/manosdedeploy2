@@ -15,6 +15,8 @@ import {
   Skeleton,
   SkeletonCircle,
   SkeletonText,
+  Switch,
+  Text
 } from "@chakra-ui/react";
 import ProductManagement from "../product/components/ProductManagement";
 import Link from 'next/link';
@@ -25,7 +27,8 @@ import {
   FaPlus, 
   FaTags, 
   FaChevronDown, 
-  FaSort 
+  FaSort, 
+  FaBox 
 } from 'react-icons/fa';
 import ProductModal from '../product/components/ProductModal';
 import { Product } from "../product/types";
@@ -45,6 +48,7 @@ const AdminPage: React.FC = () => {
   const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
   const { categories } = useCategories();
   const [isProductOrderOpen, setIsProductOrderOpen] = useState(false);
+  const [showHiddenProducts, setShowHiddenProducts] = useState(false);
 
   const handleStoreSettings = () => {
     router.push('/store-config');
@@ -169,7 +173,7 @@ const AdminPage: React.FC = () => {
             >
               Ver más
             </MenuButton>
-            <MenuList>
+            <MenuList zIndex={1500}>
               <Link href="/?preview=true" passHref>
                 <MenuItem icon={<Icon as={FaEye} />}>
                   Previsualizar tienda
@@ -187,12 +191,27 @@ const AdminPage: React.FC = () => {
               >
                 Orden de productos
               </MenuItem>
+              <MenuItem 
+                icon={<Icon as={FaBox} />}
+              >
+                <Flex justify="space-between" align="center" width="100%">
+                  <Text>Ver productos ocultos</Text>
+                  <Switch 
+                    isChecked={showHiddenProducts}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      setShowHiddenProducts(!showHiddenProducts);
+                    }}
+                    size="sm"
+                  />
+                </Flex>
+              </MenuItem>
             </MenuList>
           </Menu>
         </Flex>
       </Flex>
 
-      <ProductManagement onCreateProduct={handleCreateProduct} />
+      <ProductManagement onCreateProduct={handleCreateProduct} showHiddenProducts={showHiddenProducts} />
 
       {isModalOpen && (
         <ProductModal

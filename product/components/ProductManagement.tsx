@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import {
   Box,
   Button,
@@ -30,11 +30,19 @@ import useSWR, { mutate } from 'swr';
 const PRODUCT_LIMIT = 30;
 const SYNC_INTERVAL = 30000; // 30 segundos
 
-const ProductManagement: React.FC<{ onCreateProduct: () => void }> = ({ onCreateProduct }) => {
+interface ProductManagementProps {
+  onCreateProduct: () => void;
+  showHiddenProducts: boolean;
+}
+
+const ProductManagement: React.FC<ProductManagementProps> = ({ 
+  onCreateProduct, 
+  showHiddenProducts 
+}) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
-  const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -42,6 +50,7 @@ const ProductManagement: React.FC<{ onCreateProduct: () => void }> = ({ onCreate
   const [hasMore, setHasMore] = useState(true);
   const observer = useRef<IntersectionObserver | null>(null);
   const toast = useToast();
+  const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
 
   const lastProductElementRef = useCallback((node: HTMLDivElement | null) => {
     if (isLoading) return;
@@ -95,6 +104,23 @@ const ProductManagement: React.FC<{ onCreateProduct: () => void }> = ({ onCreate
     setDisplayedProducts(filteredProducts.slice(0, page * PRODUCTS_PER_PAGE));
     setHasMore(page * PRODUCTS_PER_PAGE < filteredProducts.length);
   }, [filteredProducts, page]);
+
+  useEffect(() => {
+    if (!products) return;
+    
+    const filtered = products
+      .filter(product => showHiddenProducts ? true : product.isVisible)
+      .filter(product => {
+        if (!searchTerm) return true;
+        return product.title.toLowerCase().includes(searchTerm.toLowerCase());
+      })
+      .filter(product => {
+        if (!selectedCategory) return true;
+        return product.categoryId === selectedCategory;
+      });
+
+    setDisplayedProducts(filtered);
+  }, [products, searchTerm, selectedCategory, showHiddenProducts]);
 
   const handleEdit = (product: Product) => {
     setCurrentProduct(product);
