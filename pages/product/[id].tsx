@@ -243,8 +243,9 @@ const ProductDetail: NextPageWithLayout = () => {
               <Skeleton isLoaded={!isLoading} height="400px">
                 {product && product.images ? (
                   <ImageCarousel 
-                    images={product.images.filter(Boolean)} 
+                    images={product.images}
                     autoPlayInterval={4000}
+                    showControls={true}
                   />
                 ) : (
                   <Box height="400px" bg="gray.100" />

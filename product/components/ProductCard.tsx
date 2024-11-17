@@ -144,10 +144,13 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading: cardLoading, 
           <Skeleton />
         ) : (
           <Link as="div" onClick={handleProductClick} cursor="pointer">
-            <ImageCarousel 
-              images={product.images.filter(Boolean)} 
-              autoPlayInterval={5000}
-            />
+            <Box position="relative">
+              <ImageCarousel 
+                images={product.images}
+                autoPlayInterval={4000}
+                showControls={false}
+              />
+            </Box>
           </Link>
         )}
       </AspectRatio>
