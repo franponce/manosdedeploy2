@@ -244,8 +244,7 @@ const ProductDetail: NextPageWithLayout = () => {
                 {product && product.images ? (
                   <ImageCarousel 
                     images={product.images}
-                    autoPlayInterval={4000}
-                    showControls={true}
+                    variant="detail"
                   />
                 ) : (
                   <Box height="400px" bg="gray.100" />

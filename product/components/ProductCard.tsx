@@ -147,8 +147,7 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading: cardLoading, 
             <Box position="relative">
               <ImageCarousel 
                 images={product.images}
-                autoPlayInterval={4000}
-                showControls={false}
+                variant="store"
               />
             </Box>
           </Link>
