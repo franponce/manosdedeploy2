@@ -110,17 +110,18 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
       {processedImages.length > 1 && (
         <Flex 
           position="absolute" 
-          bottom="2" 
+          bottom={{ base: "4", md: "2" }}
           left="0" 
           right="0" 
           justify="center" 
           gap={2}
+          zIndex="1"
         >
           {processedImages.map((_, index) => (
             <Box
               key={index}
-              width="2"
-              height="2"
+              width={{ base: "3", md: "2" }}
+              height={{ base: "3", md: "2" }}
               borderRadius="full"
               bg={index === currentIndex ? "blue.500" : "gray.300"}
             />
