@@ -117,6 +117,10 @@ const ProductOrderManager: React.FC<ProductOrderManagerProps> = ({
     );
   }
 
+  function normalizeImage(arg0: string): string | undefined {
+    throw new Error('Function not implemented.');
+  }
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} {...modalProps}>
       <ModalOverlay />
@@ -146,7 +150,7 @@ const ProductOrderManager: React.FC<ProductOrderManagerProps> = ({
                         #{index + 1}
                       </Text>
                       <Image
-                        src={product.images[0]}
+                        src={normalizeImage(product.images[0])}
                         alt={product.title}
                         boxSize="50px"
                         objectFit="cover"

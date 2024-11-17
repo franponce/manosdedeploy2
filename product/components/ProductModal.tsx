@@ -29,8 +29,9 @@ import {
   InputRightElement,
   HStack,
   Switch,
+  IconButton,
 } from "@chakra-ui/react";
-import { TimeIcon, AddIcon } from "@chakra-ui/icons";
+import { TimeIcon, AddIcon, CloseIcon } from "@chakra-ui/icons";
 import imageCompression from "browser-image-compression";
 import { Product, Category } from "../types";
 import DatePicker from "react-datepicker";
@@ -322,6 +323,22 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     return new Intl.DateTimeFormat('es-AR', options).format(scheduledDate);
   };
 
+  const normalizeImage = (img: string | string[]): string => {
+    if (Array.isArray(img)) {
+      return img[0];
+    }
+    return img;
+  };
+
+  const handleRemoveImage = (indexToRemove: number) => {
+    setCurrentProduct(prev => {
+      const newImages = prev.images
+        .filter((_, index) => index !== indexToRemove)
+        .map(normalizeImage);
+      return { ...prev, images: newImages };
+    });
+  };
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl">
       <ModalOverlay />
@@ -360,40 +377,33 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
               </Text>
             </FormControl>
 
-            <VStack spacing={4} align="stretch">
-              <Text fontSize="sm" color="gray.600" mb={2}>
-                Recomendaciones para las imágenes 😉:
-                <br />
-                • Intenta que tus imágenes sean cuadradas.
-                <br />
-                • Las medidas recomendadas son de 800x800 px.
-                <br />
-                • Cada imagen no debe pesar más de 5MB.
-                <br />
-                • Puedes subir hasta 3 imágenes.
-              </Text>
-
-              {[0, 1, 2].map((index) => (
-                <FormControl key={index}>
-                  <FormLabel>Imagen {index + 1} {index === 0 && "(Principal)"}</FormLabel>
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleProductImageUpload(e, index)}
-                  />
-                  {currentProduct.images[index] && (
-                    <Box mt={2}>
-                      <Image
-                        src={currentProduct.images[index]}
-                        alt={`Preview ${index + 1}`}
-                        maxH="200px"
-                        objectFit="contain"
-                      />
-                    </Box>
-                  )}
-                </FormControl>
-              ))}
-            </VStack>
+            <FormControl>
+              <FormLabel>Imágenes</FormLabel>
+              <VStack spacing={4} align="stretch">
+                {currentProduct.images.map((img, index) => (
+                  <Flex key={index} align="center">
+                    <Image 
+                      src={normalizeImage(img)}
+                      alt={`Imagen ${index + 1}`} 
+                      boxSize="100px" 
+                      objectFit="cover" 
+                    />
+                    <IconButton
+                      ml={2}
+                      icon={<CloseIcon />}
+                      aria-label="Eliminar imagen"
+                      size="sm"
+                      onClick={() => handleRemoveImage(index)}
+                    />
+                  </Flex>
+                ))}
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleProductImageUpload(e, currentProduct.images.length)}
+                />
+              </VStack>
+            </FormControl>
 
             <FormControl>
               <FormLabel>Precio ({siteInfo?.currency})</FormLabel>
