@@ -95,6 +95,20 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
     window.open(whatsappURL, "_blank");
   };
 
+  const getFirstImage = (images: string | string[]): string => {
+    if (Array.isArray(images)) {
+      return images[0];
+    }
+    
+    // Si es string, dividimos por ||| y tomamos la primera imagen
+    if (typeof images === 'string' && images.includes('|||')) {
+      return images.split('|||')[0];
+    }
+    
+    // Si es una única imagen, la devolvemos tal cual
+    return images;
+  };
+
   const renderTitle = (item: CartItem) => {
     return (
       <Text
@@ -134,7 +148,7 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
                 items.map((item) => (
                   <Flex key={item.id} justify="space-between" align="flex-start">
                     <Image 
-                      src={Array.isArray(item.images) ? item.images[0] : item.images} 
+                      src={getFirstImage(item.images)}
                       alt={item.title} 
                       boxSize="50px" 
                       objectFit="cover" 
