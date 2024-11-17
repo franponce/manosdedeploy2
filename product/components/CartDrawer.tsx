@@ -96,17 +96,17 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
   };
 
   const getFirstImage = (images: string | string[]): string => {
+    // Si es string, dividimos por ||| y tomamos la primera imagen
+    if (typeof images === 'string') {
+      return images.split('|||')[0].trim();
+    }
+    
+    // Si por alguna razón es array, tomamos el primero
     if (Array.isArray(images)) {
       return images[0];
     }
     
-    // Si es string, dividimos por ||| y tomamos la primera imagen
-    if (typeof images === 'string' && images.includes('|||')) {
-      return images.split('|||')[0];
-    }
-    
-    // Si es una única imagen, la devolvemos tal cual
-    return images;
+    return '';
   };
 
   const renderTitle = (item: CartItem) => {
