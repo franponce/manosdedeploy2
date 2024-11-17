@@ -514,27 +514,46 @@ if (typeof window === 'undefined') {
       const sheets = google.sheets({ version: 'v4', auth });
 
       try {
-        // Actualizar la columna J con el nuevo orden
+        // 1. Primero obtenemos todas las filas actuales
+        const response = await sheets.spreadsheets.values.get({
+          spreadsheetId: SPREADSHEET_ID,
+          range: 'La Libre Web - Catálogo online rev 2021 - products!A2:I', // Todas las columnas con datos
+        });
+
+        const currentRows = response.data.values || [];
+        
+        // 2. Creamos un mapa de ID -> fila para facilitar la reordenación
+        const rowMap = new Map(
+          currentRows.map(row => [row[0], row])
+        );
+
+        // 3. Creamos las nuevas filas en el orden especificado
+        const newRows = orderedIds.map((id, index) => {
+          const row = rowMap.get(id);
+          if (!row) throw new Error(`Producto con ID ${id} no encontrado`);
+          return row;
+        });
+
+        // 4. Actualizamos todas las filas en el nuevo orden
         await sheets.spreadsheets.values.update({
           spreadsheetId: SPREADSHEET_ID,
-          range: 'La Libre Web - Catálogo online rev 2021 - products!J2:J',
+          range: 'La Libre Web - Catálogo online rev 2021 - products!A2:I',
           valueInputOption: 'RAW',
           requestBody: {
-            values: orderedIds.map(id => [id])
+            values: newRows
           }
         });
 
-        // Reordenar las filas según el nuevo orden
-        const values = orderedIds.map((id, index) => [(index + 1).toString()]);
-        
-        await sheets.spreadsheets.values.update({
+        // 5. Verificamos la actualización
+        const verifyResponse = await sheets.spreadsheets.values.get({
           spreadsheetId: SPREADSHEET_ID,
-          range: 'La Libre Web - Catálogo online rev 2021 - products!A2:A',
-          valueInputOption: 'RAW',
-          requestBody: {
-            values
-          }
+          range: 'La Libre Web - Catálogo online rev 2021 - products!A2:I'
         });
+
+        if (!verifyResponse.data.values) {
+          throw new Error('Error al verificar la actualización del orden');
+        }
+
       } catch (error) {
         console.error('Error updating product order:', error);
         throw error;
