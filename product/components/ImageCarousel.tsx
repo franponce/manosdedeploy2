@@ -9,6 +9,9 @@ interface ImageCarouselProps {
 }
 
 const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, title, variant }) => {
+  console.log('ImageCarousel received images:', images);
+  console.log('Variant:', variant);
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const isDesktop = useBreakpointValue({ base: false, md: true });
@@ -16,6 +19,8 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, title, variant })
   const processedImages = images
     .filter(Boolean)
     .map(url => url.split('|||')[0].trim());
+
+  console.log('Processed images:', processedImages);
 
   const handleNext = (e: React.MouseEvent) => {
     e.stopPropagation();
