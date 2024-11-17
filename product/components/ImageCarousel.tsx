@@ -22,57 +22,32 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [hasCompletedAutoplay, setHasCompletedAutoplay] = useState(false);
-  const [loadedImages, setLoadedImages] = useState<boolean[]>([]);
+  const [isImageLoading, setIsImageLoading] = useState(true);
   const autoplayTimeoutRef = useRef<NodeJS.Timeout>();
   const filteredImages = images.filter(Boolean);
+  
   const imageSize = useBreakpointValue({ 
     base: variant === 'detail' ? "350px" : "300px",
     md: variant === 'detail' ? "500px" : "300px" 
   });
 
-  // Precarga de imágenes
-  useEffect(() => {
-    if (filteredImages.length > 0) {
-      const loadStates = new Array(filteredImages.length).fill(false);
-      
-      filteredImages.forEach((src, index) => {
-        const img = new HTMLImageElement();
-        img.onload = () => {
-          setLoadedImages(prev => {
-            const newStates = [...prev];
-            newStates[index] = true;
-            return newStates;
-          });
-        };
-        img.src = src;
-      });
-
-      setLoadedImages(loadStates);
-    }
-  }, [filteredImages]);
-
   // Autoplay solo una vez
   useEffect(() => {
-    if (!hasCompletedAutoplay && filteredImages.length > 1 && loadedImages[currentIndex]) {
-      let currentIdx = 0;
-      
+    if (!hasCompletedAutoplay && filteredImages.length > 1) {
       const runAutoplay = () => {
         autoplayTimeoutRef.current = setTimeout(() => {
-          if (currentIdx < filteredImages.length - 1) {
-            currentIdx++;
-            setCurrentIndex(currentIdx);
-            if (loadedImages[currentIdx]) {
-              runAutoplay();
+          setCurrentIndex(prev => {
+            const nextIndex = prev + 1;
+            if (nextIndex >= filteredImages.length - 1) {
+              setHasCompletedAutoplay(true);
+              return nextIndex;
             }
-          } else {
-            setHasCompletedAutoplay(true);
-          }
+            return nextIndex;
+          });
         }, 3000);
       };
 
-      if (loadedImages[0]) {
-        runAutoplay();
-      }
+      runAutoplay();
     }
 
     return () => {
@@ -80,7 +55,19 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
         clearTimeout(autoplayTimeoutRef.current);
       }
     };
-  }, [filteredImages.length, hasCompletedAutoplay, loadedImages]);
+  }, [filteredImages.length, hasCompletedAutoplay]);
+
+  const handlePrevious = () => {
+    setCurrentIndex((prev) => 
+      prev === 0 ? filteredImages.length - 1 : prev - 1
+    );
+  };
+
+  const handleNext = () => {
+    setCurrentIndex((prev) => 
+      (prev + 1) % filteredImages.length
+    );
+  };
 
   if (!filteredImages.length) {
     return (
@@ -97,18 +84,6 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
     );
   }
 
-  const handlePrevious = () => {
-    setCurrentIndex((prev) => 
-      prev === 0 ? filteredImages.length - 1 : prev - 1
-    );
-  };
-
-  const handleNext = () => {
-    setCurrentIndex((prev) => 
-      (prev + 1) % filteredImages.length
-    );
-  };
-
   return (
     <Box
       position="relative"
@@ -116,18 +91,27 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
       overflow="hidden"
       height={imageSize}
     >
-      {loadedImages[currentIndex] ? (
-        <Image
-          src={filteredImages[currentIndex]}
-          alt={`Imagen del producto ${currentIndex + 1}`}
-          objectFit="contain"
-          width="100%"
-          height="100%"
-          bg="white"
-        />
-      ) : (
+      <Image
+        key={filteredImages[currentIndex]} // Forzar re-render al cambiar imagen
+        src={filteredImages[currentIndex]}
+        alt={`Imagen del producto ${currentIndex + 1}`}
+        objectFit="contain"
+        width="100%"
+        height="100%"
+        bg="white"
+        onLoad={() => setIsImageLoading(false)}
+        onError={() => setIsImageLoading(false)}
+        style={{ opacity: isImageLoading ? 0 : 1 }}
+        transition="opacity 0.3s"
+      />
+
+      {isImageLoading && (
         <Flex
-          height="100%"
+          position="absolute"
+          top="0"
+          left="0"
+          right="0"
+          bottom="0"
           alignItems="center"
           justifyContent="center"
           bg="gray.50"
