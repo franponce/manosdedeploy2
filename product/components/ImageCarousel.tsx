@@ -13,26 +13,11 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
   title,
   variant 
 }) => {
-  console.log('ImageCarousel received images:', images);
-  console.log('Variant:', variant);
-
   const [currentIndex, setCurrentIndex] = useState(0);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const isDesktop = useBreakpointValue({ base: false, md: true });
 
-  const processedImages = images
-    .filter(Boolean)
-    .map(url => {
-      try {
-        return url.split('|||')[0].trim();
-      } catch (e) {
-        console.error('Error processing image URL:', url);
-        return null;
-      }
-    })
-    .filter(Boolean);
-
-  console.log('Processed images:', processedImages);
+  const processedImages = images;
 
   const handleNext = (e: React.MouseEvent) => {
     e.stopPropagation();

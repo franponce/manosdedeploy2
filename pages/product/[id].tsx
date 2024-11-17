@@ -57,6 +57,20 @@ const calculateQuantity = (cart: CartItem[]) =>
     0
   );
 
+const processImages = (images: string[] = []) => {
+  return images
+    .filter(Boolean)
+    .map(url => {
+      try {
+        return url.split('|||')[0].trim();
+      } catch (e) {
+        console.error('Error processing image URL:', url);
+        return null;
+      }
+    })
+    .filter(Boolean);
+};
+
 const ProductDetail: NextPageWithLayout = () => {
   const router = useRouter();
   const { id } = router.query;
@@ -244,8 +258,8 @@ const ProductDetail: NextPageWithLayout = () => {
               <Skeleton isLoaded={!isLoading} height="400px">
                 {product ? (
                   <ImageCarousel 
-                    images={product.images || []}
-                    variant="detail"
+                    images={processImages(product.images)?.filter((image): image is string => image !== null)}
+                    variant="product"
                     title={product.title || ''}
                   />
                 ) : (
