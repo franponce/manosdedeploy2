@@ -145,10 +145,11 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
 
     try {
       const options = {
-        maxSizeMB: 0.3,
-        maxWidthOrHeight: 800,
+        maxSizeMB: 0.1,
+        maxWidthOrHeight: 600,
         useWebWorker: true,
-        fileType: "image/jpeg"
+        fileType: "image/jpeg",
+        quality: 0.5
       };
 
       const compressedFile = await imageCompression(file, options);
@@ -168,7 +169,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
       console.error("Error processing image:", error);
       toast({
         title: "Error",
-        description: "No se pudo procesar la imagen. Por favor, intenta con una imagen más pequeña.",
+        description: "No se pudo procesar la imagen. Intenta con una imagen más pequeña.",
         status: "error",
         duration: 3000,
         isClosable: true,
