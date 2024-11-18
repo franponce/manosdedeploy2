@@ -57,9 +57,15 @@ interface ProductModalProps {
 const MAX_IMAGES = 2;
 
 const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, product, isLoading: submitLoading }) => {
-  const { stock } = useProduct(product?.id || null);
   const [currentProduct, setCurrentProduct] = useState<Product>(() => {
-    return product || {
+    if (product) {
+      return {
+        ...product,
+        stock: typeof product.stock === 'number' ? product.stock : 
+               typeof product.stock === 'string' ? parseInt(product.stock, 10) : 0
+      };
+    }
+    return {
       id: '',
       title: '',
       description: '',
@@ -99,7 +105,8 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
         ...product,
         categoryId: product.categoryId || "",
         isVisible: product.isVisible ?? true,
-        stock: stock,
+        stock: typeof product.stock === 'number' ? product.stock : 
+               typeof product.stock === 'string' ? parseInt(product.stock, 10) : 0,
         order: product.order || ''
       });
       setImagePreview(product.images[0] || null);
@@ -130,7 +137,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
         toggleSchedule();
       }
     }
-  }, [product, stock]);
+  }, [product]);
 
   useEffect(() => {
     if (isOpen) {

@@ -521,10 +521,9 @@ if (typeof window === 'undefined') {
       const sheets = google.sheets({ version: 'v4', auth });
 
       try {
-        // 1. Obtener todas las filas actuales incluyendo el stock (columna K)
         const response = await sheets.spreadsheets.values.get({
           spreadsheetId: SPREADSHEET_ID,
-          range: 'La Libre Web - Catálogo online rev 2021 - products!A2:K', // Actualizado hasta K
+          range: 'La Libre Web - Catálogo online rev 2021 - products!A2:K',
         });
 
         const currentRows = response.data.values || [];
@@ -532,14 +531,17 @@ if (typeof window === 'undefined') {
           currentRows.map(row => [row[0], row])
         );
 
-        // 2. Crear las nuevas filas manteniendo todos los datos incluyendo stock
+        // Crear las nuevas filas manteniendo el orden secuencial en la columna J
         const newRows = orderedIds.map((id, index) => {
           const row = rowMap.get(id);
           if (!row) throw new Error(`Producto con ID ${id} no encontrado`);
-          return row;
+          
+          // Creamos una copia de la fila y actualizamos el índice secuencial
+          const updatedRow = [...row];
+          updatedRow[9] = (index + 1).toString(); // Columna J (índice 9) con números secuenciales
+          return updatedRow;
         });
 
-        // 3. Actualizar todas las filas incluyendo la columna de stock
         await sheets.spreadsheets.values.update({
           spreadsheetId: SPREADSHEET_ID,
           range: 'La Libre Web - Catálogo online rev 2021 - products!A2:K',

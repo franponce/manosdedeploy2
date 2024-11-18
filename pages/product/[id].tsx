@@ -75,7 +75,7 @@ const processImages = (images: string[] = []) => {
 const ProductDetail: NextPageWithLayout = () => {
   const router = useRouter();
   const { id } = router.query;
-  const { product, isLoading } = useProduct(id ? id as string : null);
+  const { product, isLoading, error, stock } = useProduct(id ? id as string : null);
   const { siteInfo } = useSiteInfo();
   const toast = useToast();
   const { cart, addToCart, removeFromCart } = useCart();
@@ -89,11 +89,37 @@ const ProductDetail: NextPageWithLayout = () => {
     }
   }, []);
 
-  if (!id) {
+  if (isLoading) {
     return (
       <Container maxW="container.xl" py={8}>
         <VStack spacing={6} align="stretch">
           <Skeleton height="400px" />
+        </VStack>
+      </Container>
+    );
+  }
+
+  if (error || !product) {
+    return (
+      <Container maxW="container.xl" py={8}>
+        <VStack spacing={6} align="stretch">
+          <Box
+            textAlign="center"
+            py={10}
+            borderRadius="lg"
+            bg="gray.50"
+            p={8}
+          >
+            <Heading size="lg" mb={4} color="gray.600">
+              Producto no encontrado
+            </Heading>
+            <Text mb={6} color="gray.500">
+              Lo sentimos, el producto que buscas no está disponible en este momento.
+            </Text>
+            <Button colorScheme="blue" onClick={() => router.push('/')}>
+              Ver otros productos
+            </Button>
+          </Box>
         </VStack>
       </Container>
     );
@@ -198,32 +224,6 @@ const ProductDetail: NextPageWithLayout = () => {
     sessionStorage.setItem('lastViewedProductId', id as string);
     router.push('/');
   };
-
-  if (error) {
-    return (
-      <Container maxW="container.xl" py={8}>
-        <VStack spacing={6} align="stretch">
-          <Box
-            textAlign="center"
-            py={10}
-            borderRadius="lg"
-            bg="gray.50"
-            p={8}
-          >
-            <Heading size="lg" mb={4} color="gray.600">
-              Producto no encontrado
-            </Heading>
-            <Text mb={6} color="gray.500">
-              Lo sentimos, el producto que buscas no está disponible en este momento.
-            </Text>
-            <Button colorScheme="blue" onClick={() => router.push('/')}>
-              Ver otros productos
-            </Button>
-          </Box>
-        </VStack>
-      </Container>
-    );
-  }
 
   console.log('Product images from API:', product?.images);
 
