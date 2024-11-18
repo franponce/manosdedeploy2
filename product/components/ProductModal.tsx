@@ -96,7 +96,9 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
       setCurrentProduct({
         ...product,
         categoryId: product.categoryId || "",
-        isVisible: product.isVisible ?? true
+        isVisible: product.isVisible ?? true,
+        stock: product.stock ?? 0,
+        order: product.order || ''
       });
       setImagePreview(product.images[0] || null);
       setDescription(product.description || '');
@@ -105,7 +107,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
         toggleSchedule();
       }
     } else {
-      const emptyProduct: Product = {
+      setCurrentProduct({
         id: "",
         title: "",
         description: "",
@@ -118,8 +120,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
         isVisible: true,
         stock: 0,
         order: ''
-      };
-      setCurrentProduct(emptyProduct);
+      });
       setImagePreview(null);
       setDescription('');
       setScheduledDate(null);
