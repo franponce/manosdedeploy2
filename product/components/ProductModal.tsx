@@ -144,52 +144,31 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     }
 
     try {
-      const img = await createImageBitmap(file);
-      
       const options = {
-        maxSizeMB: MAX_IMAGE_SIZE_MB,
-        maxWidthOrHeight: Math.max(TARGET_WIDTH, TARGET_HEIGHT),
+        maxSizeMB: 0.3,
+        maxWidthOrHeight: 800,
         useWebWorker: true,
+        fileType: "image/jpeg"
       };
 
       const compressedFile = await imageCompression(file, options);
-      
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      
-      let newWidth = img.width;
-      let newHeight = img.height;
-      if (newWidth > TARGET_WIDTH || newHeight > TARGET_HEIGHT) {
-        const ratio = Math.min(TARGET_WIDTH / newWidth, TARGET_HEIGHT / newHeight);
-        newWidth *= ratio;
-        newHeight *= ratio;
-      }
-      
-      canvas.width = newWidth;
-      canvas.height = newHeight;
-      
-      ctx?.drawImage(img, 0, 0, newWidth, newHeight);
-      
-      const base64 = canvas.toDataURL('image/jpeg', 0.7);
-      
-      setCurrentProduct(prev => {
-        const newImages = [...prev.images];
-        newImages[index] = base64;
-        return { ...prev, images: newImages };
-      });
+      const reader = new FileReader();
 
-      toast({
-        title: "Imagen cargada",
-        description: `La imagen se ha procesado y optimizado correctamente. Tamaño final: ${(compressedFile.size / (1024 * 1024)).toFixed(2)}MB`,
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setCurrentProduct(prev => {
+          const newImages = [...prev.images];
+          newImages[index] = base64String;
+          return { ...prev, images: newImages };
+        });
+      };
+
+      reader.readAsDataURL(compressedFile);
     } catch (error) {
       console.error("Error processing image:", error);
       toast({
         title: "Error",
-        description: "No se pudo procesar la imagen. Por favor, intenta de nuevo.",
+        description: "No se pudo procesar la imagen. Por favor, intenta con una imagen más pequeña.",
         status: "error",
         duration: 3000,
         isClosable: true,
