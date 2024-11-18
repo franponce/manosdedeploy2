@@ -93,11 +93,14 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
 
   useEffect(() => {
     if (product) {
+      const stockValue = typeof product.stock === 'number' ? product.stock : 
+                        typeof product.stock === 'string' ? parseInt(product.stock, 10) : 0;
+                        
       setCurrentProduct({
         ...product,
         categoryId: product.categoryId || "",
         isVisible: product.isVisible ?? true,
-        stock: product.stock ?? 0,
+        stock: stockValue,
         order: product.order || ''
       });
       setImagePreview(product.images[0] || null);
@@ -219,9 +222,15 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
-    setCurrentProduct(prev => ({ ...prev, [name]: value }));
+    
+    setCurrentProduct(prev => ({
+      ...prev,
+      [name]: name === 'stock' ? parseInt(value, 10) || 0 : value
+    }));
   };
 
   const handleVisibilityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
