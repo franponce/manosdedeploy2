@@ -101,6 +101,21 @@ const ProductOrderManager: React.FC<ProductOrderManagerProps> = ({
     }
   };
 
+  const normalizeImage = (images: string | string[] | undefined): string => {
+    if (!images) return '';
+    
+    if (typeof images === 'string') {
+      const parts = images.split('|||');
+      return parts[0] || '';
+    }
+    
+    if (Array.isArray(images)) {
+      return images[0] || '';
+    }
+    
+    return '';
+  };
+
   if (error) {
     return (
       <Modal isOpen={isOpen} onClose={onClose}>
@@ -115,10 +130,6 @@ const ProductOrderManager: React.FC<ProductOrderManagerProps> = ({
         </ModalContent>
       </Modal>
     );
-  }
-
-  function normalizeImage(arg0: string): string | undefined {
-    throw new Error('Function not implemented.');
   }
 
   return (
@@ -150,7 +161,7 @@ const ProductOrderManager: React.FC<ProductOrderManagerProps> = ({
                         #{index + 1}
                       </Text>
                       <Image
-                        src={normalizeImage(product.images[0])}
+                        src={normalizeImage(product.images)}
                         alt={product.title}
                         boxSize="50px"
                         objectFit="cover"
