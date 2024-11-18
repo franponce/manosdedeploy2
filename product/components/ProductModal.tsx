@@ -43,8 +43,6 @@ import { CATEGORY_CONSTANTS } from '../../utils/constants';
 import { useCategories } from '@/hooks/useCategories';
 import { imageService } from '../../services/imageService';
 import { useProduct } from '@/hooks/useProduct';
-import useSWR from 'swr';
-import { SWR_KEYS } from '../constants';
 
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 
@@ -59,15 +57,9 @@ interface ProductModalProps {
 const MAX_IMAGES = 2;
 
 const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, product, isLoading: submitLoading }) => {
+  const { product: currentProductData } = useProduct(product?.id || null);
   const [currentProduct, setCurrentProduct] = useState<Product>(() => {
-    if (product) {
-      return {
-        ...product,
-        stock: typeof product.stock === 'number' ? product.stock : 
-               typeof product.stock === 'string' ? parseInt(product.stock, 10) : 0
-      };
-    }
-    return {
+    return product || {
       id: '',
       title: '',
       description: '',
@@ -101,17 +93,6 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
 
   const { categories, isLoading: categoriesLoading, createCategory, mutate: mutateCategories } = useCategories();
 
-  const fetcher = async (url: string): Promise<Product | undefined> => {
-    const response = await fetch('/api/products');
-    const products: Product[] = await response.json();
-    return products.find((p: Product) => p.id === product?.id);
-  };
-
-  const { data: currentProductData } = useSWR<Product | undefined>(
-    product?.id ? `${SWR_KEYS.PRODUCTS}/${product.id}` : null,
-    fetcher
-  );
-
   useEffect(() => {
     if (product && currentProductData) {
       const stockValue = currentProductData.stock ?? 0;
@@ -131,7 +112,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
         setScheduledDate(new Date(currentProductData.scheduledPublishDate));
         toggleSchedule();
       }
-    } else if (!product) {
+    } else {
       setCurrentProduct({
         id: "",
         title: "",
@@ -464,13 +445,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                 step="1"
                 value={currentProduct.stock}
                 onChange={handleInputChange}
-                placeholder="Ingrese el stock disponible"
               />
-              {currentProduct.stock > 0 && (
-                <Text fontSize="sm" color="green.500" mt={1}>
-                  Stock actual: {currentProduct.stock} unidades
-                </Text>
-              )}
             </FormControl>
 
             <FormControl>
