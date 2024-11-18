@@ -52,6 +52,8 @@ interface ProductModalProps {
   isLoading: boolean;
 }
 
+const MAX_IMAGES = 3;
+
 const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, product, isLoading: submitLoading }) => {
   const [currentProduct, setCurrentProduct] = useState<Product>(() => {
     return product || {
@@ -129,6 +131,17 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
   const handleProductImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (currentProduct.images.filter(Boolean).length >= MAX_IMAGES) {
+      toast({
+        title: "Límite alcanzado",
+        description: "Solo se permiten hasta 3 imágenes por producto",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
 
     try {
       const img = await createImageBitmap(file);
@@ -376,32 +389,43 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
             </FormControl>
 
             <FormControl>
-              <FormLabel>Imágenes</FormLabel>
+              <FormLabel>
+                Imágenes 
+                <Text as="span" fontSize="sm" color="gray.500" ml={2}>
+                  ({currentProduct.images.filter(Boolean).length}/{MAX_IMAGES})
+                </Text>
+              </FormLabel>
               <VStack spacing={4} align="stretch">
                 {currentProduct.images.map((img, index) => (
                   <Flex key={index} align="center" gap={2}>
-                    <Image 
-                      src={img} 
-                      alt={`Imagen ${index + 1}`} 
-                      boxSize="100px" 
-                      objectFit="cover"
-                      borderRadius="md" 
-                    />
-                    <IconButton
-                      icon={<CloseIcon />}
-                      aria-label="Eliminar imagen"
-                      size="sm"
-                      colorScheme="red"
-                      variant="ghost"
-                      onClick={() => handleRemoveImage(index)}
-                    />
+                    {img ? (
+                      <>
+                        <Image 
+                          src={img} 
+                          alt={`Imagen ${index + 1}`} 
+                          boxSize="100px" 
+                          objectFit="cover"
+                          borderRadius="md" 
+                        />
+                        <IconButton
+                          icon={<CloseIcon />}
+                          aria-label="Eliminar imagen"
+                          size="sm"
+                          colorScheme="red"
+                          variant="ghost"
+                          onClick={() => handleRemoveImage(index)}
+                        />
+                      </>
+                    ) : null}
                   </Flex>
                 ))}
-                <Input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => handleProductImageUpload(e, currentProduct.images.length)}
-                />
+                {currentProduct.images.filter(Boolean).length < MAX_IMAGES && (
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleProductImageUpload(e, currentProduct.images.length)}
+                  />
+                )}
               </VStack>
             </FormControl>
 
