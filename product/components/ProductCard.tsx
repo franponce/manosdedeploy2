@@ -153,8 +153,6 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading: cardLoading, 
             <Box position="relative">
               <ImageCarousel 
                 images={product.images}
-                title={''}
-                variant="store"
               />
             </Box>
           </Link>

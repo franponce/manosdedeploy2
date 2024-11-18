@@ -96,7 +96,6 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
   };
 
   const getFirstImage = (images: string | string[]): string => {
-    // Si es string, extraemos la primera imagen base64
     if (typeof images === 'string') {
       const matches = images.match(/data:image\/[^;]+;base64,[^,]+/g);
       if (matches && matches.length > 0) {
@@ -104,7 +103,6 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
       }
       return images;
     }
-    // Si es array, retornamos la primera imagen
     if (Array.isArray(images) && images.length > 0) {
       return images[0];
     }

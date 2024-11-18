@@ -331,12 +331,10 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
   };
 
   const handleRemoveImage = (indexToRemove: number) => {
-    setCurrentProduct(prev => {
-      const newImages = prev.images
-        .filter((_, index) => index !== indexToRemove)
-        .map(normalizeImage);
-      return { ...prev, images: newImages };
-    });
+    setCurrentProduct(prev => ({
+      ...prev,
+      images: prev.images.filter((_, index) => index !== indexToRemove)
+    }));
   };
 
   return (
@@ -381,18 +379,20 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
               <FormLabel>Imágenes</FormLabel>
               <VStack spacing={4} align="stretch">
                 {currentProduct.images.map((img, index) => (
-                  <Flex key={index} align="center">
+                  <Flex key={index} align="center" gap={2}>
                     <Image 
-                      src={normalizeImage(img)}
+                      src={img} 
                       alt={`Imagen ${index + 1}`} 
                       boxSize="100px" 
-                      objectFit="cover" 
+                      objectFit="cover"
+                      borderRadius="md" 
                     />
                     <IconButton
-                      ml={2}
                       icon={<CloseIcon />}
                       aria-label="Eliminar imagen"
                       size="sm"
+                      colorScheme="red"
+                      variant="ghost"
                       onClick={() => handleRemoveImage(index)}
                     />
                   </Flex>

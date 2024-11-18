@@ -251,118 +251,104 @@ const ProductDetail: NextPageWithLayout = () => {
         </Container>
       </Box>
 
-      <Container maxW="container.xl" py={8} mt="60px">
-        <VStack spacing={8} align="stretch">
-          <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={8}>
-            <GridItem>
-              <Skeleton isLoaded={!isLoading} height="400px">
-                {product ? (
-                  <ImageCarousel 
-                    images={processImages(product.images)?.filter((image): image is string => image !== null)}
-                    variant="product"
-                    title={product.title || ''}
-                  />
-                ) : (
-                  <Box height="400px" bg="gray.100" display="flex" alignItems="center" justifyContent="center">
-                    <Text color="gray.500">Cargando producto...</Text>
-                  </Box>
-                )}
+      <Container maxW="container.xl" pt={20}>
+        <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={8}>
+          <GridItem>
+            <ImageCarousel images={product?.images || []} />
+          </GridItem>
+
+          <GridItem>
+            <VStack spacing={6} align="stretch">
+              <Skeleton isLoaded={!isLoading}>
+                <Heading as="h1" size="xl">
+                  {product?.title}
+                </Heading>
               </Skeleton>
-            </GridItem>
 
-            <GridItem>
-              <VStack spacing={6} align="stretch">
-                <Skeleton isLoaded={!isLoading}>
-                  <Heading as="h1" size="xl">
-                    {product?.title}
-                  </Heading>
-                </Skeleton>
+              <Skeleton isLoaded={!isLoading}>
+                <Text fontSize="2xl" fontWeight="bold">
+                  {parseCurrency(product?.price || 0)}
+                </Text>
+              </Skeleton>
 
-                <Skeleton isLoaded={!isLoading}>
-                  <Text fontSize="2xl" fontWeight="bold">
-                    {parseCurrency(product?.price || 0)}
-                  </Text>
-                </Skeleton>
+              <Skeleton isLoaded={!isLoading}>
+                <Button
+                  size="lg"
+                  colorScheme="blue"
+                  leftIcon={<Icon as={FaShoppingCart} />}
+                  onClick={handleAddToCart}
+                  width="full"
+                >
+                  Agregar al carrito
+                </Button>
+              </Skeleton>
 
-                <Skeleton isLoaded={!isLoading}>
-                  <Button
-                    size="lg"
-                    colorScheme="blue"
-                    leftIcon={<Icon as={FaShoppingCart} />}
-                    onClick={handleAddToCart}
-                    width="full"
-                  >
-                    Agregar al carrito
-                  </Button>
-                </Skeleton>
-
-                <Skeleton isLoaded={!isLoading}>
-                  <Box>
-                    <Text mb={2} fontWeight="medium">Compartir producto:</Text>
-                    <HStack spacing={2}>
-                      <Tooltip label="Compartir en WhatsApp">
-                        <WhatsappShareButton
-                          url={pageUrl}
-                          title={shareTextWithPrice}
-                        >
-                          <WhatsappIcon size={40} round />
-                        </WhatsappShareButton>
-                      </Tooltip>
-
-                      <Tooltip label="Compartir en Facebook">
-                        <FacebookShareButton
-                          url={pageUrl}
-                          quote={shareText}
-                        >
-                          <FacebookIcon size={40} round />
-                        </FacebookShareButton>
-                      </Tooltip>
-
-                      <Tooltip label="Compartir en Twitter">
-                        <TwitterShareButton
-                          url={pageUrl}
-                          title={shareText}
-                        >
-                          <TwitterIcon size={40} round />
-                        </TwitterShareButton>
-                      </Tooltip>
-
-                      <Tooltip label="Compartir por email">
-                        <EmailShareButton
-                          url={pageUrl}
-                          subject={emailSubject}
-                          body={emailBody}
-                        >
-                          <EmailIcon size={40} round />
-                        </EmailShareButton>
-                      </Tooltip>
-
-                      <Tooltip label={copied ? "¡Copiado!" : "Copiar enlace"}>
-                        <IconButton
-                          aria-label="Copiar enlace"
-                          icon={<FaCopy />}
-                          onClick={handleCopyLink}
-                          size="lg"
-                          colorScheme={copied ? "green" : "gray"}
-                          rounded="full"
-                        />
-                      </Tooltip>
-                    </HStack>
-                  </Box>
-                </Skeleton>
-
+              <Skeleton isLoaded={!isLoading}>
                 <Box>
-                  <Skeleton isLoaded={!isLoading}>
-                    <Text fontWeight="medium" mb={2}>Descripción:</Text>
-                  </Skeleton>
-                  <SkeletonText isLoaded={!isLoading} noOfLines={4} spacing={4}>
-                    {renderDescription()}
-                  </SkeletonText>
+                  <Text mb={2} fontWeight="medium">Compartir producto:</Text>
+                  <HStack spacing={2}>
+                    <Tooltip label="Compartir en WhatsApp">
+                      <WhatsappShareButton
+                        url={pageUrl}
+                        title={shareTextWithPrice}
+                      >
+                        <WhatsappIcon size={40} round />
+                      </WhatsappShareButton>
+                    </Tooltip>
+
+                    <Tooltip label="Compartir en Facebook">
+                      <FacebookShareButton
+                        url={pageUrl}
+                        quote={shareText}
+                      >
+                        <FacebookIcon size={40} round />
+                      </FacebookShareButton>
+                    </Tooltip>
+
+                    <Tooltip label="Compartir en Twitter">
+                      <TwitterShareButton
+                        url={pageUrl}
+                        title={shareText}
+                      >
+                        <TwitterIcon size={40} round />
+                      </TwitterShareButton>
+                    </Tooltip>
+
+                    <Tooltip label="Compartir por email">
+                      <EmailShareButton
+                        url={pageUrl}
+                        subject={emailSubject}
+                        body={emailBody}
+                      >
+                        <EmailIcon size={40} round />
+                      </EmailShareButton>
+                    </Tooltip>
+
+                    <Tooltip label={copied ? "¡Copiado!" : "Copiar enlace"}>
+                      <IconButton
+                        aria-label="Copiar enlace"
+                        icon={<FaCopy />}
+                        onClick={handleCopyLink}
+                        size="lg"
+                        colorScheme={copied ? "green" : "gray"}
+                        rounded="full"
+                      />
+                    </Tooltip>
+                  </HStack>
                 </Box>
-              </VStack>
-            </GridItem>
-          </Grid>
-        </VStack>
+              </Skeleton>
+
+              <Box>
+                <Skeleton isLoaded={!isLoading}>
+                  <Text fontWeight="medium" mb={2}>Descripción:</Text>
+                </Skeleton>
+                <SkeletonText isLoaded={!isLoading} noOfLines={4} spacing={4}>
+                  {renderDescription()}
+                </SkeletonText>
+              </Box>
+            </VStack>
+          </GridItem>
+        </Grid>
       </Container>
 
       {Boolean(cart.length) && (

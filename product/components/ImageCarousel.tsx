@@ -1,133 +1,76 @@
 import React, { useState } from 'react';
-import { Box, Image, IconButton, Flex, useBreakpointValue } from '@chakra-ui/react';
+import { Box, IconButton, Image, Flex, HStack } from '@chakra-ui/react';
 import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
 
 interface ImageCarouselProps {
   images: string[];
-  title: string;
-  variant: string;
 }
 
-const ImageCarousel: React.FC<ImageCarouselProps> = ({ 
-  images = [], 
-  title,
-  variant 
-}) => {
+const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [touchStart, setTouchStart] = useState<number | null>(null);
-  const isDesktop = useBreakpointValue({ base: false, md: true });
 
-  const processedImages = images;
-
-  const handleNext = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setCurrentIndex(prev => (prev + 1) % processedImages.length);
+  const handlePrevious = () => {
+    setCurrentIndex(prev => (prev === 0 ? images.length - 1 : prev - 1));
   };
 
-  const handlePrev = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setCurrentIndex(prev => (prev - 1 + processedImages.length) % processedImages.length);
+  const handleNext = () => {
+    setCurrentIndex(prev => (prev === images.length - 1 ? 0 : prev + 1));
   };
 
-  // Manejo de swipe
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStart(e.touches[0].clientX);
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (!touchStart) return;
-    
-    const touchEnd = e.changedTouches[0].clientX;
-    const diff = touchStart - touchEnd;
-
-    if (Math.abs(diff) > 50) { // umbral mínimo para considerar swipe
-      if (diff > 0) {
-        setCurrentIndex(prev => (prev + 1) % processedImages.length);
-      } else {
-        setCurrentIndex(prev => (prev - 1 + processedImages.length) % processedImages.length);
-      }
-    }
-    setTouchStart(null);
-  };
-
-  // Si no hay imágenes, mostrar placeholder
-  if (!processedImages.length) {
+  if (!images.length) return null;
+  if (images.length === 1) {
     return (
-      <div className="relative aspect-square w-full">
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-          <span>No image available</span>
-        </div>
-      </div>
+      <Image
+        src={images[0]}
+        alt="Producto"
+        objectFit="cover"
+        width="100%"
+        borderRadius="md"
+      />
     );
   }
 
   return (
-    <Box 
-      position="relative" 
-      width="100%"
-      height="400px"
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-    >
-      <Image
-        src={processedImages[currentIndex] || undefined}
-        alt={`${title} - Imagen ${currentIndex + 1}`}
-        width="100%"
-        height="100%"
-        objectFit="contain"
-        pointerEvents="none"
-      />
-
-      {/* Flechas de navegación en desktop */}
-      {isDesktop && processedImages.length > 1 && (
-        <>
-          <IconButton
-            aria-label="Anterior"
-            icon={<ChevronLeftIcon />}
-            position="absolute"
-            left="0"
-            top="50%"
-            transform="translateY(-50%)"
-            onClick={handlePrev}
-            bg="whiteAlpha.700"
-            _hover={{ bg: "whiteAlpha.900" }}
+    <Box position="relative">
+      <Flex justify="center" align="center">
+        <IconButton
+          aria-label="Anterior"
+          icon={<ChevronLeftIcon />}
+          onClick={handlePrevious}
+          position="absolute"
+          left={2}
+          zIndex={2}
+        />
+        <Image
+          src={images[currentIndex]}
+          alt={`Imagen ${currentIndex + 1}`}
+          objectFit="cover"
+          width="100%"
+          borderRadius="md"
+        />
+        <IconButton
+          aria-label="Siguiente"
+          icon={<ChevronRightIcon />}
+          onClick={handleNext}
+          position="absolute"
+          right={2}
+          zIndex={2}
+        />
+      </Flex>
+      
+      <HStack justify="center" mt={4} spacing={2}>
+        {images.map((_, index) => (
+          <Box
+            key={index}
+            w="2"
+            h="2"
+            borderRadius="full"
+            bg={index === currentIndex ? "blue.500" : "gray.300"}
+            cursor="pointer"
+            onClick={() => setCurrentIndex(index)}
           />
-          <IconButton
-            aria-label="Siguiente"
-            icon={<ChevronRightIcon />}
-            position="absolute"
-            right="0"
-            top="50%"
-            transform="translateY(-50%)"
-            onClick={handleNext}
-            bg="whiteAlpha.700"
-            _hover={{ bg: "whiteAlpha.900" }}
-          />
-        </>
-      )}
-
-      {/* Indicadores de imagen */}
-      {processedImages.length > 1 && (
-        <Flex 
-          position="absolute" 
-          bottom={{ base: "4", md: "2" }}
-          left="0" 
-          right="0" 
-          justify="center" 
-          gap={2}
-          zIndex="1"
-        >
-          {processedImages.map((_, index) => (
-            <Box
-              key={index}
-              width={{ base: "3", md: "2" }}
-              height={{ base: "3", md: "2" }}
-              borderRadius="full"
-              bg={index === currentIndex ? "blue.500" : "gray.300"}
-            />
-          ))}
-        </Flex>
-      )}
+        ))}
+      </HStack>
     </Box>
   );
 };
