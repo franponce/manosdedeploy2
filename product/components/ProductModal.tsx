@@ -52,7 +52,7 @@ interface ProductModalProps {
   isLoading: boolean;
 }
 
-const MAX_IMAGES = 3;
+const MAX_IMAGES = 2;
 
 const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, product, isLoading: submitLoading }) => {
   const [currentProduct, setCurrentProduct] = useState<Product>(() => {
@@ -135,7 +135,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     if (currentProduct.images.filter(Boolean).length >= MAX_IMAGES) {
       toast({
         title: "Límite alcanzado",
-        description: "Solo se permiten hasta 3 imágenes por producto",
+        description: "Solo se permiten hasta 2 imágenes por producto",
         status: "warning",
         duration: 3000,
         isClosable: true,
