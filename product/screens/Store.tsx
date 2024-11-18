@@ -307,6 +307,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
                   title: '',
                   description: '',
                   images: [],
+                  stock: 0,
                   price: 0,
                   currency: 'ARS',
                   isScheduled: false,

@@ -131,6 +131,7 @@ if (typeof window === 'undefined') {
             scheduledPublishDate: row[5] ? new Date(row[5].replace(' ', 'T')) : null,
             categoryId: row[7] || '',
             isVisible: row[8] ? row[8].toUpperCase() === 'TRUE' : true,
+            stock: parseInt(row[9] || '0', 10)
           }))
           .filter((product) => product.title && product.title.trim() !== '');
       } catch (error) {
@@ -171,14 +172,15 @@ if (typeof window === 'undefined') {
             product.scheduledPublishDate ? formatLocalDateTime(product.scheduledPublishDate) : '',
             product.isScheduled ? 'TRUE' : 'FALSE',
             product.categoryId,
-            product.isVisible ? 'TRUE' : 'FALSE'
+            product.isVisible ? 'TRUE' : 'FALSE',
+            product.stock.toString()
           ]
         ];
 
         // Actualizar la fila
         await sheets.spreadsheets.values.update({
           spreadsheetId: SPREADSHEET_ID,
-          range: `La Libre Web - Catálogo online rev 2021 - products!A${actualRow}:I${actualRow}`,
+          range: `La Libre Web - Catálogo online rev 2021 - products!A${actualRow}:J${actualRow}`,
           valueInputOption: 'USER_ENTERED',
           requestBody: { values }
         });
@@ -186,7 +188,7 @@ if (typeof window === 'undefined') {
         // Verificar la actualización
         const verifyResponse = await sheets.spreadsheets.values.get({
           spreadsheetId: SPREADSHEET_ID,
-          range: `La Libre Web - Catálogo online rev 2021 - products!A${actualRow}:I${actualRow}`
+          range: `La Libre Web - Catálogo online rev 2021 - products!A${actualRow}:J${actualRow}`
         });
 
         if (!verifyResponse.data.values?.[0]) {
@@ -217,7 +219,8 @@ if (typeof window === 'undefined') {
             product.scheduledPublishDate ? formatLocalDateTime(product.scheduledPublishDate) : '',
             product.isScheduled ? 'TRUE' : 'FALSE',
             product.categoryId || '',
-            product.isVisible ? 'TRUE' : 'FALSE'
+            product.isVisible ? 'TRUE' : 'FALSE',
+            product.stock.toString()
           ]
         ];
 

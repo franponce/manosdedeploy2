@@ -68,6 +68,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
       scheduledPublishDate: null,
       categoryId: '',
       isVisible: true,
+      stock: 0
     };
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -113,7 +114,8 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
         isScheduled: false,
         scheduledPublishDate: null,
         categoryId: "",
-        isVisible: true
+        isVisible: true,
+        stock: 0
       });
       setImagePreview(null);
       setDescription('');
@@ -414,6 +416,18 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                 type="number"
                 step="0.01"
                 value={currentProduct.price}
+                onChange={handleInputChange}
+              />
+            </FormControl>
+
+            <FormControl>
+              <FormLabel>Stock disponible</FormLabel>
+              <Input
+                name="stock"
+                type="number"
+                min="0"
+                step="1"
+                value={currentProduct.stock}
                 onChange={handleInputChange}
               />
             </FormControl>

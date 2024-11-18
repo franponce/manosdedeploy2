@@ -8,7 +8,8 @@ export interface Product {
   isScheduled: boolean;
   scheduledPublishDate: Date | null;
   categoryId: string;
-  isVisible?: boolean;
+  isVisible: boolean;
+  stock: number;
 }
 
 export interface CartItem extends Product {
