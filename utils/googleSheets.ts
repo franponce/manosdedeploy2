@@ -521,46 +521,33 @@ if (typeof window === 'undefined') {
       const sheets = google.sheets({ version: 'v4', auth });
 
       try {
-        // 1. Primero obtenemos todas las filas actuales
+        // 1. Obtener todas las filas actuales incluyendo el stock (columna K)
         const response = await sheets.spreadsheets.values.get({
           spreadsheetId: SPREADSHEET_ID,
-          range: 'La Libre Web - Catálogo online rev 2021 - products!A2:I', // Todas las columnas con datos
+          range: 'La Libre Web - Catálogo online rev 2021 - products!A2:K', // Actualizado hasta K
         });
 
         const currentRows = response.data.values || [];
-        
-        // 2. Creamos un mapa de ID -> fila para facilitar la reordenación
         const rowMap = new Map(
           currentRows.map(row => [row[0], row])
         );
 
-        // 3. Creamos las nuevas filas en el orden especificado
+        // 2. Crear las nuevas filas manteniendo todos los datos incluyendo stock
         const newRows = orderedIds.map((id, index) => {
           const row = rowMap.get(id);
           if (!row) throw new Error(`Producto con ID ${id} no encontrado`);
           return row;
         });
 
-        // 4. Actualizamos todas las filas en el nuevo orden
+        // 3. Actualizar todas las filas incluyendo la columna de stock
         await sheets.spreadsheets.values.update({
           spreadsheetId: SPREADSHEET_ID,
-          range: 'La Libre Web - Catálogo online rev 2021 - products!A2:I',
+          range: 'La Libre Web - Catálogo online rev 2021 - products!A2:K',
           valueInputOption: 'RAW',
           requestBody: {
             values: newRows
           }
         });
-
-        // 5. Verificamos la actualización
-        const verifyResponse = await sheets.spreadsheets.values.get({
-          spreadsheetId: SPREADSHEET_ID,
-          range: 'La Libre Web - Catálogo online rev 2021 - products!A2:I'
-        });
-
-        if (!verifyResponse.data.values) {
-          throw new Error('Error al verificar la actualización del orden');
-        }
-
       } catch (error) {
         console.error('Error updating product order:', error);
         throw error;

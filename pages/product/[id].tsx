@@ -40,6 +40,7 @@ import {
 import { Product, CartItem } from '@/product/types';
 import { NextPage } from 'next';
 import ImageCarousel from '@/product/components/ImageCarousel';
+import error from 'next/error';
 
 type NextPageWithLayout = NextPage & {
   getLayout?: (page: React.ReactElement) => React.ReactElement;
@@ -74,7 +75,7 @@ const processImages = (images: string[] = []) => {
 const ProductDetail: NextPageWithLayout = () => {
   const router = useRouter();
   const { id } = router.query;
-  const { product, isLoading, error } = useProduct(id ? id as string : null);
+  const { product, isLoading } = useProduct(id ? id as string : null);
   const { siteInfo } = useSiteInfo();
   const toast = useToast();
   const { cart, addToCart, removeFromCart } = useCart();

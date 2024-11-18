@@ -42,6 +42,7 @@ import 'react-quill/dist/quill.snow.css';
 import { CATEGORY_CONSTANTS } from '../../utils/constants';
 import { useCategories } from '@/hooks/useCategories';
 import { imageService } from '../../services/imageService';
+import { useProduct } from '@/hooks/useProduct';
 
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 
@@ -56,6 +57,7 @@ interface ProductModalProps {
 const MAX_IMAGES = 2;
 
 const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, product, isLoading: submitLoading }) => {
+  const { stock } = useProduct(product?.id || null);
   const [currentProduct, setCurrentProduct] = useState<Product>(() => {
     return product || {
       id: '',
@@ -93,14 +95,11 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
 
   useEffect(() => {
     if (product) {
-      const stockValue = typeof product.stock === 'number' ? product.stock : 
-                        typeof product.stock === 'string' ? parseInt(product.stock, 10) : 0;
-                        
       setCurrentProduct({
         ...product,
         categoryId: product.categoryId || "",
         isVisible: product.isVisible ?? true,
-        stock: stockValue,
+        stock: stock,
         order: product.order || ''
       });
       setImagePreview(product.images[0] || null);
@@ -131,7 +130,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
         toggleSchedule();
       }
     }
-  }, [product]);
+  }, [product, stock]);
 
   useEffect(() => {
     if (isOpen) {
@@ -229,7 +228,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     
     setCurrentProduct(prev => ({
       ...prev,
-      [name]: name === 'stock' ? parseInt(value, 10) || 0 : value
+      [name]: name === 'stock' ? Math.max(0, parseInt(value, 10) || 0) : value
     }));
   };
 
