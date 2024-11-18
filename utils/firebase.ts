@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
-import { getStorage, ref, uploadString, getDownloadURL, uploadBytes } from "firebase/storage";
+import { getStorage, ref, uploadString, getDownloadURL, uploadBytes, deleteObject, listAll } from "firebase/storage";
 import { 
   getAuth, 
   createUserWithEmailAndPassword, 
@@ -40,6 +40,12 @@ export interface SiteInformation {
   exchangeRates: {
     [key: string]: number;
   };
+  imageSettings?: {
+    maxImagesPerProduct: number;
+    maxSizeMB: number;
+    maxWidth: number;
+    maxHeight: number;
+  };
 }
 
 export const DEFAULT_SITE_INFORMATION: SiteInformation = {
@@ -57,7 +63,13 @@ export const DEFAULT_SITE_INFORMATION: SiteInformation = {
   bannerUrl: "/default-banner.jpg",
   currency: 'ARS',
   exchangeRates: {},
-  storeName: ""
+  storeName: "",
+  imageSettings: {
+    maxImagesPerProduct: 5,
+    maxSizeMB: 2,
+    maxWidth: 1920,
+    maxHeight: 1080
+  }
 };
 
 export interface PaymentMethods {
@@ -168,6 +180,43 @@ export const getCurrentUser = (): User | null => {
 
 export const isAdminUser = (user: User | null): boolean => {
   return user?.uid === 'admin';
+};
+export interface ProductImage {
+  url: string;
+  path: string;
+  timestamp: number;
+}
+
+export const productImageService = {
+  async upload(file: File, productId: string): Promise<ProductImage> {
+    const timestamp = Date.now();
+    const fileName = `${timestamp}_${file.name.replace(/[^a-zA-Z0-9.]/g, '')}`;
+    const path = `products/${productId}/${fileName}`;
+    const storageRef = ref(storage, path);
+    
+    await uploadBytes(storageRef, file);
+    const url = await getDownloadURL(storageRef);
+    
+    return {
+      url,
+      path,
+      timestamp
+    };
+  },
+
+  async delete(path: string): Promise<void> {
+    const imageRef = ref(storage, path);
+    await deleteObject(imageRef);
+  },
+
+  async deleteAllProductImages(productId: string): Promise<void> {
+    const productRef = ref(storage, `products/${productId}`);
+    const list = await listAll(productRef);
+    
+    await Promise.all(
+      list.items.map(item => deleteObject(item))
+    );
+  }
 };
 
 export { auth, db, storage };

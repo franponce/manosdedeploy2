@@ -41,6 +41,7 @@ import dynamic from 'next/dynamic';
 import 'react-quill/dist/quill.snow.css';
 import { CATEGORY_CONSTANTS } from '../../utils/constants';
 import { useCategories } from '@/hooks/useCategories';
+import { imageService } from '../../services/imageService';
 
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 
@@ -78,6 +79,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
   const [description, setDescription] = useState('');
   const [newCategoryName, setNewCategoryName] = useState('');
   const [showNewCategoryInput, setShowNewCategoryInput] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   const MAX_TITLE_LENGTH = 60;
   const MAX_DESCRIPTION_LENGTH = 300;
@@ -137,45 +139,29 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
         title: "Límite alcanzado",
         description: "Solo se permiten hasta 2 imágenes por producto",
         status: "warning",
-        duration: 3000,
-        isClosable: true,
       });
       return;
     }
 
     try {
-      const options = {
-        maxSizeMB: 0.1,
-        maxWidthOrHeight: 600,
-        useWebWorker: true,
-        fileType: "image/jpeg",
-        quality: 0.5
-      };
-
-      const compressedFile = await imageCompression(file, options);
-      const reader = new FileReader();
-
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        setCurrentProduct(prev => {
-          const newImages = [...prev.images];
-          newImages[index] = base64String;
-          return { ...prev, images: newImages };
-        });
-      };
-
-      reader.readAsDataURL(compressedFile);
+      setIsUploading(true);
+      const imageUrl = await imageService.upload(file, currentProduct.id);
+      
+      setCurrentProduct(prev => ({
+        ...prev,
+        images: [...prev.images, imageUrl]
+      }));
     } catch (error) {
-      console.error("Error processing image:", error);
+      console.error('Error uploading image:', error);
       toast({
         title: "Error",
-        description: "No se pudo procesar la imagen. Intenta con una imagen más pequeña.",
+        description: "No se pudo subir la imagen. Intenta nuevamente.",
         status: "error",
-        duration: 3000,
-        isClosable: true,
       });
+    } finally {
+      setIsUploading(false);
     }
-  }, [toast, currentProduct.images]);
+  }, [currentProduct.id, currentProduct.images, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -323,12 +309,24 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     return img;
   };
 
-  const handleRemoveImage = (indexToRemove: number) => {
-    setCurrentProduct(prev => ({
-      ...prev,
-      images: prev.images.filter((_, index) => index !== indexToRemove)
-    }));
-  };
+  const handleRemoveImage = useCallback(async (index: number) => {
+    try {
+      const imageUrl = currentProduct.images[index];
+      await imageService.delete(imageUrl);
+      
+      setCurrentProduct(prev => ({
+        ...prev,
+        images: prev.images.filter((_, i) => i !== index)
+      }));
+    } catch (error) {
+      console.error('Error removing image:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo eliminar la imagen",
+        status: "error",
+      });
+    }
+  }, [currentProduct.images, toast]);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl">
