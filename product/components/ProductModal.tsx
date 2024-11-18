@@ -68,7 +68,8 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
       scheduledPublishDate: null,
       categoryId: '',
       isVisible: true,
-      stock: 0
+      stock: 0,
+      order: ''
     };
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -115,7 +116,8 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
         scheduledPublishDate: null,
         categoryId: "",
         isVisible: true,
-        stock: 0
+        stock: 0,
+        order: ''
       });
       setImagePreview(null);
       setDescription('');

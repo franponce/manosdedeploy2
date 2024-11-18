@@ -313,7 +313,8 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
                   isScheduled: false,
                   scheduledPublishDate: null,
                   categoryId: '',
-                  isVisible: true
+                  isVisible: true,
+                  order: ''
                 }}
                 onAdd={() => {}}
                 isLoading={true}
