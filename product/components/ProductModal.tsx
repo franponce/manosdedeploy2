@@ -43,6 +43,8 @@ import { CATEGORY_CONSTANTS } from '../../utils/constants';
 import { useCategories } from '@/hooks/useCategories';
 import { imageService } from '../../services/imageService';
 import { useProduct } from '@/hooks/useProduct';
+import useSWR from 'swr';
+import { SWR_KEYS } from '../constants';
 
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 
@@ -99,23 +101,37 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
 
   const { categories, isLoading: categoriesLoading, createCategory, mutate: mutateCategories } = useCategories();
 
+  const fetcher = async (url: string): Promise<Product | undefined> => {
+    const response = await fetch('/api/products');
+    const products: Product[] = await response.json();
+    return products.find((p: Product) => p.id === product?.id);
+  };
+
+  const { data: currentProductData } = useSWR<Product | undefined>(
+    product?.id ? `${SWR_KEYS.PRODUCTS}/${product.id}` : null,
+    fetcher
+  );
+
   useEffect(() => {
-    if (product) {
+    if (product && currentProductData) {
+      const stockValue = currentProductData.stock ?? 0;
+      
       setCurrentProduct({
         ...product,
-        categoryId: product.categoryId || "",
-        isVisible: product.isVisible ?? true,
-        stock: typeof product.stock === 'number' ? product.stock : 
-               typeof product.stock === 'string' ? parseInt(product.stock, 10) : 0,
-        order: product.order || ''
+        ...currentProductData,
+        categoryId: currentProductData.categoryId || "",
+        isVisible: currentProductData.isVisible ?? true,
+        stock: typeof stockValue === 'number' ? stockValue : 
+               typeof stockValue === 'string' ? parseInt(stockValue, 10) : 0,
+        order: currentProductData.order || ''
       });
-      setImagePreview(product.images[0] || null);
-      setDescription(product.description || '');
-      if (product.scheduledPublishDate) {
-        setScheduledDate(new Date(product.scheduledPublishDate));
+      setImagePreview(currentProductData.images[0] || null);
+      setDescription(currentProductData.description || '');
+      if (currentProductData.scheduledPublishDate) {
+        setScheduledDate(new Date(currentProductData.scheduledPublishDate));
         toggleSchedule();
       }
-    } else {
+    } else if (!product) {
       setCurrentProduct({
         id: "",
         title: "",
@@ -137,7 +153,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
         toggleSchedule();
       }
     }
-  }, [product]);
+  }, [product, currentProductData]);
 
   useEffect(() => {
     if (isOpen) {
@@ -448,7 +464,13 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                 step="1"
                 value={currentProduct.stock}
                 onChange={handleInputChange}
+                placeholder="Ingrese el stock disponible"
               />
+              {currentProduct.stock > 0 && (
+                <Text fontSize="sm" color="green.500" mt={1}>
+                  Stock actual: {currentProduct.stock} unidades
+                </Text>
+              )}
             </FormControl>
 
             <FormControl>
