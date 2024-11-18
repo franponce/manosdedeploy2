@@ -163,6 +163,7 @@ if (typeof window === 'undefined') {
         // Calcular la fila real (añadimos 2 porque empezamos desde A2)
         const actualRow = rowIndex + 2;
 
+        // Mantener el orden secuencial en la columna J
         const values = [
           [
             product.id,
@@ -174,7 +175,7 @@ if (typeof window === 'undefined') {
             product.isScheduled ? 'TRUE' : 'FALSE',
             product.categoryId,
             product.isVisible ? 'TRUE' : 'FALSE',
-            product.order || '',
+            (actualRow - 1).toString(), // Mantener el orden secuencial
             product.stock.toString()
           ]
         ];
