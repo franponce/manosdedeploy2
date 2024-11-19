@@ -58,6 +58,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
   const observer = useRef<IntersectionObserver | null>(null);
   const toast = useToast();
   const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
+  const [productImageIndexes, setProductImageIndexes] = useState<{[key: string]: number}>({});
 
   const lastProductElementRef = useCallback((node: HTMLDivElement | null) => {
     if (isLoading) return;
@@ -344,9 +345,53 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
         height="200px"
         mb={4}
       >
-        <ImageCarousel
-          images={Array.isArray(product.images) ? product.images : product.images ? [product.images] : []}
-        />
+        <AspectRatio ratio={1}>
+          <Box position="relative">
+            <Image
+              src={product.images[productImageIndexes[product.id] || 0]}
+              alt={product.title}
+              objectFit="cover"
+            />
+            {product.images.length > 1 && (
+              <>
+                <IconButton
+                  aria-label="Anterior"
+                  icon={<ChevronLeftIcon />}
+                  position="absolute"
+                  left={2}
+                  top="50%"
+                  transform="translateY(-50%)"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setProductImageIndexes(prev => ({
+                      ...prev,
+                      [product.id]: prev[product.id] === 0 ? product.images.length - 1 : (prev[product.id] || 0) - 1
+                    }));
+                  }}
+                  zIndex={2}
+                />
+                <IconButton
+                  aria-label="Siguiente"
+                  icon={<ChevronRightIcon />}
+                  position="absolute"
+                  right={2}
+                  top="50%"
+                  transform="translateY(-50%)"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setProductImageIndexes(prev => ({
+                      ...prev,
+                      [product.id]: prev[product.id] === product.images.length - 1 ? 0 : (prev[product.id] || 0) + 1
+                    }));
+                  }}
+                  zIndex={2}
+                />
+              </>
+            )}
+          </Box>
+        </AspectRatio>
       </Box>
 
       {/* Información del producto */}
