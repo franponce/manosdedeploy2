@@ -163,17 +163,9 @@ const ProductOrderManager: React.FC<ProductOrderManagerProps> = ({
                     <Flex align="center" gap={4} flex={1}>
                       <Flex direction="column" align="center" minW="50px">
                         <Text color="gray.500" fontSize="sm">
-                          Actual
+                          Orden
                         </Text>
                         <Text color="blue.500" fontWeight="bold">
-                          #{product.order || 'N/A'}
-                        </Text>
-                      </Flex>
-                      <Flex direction="column" align="center" minW="50px">
-                        <Text color="gray.500" fontSize="sm">
-                          Nuevo
-                        </Text>
-                        <Text color="green.500" fontWeight="bold">
                           #{index + 1}
                         </Text>
                       </Flex>
