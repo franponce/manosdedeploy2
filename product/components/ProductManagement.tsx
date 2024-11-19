@@ -340,11 +340,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
       </Badge>
 
       {/* Contenedor de imágenes */}
-      <Box 
-        position="relative" 
-        height="200px"
-        mb={4}
-      >
+      <Box position="relative" height="200px" mb={4}>
         <AspectRatio ratio={1}>
           <Box position="relative">
             <Image
@@ -396,11 +392,62 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
       </Box>
 
       {/* Información del producto */}
-      <Stack spacing={2}>
-        <Heading size="md">{product.title}</Heading>
-        <Text color="gray.600">{parseCurrency(product.price)}</Text>
-        <Text noOfLines={2}>{product.description}</Text>
-      </Stack>
+      <Box mb={2}>
+        <Text
+          fontWeight="bold"
+          fontSize="lg"
+          noOfLines={expandedTitles[product.id] ? undefined : 2}
+          onClick={() => toggleTitle(product.id)}
+          cursor="pointer"
+        >
+          {product.title}
+        </Text>
+        {product.title.length > 50 && (
+          <Button
+            size="xs"
+            variant="link"
+            color="blue.500"
+            onClick={() => toggleTitle(product.id)}
+            mt={1}
+          >
+            {expandedTitles[product.id] ? "Ver menos" : "Ver título completo"}
+          </Button>
+        )}
+      </Box>
+      
+      <Box mb={4}>
+        <div
+          dangerouslySetInnerHTML={{
+            __html: expandedDescriptions[product.id]
+              ? product.description
+              : truncateText(product.description, 150)
+          }}
+          style={{
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            display: '-webkit-box',
+            WebkitLineClamp: expandedDescriptions[product.id] ? 'unset' : 3,
+            WebkitBoxOrient: 'vertical',
+            lineHeight: '1.5em',
+            maxHeight: expandedDescriptions[product.id] ? 'none' : '4.5em',
+          }}
+        />
+        {product.description.length > 150 && (
+          <Button
+            size="xs"
+            variant="link"
+            color="blue.500"
+            onClick={() => toggleDescription(product.id)}
+            mt={1}
+          >
+            {expandedDescriptions[product.id] ? "Ver menos" : "Ver más"}
+          </Button>
+        )}
+      </Box>
+
+      <Text fontWeight="bold" mb={4}>
+        ${product.price.toFixed(2)}
+      </Text>
 
       {/* Acciones */}
       <Center mt={4}>
