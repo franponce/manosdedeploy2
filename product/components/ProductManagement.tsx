@@ -327,12 +327,22 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
       borderRadius="lg"
       position="relative"
     >
+      {/* Badge de visibilidad */}
+      <Badge
+        position="absolute"
+        top={2}
+        right={2}
+        colorScheme={product.isVisible ? "green" : "red"}
+        zIndex={1}
+      >
+        {product.isVisible ? "Visible" : "Oculto"}
+      </Badge>
+
       {/* Contenedor de imágenes */}
       <Box 
         position="relative" 
         height="200px"
         mb={4}
-        onClick={(e) => e.preventDefault()}
       >
         <ImageCarousel
           images={Array.isArray(product.images) ? product.images : product.images ? [product.images] : []}
