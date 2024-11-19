@@ -19,13 +19,20 @@ import {
   Badge,
   Spinner,
   Tooltip,
+  Grid,
+  IconButton,
+  Switch,
+  Stack,
 } from "@chakra-ui/react";
-import { SearchIcon } from "@chakra-ui/icons";
+import { SearchIcon, ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
 import { FaTrash, FaEye, FaEyeSlash } from "react-icons/fa";
 import ProductModal from "./ProductModal";
 import { getProducts, createProduct, updateProduct, deleteProduct } from "../../utils/googleSheets";
 import { Product } from "../types";
 import useSWR, { mutate } from 'swr';
+import ImageCarousel from '../components/ImageCarousel';
+import { parseCurrency } from '../../utils/currency';
+import { SWR_KEYS } from '../constants';
 
 const PRODUCT_LIMIT = 30;
 const SYNC_INTERVAL = 30000; // 30 segundos
@@ -299,6 +306,72 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
     return () => clearInterval(interval);
   }, [checkAndUpdateScheduledProducts]);
 
+  const handleVisibilityToggle = async (product: Product) => {
+    try {
+      const updatedProduct = {
+        ...product,
+        isVisible: !product.isVisible
+      };
+      await updateProduct(updatedProduct);
+      mutate(SWR_KEYS.PRODUCTS);
+    } catch (error) {
+      console.error('Error toggling visibility:', error);
+    }
+  };
+
+  const renderProduct = (product: Product) => (
+    <Box
+      key={product.id}
+      p={4}
+      borderWidth="1px"
+      borderRadius="lg"
+      position="relative"
+    >
+      {/* Contenedor de imágenes */}
+      <Box 
+        position="relative" 
+        height="200px"
+        mb={4}
+        onClick={(e) => e.preventDefault()}
+      >
+        <ImageCarousel
+          images={Array.isArray(product.images) ? product.images : product.images ? [product.images] : []}
+        />
+      </Box>
+
+      {/* Información del producto */}
+      <Stack spacing={2}>
+        <Heading size="md">{product.title}</Heading>
+        <Text color="gray.600">{parseCurrency(product.price)}</Text>
+        <Text noOfLines={2}>{product.description}</Text>
+        
+        {/* Acciones */}
+        <Flex justify="space-between" align="center" mt={2}>
+          <HStack>
+            <Button
+              size="sm"
+              colorScheme="blue"
+              onClick={() => handleEdit(product)}
+            >
+              Editar
+            </Button>
+            <Button
+              size="sm"
+              colorScheme="red"
+              onClick={() => handleDelete(product.id)}
+            >
+              Eliminar
+            </Button>
+          </HStack>
+          <Switch
+            isChecked={product.isVisible}
+            onChange={() => handleVisibilityToggle(product)}
+          />
+        </Flex>
+      </Stack>
+    </Box>
+  );
+
   return (
     <Box>
       <Flex direction="column" mb={6}>
@@ -340,122 +413,16 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
           </Text>
         </Center>
       ) : (
-        <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
-          {displayedProducts.map((product, index) => (
-            <Box
-              key={product.id}
-              ref={index === displayedProducts.length - 1 ? lastProductElementRef : null}
-              borderRadius="lg"
-              borderWidth={1}
-              overflow="hidden"
-              position="relative"
-            >
-              <Flex position="absolute" top="2" left="2" zIndex="1" direction="column" gap={2}>
-                {isProductScheduled(product) && (
-                  <>
-                    <Badge colorScheme="purple">
-                      Producto programado
-                    </Badge>
-                    <Badge colorScheme="blue" fontSize="xs">
-                      Se publicará el {product.scheduledPublishDate ? formatScheduledDate(product.scheduledPublishDate.toString()) : ''}
-                    </Badge>
-                  </>
-                )}
-                <Badge colorScheme={product.isVisible ? "green" : "red"}>
-                  {product.isVisible ? "Visible" : "Oculto"}
-                </Badge>
-              </Flex>
-              
-              <AspectRatio ratio={1}>
-                <Image
-                  src={product.images[0]}
-                  alt={product.title}
-                  objectFit="cover"
-                />
-              </AspectRatio>
-              <Box p={4}>
-                <Box mb={2}>
-                  <Text
-                    fontWeight="bold"
-                    fontSize="lg"
-                    noOfLines={expandedTitles[product.id] ? undefined : 2}
-                    onClick={() => toggleTitle(product.id)}
-                    cursor="pointer"
-                  >
-                    {product.title}
-                  </Text>
-                  {product.title.length > 50 && (
-                    <Button
-                      size="xs"
-                      variant="link"
-                      color="blue.500"
-                      onClick={() => toggleTitle(product.id)}
-                      mt={1}
-                    >
-                      {expandedTitles[product.id] ? "Ver menos" : "Ver título completo"}
-                    </Button>
-                  )}
-                </Box>
-                <Box mb={2}>
-                  <div
-                    dangerouslySetInnerHTML={{
-                      __html: expandedDescriptions[product.id]
-                        ? product.description
-                        : truncateText(product.description, 150)
-                    }}
-                    style={{
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      display: '-webkit-box',
-                      WebkitLineClamp: expandedDescriptions[product.id] ? 'unset' : 3,
-                      WebkitBoxOrient: 'vertical',
-                      lineHeight: '1.5em',
-                      maxHeight: expandedDescriptions[product.id] ? 'none' : '4.5em',
-                    }}
-                  />
-                  {product.description.length > 150 && (
-                    <Button
-                      size="xs"
-                      variant="link"
-                      color="blue.500"
-                      onClick={() => toggleDescription(product.id)}
-                      mt={1}
-                    >
-                      {expandedDescriptions[product.id] ? "Ver menos" : "Ver más"}
-                    </Button>
-                  )}
-                </Box>
-                <Text fontWeight="bold" mb={4}>
-                  ${product.price.toFixed(2)}
-                </Text>
-                <HStack spacing={2}>
-                  <Button 
-                    colorScheme="red" 
-                    onClick={() => handleDelete(product.id)}
-                    leftIcon={<Icon as={FaTrash} />}
-                  >
-                    Eliminar
-                  </Button>
-                  <Button 
-                    colorScheme="blue" 
-                    onClick={() => handleEdit(product)}
-                  >
-                    Editar
-                  </Button>
-                  <Tooltip label={product.isVisible ? "Ocultar producto" : "Mostrar producto"}>
-                    <Button
-                      colorScheme={product.isVisible ? "green" : "gray"}
-                      onClick={() => handleToggleVisibility(product)}
-                      leftIcon={<Icon as={product.isVisible ? FaEye : FaEyeSlash} />}
-                    >
-                      {product.isVisible ? "Visible" : "Oculto"}
-                    </Button>
-                  </Tooltip>
-                </HStack>
-              </Box>
-            </Box>
-          ))}
-        </SimpleGrid>
+        <Grid
+          templateColumns={{
+            base: "1fr",
+            md: "repeat(2, 1fr)",
+            lg: "repeat(3, 1fr)"
+          }}
+          gap={6}
+        >
+          {products?.map(renderProduct)}
+        </Grid>
       )}
       {isLoading && (
         <Center mt={4}>
