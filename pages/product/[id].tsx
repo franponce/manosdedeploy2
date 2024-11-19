@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Box,
   Container,
@@ -88,6 +88,13 @@ const ProductDetail: NextPageWithLayout = () => {
       setPageUrl(window.location.href);
     }
   }, []);
+  const handleBack = useCallback(() => {
+    router.back();
+  }, [router]);
+
+  useEffect(() => {
+    router.prefetch('/');
+  }, [router]);
 
   if (isLoading) {
     return (
@@ -227,30 +234,14 @@ const ProductDetail: NextPageWithLayout = () => {
 
   console.log('Product images from API:', product?.images);
 
-  const handleBack = (e: React.MouseEvent) => {
-    e.preventDefault();
-    // Usar shallow routing para navegación más rápida
-    router.push('/', undefined, { shallow: true });
-  };
-
   return (
     <>
-      <Box 
-        as="header" 
-        position="fixed"
-        top="0"
-        left="0"
-        right="0"
-        bg="white"
-        boxShadow="sm"
-        zIndex="sticky"
-      >
+      <Box bg="white" position="sticky" top={0} zIndex={10} borderBottom="1px" borderColor="gray.200">
         <Container maxW="container.xl" py={4}>
           <Button
             leftIcon={<Icon as={FaArrowLeft} />}
-            onClick={handleBack}
-            colorScheme="blue"
             variant="ghost"
+            onClick={handleBack}
             size="md"
           >
             Volver a la tienda
