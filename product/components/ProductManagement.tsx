@@ -351,6 +351,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
               src={product.images[productImageIndexes[product.id] || 0]}
               alt={product.title}
               objectFit="cover"
+              borderRadius="md"
             />
             {product.images.length > 1 && (
               <>
@@ -399,8 +400,10 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
         <Heading size="md">{product.title}</Heading>
         <Text color="gray.600">{parseCurrency(product.price)}</Text>
         <Text noOfLines={2}>{product.description}</Text>
-        
-        {/* Acciones */}
+      </Stack>
+
+      {/* Acciones */}
+      <Center mt={4}>
         <HStack spacing={2}>
           <Button 
             size="sm"
@@ -428,7 +431,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
             </Button>
           </Tooltip>
         </HStack>
-      </Stack>
+      </Center>
     </Box>
   );
 
