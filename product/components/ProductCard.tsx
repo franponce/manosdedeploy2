@@ -149,13 +149,13 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading: cardLoading, 
         {cardLoading ? (
           <Skeleton />
         ) : (
-          <Link as="div" onClick={handleProductClick} cursor="pointer">
-            <Box position="relative">
+          <Box position="relative" onClick={(e) => e.preventDefault()}>
+            <Box position="relative" height="100%" width="100%">
               <ImageCarousel 
                 images={product.images}
               />
             </Box>
-          </Link>
+          </Box>
         )}
       </AspectRatio>
       <Box p={4}>

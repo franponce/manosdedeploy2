@@ -227,6 +227,12 @@ const ProductDetail: NextPageWithLayout = () => {
 
   console.log('Product images from API:', product?.images);
 
+  const handleBack = (e: React.MouseEvent) => {
+    e.preventDefault();
+    // Usar shallow routing para navegación más rápida
+    router.push('/', undefined, { shallow: true });
+  };
+
   return (
     <>
       <Box 
@@ -242,7 +248,7 @@ const ProductDetail: NextPageWithLayout = () => {
         <Container maxW="container.xl" py={4}>
           <Button
             leftIcon={<Icon as={FaArrowLeft} />}
-            onClick={handleBackToStore}
+            onClick={handleBack}
             colorScheme="blue"
             variant="ghost"
             size="md"

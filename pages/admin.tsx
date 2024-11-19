@@ -186,11 +186,17 @@ const AdminPage: React.FC = () => {
               Ver más
             </MenuButton>
             <MenuList zIndex={10}>
-              <Link href="/?preview=true" passHref>
-                <MenuItem icon={<Icon as={FaEye} />}>
-                  Previsualizar tienda
-                </MenuItem>
-              </Link>
+              <MenuItem 
+                icon={<Icon as={FaEye} />}
+                onClick={() => {
+                  router.push('/', undefined, { 
+                    shallow: true, 
+                    scroll: false 
+                  });
+                }}
+              >
+                Previsualizar tienda
+              </MenuItem>
               <MenuItem 
                 icon={<Icon as={FaTags} />}
                 onClick={() => setIsCategoryManagerOpen(true)}

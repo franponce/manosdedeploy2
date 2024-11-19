@@ -263,147 +263,156 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
   });
 
   return (
-    <ChakraProvider theme={theme}>
-      <Global
-        styles={css`
-          * {
-            /*font-family: "Jost", sans-serif !important;*/
-          }
-        `}
-      />
-      <Head>
-        <title>{siteInfo?.title || 'Catálogo online'}</title>
-        <meta
-          content="initial-scale=1.0, width=device-width"
-          name="viewport"
+    <SWRConfig
+      value={{
+        revalidateOnFocus: false,
+        revalidateOnReconnect: false,
+        dedupingInterval: 60000,
+        shouldRetryOnError: false
+      }}
+    >
+      <ChakraProvider theme={theme}>
+        <Global
+          styles={css`
+            * {
+              /*font-family: "Jost", sans-serif !important;*/
+            }
+          `}
         />
-        <meta content="Frank" name="author" />
-        <meta content="Frank" name="copyright" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Jost&display=swap"
-          rel="stylesheet"
-        />
-        {customScripts && (
-          <script dangerouslySetInnerHTML={{ __html: customScripts }} />
-        )}
-      </Head>
-      {!isLoginPage && !isProductDetail && (
-        <>
-          {announcementBar && announcementBar.isEnabled && (
-            <Box bg="blue.500" color="white" py={2}>
-              <Container maxW="container.xl">
-                <Flex justify="space-between">
-                  {[1, 2, 3].map((num) => (
-                    announcementBar[`message${num}`] && (
-                      <Link key={num} href={announcementBar[`link${num}`]} isExternal>
-                        {announcementBar[`message${num}`]}
-                      </Link>
-                    )
-                  ))}
+        <Head>
+          <title>{siteInfo?.title || 'Catálogo online'}</title>
+          <meta
+            content="initial-scale=1.0, width=device-width"
+            name="viewport"
+          />
+          <meta content="Frank" name="author" />
+          <meta content="Frank" name="copyright" />
+          <link
+            href="https://fonts.googleapis.com/css2?family=Jost&display=swap"
+            rel="stylesheet"
+          />
+          {customScripts && (
+            <script dangerouslySetInnerHTML={{ __html: customScripts }} />
+          )}
+        </Head>
+        {!isLoginPage && !isProductDetail && (
+          <>
+            {announcementBar && announcementBar.isEnabled && (
+              <Box bg="blue.500" color="white" py={2}>
+                <Container maxW="container.xl">
+                  <Flex justify="space-between">
+                    {[1, 2, 3].map((num) => (
+                      announcementBar[`message${num}`] && (
+                        <Link key={num} href={announcementBar[`link${num}`]} isExternal>
+                          {announcementBar[`message${num}`]}
+                        </Link>
+                      )
+                    ))}
+                  </Flex>
+                </Container>
+              </Box>
+            )}
+            <Box
+              position="fixed"
+              top={0}
+              left={0}
+              right={0}
+              zIndex={1000}
+              bg="white"
+              boxShadow="md"
+            >
+              <Container maxWidth="container.xl" padding={4}>
+                <Flex alignItems="center" justifyContent="space-between">
+                  <Box>
+                    {getWelcomeMessage()}
+                  </Box>
+                  {isMounted && (
+                    <HamburgerMenu
+                      isLoggedIn={isLoggedIn}
+                      isAdmin={isAdmin}
+                      onLogout={handleLogout}
+                    />
+                  )}
                 </Flex>
               </Container>
             </Box>
-          )}
+          </>
+        )}
+        {showPreviewBanner && (
           <Box
-            position="fixed"
-            top={0}
-            left={0}
-            right={0}
-            zIndex={1000}
-            bg="white"
-            boxShadow="md"
+            position="sticky"
+            top="70px"
+            zIndex={999}
+            bg="blue.50"
+            py={{ base: 2, md: 3 }}
+            borderBottom="1px"
+            borderColor="blue.100"
           >
-            <Container maxWidth="container.xl" padding={4}>
-              <Flex alignItems="center" justifyContent="space-between">
-                <Box>
-                  {getWelcomeMessage()}
-                </Box>
-                {isMounted && (
-                  <HamburgerMenu
-                    isLoggedIn={isLoggedIn}
-                    isAdmin={isAdmin}
-                    onLogout={handleLogout}
-                  />
-                )}
-              </Flex>
-            </Container>
-          </Box>
-        </>
-      )}
-      {showPreviewBanner && (
-        <Box
-          position="sticky"
-          top="70px"
-          zIndex={999}
-          bg="blue.50"
-          py={{ base: 2, md: 3 }}
-          borderBottom="1px"
-          borderColor="blue.100"
-        >
-          <Container maxW="container.xl">
-            <Flex
-              justify={{ base: "center", sm: "space-between" }}
-              align="center"
-              px={4}
-              direction={{ base: "column", sm: "row" }}
-              gap={{ base: 2, sm: 0 }}
-            >
-              <Flex 
-                align="center" 
-                gap={2}
-                textAlign={{ base: "center", sm: "left" }}
+            <Container maxW="container.xl">
+              <Flex
+                justify={{ base: "center", sm: "space-between" }}
+                align="center"
+                px={4}
+                direction={{ base: "column", sm: "row" }}
+                gap={{ base: 2, sm: 0 }}
               >
-                <Icon as={FaEye} color="blue.500" display={{ base: "none", sm: "block" }} />
-                <Text 
-                  color="blue.700"
+                <Flex 
+                  align="center" 
+                  gap={2}
+                  textAlign={{ base: "center", sm: "left" }}
+                >
+                  <Icon as={FaEye} color="blue.500" display={{ base: "none", sm: "block" }} />
+                  <Text 
+                    color="blue.700"
+                    fontSize={{ base: "sm", md: "md" }}
+                  >
+                    Estás visualizando la tienda como un cliente.
+                  </Text>
+                </Flex>
+                <Button
+                  size={{ base: "xs", md: "sm" }}
+                  colorScheme="blue"
+                  variant="link"
+                  rightIcon={<Icon as={FaArrowRight} />}
+                  onClick={handleClosePreview}
                   fontSize={{ base: "sm", md: "md" }}
                 >
-                  Estás visualizando la tienda como un cliente.
-                </Text>
+                  Volver al administrador
+                </Button>
               </Flex>
-              <Button
-                size={{ base: "xs", md: "sm" }}
-                colorScheme="blue"
-                variant="link"
-                rightIcon={<Icon as={FaArrowRight} />}
-                onClick={handleClosePreview}
-                fontSize={{ base: "sm", md: "md" }}
-              >
-                Volver al administrador
-              </Button>
-            </Flex>
-          </Container>
-        </Box>
-      )}
-      <Box display="flex" flexDirection="column" minHeight="100vh">
-        {router.pathname === '/admin' ? (
-          <Box flex="1">
-            <Container maxWidth="container.xl" padding={4}>
-              <Component {...pageProps} />
-            </Container>
-          </Box>
-        ) : (
-          <Box flex="1" pt={isLoginPage || isProductDetail ? "20px" : "70px"}>
-            <Container
-              backgroundColor="white"
-              borderRadius="sm"
-              maxWidth="container.xl"
-              padding={4}
-            >
-              {getLayout(<Component {...pageProps} />)}
             </Container>
           </Box>
         )}
+        <Box display="flex" flexDirection="column" minHeight="100vh">
+          {router.pathname === '/admin' ? (
+            <Box flex="1">
+              <Container maxWidth="container.xl" padding={4}>
+                <Component {...pageProps} />
+              </Container>
+            </Box>
+          ) : (
+            <Box flex="1" pt={isLoginPage || isProductDetail ? "20px" : "70px"}>
+              <Container
+                backgroundColor="white"
+                borderRadius="sm"
+                maxWidth="container.xl"
+                padding={4}
+              >
+                {getLayout(<Component {...pageProps} />)}
+              </Container>
+            </Box>
+          )}
 
-        {/* Footer común para todas las rutas */}
-        <Box mt="auto">
-          <Divider marginY={4} />
-          <Text textAlign="center" pb={4}>
-            © Copyright {new Date().getFullYear()}. Hecho con ♥ Simple Ecommerce
-          </Text>
+          {/* Footer común para todas las rutas */}
+          <Box mt="auto">
+            <Divider marginY={4} />
+            <Text textAlign="center" pb={4}>
+              © Copyright {new Date().getFullYear()}. Hecho con ♥ Simple Ecommerce
+            </Text>
+          </Box>
         </Box>
-      </Box>
-    </ChakraProvider>
+      </ChakraProvider>
+    </SWRConfig>
   );
 };
 

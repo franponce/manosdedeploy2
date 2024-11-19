@@ -28,6 +28,7 @@ import { useCart } from '../../hooks/useCart';
 import { SWR_KEYS } from '../constants';
 import SiteInfoBanner from '../../components/SiteInfoBanner';
 import { useSiteInfo } from '../../hooks/useSiteInfo';
+import { useRouter } from 'next/router';
 
 const fetcher = async (url: string) => {
   const response = await fetch(url);
@@ -62,14 +63,35 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
   const [displayedProducts, setDisplayedProducts] = React.useState<Product[]>([]);
   const [hasMore, setHasMore] = React.useState(true);
   const observer = React.useRef<IntersectionObserver | null>(null);
+  const router = useRouter();
+
+  // Prefetch de datos
+  React.useEffect(() => {
+    // Prefetch de productos
+    const prefetchData = async () => {
+      await Promise.all([
+        router.prefetch('/admin'),
+        router.prefetch('/'),
+        mutate(SWR_KEYS.PRODUCTS),
+        mutate(SWR_KEYS.CATEGORIES)
+      ]);
+    };
+    
+    prefetchData();
+  }, [router]);
+
+  // Optimizar el fetcher con cache
   const { data: products, error, isLoading } = useSWR<Product[]>(
     SWR_KEYS.PRODUCTS, 
     fetcher, 
     {
       fallbackData: initialProducts,
-      refreshInterval: 60000, // Actualizar cada minuto
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      dedupingInterval: 60000, // 1 minuto
     }
   );
+
   const { data: categories } = useSWR<Category[]>(
     SWR_KEYS.CATEGORIES, 
     fetcher, 
