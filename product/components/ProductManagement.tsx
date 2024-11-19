@@ -456,25 +456,38 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
         </Text>
 
         {/* Acciones */}
-        <Center>
-          <HStack spacing={2}>
+        <Box width="100%" p={4}>
+          <Badge 
+            mb={4} 
+            width="100%" 
+            textAlign="center"
+            colorScheme={product.isVisible ? "green" : "red"}
+          >
+            {product.isVisible ? "Visible" : "Oculto"}
+          </Badge>
+          
+          <HStack spacing={4} width="100%">
             <Button 
-              size="sm"
+              flex={1}
+              size="lg"
               colorScheme="red" 
               onClick={() => handleDelete(product.id)}
               leftIcon={<Icon as={FaTrash} />}
+              borderRadius="md"
             >
               Eliminar
             </Button>
             <Button 
-              size="sm"
+              flex={1}
+              size="lg"
               colorScheme="blue" 
               onClick={() => handleEdit(product)}
+              borderRadius="md"
             >
               Editar
             </Button>
           </HStack>
-        </Center>
+        </Box>
       </Box>
     </Box>
   );
