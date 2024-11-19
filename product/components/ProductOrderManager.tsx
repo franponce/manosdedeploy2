@@ -52,10 +52,14 @@ const ProductOrderManager: React.FC<ProductOrderManagerProps> = ({
 
   useEffect(() => {
     if (products) {
-      // Aseguramos que los productos estén ordenados por ID
-      const sortedProducts = [...products].sort((a, b) => 
-        parseInt(a.id) - parseInt(b.id)
-      );
+      // Ordenamos los productos según el orden guardado en el sheet
+      const sortedProducts = [...products].sort((a, b) => {
+        // Convertimos el orden a número, si no existe usamos Infinity para ponerlo al final
+        const orderA = a.order ? parseInt(a.order, 10) : Infinity;
+        const orderB = b.order ? parseInt(b.order, 10) : Infinity;
+        return orderA - orderB;
+      });
+
       setOrderedProducts(sortedProducts);
     }
   }, [products]);
@@ -157,9 +161,22 @@ const ProductOrderManager: React.FC<ProductOrderManagerProps> = ({
                 >
                   <Flex align="center" justify="space-between">
                     <Flex align="center" gap={4} flex={1}>
-                      <Text color="gray.500" fontWeight="medium" minW="30px">
-                        #{index + 1}
-                      </Text>
+                      <Flex direction="column" align="center" minW="50px">
+                        <Text color="gray.500" fontSize="sm">
+                          Actual
+                        </Text>
+                        <Text color="blue.500" fontWeight="bold">
+                          #{product.order || 'N/A'}
+                        </Text>
+                      </Flex>
+                      <Flex direction="column" align="center" minW="50px">
+                        <Text color="gray.500" fontSize="sm">
+                          Nuevo
+                        </Text>
+                        <Text color="green.500" fontWeight="bold">
+                          #{index + 1}
+                        </Text>
+                      </Flex>
                       <Image
                         src={normalizeImage(product.images)}
                         alt={product.title}
@@ -167,7 +184,12 @@ const ProductOrderManager: React.FC<ProductOrderManagerProps> = ({
                         objectFit="cover"
                         borderRadius="md"
                       />
-                      <Text fontWeight="medium">{product.title}</Text>
+                      <Box>
+                        <Text fontWeight="medium">{product.title}</Text>
+                        <Text fontSize="sm" color="gray.500">
+                          ID: {product.id}
+                        </Text>
+                      </Box>
                     </Flex>
                     <Flex gap={2}>
                       <IconButton
