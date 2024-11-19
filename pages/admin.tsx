@@ -48,7 +48,7 @@ const AdminPage: React.FC = () => {
   const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
   const { categories } = useCategories();
   const [isProductOrderOpen, setIsProductOrderOpen] = useState(false);
-  const [showHiddenProducts, setShowHiddenProducts] = useState(false);
+  const [showHiddenProducts, setShowHiddenProducts] = useState(true);
 
   const handleStoreSettings = () => {
     router.push('/store-config');
@@ -211,13 +211,13 @@ const AdminPage: React.FC = () => {
               </MenuItem>
               <MenuItem 
                 icon={<Icon as={FaBox} />}
-                onClick={handleToggleHiddenProducts}
               >
                 <Flex justify="space-between" align="center" width="100%">
                   <Text>Ver productos ocultos</Text>
                   <Switch 
-                    isChecked={showHiddenProducts}
-                    pointerEvents="none"
+                    isChecked={true}
+                    isReadOnly
+                    defaultChecked
                     size="sm"
                   />
                 </Flex>
