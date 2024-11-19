@@ -36,14 +36,31 @@ const AnnouncementBanner: React.FC<AnnouncementBannerProps> = ({ announcementBar
   if (!announcementBar.isEnabled || activeMessages.length === 0) return null;
 
   return (
-    <Box bg="blue.500" color="white" py={2} overflow="hidden">
-      <Container maxW="container.xl">
+    <Box 
+      bg="blue.500" 
+      color="white" 
+      py={2} 
+      position="relative"
+      width="100%"
+      zIndex={1001}
+    >
+      <Container maxW="100%" px={4}>
         {announcementBar.displayMode === 'static' ? (
-          <Flex justify={activeMessages.length === 1 ? "center" : "space-between"}>
-            {activeMessages.map((msg: AnnouncementMessage, index: number) => (
-              <Box key={index} textAlign="center" flex={1}>
+          <Flex 
+            justify={activeMessages.length === 1 ? "center" : "space-around"}
+            align="center"
+            gap={4}
+          >
+            {activeMessages.map((msg, index) => (
+              <Box 
+                key={index} 
+                textAlign="center" 
+                flex={1}
+                fontSize="sm"
+                fontWeight="medium"
+              >
                 {msg.link ? (
-                  <Link href={msg.link} isExternal>
+                  <Link href={msg.link} isExternal _hover={{ color: 'white', textDecoration: 'underline' }}>
                     {msg.message}
                   </Link>
                 ) : (
@@ -56,14 +73,22 @@ const AnnouncementBanner: React.FC<AnnouncementBannerProps> = ({ announcementBar
           <AnimatePresence mode="wait">
             <motion.div
               key={currentIndex}
-              initial={{ y: 20, opacity: 0 }}
+              initial={{ y: 10, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              exit={{ y: -20, opacity: 0 }}
-              transition={{ duration: 0.5 }}
+              exit={{ y: -10, opacity: 0 }}
+              transition={{ duration: 0.3 }}
             >
-              <Box textAlign="center">
+              <Box 
+                textAlign="center"
+                fontSize="sm"
+                fontWeight="medium"
+              >
                 {activeMessages[currentIndex].link ? (
-                  <Link href={activeMessages[currentIndex].link} isExternal>
+                  <Link 
+                    href={activeMessages[currentIndex].link} 
+                    isExternal
+                    _hover={{ color: 'white', textDecoration: 'underline' }}
+                  >
                     {activeMessages[currentIndex].message}
                   </Link>
                 ) : (

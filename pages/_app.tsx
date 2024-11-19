@@ -31,6 +31,7 @@ import { FaArrowLeft, FaEye, FaArrowRight, FaLink } from 'react-icons/fa';
 import type { NextPage } from 'next';
 import Layout from "@/app/layout";
 import SiteInfoCollapsible from '../components/SiteInfoCollapsible';
+import AnnouncementBanner from '../components/AnnouncementBanner';
 
 type NextPageWithLayout = NextPage & {
   getLayout?: (page: React.ReactElement) => React.ReactElement;
@@ -297,24 +298,11 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
         </Head>
         {!isLoginPage && !isProductDetail && (
           <>
-            {announcementBar && announcementBar.isEnabled && (
-              <Box bg="blue.500" color="white" py={2}>
-                <Container maxW="container.xl">
-                  <Flex justify="space-between">
-                    {[1, 2, 3].map((num) => (
-                      announcementBar[`message${num}`] && (
-                        <Link key={num} href={announcementBar[`link${num}`]} isExternal>
-                          {announcementBar[`message${num}`]}
-                        </Link>
-                      )
-                    ))}
-                  </Flex>
-                </Container>
-              </Box>
-            )}
+            {announcementBar?.isEnabled && <AnnouncementBanner announcementBar={announcementBar} />}
+            
             <Box
               position="fixed"
-              top={0}
+              top={announcementBar?.isEnabled ? "40px" : 0}
               left={0}
               right={0}
               zIndex={1000}
@@ -391,7 +379,16 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
               </Container>
             </Box>
           ) : (
-            <Box flex="1" pt={isLoginPage || isProductDetail ? "20px" : "70px"}>
+            <Box 
+              flex="1" 
+              pt={
+                isLoginPage || isProductDetail 
+                  ? "20px" 
+                  : announcementBar?.isEnabled 
+                    ? "110px"
+                    : "70px"
+              }
+            >
               <Container
                 backgroundColor="white"
                 borderRadius="sm"
