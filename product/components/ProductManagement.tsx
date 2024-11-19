@@ -323,10 +323,13 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
   const renderProduct = (product: Product) => (
     <Box
       key={product.id}
-      p={4}
       borderWidth="1px"
       borderRadius="lg"
-      position="relative"
+      overflow="hidden"
+      bg="white"
+      height="100%"
+      display="flex"
+      flexDirection="column"
     >
       {/* Badge de visibilidad */}
       <Badge
@@ -340,145 +343,139 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
       </Badge>
 
       {/* Contenedor de imágenes */}
-      <Box position="relative" height="200px" mb={4}>
-        <AspectRatio ratio={1}>
-          <Box position="relative">
-            <Image
-              src={product.images[productImageIndexes[product.id] || 0]}
-              alt={product.title}
-              objectFit="cover"
-              borderRadius="md"
-            />
-            {product.images.length > 1 && (
-              <>
-                <IconButton
-                  aria-label="Anterior"
-                  icon={<ChevronLeftIcon />}
-                  position="absolute"
-                  left={2}
-                  top="50%"
-                  transform="translateY(-50%)"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setProductImageIndexes(prev => ({
-                      ...prev,
-                      [product.id]: prev[product.id] === 0 ? product.images.length - 1 : (prev[product.id] || 0) - 1
-                    }));
-                  }}
-                  zIndex={2}
-                />
-                <IconButton
-                  aria-label="Siguiente"
-                  icon={<ChevronRightIcon />}
-                  position="absolute"
-                  right={2}
-                  top="50%"
-                  transform="translateY(-50%)"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setProductImageIndexes(prev => ({
-                      ...prev,
-                      [product.id]: prev[product.id] === product.images.length - 1 ? 0 : (prev[product.id] || 0) + 1
-                    }));
-                  }}
-                  zIndex={2}
-                />
-              </>
-            )}
-          </Box>
-        </AspectRatio>
+      <Box position="relative" width="100%" paddingTop="100%">
+        <Box position="absolute" top={0} left={0} right={0} bottom={0}>
+          <Image
+            src={product.images[productImageIndexes[product.id] || 0]}
+            alt={product.title}
+            objectFit="cover"
+            width="100%"
+            height="100%"
+          />
+          {product.images.length > 1 && (
+            <>
+              <IconButton
+                aria-label="Anterior"
+                icon={<ChevronLeftIcon />}
+                position="absolute"
+                left={2}
+                top="50%"
+                transform="translateY(-50%)"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setProductImageIndexes(prev => ({
+                    ...prev,
+                    [product.id]: prev[product.id] === 0 ? product.images.length - 1 : (prev[product.id] || 0) - 1
+                  }));
+                }}
+                zIndex={2}
+              />
+              <IconButton
+                aria-label="Siguiente"
+                icon={<ChevronRightIcon />}
+                position="absolute"
+                right={2}
+                top="50%"
+                transform="translateY(-50%)"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setProductImageIndexes(prev => ({
+                    ...prev,
+                    [product.id]: prev[product.id] === product.images.length - 1 ? 0 : (prev[product.id] || 0) + 1
+                  }));
+                }}
+                zIndex={2}
+              />
+            </>
+          )}
+        </Box>
       </Box>
 
-      {/* Información del producto */}
-      <Box mb={2}>
-        <Text
-          fontWeight="bold"
-          fontSize="lg"
-          noOfLines={expandedTitles[product.id] ? undefined : 2}
-          onClick={() => toggleTitle(product.id)}
-          cursor="pointer"
-        >
-          {product.title}
-        </Text>
-        {product.title.length > 50 && (
-          <Button
-            size="xs"
-            variant="link"
-            color="blue.500"
+      {/* Contenido del producto */}
+      <Box p={4} flex="1" display="flex" flexDirection="column">
+        {/* Título */}
+        <Box mb={2}>
+          <Text
+            fontWeight="bold"
+            fontSize="lg"
+            noOfLines={expandedTitles[product.id] ? undefined : 2}
             onClick={() => toggleTitle(product.id)}
-            mt={1}
+            cursor="pointer"
           >
-            {expandedTitles[product.id] ? "Ver menos" : "Ver título completo"}
-          </Button>
-        )}
-      </Box>
-      
-      <Box mb={4}>
-        <div
-          dangerouslySetInnerHTML={{
-            __html: expandedDescriptions[product.id]
-              ? product.description
-              : truncateText(product.description, 150)
-          }}
-          style={{
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            display: '-webkit-box',
-            WebkitLineClamp: expandedDescriptions[product.id] ? 'unset' : 3,
-            WebkitBoxOrient: 'vertical',
-            lineHeight: '1.5em',
-            maxHeight: expandedDescriptions[product.id] ? 'none' : '4.5em',
-          }}
-        />
-        {product.description.length > 150 && (
-          <Button
-            size="xs"
-            variant="link"
-            color="blue.500"
-            onClick={() => toggleDescription(product.id)}
-            mt={1}
-          >
-            {expandedDescriptions[product.id] ? "Ver menos" : "Ver más"}
-          </Button>
-        )}
-      </Box>
-
-      <Text fontWeight="bold" mb={4}>
-        ${product.price.toFixed(2)}
-      </Text>
-
-      {/* Acciones */}
-      <Center mt={4}>
-        <HStack spacing={2}>
-          <Button 
-            size="sm"
-            colorScheme="red" 
-            onClick={() => handleDelete(product.id)}
-            leftIcon={<Icon as={FaTrash} />}
-          >
-            Eliminar
-          </Button>
-          <Button 
-            size="sm"
-            colorScheme="blue" 
-            onClick={() => handleEdit(product)}
-          >
-            Editar
-          </Button>
-          <Tooltip label={product.isVisible ? "Ocultar producto" : "Mostrar producto"}>
+            {product.title}
+          </Text>
+          {product.title.length > 50 && (
             <Button
-              size="sm"
-              colorScheme={product.isVisible ? "green" : "gray"}
-              onClick={() => handleToggleVisibility(product)}
-              leftIcon={<Icon as={product.isVisible ? FaEye : FaEyeSlash} />}
+              size="xs"
+              variant="link"
+              color="blue.500"
+              onClick={() => toggleTitle(product.id)}
+              mt={1}
             >
-              {product.isVisible ? "Visible" : "Oculto"}
+              {expandedTitles[product.id] ? "Ver menos" : "Ver título completo"}
             </Button>
-          </Tooltip>
-        </HStack>
-      </Center>
+          )}
+        </Box>
+
+        {/* Descripción */}
+        <Box mb={4} flex="1">
+          <div
+            dangerouslySetInnerHTML={{
+              __html: expandedDescriptions[product.id]
+                ? product.description
+                : truncateText(product.description, 150)
+            }}
+            style={{
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              display: '-webkit-box',
+              WebkitLineClamp: expandedDescriptions[product.id] ? 'unset' : 3,
+              WebkitBoxOrient: 'vertical',
+              lineHeight: '1.5em',
+              maxHeight: expandedDescriptions[product.id] ? 'none' : '4.5em',
+            }}
+          />
+          {product.description.length > 150 && (
+            <Button
+              size="xs"
+              variant="link"
+              color="blue.500"
+              onClick={() => toggleDescription(product.id)}
+              mt={1}
+            >
+              {expandedDescriptions[product.id] ? "Ver menos" : "Ver más"}
+            </Button>
+          )}
+        </Box>
+
+        {/* Precio */}
+        <Text fontWeight="bold" mb={4}>
+          ${product.price.toFixed(2)}
+        </Text>
+
+        {/* Acciones */}
+        <Center>
+          <HStack spacing={2}>
+            <Button 
+              size="sm"
+              colorScheme="red" 
+              onClick={() => handleDelete(product.id)}
+              leftIcon={<Icon as={FaTrash} />}
+            >
+              Eliminar
+            </Button>
+            <Button 
+              size="sm"
+              colorScheme="blue" 
+              onClick={() => handleEdit(product)}
+            >
+              Editar
+            </Button>
+          </HStack>
+        </Center>
+      </Box>
     </Box>
   );
 
