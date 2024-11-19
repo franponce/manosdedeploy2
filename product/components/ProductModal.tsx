@@ -94,47 +94,26 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
   const { categories, isLoading: categoriesLoading, createCategory, mutate: mutateCategories } = useCategories();
 
   useEffect(() => {
-    if (product && currentProductData) {
-      const stockValue = currentProductData.stock ?? 0;
+    if (product) {
+      const stockValue = product.stock ?? 0;
       
-      setCurrentProduct({
+      setCurrentProduct(prevProduct => ({
+        ...prevProduct,
         ...product,
-        ...currentProductData,
-        categoryId: currentProductData.categoryId || "",
-        isVisible: currentProductData.isVisible ?? true,
+        categoryId: product.categoryId || "",
+        isVisible: product.isVisible ?? true,
         stock: typeof stockValue === 'number' ? stockValue : 
                typeof stockValue === 'string' ? parseInt(stockValue, 10) : 0,
-        order: currentProductData.order || ''
-      });
-      setImagePreview(currentProductData.images[0] || null);
-      setDescription(currentProductData.description || '');
-      if (currentProductData.scheduledPublishDate) {
-        setScheduledDate(new Date(currentProductData.scheduledPublishDate));
-        toggleSchedule();
-      }
-    } else {
-      setCurrentProduct({
-        id: "",
-        title: "",
-        description: "",
-        images: ['', '', ''],
-        price: 0,
-        currency: "ARS",
-        isScheduled: false,
-        scheduledPublishDate: null,
-        categoryId: "",
-        isVisible: true,
-        stock: 0,
-        order: ''
-      });
-      setImagePreview(null);
-      setDescription('');
-      setScheduledDate(null);
-      if (isScheduleOpen) {
+        order: product.order || ''
+      }));
+      setImagePreview(product.images[0] || null);
+      setDescription(product.description || '');
+      if (product.scheduledPublishDate) {
+        setScheduledDate(new Date(product.scheduledPublishDate));
         toggleSchedule();
       }
     }
-  }, [product, currentProductData]);
+  }, [product]);
 
   useEffect(() => {
     if (isOpen) {
