@@ -89,8 +89,9 @@ const ProductDetail: NextPageWithLayout = () => {
     }
   }, []);
   const handleBack = useCallback(() => {
-    router.back();
-  }, [router]);
+    sessionStorage.setItem('lastViewedProductId', id as string);
+    router.push('/');
+  }, [router, id]);
 
   useEffect(() => {
     router.prefetch('/');
