@@ -401,28 +401,33 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
         <Text noOfLines={2}>{product.description}</Text>
         
         {/* Acciones */}
-        <Flex justify="space-between" align="center" mt={2}>
-          <HStack>
+        <HStack spacing={2}>
+          <Button 
+            size="sm"
+            colorScheme="red" 
+            onClick={() => handleDelete(product.id)}
+            leftIcon={<Icon as={FaTrash} />}
+          >
+            Eliminar
+          </Button>
+          <Button 
+            size="sm"
+            colorScheme="blue" 
+            onClick={() => handleEdit(product)}
+          >
+            Editar
+          </Button>
+          <Tooltip label={product.isVisible ? "Ocultar producto" : "Mostrar producto"}>
             <Button
               size="sm"
-              colorScheme="blue"
-              onClick={() => handleEdit(product)}
+              colorScheme={product.isVisible ? "green" : "gray"}
+              onClick={() => handleToggleVisibility(product)}
+              leftIcon={<Icon as={product.isVisible ? FaEye : FaEyeSlash} />}
             >
-              Editar
+              {product.isVisible ? "Visible" : "Oculto"}
             </Button>
-            <Button
-              size="sm"
-              colorScheme="red"
-              onClick={() => handleDelete(product.id)}
-            >
-              Eliminar
-            </Button>
-          </HStack>
-          <Switch
-            isChecked={product.isVisible}
-            onChange={() => handleVisibilityToggle(product)}
-          />
-        </Flex>
+          </Tooltip>
+        </HStack>
       </Stack>
     </Box>
   );
