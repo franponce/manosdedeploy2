@@ -30,6 +30,8 @@ import {
   HStack,
   Switch,
   IconButton,
+  UnorderedList,
+  ListItem,
 } from "@chakra-ui/react";
 import { TimeIcon, AddIcon, CloseIcon } from "@chakra-ui/icons";
 import imageCompression from "browser-image-compression";
@@ -370,6 +372,14 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                   ({currentProduct.images.filter(Boolean).length}/{MAX_IMAGES})
                 </Text>
               </FormLabel>
+              <Text fontSize="sm" color="gray.600" mb={3}>
+                Recomendaciones 😉:
+                <UnorderedList mt={1} spacing={1}>
+                  <ListItem>Intenta que tu imagen sea cuadrada.</ListItem>
+                  <ListItem>Las medidas recomendadas son de 800x800 px.</ListItem>
+                  <ListItem>No debe pesar más de 5MB.</ListItem>
+                </UnorderedList>
+              </Text>
               <VStack spacing={4} align="stretch">
                 {currentProduct.images.map((img, index) => (
                   <Flex key={index} align="center" gap={2}>
