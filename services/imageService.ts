@@ -12,14 +12,19 @@ export const imageService = {
     return url;
   },
 
-  async delete(url: string): Promise<void> {
-    const fileRef = ref(storage, url);
-    await deleteObject(fileRef);
-  },
-
-  getImagePath(url: string): string {
-    // Extraer path de la URL de Firebase
-    const decodedUrl = decodeURIComponent(url);
-    return decodedUrl.split('products%2F')[1].split('?')[0];
+  async delete(imageUrl: string): Promise<void> {
+    try {
+      // Extraer el path de la URL de Firebase
+      const path = decodeURIComponent(imageUrl)
+        .split('/o/')[1]
+        .split('?')[0]
+        .replace(/%2F/g, '/');
+      
+      const fileRef = ref(storage, path);
+      await deleteObject(fileRef);
+    } catch (error) {
+      console.error('Error deleting image:', error);
+      throw error;
+    }
   }
 }; 

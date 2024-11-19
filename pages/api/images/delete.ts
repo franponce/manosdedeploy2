@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { adminAuth } from '../../../utils/firebase-admin';
-import { productImageService } from '../../../utils/firebase';
+import { imageService } from '../../../services/imageService';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -17,11 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     await adminAuth.verifyIdToken(token);
 
     const { imageUrl } = req.body;
-    
-    // Extraer el path de la URL
-    const path = decodeURIComponent(imageUrl.split('/o/')[1].split('?')[0]);
-    
-    await productImageService.delete(path);
+    await imageService.delete(imageUrl);
     
     res.status(200).json({ message: 'Image deleted successfully' });
   } catch (error) {
