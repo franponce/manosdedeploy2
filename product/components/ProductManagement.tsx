@@ -467,17 +467,6 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
         <Text fontWeight="bold" mb={4}>
           ${product.price.toFixed(2)}
         </Text>
-
-        {/* Acciones */}
-        <Box width="100%" p={4}>
-          <Badge 
-            mb={4} 
-            width="100%" 
-            textAlign="center"
-            colorScheme={product.isVisible ? "green" : "red"}
-          >
-            {product.isVisible ? "Visible" : "Oculto"}
-          </Badge>
           
           <HStack spacing={4} width="100%">
             <Button 
