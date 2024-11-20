@@ -58,9 +58,12 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
   const showPreviewBanner = React.useMemo(() => {
     if (typeof window === 'undefined') return false;
     
+    const isFromAdmin = router.query.preview === 'true' || localStorage.getItem('previewMode') === 'true';
     const isStoreRoute = router.pathname === '/';
-    return isStoreRoute;
-  }, [router.pathname]);
+    const isAuthorizedUser = isAdmin || isLoggedIn;
+
+    return isAuthorizedUser && (isStoreRoute || isFromAdmin);
+  }, [isAdmin, isLoggedIn, router.pathname, router.query.preview]);
 
   React.useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -121,11 +124,13 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
     checkAuthStatus();
     setIsMounted(true);
 
+    // Fetch custom scripts
     fetch('/api/get-scripts')
       .then(response => response.json())
       .then(data => setCustomScripts(data.scripts))
       .catch(error => console.error('Error fetching custom scripts:', error));
 
+    // Load announcement bar configuration
     const loadedConfig = localStorage.getItem('announcementBarConfig');
     if (loadedConfig) {
       setAnnouncementBar(JSON.parse(loadedConfig));
@@ -258,19 +263,6 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
     return <Layout>{page}</Layout>;
   });
 
-  const getBannerContent = () => {
-    if (isAdmin || isLoggedIn) {
-      return {
-        message: "Estás visualizando la tienda como un cliente.",
-        showButton: true
-      };
-    }
-    return {
-      message: "",
-      showButton: false
-    };
-  };
-
   return (
     <SWRConfig
       value={{
@@ -362,21 +354,19 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
                     color="blue.700"
                     fontSize={{ base: "sm", md: "md" }}
                   >
-                    {getBannerContent().message}
+                    Estás visualizando la tienda como un cliente.
                   </Text>
                 </Flex>
-                {getBannerContent().showButton && (
-                  <Button
-                    size={{ base: "xs", md: "sm" }}
-                    colorScheme="blue"
-                    variant="link"
-                    rightIcon={<Icon as={FaArrowRight} />}
-                    onClick={handleClosePreview}
-                    fontSize={{ base: "sm", md: "md" }}
-                  >
-                    Volver al administrador
-                  </Button>
-                )}
+                <Button
+                  size={{ base: "xs", md: "sm" }}
+                  colorScheme="blue"
+                  variant="link"
+                  rightIcon={<Icon as={FaArrowRight} />}
+                  onClick={handleClosePreview}
+                  fontSize={{ base: "sm", md: "md" }}
+                >
+                  Volver al administrador
+                </Button>
               </Flex>
             </Container>
           </Box>
