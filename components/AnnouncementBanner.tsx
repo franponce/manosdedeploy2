@@ -99,7 +99,7 @@ const AnnouncementBanner: React.FC<AnnouncementBannerProps> = ({ announcementBar
                     {activeMessages[currentIndex].message}
                   </Link>
                 ) : (
-                  <Text>{msg.message}</Text>
+                  <Text>{activeMessages[currentIndex].message}</Text>
                 )}
               </Box>
             </motion.div>
