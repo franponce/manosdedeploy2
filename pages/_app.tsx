@@ -58,12 +58,9 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
   const showPreviewBanner = React.useMemo(() => {
     if (typeof window === 'undefined') return false;
     
-    const isFromAdmin = router.query.preview === 'true' || localStorage.getItem('previewMode') === 'true';
     const isStoreRoute = router.pathname === '/';
-    const isAuthorizedUser = isAdmin || isLoggedIn;
-
-    return isStoreRoute || (isAuthorizedUser && isFromAdmin);
-  }, [isAdmin, isLoggedIn, router.pathname, router.query.preview]);
+    return isStoreRoute;
+  }, [router.pathname]);
 
   React.useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -264,14 +261,17 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
   });
 
   const getBannerContent = () => {
+    const defaultMessage = "Bienvenido a nuestra tienda online";
+    
     if (isAdmin || isLoggedIn) {
       return {
         message: "Estás visualizando la tienda como un cliente.",
         showButton: true
       };
     }
+
     return {
-      message: "Bienvenido a nuestra tienda online",
+      message: defaultMessage,
       showButton: false
     };
   };
