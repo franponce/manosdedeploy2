@@ -327,11 +327,11 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
               </Container>
             </Box>
 
-            {/* Banner de previsualización justo debajo del header */}
+            {/* Banner de previsualización debajo del header */}
             {showPreviewBanner && (
               <Box
                 position="fixed"
-                top={router.pathname === '/' && announcementBar?.isEnabled ? "100px" : "60px"}
+                top={router.pathname === '/' && announcementBar?.isEnabled ? "120px" : "80px"}
                 left={0}
                 right={0}
                 zIndex={2}
@@ -392,7 +392,7 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
                 isLoginPage || isProductDetail 
                   ? "20px" 
                   : showPreviewBanner
-                    ? (announcementBar?.isEnabled ? "150px" : "110px")
+                    ? (announcementBar?.isEnabled ? "170px" : "130px")
                     : (announcementBar?.isEnabled ? "110px" : "70px")
               }
             >
