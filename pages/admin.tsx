@@ -110,15 +110,17 @@ const AdminPage: React.FC = () => {
     });
   };
 
-  const handleToggleHiddenProducts = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.checked;
-    setShowHiddenProducts(newValue);
-    toast({
-      title: newValue ? "Mostrando todos los productos" : "Mostrando solo productos visibles",
-      status: "info",
-      duration: 2000,
-      isClosable: true,
-      position: "top",
+  const handleToggleHiddenProducts = () => {
+    setShowHiddenProducts((prev) => {
+      const newValue = !prev;
+      toast({
+        title: newValue ? "Mostrando todos los productos" : "Mostrando solo productos visibles",
+        status: "info",
+        duration: 2000,
+        isClosable: true,
+        position: "top",
+      });
+      return newValue;
     });
   };
 
@@ -219,6 +221,7 @@ const AdminPage: React.FC = () => {
                     isChecked={showHiddenProducts}
                     onChange={handleToggleHiddenProducts}
                     size="sm"
+                    onClick={(e) => e.stopPropagation()}
                   />
                 </Flex>
               </MenuItem>
