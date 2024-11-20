@@ -326,55 +326,57 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
                 </Flex>
               </Container>
             </Box>
-          </>
-        )}
-        {showPreviewBanner && (
-          <Box
-            position="fixed"
-            bottom={0}
-            left={0}
-            right={0}
-            zIndex={2}
-            bg="blue.50"
-            py={{ base: 2, md: 3 }}
-            borderTop="1px"
-            borderColor="blue.100"
-            boxShadow="0 -2px 10px rgba(0,0,0,0.1)"
-          >
-            <Container maxW="container.xl">
-              <Flex
-                justify={{ base: "center", sm: "space-between" }}
-                align="center"
-                px={4}
-                direction={{ base: "column", sm: "row" }}
-                gap={{ base: 2, sm: 0 }}
+
+            {/* Banner de previsualización justo debajo del header */}
+            {showPreviewBanner && (
+              <Box
+                position="fixed"
+                top={router.pathname === '/' && announcementBar?.isEnabled ? "100px" : "60px"}
+                left={0}
+                right={0}
+                zIndex={2}
+                bg="blue.50"
+                py={2}
+                borderBottom="1px"
+                borderColor="blue.100"
+                boxShadow="0 2px 10px rgba(0,0,0,0.1)"
               >
-                <Flex 
-                  align="center" 
-                  gap={2}
-                  textAlign={{ base: "center", sm: "left" }}
-                >
-                  <Icon as={FaEye} color="blue.500" display={{ base: "none", sm: "block" }} />
-                  <Text 
-                    color="blue.700"
-                    fontSize={{ base: "sm", md: "md" }}
+                <Container maxW="container.xl">
+                  <Flex
+                    justify={{ base: "center", sm: "space-between" }}
+                    align="center"
+                    px={4}
+                    direction={{ base: "column", sm: "row" }}
+                    gap={{ base: 2, sm: 0 }}
                   >
-                    Estás visualizando la tienda como un cliente.
-                  </Text>
-                </Flex>
-                <Button
-                  size={{ base: "xs", md: "sm" }}
-                  colorScheme="blue"
-                  variant="link"
-                  rightIcon={<Icon as={FaArrowRight} />}
-                  onClick={handleClosePreview}
-                  fontSize={{ base: "sm", md: "md" }}
-                >
-                  Volver al administrador
-                </Button>
-              </Flex>
-            </Container>
-          </Box>
+                    <Flex 
+                      align="center" 
+                      gap={2}
+                      textAlign={{ base: "center", sm: "left" }}
+                    >
+                      <Icon as={FaEye} color="blue.500" display={{ base: "none", sm: "block" }} />
+                      <Text 
+                        color="blue.700"
+                        fontSize={{ base: "sm", md: "md" }}
+                      >
+                        Estás visualizando la tienda como un cliente.
+                      </Text>
+                    </Flex>
+                    <Button
+                      size={{ base: "xs", md: "sm" }}
+                      colorScheme="blue"
+                      variant="link"
+                      rightIcon={<Icon as={FaArrowRight} />}
+                      onClick={handleClosePreview}
+                      fontSize={{ base: "sm", md: "md" }}
+                    >
+                      Volver al administrador
+                    </Button>
+                  </Flex>
+                </Container>
+              </Box>
+            )}
+          </>
         )}
         <Box display="flex" flexDirection="column" minHeight="100vh">
           {router.pathname === '/admin' ? (
@@ -389,9 +391,9 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
               pt={
                 isLoginPage || isProductDetail 
                   ? "20px" 
-                  : announcementBar?.isEnabled 
-                    ? "110px"
-                    : "70px"
+                  : showPreviewBanner
+                    ? (announcementBar?.isEnabled ? "150px" : "110px")
+                    : (announcementBar?.isEnabled ? "110px" : "70px")
               }
             >
               <Container
