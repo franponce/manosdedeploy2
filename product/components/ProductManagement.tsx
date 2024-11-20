@@ -41,7 +41,7 @@ interface ProductManagementProps {
   onCreateProduct: () => void;
 }
 
-const ProductManagement: React.FC<ProductManagementProps> = ({ 
+const ProductManagement: React.FC<ProductManagementProps> = ({
   onCreateProduct
 }) => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -55,7 +55,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
   const observer = useRef<IntersectionObserver | null>(null);
   const toast = useToast();
   const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
-  const [productImageIndexes, setProductImageIndexes] = useState<{[key: string]: number}>({});
+  const [productImageIndexes, setProductImageIndexes] = useState<{ [key: string]: number }>({});
   const [showHiddenProducts, setShowHiddenProducts] = useState(false);
 
   const lastProductElementRef = useCallback((node: HTMLDivElement | null) => {
@@ -112,18 +112,18 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
 
   useEffect(() => {
     if (!products) return;
-    
+
     const filtered = products.filter(product => {
       if (showHiddenProducts) {
         return true;
       }
       return product.isVisible;
     }).filter(product => {
-      const matchesSearch = !searchTerm || 
+      const matchesSearch = !searchTerm ||
         product.title.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory = !selectedCategory || 
+      const matchesCategory = !selectedCategory ||
         product.categoryId === selectedCategory;
-      
+
       return matchesSearch && matchesCategory;
     });
 
@@ -168,7 +168,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
       };
       await updateProduct(updatedProduct);
       await fetchProducts();
-      
+
       toast({
         title: "Visibilidad actualizada",
         description: `El producto ahora está ${updatedProduct.isVisible ? 'visible' : 'oculto'} en la tienda`,
@@ -198,7 +198,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
       }
       setIsModalOpen(false);
       setCurrentProduct(null);
-      
+
       await mutate('/api/products');
       await fetchProducts();
 
@@ -225,14 +225,14 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
 
   const isProductScheduled = (product: Product): boolean => {
     if (!product.isScheduled || !product.scheduledPublishDate) return false;
-    
+
     const scheduledDate = new Date(product.scheduledPublishDate);
     const now = new Date();
-    
+
     const argentinaTime = new Date(now.toLocaleString('en-US', {
       timeZone: 'America/Argentina/Buenos_Aires'
     }));
-    
+
     return scheduledDate > argentinaTime;
   };
 
@@ -260,7 +260,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
 
   const formatScheduledDate = (date: string | null | undefined) => {
     if (!date) return '';
-    
+
     const scheduledDate = new Date(date);
     const options: Intl.DateTimeFormatOptions = {
       day: '2-digit',
@@ -277,9 +277,9 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
 
   const checkAndUpdateScheduledProducts = useCallback(async () => {
     const now = new Date();
-    const productsToUpdate = products.filter(product => 
-      product.isScheduled && 
-      product.scheduledPublishDate && 
+    const productsToUpdate = products.filter(product =>
+      product.isScheduled &&
+      product.scheduledPublishDate &&
       new Date(product.scheduledPublishDate) <= now
     );
 
@@ -380,7 +380,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
       </Box>
 
       <Box p={4} flex="1" display="flex" flexDirection="column">
-        <Badge 
+        <Badge
           mb={3}
           width="fit-content"
           px={3}
@@ -451,20 +451,20 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
 
         <Box width="100%" p={4}>
           <HStack spacing={4} width="100%">
-            <Button 
+            <Button
               flex={1}
               size="lg"
-              colorScheme="red" 
+              colorScheme="red"
               onClick={() => handleDelete(product.id)}
               leftIcon={<Icon as={FaTrash} />}
               borderRadius="md"
             >
               Eliminar
             </Button>
-            <Button 
+            <Button
               flex={1}
               size="lg"
-              colorScheme="blue" 
+              colorScheme="blue"
               onClick={() => handleEdit(product)}
               borderRadius="md"
             >
@@ -479,16 +479,16 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
   const filteredProducts = useMemo(() => {
     console.log('Filtering products. showHiddenProducts:', showHiddenProducts);
     if (!products) return [];
-    
+
     return products.filter(product => {
-      const matchesSearch = !searchTerm || 
+      const matchesSearch = !searchTerm ||
         product.title.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      const matchesCategory = !selectedCategory || 
+
+      const matchesCategory = !selectedCategory ||
         product.categoryId === selectedCategory;
-      
+
       const matchesVisibility = showHiddenProducts || product.isVisible;
-      
+
       return matchesSearch && matchesCategory && matchesVisibility;
     });
   }, [products, showHiddenProducts, searchTerm, selectedCategory]);
@@ -537,11 +537,20 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
         <Center flexDirection="column" p={8} bg="gray.50" borderRadius="lg" boxShadow="sm">
           <Icon as={SearchIcon} w={12} h={12} color="gray.400" mb={4} />
           <Heading as="h3" size="md" textAlign="center" mb={2}>
-            No se encontraron productos
+            No se encontraron productos.
           </Heading>
           <Text color="gray.600" textAlign="center" maxW="md">
-            que coincidan con tu búsqueda. Intenta con otros términos o crea un nuevo producto.
+            Intenta con otros términos o crea un nuevo producto.
           </Text>
+          {searchTerm && (
+            <Button
+              mt={4}
+              colorScheme="blue"
+              onClick={() => setSearchTerm("")}
+            >
+              Limpiar búsqueda
+            </Button>
+          )}
         </Center>
       ) : (
         <Grid
