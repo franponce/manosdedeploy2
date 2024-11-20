@@ -110,18 +110,26 @@ const AdminPage: React.FC = () => {
     });
   };
 
-  const handleToggleHiddenProducts = () => {
-    setShowHiddenProducts((prev) => {
-      const newValue = !prev;
+  const handleToggleHiddenProducts = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    console.log('Toggle clicked. Estado anterior:', showHiddenProducts);
+    
+    const newValue = !showHiddenProducts;
+    console.log('Nuevo valor será:', newValue);
+    
+    setShowHiddenProducts(newValue);
+    
+    setTimeout(() => {
       toast({
-        title: newValue ? "Mostrando todos los productos" : "Mostrando solo productos visibles",
+        title: newValue ? "Mostrando productos ocultos" : "Mostrando solo productos visibles",
         status: "info",
         duration: 2000,
         isClosable: true,
         position: "top",
       });
-      return newValue;
-    });
+    }, 0);
   };
 
   return (
@@ -213,16 +221,19 @@ const AdminPage: React.FC = () => {
               </MenuItem>
               <MenuItem 
                 icon={<Icon as={FaBox} />}
-                onClick={(e) => e.stopPropagation()}
+                closeOnSelect={false}
               >
-                <Flex justify="space-between" align="center" width="100%">
+                <Flex 
+                  justify="space-between" 
+                  align="center" 
+                  width="100%" 
+                  onClick={handleToggleHiddenProducts}
+                  cursor="pointer"
+                >
                   <Text>Ver productos ocultos</Text>
-                  <Switch 
-                    isChecked={showHiddenProducts}
-                    onChange={handleToggleHiddenProducts}
-                    size="sm"
-                    onClick={(e) => e.stopPropagation()}
-                  />
+                  <Box as="span" ml={2}>
+                    {showHiddenProducts ? "Activado" : "Desactivado"}
+                  </Box>
                 </Flex>
               </MenuItem>
             </MenuList>
