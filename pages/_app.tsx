@@ -58,9 +58,12 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
   const showPreviewBanner = React.useMemo(() => {
     if (typeof window === 'undefined') return false;
     
+    const isFromAdmin = router.query.preview === 'true' || localStorage.getItem('previewMode') === 'true';
     const isStoreRoute = router.pathname === '/';
-    return isStoreRoute;
-  }, [router.pathname]);
+    const isAuthorizedUser = isAdmin || isLoggedIn;
+
+    return isAuthorizedUser && (isStoreRoute || isFromAdmin);
+  }, [isAdmin, isLoggedIn, router.pathname, router.query.preview]);
 
   React.useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -295,16 +298,14 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
         </Head>
         {!isLoginPage && !isProductDetail && (
           <>
-            {router.pathname === '/' && announcementBar?.isEnabled && (
-              <AnnouncementBanner announcementBar={announcementBar} />
-            )}
+            {announcementBar?.isEnabled && <AnnouncementBanner announcementBar={announcementBar} />}
             
             <Box
               position="fixed"
-              top={router.pathname === '/' && announcementBar?.isEnabled ? "40px" : 0}
+              top={announcementBar?.isEnabled ? "40px" : 0}
               left={0}
               right={0}
-              zIndex={999}
+              zIndex={1000}
               bg="white"
               boxShadow="md"
             >
@@ -323,57 +324,52 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
                 </Flex>
               </Container>
             </Box>
-
-            {/* Banner de previsualización debajo del header */}
-            {showPreviewBanner && (
-              <Box
-                position="fixed"
-                top={router.pathname === '/' && announcementBar?.isEnabled ? "120px" : "80px"}
-                left={0}
-                right={0}
-                zIndex={2}
-                bg="blue.50"
-                py={2}
-                borderBottom="1px"
-                borderColor="blue.100"
-                boxShadow="0 2px 10px rgba(0,0,0,0.1)"
-              >
-                <Container maxW="container.xl">
-                  <Flex
-                    justify={{ base: "center", sm: "space-between" }}
-                    align="center"
-                    px={4}
-                    direction={{ base: "column", sm: "row" }}
-                    gap={{ base: 2, sm: 0 }}
-                  >
-                    <Flex 
-                      align="center" 
-                      gap={2}
-                      textAlign={{ base: "center", sm: "left" }}
-                    >
-                      <Icon as={FaEye} color="blue.500" display={{ base: "none", sm: "block" }} />
-                      <Text 
-                        color="blue.700"
-                        fontSize={{ base: "sm", md: "md" }}
-                      >
-                        Estás visualizando la tienda como un cliente.
-                      </Text>
-                    </Flex>
-                    <Button
-                      size={{ base: "xs", md: "sm" }}
-                      colorScheme="blue"
-                      variant="link"
-                      rightIcon={<Icon as={FaArrowRight} />}
-                      onClick={handleClosePreview}
-                      fontSize={{ base: "sm", md: "md" }}
-                    >
-                      Volver al administrador
-                    </Button>
-                  </Flex>
-                </Container>
-              </Box>
-            )}
           </>
+        )}
+        {showPreviewBanner && (
+          <Box
+            position="sticky"
+            top="70px"
+            zIndex={999}
+            bg="blue.50"
+            py={{ base: 2, md: 3 }}
+            borderBottom="1px"
+            borderColor="blue.100"
+          >
+            <Container maxW="container.xl">
+              <Flex
+                justify={{ base: "center", sm: "space-between" }}
+                align="center"
+                px={4}
+                direction={{ base: "column", sm: "row" }}
+                gap={{ base: 2, sm: 0 }}
+              >
+                <Flex 
+                  align="center" 
+                  gap={2}
+                  textAlign={{ base: "center", sm: "left" }}
+                >
+                  <Icon as={FaEye} color="blue.500" display={{ base: "none", sm: "block" }} />
+                  <Text 
+                    color="blue.700"
+                    fontSize={{ base: "sm", md: "md" }}
+                  >
+                    Estás visualizando la tienda como un cliente.
+                  </Text>
+                </Flex>
+                <Button
+                  size={{ base: "xs", md: "sm" }}
+                  colorScheme="blue"
+                  variant="link"
+                  rightIcon={<Icon as={FaArrowRight} />}
+                  onClick={handleClosePreview}
+                  fontSize={{ base: "sm", md: "md" }}
+                >
+                  Volver al administrador
+                </Button>
+              </Flex>
+            </Container>
+          </Box>
         )}
         <Box display="flex" flexDirection="column" minHeight="100vh">
           {router.pathname === '/admin' ? (
@@ -388,9 +384,9 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
               pt={
                 isLoginPage || isProductDetail 
                   ? "20px" 
-                  : showPreviewBanner
-                    ? (announcementBar?.isEnabled ? "170px" : "130px")
-                    : (announcementBar?.isEnabled ? "110px" : "70px")
+                  : announcementBar?.isEnabled 
+                    ? "110px"
+                    : "70px"
               }
             >
               <Container
