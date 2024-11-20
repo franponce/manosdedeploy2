@@ -62,7 +62,7 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
     const isStoreRoute = router.pathname === '/';
     const isAuthorizedUser = isAdmin || isLoggedIn;
 
-    return isAuthorizedUser && (isStoreRoute || isFromAdmin);
+    return isStoreRoute || (isAuthorizedUser && isFromAdmin);
   }, [isAdmin, isLoggedIn, router.pathname, router.query.preview]);
 
   React.useEffect(() => {
@@ -263,6 +263,19 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
     return <Layout>{page}</Layout>;
   });
 
+  const getBannerContent = () => {
+    if (isAdmin || isLoggedIn) {
+      return {
+        message: "Estás visualizando la tienda como un cliente.",
+        showButton: true
+      };
+    }
+    return {
+      message: "Bienvenido a nuestra tienda online",
+      showButton: false
+    };
+  };
+
   return (
     <SWRConfig
       value={{
@@ -354,19 +367,21 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
                     color="blue.700"
                     fontSize={{ base: "sm", md: "md" }}
                   >
-                    Estás visualizando la tienda como un cliente.
+                    {getBannerContent().message}
                   </Text>
                 </Flex>
-                <Button
-                  size={{ base: "xs", md: "sm" }}
-                  colorScheme="blue"
-                  variant="link"
-                  rightIcon={<Icon as={FaArrowRight} />}
-                  onClick={handleClosePreview}
-                  fontSize={{ base: "sm", md: "md" }}
-                >
-                  Volver al administrador
-                </Button>
+                {getBannerContent().showButton && (
+                  <Button
+                    size={{ base: "xs", md: "sm" }}
+                    colorScheme="blue"
+                    variant="link"
+                    rightIcon={<Icon as={FaArrowRight} />}
+                    onClick={handleClosePreview}
+                    fontSize={{ base: "sm", md: "md" }}
+                  >
+                    Volver al administrador
+                  </Button>
+                )}
               </Flex>
             </Container>
           </Box>
