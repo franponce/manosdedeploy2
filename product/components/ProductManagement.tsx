@@ -395,6 +395,19 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
 
       {/* Contenido del producto */}
       <Box p={4} flex="1" display="flex" flexDirection="column">
+        {/* Badge de visibilidad movido arriba del título */}
+        <Badge 
+          mb={3}
+          width="fit-content"
+          px={3}
+          py={1}
+          borderRadius="full"
+          colorScheme={product.isVisible ? "green" : "red"}
+          fontSize="sm"
+        >
+          {product.isVisible ? "Visible" : "Oculto"}
+        </Badge>
+
         {/* Título */}
         <Box mb={2}>
           <Text
