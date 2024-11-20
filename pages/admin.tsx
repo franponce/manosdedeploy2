@@ -211,14 +211,17 @@ const AdminPage: React.FC = () => {
               </MenuItem>
               <MenuItem 
                 icon={<Icon as={FaBox} />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
               >
                 <Flex justify="space-between" align="center" width="100%">
                   <Text>Ver productos ocultos</Text>
                   <Switch 
-                    isChecked={true}
-                    isReadOnly
-                    defaultChecked
+                    isChecked={showHiddenProducts}
+                    onChange={handleToggleHiddenProducts}
                     size="sm"
+                    onClick={(e) => e.stopPropagation()}
                   />
                 </Flex>
               </MenuItem>
