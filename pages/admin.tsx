@@ -38,7 +38,6 @@ import { useCategories } from '../hooks/useCategories';
 import SiteInfoCollapsible from '../components/SiteInfoCollapsible';
 import { useSiteInfo } from '../hooks/useSiteInfo';
 import ProductOrderManager from '../product/components/ProductOrderManager';
-import { useHiddenProducts } from '../hooks/useHiddenProducts';
 
 const AdminPage: React.FC = () => {
   const router = useRouter();
@@ -49,7 +48,6 @@ const AdminPage: React.FC = () => {
   const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
   const { categories } = useCategories();
   const [isProductOrderOpen, setIsProductOrderOpen] = useState(false);
-  const { showHidden, toggle: toggleHiddenProducts } = useHiddenProducts();
 
   const handleStoreSettings = () => {
     router.push('/store-config');
@@ -108,17 +106,6 @@ const AdminPage: React.FC = () => {
         duration: 2000,
         isClosable: true,
       });
-    });
-  };
-
-  const handleToggleHiddenProducts = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    toggleHiddenProducts();
-    toast({
-      title: !showHidden ? "Mostrando productos ocultos" : "Mostrando solo productos visibles",
-      status: "info",
-      duration: 2000,
-      isClosable: true,
     });
   };
 
@@ -209,29 +196,12 @@ const AdminPage: React.FC = () => {
               >
                 Orden de productos
               </MenuItem>
-              <MenuItem 
-                icon={<Icon as={FaBox} />}
-                closeOnSelect={false}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Flex justify="space-between" align="center" width="100%">
-                  <Text>Ver productos ocultos</Text>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={handleToggleHiddenProducts}
-                    colorScheme={showHidden ? "green" : "gray"}
-                  >
-                    {showHidden ? "Activado" : "Desactivado"}
-                  </Button>
-                </Flex>
-              </MenuItem>
             </MenuList>
           </Menu>
         </Flex>
       </Flex>
 
-      <ProductManagement onCreateProduct={handleCreateProduct} showHiddenProducts={showHidden} />
+      <ProductManagement onCreateProduct={handleCreateProduct} />
 
       {isModalOpen && (
         <ProductModal

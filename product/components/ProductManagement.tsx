@@ -39,12 +39,10 @@ const SYNC_INTERVAL = 30000; // 30 segundos
 
 interface ProductManagementProps {
   onCreateProduct: () => void;
-  showHiddenProducts: boolean;
 }
 
 const ProductManagement: React.FC<ProductManagementProps> = ({ 
-  onCreateProduct, 
-  showHiddenProducts 
+  onCreateProduct
 }) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -58,6 +56,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
   const toast = useToast();
   const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
   const [productImageIndexes, setProductImageIndexes] = useState<{[key: string]: number}>({});
+  const [showHiddenProducts, setShowHiddenProducts] = useState(false);
 
   const lastProductElementRef = useCallback((node: HTMLDivElement | null) => {
     if (isLoading) return;
@@ -117,9 +116,8 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
     const filtered = products.filter(product => {
       if (showHiddenProducts) {
         return true;
-      } else {
-        return product.isVisible;
       }
+      return product.isVisible;
     }).filter(product => {
       const matchesSearch = !searchTerm || 
         product.title.toLowerCase().includes(searchTerm.toLowerCase());
@@ -508,6 +506,16 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </InputGroup>
+        <Flex justifyContent="flex-end">
+          <HStack>
+            <Text>Ver productos ocultos</Text>
+            <Switch
+              isChecked={showHiddenProducts}
+              onChange={() => setShowHiddenProducts(!showHiddenProducts)}
+              colorScheme="purple"
+            />
+          </HStack>
+        </Flex>
       </Flex>
 
       {products.length >= PRODUCT_LIMIT - 5 && products.length < PRODUCT_LIMIT && (
