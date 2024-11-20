@@ -116,16 +116,20 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
   useEffect(() => {
     if (!products) return;
     
-    const filtered = products
-      .filter(product => showHiddenProducts ? true : product.isVisible)
-      .filter(product => {
-        if (!searchTerm) return true;
-        return product.title.toLowerCase().includes(searchTerm.toLowerCase());
-      })
-      .filter(product => {
-        if (!selectedCategory) return true;
-        return product.categoryId === selectedCategory;
-      });
+    const filtered = products.filter(product => {
+      if (showHiddenProducts) {
+        return true;
+      } else {
+        return product.isVisible;
+      }
+    }).filter(product => {
+      const matchesSearch = !searchTerm || 
+        product.title.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory = !selectedCategory || 
+        product.categoryId === selectedCategory;
+      
+      return matchesSearch && matchesCategory;
+    });
 
     setDisplayedProducts(filtered);
   }, [products, searchTerm, selectedCategory, showHiddenProducts]);
