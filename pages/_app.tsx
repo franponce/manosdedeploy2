@@ -58,12 +58,9 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
   const showPreviewBanner = React.useMemo(() => {
     if (typeof window === 'undefined') return false;
     
-    const isFromAdmin = router.query.preview === 'true' || localStorage.getItem('previewMode') === 'true';
     const isStoreRoute = router.pathname === '/';
-    const isAuthorizedUser = isAdmin || isLoggedIn;
-
-    return isAuthorizedUser && (isStoreRoute || isFromAdmin);
-  }, [isAdmin, isLoggedIn, router.pathname, router.query.preview]);
+    return isStoreRoute;
+  }, [router.pathname]);
 
   React.useEffect(() => {
     if (typeof window === 'undefined') return;
