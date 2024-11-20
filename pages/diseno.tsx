@@ -1,7 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Box, VStack, Heading, FormControl, FormLabel, Input, Switch, Button, useToast, Select, NumberInput, NumberInputField, NumberInputStepper, NumberIncrementStepper, NumberDecrementStepper
+  Box,
+  VStack,
+  Heading,
+  FormControl,
+  FormLabel,
+  Input,
+  Switch,
+  Button,
+  useToast,
+  Select,
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
+  NumberIncrementStepper,
+  NumberDecrementStepper,
+  Container,
 } from '@chakra-ui/react';
+import { db } from '../utils/firebase';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 interface AnnouncementMessage {
   message: string;
@@ -27,14 +44,33 @@ const DisenoPage: React.FC = () => {
     displayMode: 'static',
     autoPlaySpeed: 3000
   });
+  const [isLoading, setIsLoading] = useState(true);
   const toast = useToast();
 
   useEffect(() => {
-    const loadedConfig = localStorage.getItem('announcementBarConfig');
-    if (loadedConfig) {
-      setAnnouncementBar(JSON.parse(loadedConfig));
-    }
-  }, []);
+    const fetchAnnouncementConfig = async () => {
+      try {
+        const docRef = doc(db, 'config', 'announcement');
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+          setAnnouncementBar(docSnap.data() as AnnouncementBar);
+        }
+      } catch (error) {
+        console.error('Error al cargar la configuración:', error);
+        toast({
+          title: "Error al cargar la configuración",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAnnouncementConfig();
+  }, [toast]);
 
   const handleInputChange = (index: number, field: 'message' | 'link' | 'isActive', value: string | boolean) => {
     setAnnouncementBar(prev => ({
@@ -49,23 +85,43 @@ const DisenoPage: React.FC = () => {
     setAnnouncementBar(prev => ({ ...prev, isEnabled: !prev.isEnabled }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    localStorage.setItem('announcementBarConfig', JSON.stringify(announcementBar));
-    toast({
-      title: "Configuración guardada",
-      status: "success",
-      duration: 3000,
-      isClosable: true,
-    });
+    try {
+      const docRef = doc(db, 'config', 'announcement');
+      await setDoc(docRef, announcementBar);
+
+      toast({
+        title: "Configuración guardada",
+        description: "Los cambios se han guardado correctamente",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('Error al guardar:', error);
+      toast({
+        title: "Error al guardar",
+        description: "No se pudieron guardar los cambios",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
+
+  if (isLoading) {
+    return (
+      <Container maxWidth="800px" centerContent p={8}>
+        <Heading mb={6}>Cargando configuración...</Heading>
+      </Container>
+    );
+  }
 
   return (
     <Box maxWidth="800px" margin="auto" padding={8}>
-      <Heading mb={6}>Configuraciones avanzadas</Heading>
+      <Heading mb={6}>Configuración del Banner de Anuncios</Heading>
       <VStack as="form" onSubmit={handleSubmit} spacing={6} align="stretch">
-        <Heading size="md">Configuración del Banner de Anuncios</Heading>
-        
         <FormControl display="flex" alignItems="center">
           <FormLabel htmlFor="show-announcement" mb="0">
             Activar banner de anuncios
@@ -125,11 +181,11 @@ const DisenoPage: React.FC = () => {
               </FormControl>
               
               <FormControl mt={2}>
-                <FormLabel>{`Link ${index + 1}`}</FormLabel>
+                <FormLabel>{`Link ${index + 1} (opcional)`}</FormLabel>
                 <Input
                   value={msg.link}
                   onChange={(e) => handleInputChange(index, 'link', e.target.value)}
-                  placeholder="Ingrese el link (opcional)"
+                  placeholder="https://ejemplo.com"
                 />
               </FormControl>
 
@@ -147,7 +203,7 @@ const DisenoPage: React.FC = () => {
           ))}
         </VStack>
 
-        <Button type="submit" colorScheme="blue">
+        <Button type="submit" colorScheme="blue" size="lg">
           Guardar cambios
         </Button>
       </VStack>

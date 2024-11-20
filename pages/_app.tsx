@@ -298,14 +298,16 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
         </Head>
         {!isLoginPage && !isProductDetail && (
           <>
-            {announcementBar?.isEnabled && <AnnouncementBanner announcementBar={announcementBar} />}
+            {router.pathname === '/' && announcementBar?.isEnabled && (
+              <AnnouncementBanner announcementBar={announcementBar} />
+            )}
             
             <Box
               position="fixed"
-              top={announcementBar?.isEnabled ? "40px" : 0}
+              top={router.pathname === '/' && announcementBar?.isEnabled ? "40px" : 0}
               left={0}
               right={0}
-              zIndex={1000}
+              zIndex={999}
               bg="white"
               boxShadow="md"
             >
