@@ -327,22 +327,8 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
       borderRadius="lg"
       overflow="hidden"
       bg="white"
-      height="100%"
-      display="flex"
-      flexDirection="column"
+      position="relative"
     >
-      {/* Badge de visibilidad */}
-      <Badge
-        position="absolute"
-        top={2}
-        right={2}
-        colorScheme={product.isVisible ? "green" : "red"}
-        zIndex={1}
-      >
-        {product.isVisible ? "Visible" : "Oculto"}
-      </Badge>
-
-      {/* Contenedor de imágenes */}
       <Box position="relative" width="100%" paddingTop="100%">
         <Box position="absolute" top={0} left={0} right={0} bottom={0}>
           <Image
@@ -393,9 +379,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
         </Box>
       </Box>
 
-      {/* Contenido del producto */}
       <Box p={4} flex="1" display="flex" flexDirection="column">
-        {/* Badge de visibilidad movido arriba del título */}
         <Badge 
           mb={3}
           width="fit-content"
@@ -408,7 +392,6 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
           {product.isVisible ? "Visible" : "Oculto"}
         </Badge>
 
-        {/* Título */}
         <Box mb={2}>
           <Text
             fontWeight="bold"
@@ -432,7 +415,6 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
           )}
         </Box>
 
-        {/* Descripción */}
         <Box mb={4} flex="1">
           <div
             dangerouslySetInnerHTML={{
@@ -463,10 +445,19 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
           )}
         </Box>
 
-        {/* Precio */}
         <Text fontWeight="bold" mb={4}>
           ${product.price.toFixed(2)}
         </Text>
+
+        <Box width="100%" p={4}>
+          <Badge 
+            mb={4} 
+            width="100%" 
+            textAlign="center"
+            colorScheme={product.isVisible ? "green" : "red"}
+          >
+            {product.isVisible ? "Visible" : "Oculto"}
+          </Badge>
           
           <HStack spacing={4} width="100%">
             <Button 
