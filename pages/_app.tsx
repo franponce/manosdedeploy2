@@ -121,13 +121,11 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
     checkAuthStatus();
     setIsMounted(true);
 
-    // Fetch custom scripts
     fetch('/api/get-scripts')
       .then(response => response.json())
       .then(data => setCustomScripts(data.scripts))
       .catch(error => console.error('Error fetching custom scripts:', error));
 
-    // Load announcement bar configuration
     const loadedConfig = localStorage.getItem('announcementBarConfig');
     if (loadedConfig) {
       setAnnouncementBar(JSON.parse(loadedConfig));
