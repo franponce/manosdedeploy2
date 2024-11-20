@@ -38,6 +38,7 @@ import { useCategories } from '../hooks/useCategories';
 import SiteInfoCollapsible from '../components/SiteInfoCollapsible';
 import { useSiteInfo } from '../hooks/useSiteInfo';
 import ProductOrderManager from '../product/components/ProductOrderManager';
+import { useHiddenProducts } from '../hooks/useHiddenProducts';
 
 const AdminPage: React.FC = () => {
   const router = useRouter();
@@ -48,7 +49,7 @@ const AdminPage: React.FC = () => {
   const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
   const { categories } = useCategories();
   const [isProductOrderOpen, setIsProductOrderOpen] = useState(false);
-  const [showHiddenProducts, setShowHiddenProducts] = useState(false);
+  const { showHidden, toggle: toggleHiddenProducts } = useHiddenProducts();
 
   const handleStoreSettings = () => {
     router.push('/store-config');
@@ -111,25 +112,14 @@ const AdminPage: React.FC = () => {
   };
 
   const handleToggleHiddenProducts = (e: React.MouseEvent) => {
-    e.preventDefault();
     e.stopPropagation();
-    
-    console.log('Toggle clicked. Estado anterior:', showHiddenProducts);
-    
-    const newValue = !showHiddenProducts;
-    console.log('Nuevo valor será:', newValue);
-    
-    setShowHiddenProducts(newValue);
-    
-    setTimeout(() => {
-      toast({
-        title: newValue ? "Mostrando productos ocultos" : "Mostrando solo productos visibles",
-        status: "info",
-        duration: 2000,
-        isClosable: true,
-        position: "top",
-      });
-    }, 0);
+    toggleHiddenProducts();
+    toast({
+      title: !showHidden ? "Mostrando productos ocultos" : "Mostrando solo productos visibles",
+      status: "info",
+      duration: 2000,
+      isClosable: true,
+    });
   };
 
   return (
@@ -222,18 +212,18 @@ const AdminPage: React.FC = () => {
               <MenuItem 
                 icon={<Icon as={FaBox} />}
                 closeOnSelect={false}
+                onClick={(e) => e.stopPropagation()}
               >
-                <Flex 
-                  justify="space-between" 
-                  align="center" 
-                  width="100%" 
-                  onClick={handleToggleHiddenProducts}
-                  cursor="pointer"
-                >
+                <Flex justify="space-between" align="center" width="100%">
                   <Text>Ver productos ocultos</Text>
-                  <Box as="span" ml={2}>
-                    {showHiddenProducts ? "Activado" : "Desactivado"}
-                  </Box>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={handleToggleHiddenProducts}
+                    colorScheme={showHidden ? "green" : "gray"}
+                  >
+                    {showHidden ? "Activado" : "Desactivado"}
+                  </Button>
                 </Flex>
               </MenuItem>
             </MenuList>
@@ -241,7 +231,7 @@ const AdminPage: React.FC = () => {
         </Flex>
       </Flex>
 
-      <ProductManagement onCreateProduct={handleCreateProduct} showHiddenProducts={showHiddenProducts} />
+      <ProductManagement onCreateProduct={handleCreateProduct} showHiddenProducts={showHidden} />
 
       {isModalOpen && (
         <ProductModal

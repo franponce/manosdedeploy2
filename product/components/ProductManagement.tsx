@@ -47,7 +47,6 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
   showHiddenProducts 
 }) => {
   const [products, setProducts] = useState<Product[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -75,7 +74,6 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
     try {
       const fetchedProducts = await getProducts();
       setProducts(fetchedProducts);
-      setFilteredProducts(fetchedProducts);
     } catch (error) {
       console.error("Error fetching products:", error);
       toast({
@@ -102,16 +100,16 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
         product.description.toLowerCase().includes(lowercasedTerm) ||
         product.price.toString().includes(lowercasedTerm)
     );
-    setFilteredProducts(filtered);
+    setDisplayedProducts(filtered);
     setPage(1);
     setHasMore(true);
   }, [searchTerm, products]);
 
   useEffect(() => {
     const PRODUCTS_PER_PAGE = 10;
-    setDisplayedProducts(filteredProducts.slice(0, page * PRODUCTS_PER_PAGE));
-    setHasMore(page * PRODUCTS_PER_PAGE < filteredProducts.length);
-  }, [filteredProducts, page]);
+    setDisplayedProducts(products.slice(0, page * PRODUCTS_PER_PAGE));
+    setHasMore(page * PRODUCTS_PER_PAGE < products.length);
+  }, [products, page]);
 
   useEffect(() => {
     if (!products) return;
@@ -480,6 +478,23 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
     </Box>
   );
 
+  const filteredProducts = useMemo(() => {
+    console.log('Filtering products. showHiddenProducts:', showHiddenProducts);
+    if (!products) return [];
+    
+    return products.filter(product => {
+      const matchesSearch = !searchTerm || 
+        product.title.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesCategory = !selectedCategory || 
+        product.categoryId === selectedCategory;
+      
+      const matchesVisibility = showHiddenProducts || product.isVisible;
+      
+      return matchesSearch && matchesCategory && matchesVisibility;
+    });
+  }, [products, showHiddenProducts, searchTerm, selectedCategory]);
+
   return (
     <Box>
       <Flex direction="column" mb={6}>
@@ -510,7 +525,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
         </Box>
       )}
 
-      {displayedProducts.length === 0 ? (
+      {filteredProducts.length === 0 ? (
         <Center flexDirection="column" p={8} bg="gray.50" borderRadius="lg" boxShadow="sm">
           <Icon as={SearchIcon} w={12} h={12} color="gray.400" mb={4} />
           <Heading as="h3" size="md" textAlign="center" mb={2}>
@@ -529,7 +544,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
           }}
           gap={6}
         >
-          {products?.map(renderProduct)}
+          {filteredProducts.map(renderProduct)}
         </Grid>
       )}
       {isLoading && (
