@@ -450,15 +450,6 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
         </Text>
 
         <Box width="100%" p={4}>
-          <Badge 
-            mb={4} 
-            width="100%" 
-            textAlign="center"
-            colorScheme={product.isVisible ? "green" : "red"}
-          >
-            {product.isVisible ? "Visible" : "Oculto"}
-          </Badge>
-          
           <HStack spacing={4} width="100%">
             <Button 
               flex={1}
