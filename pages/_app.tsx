@@ -330,13 +330,16 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
         )}
         {showPreviewBanner && (
           <Box
-            position="sticky"
-            top="70px"
-            zIndex={999}
+            position="fixed"
+            bottom={0}
+            left={0}
+            right={0}
+            zIndex={2}
             bg="blue.50"
             py={{ base: 2, md: 3 }}
-            borderBottom="1px"
+            borderTop="1px"
             borderColor="blue.100"
+            boxShadow="0 -2px 10px rgba(0,0,0,0.1)"
           >
             <Container maxW="container.xl">
               <Flex
