@@ -48,7 +48,7 @@ const AdminPage: React.FC = () => {
   const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
   const { categories } = useCategories();
   const [isProductOrderOpen, setIsProductOrderOpen] = useState(false);
-  const [showHiddenProducts, setShowHiddenProducts] = useState(true);
+  const [showHiddenProducts, setShowHiddenProducts] = useState(false);
 
   const handleStoreSettings = () => {
     router.push('/store-config');
@@ -110,11 +110,11 @@ const AdminPage: React.FC = () => {
     });
   };
 
-  const handleToggleHiddenProducts = () => {
-    setShowHiddenProducts(!showHiddenProducts);
+  const handleToggleHiddenProducts = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.checked;
+    setShowHiddenProducts(newValue);
     toast({
-      title: showHiddenProducts ? "Mostrando solo productos visibles" : "Mostrando todos los productos",
-      description: "El listado se está actualizando...",
+      title: newValue ? "Mostrando todos los productos" : "Mostrando solo productos visibles",
       status: "info",
       duration: 2000,
       isClosable: true,
@@ -211,9 +211,7 @@ const AdminPage: React.FC = () => {
               </MenuItem>
               <MenuItem 
                 icon={<Icon as={FaBox} />}
-                onClick={(e) => {
-                  e.stopPropagation();
-                }}
+                onClick={(e) => e.stopPropagation()}
               >
                 <Flex justify="space-between" align="center" width="100%">
                   <Text>Ver productos ocultos</Text>
@@ -221,7 +219,6 @@ const AdminPage: React.FC = () => {
                     isChecked={showHiddenProducts}
                     onChange={handleToggleHiddenProducts}
                     size="sm"
-                    onClick={(e) => e.stopPropagation()}
                   />
                 </Flex>
               </MenuItem>
