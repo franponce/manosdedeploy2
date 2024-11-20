@@ -37,14 +37,15 @@ const AnnouncementBanner: React.FC<AnnouncementBannerProps> = ({ announcementBar
 
   return (
     <Box 
-      bg="blue.500" 
-      color="white" 
-      py={2} 
+      bg="blue.50" 
+      py={{ base: 2, md: 3 }}
+      borderBottom="1px"
+      borderColor="blue.100"
       position="relative"
       width="100%"
       zIndex={1001}
     >
-      <Container maxW="100%" px={4}>
+      <Container maxW="container.xl">
         {announcementBar.displayMode === 'static' ? (
           <Flex 
             justify={activeMessages.length === 1 ? "center" : "space-around"}
@@ -56,11 +57,16 @@ const AnnouncementBanner: React.FC<AnnouncementBannerProps> = ({ announcementBar
                 key={index} 
                 textAlign="center" 
                 flex={1}
-                fontSize="sm"
+                fontSize={{ base: "sm", md: "md" }}
+                color="blue.700"
                 fontWeight="medium"
               >
                 {msg.link ? (
-                  <Link href={msg.link} isExternal _hover={{ color: 'white', textDecoration: 'underline' }}>
+                  <Link 
+                    href={msg.link} 
+                    isExternal 
+                    _hover={{ color: 'blue.800', textDecoration: 'underline' }}
+                  >
                     {msg.message}
                   </Link>
                 ) : (
@@ -80,19 +86,20 @@ const AnnouncementBanner: React.FC<AnnouncementBannerProps> = ({ announcementBar
             >
               <Box 
                 textAlign="center"
-                fontSize="sm"
+                fontSize={{ base: "sm", md: "md" }}
+                color="blue.700"
                 fontWeight="medium"
               >
                 {activeMessages[currentIndex].link ? (
                   <Link 
                     href={activeMessages[currentIndex].link} 
                     isExternal
-                    _hover={{ color: 'white', textDecoration: 'underline' }}
+                    _hover={{ color: 'blue.800', textDecoration: 'underline' }}
                   >
                     {activeMessages[currentIndex].message}
                   </Link>
                 ) : (
-                  <Text>{activeMessages[currentIndex].message}</Text>
+                  <Text>{msg.message}</Text>
                 )}
               </Box>
             </motion.div>

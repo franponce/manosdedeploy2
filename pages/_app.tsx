@@ -261,17 +261,14 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
   });
 
   const getBannerContent = () => {
-    const defaultMessage = "Bienvenido a nuestra tienda online";
-    
     if (isAdmin || isLoggedIn) {
       return {
         message: "Estás visualizando la tienda como un cliente.",
         showButton: true
       };
     }
-
     return {
-      message: defaultMessage,
+      message: "",
       showButton: false
     };
   };
