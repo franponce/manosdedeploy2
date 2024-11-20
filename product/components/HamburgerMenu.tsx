@@ -33,7 +33,10 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ isLoggedIn, isAdmin, onLo
         icon={<HamburgerIcon />}
         variant="outline"
       />
-      <MenuList>
+      <MenuList
+        zIndex={9999}
+        position="relative"
+      >
         {isLoggedIn ? (
           <>
             <NextLink href="/admin" passHref legacyBehavior>
