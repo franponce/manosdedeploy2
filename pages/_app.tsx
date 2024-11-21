@@ -62,7 +62,7 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
     const isStoreRoute = router.pathname === '/';
     const isAuthorizedUser = isAdmin || isLoggedIn;
 
-    return isAuthorizedUser && (isStoreRoute || isFromAdmin);
+    return router.pathname === '/' || (isAuthorizedUser && isFromAdmin);
   }, [isAdmin, isLoggedIn, router.pathname, router.query.preview]);
 
   React.useEffect(() => {
