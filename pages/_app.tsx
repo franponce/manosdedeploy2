@@ -131,24 +131,10 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
       .catch(error => console.error('Error fetching custom scripts:', error));
 
     // Load announcement bar configuration
-    const loadAnnouncementConfig = () => {
-      const loadedConfig = localStorage.getItem('announcementBarConfig');
-      if (loadedConfig) {
-        try {
-          const parsedConfig = JSON.parse(loadedConfig);
-          setAnnouncementBar(parsedConfig);
-        } catch (error) {
-          console.error('Error parsing announcement config:', error);
-        }
-      }
-    };
-
-    loadAnnouncementConfig();
-    window.addEventListener('storage', loadAnnouncementConfig);
-
-    return () => {
-      window.removeEventListener('storage', loadAnnouncementConfig);
-    };
+    const loadedConfig = localStorage.getItem('announcementBarConfig');
+    if (loadedConfig) {
+      setAnnouncementBar(JSON.parse(loadedConfig));
+    }
   }, [router.pathname, hasRefreshed]);
 
   const handleLogout = async () => {
@@ -277,6 +263,34 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
     return <Layout>{page}</Layout>;
   });
 
+  // Modificamos el useEffect que carga el announcement bar
+  React.useEffect(() => {
+    // Función para cargar la configuración del banner
+    const loadAnnouncementConfig = () => {
+      const loadedConfig = localStorage.getItem('announcementBarConfig');
+      if (loadedConfig) {
+        try {
+          const parsedConfig = JSON.parse(loadedConfig);
+          setAnnouncementBar(parsedConfig);
+        } catch (error) {
+          console.error('Error parsing announcement config:', error);
+        }
+      }
+    };
+
+    // Cargar inmediatamente
+    loadAnnouncementConfig();
+
+    // Agregar un listener para cambios en el localStorage
+    window.addEventListener('storage', loadAnnouncementConfig);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('storage', loadAnnouncementConfig);
+    };
+  }, []); // Solo se ejecuta una vez al montar
+
+  // Asegurarnos de que el banner se muestre solo cuando tengamos los datos
   const showAnnouncement = React.useMemo(() => {
     return announcementBar?.isEnabled && isMounted;
   }, [announcementBar?.isEnabled, isMounted]);
@@ -314,7 +328,6 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
             <script dangerouslySetInnerHTML={{ __html: customScripts }} />
           )}
         </Head>
-
         {shouldShowHeader && (
           <Box
             as="header"
@@ -332,24 +345,11 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
                 justify="space-between"
                 align="center"
                 padding={4}
-                gap={4}
               >
-                <Flex align="center" gap={4}>
-                  {logoUrl && (
-                    <NextLink href="/" passHref>
-                      <Link>
-                        <Image
-                          src={logoUrl}
-                          alt="Logo"
-                          height="40px"
-                          objectFit="contain"
-                        />
-                      </Link>
-                    </NextLink>
-                  )}
+                <Flex align="center">
                   {getWelcomeMessage()}
                 </Flex>
-                <Flex gap={4} align="center">
+                <Flex align="center">
                   {shouldShowMenu && (
                     <HamburgerMenu
                       isLoggedIn={isLoggedIn}
@@ -364,11 +364,9 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
             </Container>
           </Box>
         )}
-
         {!isLoginPage && !isProductDetail && showAnnouncement && (
           <AnnouncementBanner announcementBar={announcementBar} />
         )}
-
         {showPreviewBanner && (
           <Box position="sticky" top="70px" zIndex={999} bg="blue.50" py={{ base: 2, md: 3 }} borderBottom="1px" borderColor="blue.100">
             <Container maxW="container.xl">
@@ -410,7 +408,6 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
             </Container>
           </Box>
         )}
-
         <Box display="flex" flexDirection="column" minHeight="100vh">
           {router.pathname === '/admin' ? (
             <Box flex="1">
@@ -440,6 +437,7 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
             </Box>
           )}
 
+          {/* Footer común para todas las rutas */}
           <Box mt="auto">
             <Divider marginY={4} />
             <Text textAlign="center" pb={4}>
