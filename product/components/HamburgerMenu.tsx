@@ -14,6 +14,8 @@ interface HamburgerMenuProps {
   isLoggedIn: boolean;
   isAdmin: boolean;
   onLogout: () => void;
+  onBackToAdmin: () => void;
+  userName: string;
 }
 
 const HamburgerIcon = () => (
@@ -24,7 +26,7 @@ const HamburgerIcon = () => (
   </Flex>
 );
 
-const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ isLoggedIn, isAdmin, onLogout }) => {
+const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ isLoggedIn, isAdmin, onLogout, onBackToAdmin, userName }) => {
   return (
     <Menu>
       <MenuButton
