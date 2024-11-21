@@ -263,6 +263,38 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
     return <Layout>{page}</Layout>;
   });
 
+  // Modificamos el useEffect que carga el announcement bar
+  React.useEffect(() => {
+    // Función para cargar la configuración del banner
+    const loadAnnouncementConfig = () => {
+      const loadedConfig = localStorage.getItem('announcementBarConfig');
+      if (loadedConfig) {
+        try {
+          const parsedConfig = JSON.parse(loadedConfig);
+          setAnnouncementBar(parsedConfig);
+        } catch (error) {
+          console.error('Error parsing announcement config:', error);
+        }
+      }
+    };
+
+    // Cargar inmediatamente
+    loadAnnouncementConfig();
+
+    // Agregar un listener para cambios en el localStorage
+    window.addEventListener('storage', loadAnnouncementConfig);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('storage', loadAnnouncementConfig);
+    };
+  }, []); // Solo se ejecuta una vez al montar
+
+  // Asegurarnos de que el banner se muestre solo cuando tengamos los datos
+  const showAnnouncement = React.useMemo(() => {
+    return announcementBar?.isEnabled && isMounted;
+  }, [announcementBar?.isEnabled, isMounted]);
+
   return (
     <SWRConfig
       value={{
@@ -296,35 +328,8 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
             <script dangerouslySetInnerHTML={{ __html: customScripts }} />
           )}
         </Head>
-        {!isLoginPage && !isProductDetail && (
-          <>
-            {announcementBar?.isEnabled && <AnnouncementBanner announcementBar={announcementBar} />}
-            
-            <Box
-              position="fixed"
-              top={announcementBar?.isEnabled ? "40px" : 0}
-              left={0}
-              right={0}
-              zIndex={1000}
-              bg="white"
-              boxShadow="md"
-            >
-              <Container maxWidth="container.xl" padding={4}>
-                <Flex alignItems="center" justifyContent="space-between">
-                  <Box>
-                    {getWelcomeMessage()}
-                  </Box>
-                  {isMounted && (
-                    <HamburgerMenu
-                      isLoggedIn={isLoggedIn}
-                      isAdmin={isAdmin}
-                      onLogout={handleLogout}
-                    />
-                  )}
-                </Flex>
-              </Container>
-            </Box>
-          </>
+        {!isLoginPage && !isProductDetail && showAnnouncement && (
+          <AnnouncementBanner announcementBar={announcementBar} />
         )}
         {showPreviewBanner && (
           <Box position="sticky" top="70px" zIndex={999} bg="blue.50" py={{ base: 2, md: 3 }} borderBottom="1px" borderColor="blue.100">
