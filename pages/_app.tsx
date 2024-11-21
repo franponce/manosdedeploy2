@@ -58,11 +58,11 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
   const showPreviewBanner = React.useMemo(() => {
     if (typeof window === 'undefined') return false;
     
-    const isFromAdmin = router.query.preview === 'true' || localStorage.getItem('previewMode') === 'true';
-    const isStoreRoute = router.pathname === '/';
-    const isAuthorizedUser = isAdmin || isLoggedIn;
-
-    return router.pathname === '/' || (isAuthorizedUser && isFromAdmin);
+    return (isAdmin || isLoggedIn) && (
+      router.pathname === '/' || 
+      router.query.preview === 'true' || 
+      localStorage.getItem('previewMode') === 'true'
+    );
   }, [isAdmin, isLoggedIn, router.pathname, router.query.preview]);
 
   React.useEffect(() => {
@@ -327,15 +327,7 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
           </>
         )}
         {showPreviewBanner && (
-          <Box
-            position="sticky"
-            top="70px"
-            zIndex={999}
-            bg="blue.50"
-            py={{ base: 2, md: 3 }}
-            borderBottom="1px"
-            borderColor="blue.100"
-          >
+          <Box position="sticky" top="70px" zIndex={999} bg="blue.50" py={{ base: 2, md: 3 }} borderBottom="1px" borderColor="blue.100">
             <Container maxW="container.xl">
               <Flex
                 justify={{ base: "center", sm: "space-between" }}
@@ -354,19 +346,23 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
                     color="blue.700"
                     fontSize={{ base: "sm", md: "md" }}
                   >
-                    Estás visualizando la tienda como un cliente.
+                    {(isAdmin || isLoggedIn) 
+                      ? "Estás visualizando la tienda como un cliente."
+                      : "¡Bienvenido a nuestra tienda!"}
                   </Text>
                 </Flex>
-                <Button
-                  size={{ base: "xs", md: "sm" }}
-                  colorScheme="blue"
-                  variant="link"
-                  rightIcon={<Icon as={FaArrowRight} />}
-                  onClick={handleClosePreview}
-                  fontSize={{ base: "sm", md: "md" }}
-                >
-                  Volver al administrador
-                </Button>
+                {(isAdmin || isLoggedIn) && (
+                  <Button
+                    size={{ base: "xs", md: "sm" }}
+                    colorScheme="blue"
+                    variant="link"
+                    rightIcon={<Icon as={FaArrowRight} />}
+                    onClick={handleClosePreview}
+                    fontSize={{ base: "sm", md: "md" }}
+                  >
+                    Volver al administrador
+                  </Button>
+                )}
               </Flex>
             </Container>
           </Box>
