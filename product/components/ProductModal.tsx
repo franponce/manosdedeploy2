@@ -234,31 +234,31 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
   };
 
   const handleInputChange = async (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-    
-    if (name === 'stock') {
-      if (value === '' || /^\d+$/.test(value)) {
-        const newStockValue = value === '' ? null : parseInt(value, 10);
-        
-        setCurrentProduct(prev => ({
-          ...prev,
-          stock: newStockValue
-        }));
 
-        if (currentProduct.id) {
-          try {
-            await stockService.updateStock(currentProduct.id, newStockValue || 0);
-          } catch (error) {
-            console.error('Error updating stock:', error);
-            toast({
-              title: "Error",
-              description: "No se pudo actualizar el stock",
-              status: "error",
-              duration: 3000,
-            });
+    if (name === "stock") {
+      const newStockValue = value === '' ? 0 : parseInt(value, 10);
+      
+      if (!isNaN(newStockValue)) {
+        try {
+          if (currentProduct.id) {
+            await stockService.updateStock(currentProduct.id, newStockValue);
           }
+          
+          setCurrentProduct(prev => ({
+            ...prev,
+            stock: newStockValue
+          }));
+        } catch (error) {
+          console.error('Error updating stock:', error);
+          toast({
+            title: "Error",
+            description: "No se pudo actualizar el stock",
+            status: "error",
+            duration: 3000,
+          });
         }
       }
     } else {
@@ -483,10 +483,10 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                 name="stock"
                 type="number"
                 min={0}
-                step={1}
-                value={currentProduct.stock ?? 0}
+                value={currentProduct.stock ?? ''}
                 onChange={handleInputChange}
                 isDisabled={submitLoading}
+                placeholder="0"
               />
             </FormControl>
 

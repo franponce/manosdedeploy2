@@ -238,19 +238,11 @@ export const stockService = {
     return docSnap.exists() ? docSnap.data().quantity : 0;
   },
 
-  async updateStock(productId: string, quantity: number) {
+  async updateStock(productId: string, newQuantity: number) {
     const stockRef = doc(db, 'stock', productId);
-    const stockDoc = await getDoc(stockRef);
     
-    const currentStock = stockDoc.exists() ? stockDoc.data().quantity : 0;
-    const newStock = currentStock + quantity;
-    
-    if (newStock < 0) {
-      throw new Error('No hay suficiente stock disponible');
-    }
-    
-    await setDoc(stockRef, { quantity: newStock }, { merge: true });
-    return newStock;
+    await setDoc(stockRef, { quantity: newQuantity }, { merge: true });
+    return newQuantity;
   },
 
   async reserveStock(productId: string, quantity: number): Promise<boolean> {
