@@ -32,6 +32,7 @@ import { getPaymentMethods, PaymentMethods, stockService } from '../../utils/fir
 import { FaArrowLeft, FaShoppingCart, FaWhatsapp } from 'react-icons/fa';
 import { useSiteInfo } from '@/hooks/useSiteInfo';
 import { useStock } from '@/hooks/useStock';
+import { useSessionId } from '@/hooks/useSessionId';
 
 interface Props {
   isOpen: boolean;
@@ -42,9 +43,7 @@ interface Props {
 }
 
 const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDecrement }) => {
-  const [sessionId] = useState<string>(() => 
-    localStorage.getItem('sessionId') || crypto.randomUUID()
-  );
+  const { sessionId, isReady } = useSessionId();
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethods>({
     mercadoPago: false,
     cash: false,
@@ -57,9 +56,18 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
   const toast = useToast();
   const { siteInfo } = useSiteInfo();
 
-  useEffect(() => {
-    localStorage.setItem('sessionId', sessionId);
-  }, [sessionId]);
+  const handleAction = async (action: () => Promise<void>) => {
+    if (!isReady) {
+      toast({
+        title: "Espera un momento",
+        description: "Inicializando sesión...",
+        status: "info",
+        duration: 2000,
+      });
+      return;
+    }
+    await action();
+  };
 
   const createWhatsAppMessage = (
     items: CartItem[], 
@@ -85,6 +93,16 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
   };
 
   const handleWhatsAppRedirect = async () => {
+    if (!sessionId) {
+      toast({
+        title: "Error",
+        description: "Por favor, intenta nuevamente en unos segundos",
+        status: "error",
+        duration: 3000,
+      });
+      return;
+    }
+
     if (!fullName.trim()) {
       setIsFullNameError(true);
       return;
@@ -145,10 +163,94 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
           <DrawerHeader>Tu carrito</DrawerHeader>
           <DrawerCloseButton />
           <DrawerBody>
-            {/* ... contenido del drawer ... */}
+            <VStack spacing={4} align="stretch">
+              {items.map((item) => (
+                <Box key={item.id} p={4} borderWidth={1} borderRadius="md">
+                  <HStack spacing={4}>
+                    {item.images?.[0] && (
+                      <Image
+                        src={item.images[0]}
+                        alt={item.title}
+                        boxSize="100px"
+                        objectFit="cover"
+                        borderRadius="md"
+                      />
+                    )}
+                    <VStack align="start" flex={1}>
+                      <Text fontWeight="bold">{item.title}</Text>
+                      <Text>{parseCurrency(item.price)} {siteInfo?.currency}</Text>
+                      <HStack>
+                        <Button size="sm" onClick={() => onDecrement(item)}>-</Button>
+                        <Text>{item.quantity}</Text>
+                        <Button size="sm" onClick={() => onIncrement(item)}>+</Button>
+                      </HStack>
+                    </VStack>
+                  </HStack>
+                </Box>
+              ))}
+
+              <Divider />
+
+              <FormControl isInvalid={isFullNameError}>
+                <FormLabel>Nombre completo</FormLabel>
+                <Input
+                  value={fullName}
+                  onChange={(e) => {
+                    setFullName(e.target.value);
+                    setIsFullNameError(false);
+                  }}
+                  placeholder="Ingresa tu nombre completo"
+                />
+                {isFullNameError && (
+                  <FormErrorMessage>El nombre es requerido</FormErrorMessage>
+                )}
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>Método de pago</FormLabel>
+                <RadioGroup value={selectedPaymentMethod} onChange={setSelectedPaymentMethod}>
+                  <VStack align="start">
+                    {paymentMethods.mercadoPago && (
+                      <Radio value="MercadoPago">MercadoPago</Radio>
+                    )}
+                    {paymentMethods.cash && (
+                      <Radio value="Efectivo">Efectivo</Radio>
+                    )}
+                    {paymentMethods.bankTransfer && (
+                      <Radio value="Transferencia">Transferencia bancaria</Radio>
+                    )}
+                  </VStack>
+                </RadioGroup>
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>Nota (opcional)</FormLabel>
+                <Textarea
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  placeholder="Agrega una nota a tu pedido"
+                />
+              </FormControl>
+            </VStack>
           </DrawerBody>
           <DrawerFooter>
-            {/* ... footer del drawer ... */}
+            <VStack width="100%" spacing={4}>
+              <HStack width="100%" justify="space-between">
+                <Text fontWeight="bold">Total:</Text>
+                <Text fontWeight="bold">
+                  {parseCurrency(items.reduce((sum, item) => sum + item.price * item.quantity, 0))} {siteInfo?.currency}
+                </Text>
+              </HStack>
+              <Button
+                width="100%"
+                colorScheme="whatsapp"
+                leftIcon={<Icon as={FaWhatsapp} />}
+                onClick={handleWhatsAppRedirect}
+                isDisabled={!selectedPaymentMethod || items.length === 0}
+              >
+                Completar pedido
+              </Button>
+            </VStack>
           </DrawerFooter>
         </DrawerContent>
       </DrawerOverlay>
