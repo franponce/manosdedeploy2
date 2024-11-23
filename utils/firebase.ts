@@ -220,51 +220,141 @@ export const productImageService = {
 };
 
 interface StockReservation {
+  userId: string;
   quantity: number;
-  expiresAt: Date;
+  expiresAt: number; // timestamp
 }
 
 interface StockDocument {
-  quantity: number;
-  reservations: {
-    [key: string]: StockReservation;
+  available: number;     // Stock real disponible
+  reserved: number;      // Stock temporalmente reservado
+  reservations: {        // Registro detallado de reservas
+    [sessionId: string]: StockReservation;
   };
 }
 
 export const stockService = {
+  // Mantener el método anterior por compatibilidad
   async getProductStock(productId: string): Promise<number> {
     const docRef = doc(db, 'stock', productId);
     const docSnap = await getDoc(docRef);
     return docSnap.exists() ? docSnap.data().quantity : 0;
   },
 
+  // Mantener el método anterior por compatibilidad
   async updateStock(productId: string, newQuantity: number) {
     const stockRef = doc(db, 'stock', productId);
-    
     await setDoc(stockRef, { quantity: newQuantity }, { merge: true });
     return newQuantity;
   },
 
-  async reserveStock(productId: string, quantity: number): Promise<boolean> {
+  // Nuevos métodos para el manejo mejorado de stock
+  async getAvailableStock(productId: string): Promise<number> {
     const docRef = doc(db, 'stock', productId);
+    const docSnap = await getDoc(docRef);
+    
+    if (!docSnap.exists()) return 0;
+    
+    const stockData = docSnap.data() as StockDocument;
+    return stockData.available - stockData.reserved;
+  },
+
+  async reserveStock(productId: string, quantity: number, sessionId: string): Promise<boolean> {
+    const stockRef = doc(db, 'stock', productId);
     
     try {
-      await runTransaction(db, async (transaction) => {
-        const stockDoc = await transaction.get(docRef);
-        const currentStock = stockDoc.exists() ? stockDoc.data().quantity : 0;
+      const success = await runTransaction(db, async (transaction) => {
+        const stockDoc = await transaction.get(stockRef);
+        if (!stockDoc.exists()) return false;
+
+        const stockData = stockDoc.data() as StockDocument;
+        const currentReservation = stockData.reservations[sessionId] || { quantity: 0 };
+        const availableStock = stockData.available - stockData.reserved;
         
-        if (currentStock < quantity) {
-          throw new Error('Stock insuficiente');
+        // Validar si hay suficiente stock
+        if (availableStock < (quantity - currentReservation.quantity)) {
+          return false;
         }
-        
-        transaction.update(docRef, { 
-          quantity: currentStock - quantity 
+
+        // Actualizar reserva
+        const newReserved = stockData.reserved - currentReservation.quantity + quantity;
+        const newReservations = {
+          ...stockData.reservations,
+          [sessionId]: {
+            userId: sessionId,
+            quantity,
+            expiresAt: Date.now() + 30 * 60 * 1000 // 30 minutos
+          }
+        };
+
+        transaction.update(stockRef, {
+          reserved: newReserved,
+          reservations: newReservations
         });
+
+        return true;
       });
-      
-      return true;
+
+      return success;
     } catch (error) {
-      console.error('Error al reservar stock:', error);
+      console.error('Error reserving stock:', error);
+      return false;
+    }
+  },
+
+  async releaseReservation(productId: string, sessionId: string): Promise<void> {
+    const stockRef = doc(db, 'stock', productId);
+    
+    await runTransaction(db, async (transaction) => {
+      const stockDoc = await transaction.get(stockRef);
+      if (!stockDoc.exists()) return;
+
+      const stockData = stockDoc.data() as StockDocument;
+      const reservation = stockData.reservations[sessionId];
+      
+      if (!reservation) return;
+
+      const newReserved = stockData.reserved - reservation.quantity;
+      const { [sessionId]: removed, ...newReservations } = stockData.reservations;
+
+      transaction.update(stockRef, {
+        reserved: newReserved,
+        reservations: newReservations
+      });
+    });
+  },
+
+  async confirmPurchase(productId: string, quantity: number, sessionId: string): Promise<boolean> {
+    const stockRef = doc(db, 'stock', productId);
+    
+    try {
+      const success = await runTransaction(db, async (transaction) => {
+        const stockDoc = await transaction.get(stockRef);
+        if (!stockDoc.exists()) return false;
+
+        const stockData = stockDoc.data() as StockDocument;
+        
+        // Validar stock final
+        if (stockData.available < quantity) {
+          return false;
+        }
+
+        // Actualizar stock y limpiar reserva
+        const { [sessionId]: removed, ...newReservations } = stockData.reservations;
+        const newReserved = stockData.reserved - (removed?.quantity || 0);
+
+        transaction.update(stockRef, {
+          available: stockData.available - quantity,
+          reserved: newReserved,
+          reservations: newReservations
+        });
+
+        return true;
+      });
+
+      return success;
+    } catch (error) {
+      console.error('Error confirming purchase:', error);
       return false;
     }
   }
