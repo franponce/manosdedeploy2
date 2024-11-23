@@ -176,7 +176,7 @@ if (typeof window === 'undefined') {
             product.categoryId,
             product.isVisible ? 'TRUE' : 'FALSE',
             (actualRow - 1).toString(), // Mantener el orden secuencial
-            product.stock.toString()
+            product.stock ?? 0
           ]
         ];
 
@@ -224,7 +224,7 @@ if (typeof window === 'undefined') {
             product.categoryId || '',
             product.isVisible ? 'TRUE' : 'FALSE',
             product.order || '',
-            product.stock.toString()
+            product.stock ?? 0
           ]
         ];
 
