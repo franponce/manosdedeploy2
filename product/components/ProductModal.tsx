@@ -45,6 +45,7 @@ import { CATEGORY_CONSTANTS } from '../../utils/constants';
 import { useCategories } from '@/hooks/useCategories';
 import { imageService } from '../../services/imageService';
 import { useProduct } from '@/hooks/useProduct';
+import { stockService } from '../../utils/firebase';
 
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 
@@ -122,6 +123,32 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
       mutateCategories();
     }
   }, [isOpen, mutateCategories]);
+
+  useEffect(() => {
+    const fetchStock = async () => {
+      if (product?.id) {
+        try {
+          const stockValue = await stockService.getProductStock(product.id);
+          setCurrentProduct(prev => ({
+            ...prev,
+            stock: stockValue
+          }));
+        } catch (error) {
+          console.error('Error fetching stock:', error);
+          toast({
+            title: "Error",
+            description: "No se pudo cargar el stock del producto",
+            status: "error",
+            duration: 3000,
+          });
+        }
+      }
+    };
+
+    if (isOpen && product?.id) {
+      fetchStock();
+    }
+  }, [isOpen, product?.id]);
 
   const handleProductImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
     const file = e.target.files?.[0];
@@ -206,15 +233,38 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     }
   };
 
-  const handleInputChange = (
+  const handleInputChange = async (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
     
-    setCurrentProduct(prev => ({
-      ...prev,
-      [name]: name === 'stock' ? Math.max(0, parseInt(value, 10) || 0) : value
-    }));
+    if (name === 'stock') {
+      const newStockValue = Math.max(0, parseInt(value, 10) || 0);
+      
+      setCurrentProduct(prev => ({
+        ...prev,
+        [name]: newStockValue
+      }));
+
+      if (currentProduct.id) {
+        try {
+          await stockService.updateStock(currentProduct.id, newStockValue);
+        } catch (error) {
+          console.error('Error updating stock:', error);
+          toast({
+            title: "Error",
+            description: "No se pudo actualizar el stock",
+            status: "error",
+            duration: 3000,
+          });
+        }
+      }
+    } else {
+      setCurrentProduct(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
   const handleVisibilityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -434,6 +484,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                 step="1"
                 value={currentProduct.stock}
                 onChange={handleInputChange}
+                isDisabled={submitLoading}
               />
             </FormControl>
 
