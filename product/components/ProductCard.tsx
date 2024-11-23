@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Image,
@@ -19,6 +19,7 @@ import { parseCurrency } from '../../utils/currency';
 import { useRouter } from 'next/router';
 import { VisibilityToggle } from './VisibilityToggle';
 import ImageCarousel from './ImageCarousel';
+import { stockService } from '../../utils/firebase';
 
 interface Props {
   product: Product;
@@ -28,13 +29,28 @@ interface Props {
   onDelete: (id: string) => void;
   onVisibilityToggle: (id: string, isVisible: boolean) => void;
   isAdminView?: boolean;
+  showStock?: boolean;
 }
 
-const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading: cardLoading, onEdit, onDelete, onVisibilityToggle, isAdminView = false }) => {
+const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading: cardLoading, onEdit, onDelete, onVisibilityToggle, isAdminView = false, showStock = false }) => {
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [isTitleExpanded, setIsTitleExpanded] = useState(false);
   const [isMobile] = useMediaQuery("(max-width: 48em)");
   const router = useRouter();
+  const [stock, setStock] = useState<number | null>(null);
+
+  useEffect(() => {
+    const fetchStock = async () => {
+      try {
+        const stockValue = await stockService.getProductStock(product.id);
+        setStock(stockValue);
+      } catch (error) {
+        console.error('Error fetching stock:', error);
+      }
+    };
+    
+    fetchStock();
+  }, [product.id]);
 
   const handleProductClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -174,24 +190,19 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading: cardLoading, 
               <Text fontWeight="bold" fontSize="xl">
                 {parseCurrency(product.price || 0)}
               </Text>
-              {product.stock === 0 ? (
-                <Button
-                  colorScheme="gray"
-                  isDisabled
-                  width="100%"
-                >
-                  Agotado
-                </Button>
-              ) : (
-                <Button
-                  colorScheme="blue"
-                  onClick={handleProductClick}
-                  width="100%"
-                  isDisabled={product.stock < 1}
-                >
-                  Ver detalle
-                </Button>
+              {showStock && (
+                <Text fontSize="sm" color={stock === 0 ? "red.500" : "gray.600"}>
+                  {stock === 0 ? "Agotado" : `Stock disponible: ${stock}`}
+                </Text>
               )}
+              <Button
+                colorScheme="blue"
+                onClick={handleProductClick}
+                width="100%"
+                isDisabled={product.stock < 1}
+              >
+                Ver detalle
+              </Button>
               {product.stock > 0 && product.stock <= 5 && (
                 <Text color="orange.500" fontSize="sm" mt={2}>
                   ¡Últimas {product.stock} unidades!

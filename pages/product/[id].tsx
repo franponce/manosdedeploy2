@@ -264,6 +264,10 @@ const ProductDetail: NextPageWithLayout = () => {
                 </Heading>
               </Skeleton>
 
+              <Text fontSize="lg" color={stock === 0 ? "red.500" : "gray.600"}>
+                {stock === 0 ? "Agotado" : `Stock disponible: ${stock}`}
+              </Text>
+
               <Skeleton isLoaded={!isLoading}>
                 <Text fontSize="2xl" fontWeight="bold">
                   {parseCurrency(product?.price || 0)}
@@ -277,8 +281,9 @@ const ProductDetail: NextPageWithLayout = () => {
                   leftIcon={<Icon as={FaShoppingCart} />}
                   onClick={handleAddToCart}
                   width="full"
+                  isDisabled={stock === 0}
                 >
-                  Agregar al carrito
+                  {stock === 0 ? "Agotado" : "Agregar al carrito"}
                 </Button>
               </Skeleton>
 

@@ -369,6 +369,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
                   onDelete={() => {}}
                   onVisibilityToggle={() => {}}
                   isAdminView={false}
+                  showStock={true}
                 />
               </Box>
             ))}
