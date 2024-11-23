@@ -214,18 +214,25 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
       for (const item of items) {
         const success = await stockService.confirmPurchase(item.id, item.quantity, sessionId);
         if (!success) {
-          throw new Error(`No se pudo confirmar la compra de ${item.title}`);
+          toast({
+            title: "Error en la compra",
+            description: `No se pudo procesar el producto: ${item.title}. Por favor, intente nuevamente.`,
+            status: "error",
+            duration: 5000,
+          });
+          return;
         }
       }
+
       window.open(whatsappURL, "_blank");
       onClose();
     } catch (error) {
       console.error('Error al procesar la compra:', error);
       toast({
         title: "Error",
-        description: "No se pudo completar la compra. Por favor, intente nuevamente.",
+        description: "Hubo un problema al procesar la compra. Por favor, intente nuevamente.",
         status: "error",
-        duration: 3000,
+        duration: 5000,
       });
     }
   };
