@@ -10,7 +10,7 @@ export interface Product {
   scheduledPublishDate: Date | null;
   categoryId: string;
   isVisible: boolean;
-  stock: number;
+  stock: number | null;
 }
 
 export interface CartItem extends Product {

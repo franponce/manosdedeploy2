@@ -107,19 +107,8 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
     }
   };
 
-  const handleDecrement = async (item: CartItem) => {
-    try {
-      await stockService.updateStock(item.id, 1);
-      onDecrement(item);
-    } catch (error) {
-      console.error('Error al liberar stock:', error);
-      toast({
-        title: "Error",
-        description: "No se pudo actualizar el carrito",
-        status: "error",
-        duration: 3000,
-      });
-    }
+  const handleDecrement = (item: CartItem) => {
+    onDecrement(item);
   };
 
   const validateCartStock = async (): Promise<boolean> => {
@@ -170,11 +159,12 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
     
     try {
       for (const item of items) {
-        await stockService.reserveStock(item.id, item.quantity);
+        await stockService.updateStock(item.id, -item.quantity);
       }
       window.open(whatsappURL, "_blank");
+      onClose();
     } catch (error) {
-      console.error('Error al reservar stock:', error);
+      console.error('Error al actualizar stock:', error);
       toast({
         title: "Error",
         description: "No se pudo completar la compra",
@@ -217,6 +207,47 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
     );
   };
 
+  const handleQuantityChange = async (item: CartItem, newValue: string) => {
+    if (!/^\d*$/.test(newValue)) return;
+    
+    const newQuantity = newValue === '' ? 0 : parseInt(newValue, 10);
+    const currentQuantity = item.quantity;
+    
+    try {
+      if (newQuantity > currentQuantity) {
+        const currentStock = await stockService.getProductStock(item.id);
+        if (newQuantity > currentStock) {
+          toast({
+            title: "Stock no disponible",
+            description: `Solo hay ${currentStock} unidades disponibles`,
+            status: "warning",
+            duration: 3000,
+          });
+          return;
+        }
+      }
+      
+      const difference = newQuantity - currentQuantity;
+      if (difference > 0) {
+        for (let i = 0; i < difference; i++) {
+          await onIncrement(item);
+        }
+      } else if (difference < 0) {
+        for (let i = 0; i < Math.abs(difference); i++) {
+          await onDecrement(item);
+        }
+      }
+    } catch (error) {
+      console.error('Error al actualizar cantidad:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar la cantidad",
+        status: "error",
+        duration: 3000,
+      });
+    }
+  };
+
   return (
     <Drawer isOpen={isOpen} placement="right" onClose={onClose} size="md">
       <DrawerOverlay>
@@ -256,7 +287,14 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
                       >
                         -
                       </Button>
-                      <Text>{item.quantity}</Text>
+                      <Input
+                        value={item.quantity}
+                        onChange={(e) => handleQuantityChange(item, e.target.value)}
+                        size="sm"
+                        width="50px"
+                        textAlign="center"
+                        p={1}
+                      />
                       <Button 
                         size="sm" 
                         onClick={() => handleIncrement(item)}
