@@ -73,7 +73,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
       scheduledPublishDate: null,
       categoryId: '',
       isVisible: true,
-      stock: 0,
+      stock: '',
       order: ''
     };
   });
@@ -233,17 +233,15 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     }
   };
 
-  const handleInputChange = async (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
+  const handleInputChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
 
-    if (name === "stock") {
-      const newStockValue = value === '' ? 0 : parseInt(value, 10);
-      
-      if (!isNaN(newStockValue)) {
+    if (name === 'stock') {
+      if (value === '' || /^\d+$/.test(value)) {
+        const newStockValue = value === '' ? '' : parseInt(value, 10);
+        
         try {
-          if (currentProduct.id) {
+          if (currentProduct.id && typeof newStockValue === 'number') {
             await stockService.updateStock(currentProduct.id, newStockValue);
           }
           
@@ -267,7 +265,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
         [name]: value
       }));
     }
-  };
+  }, [currentProduct.id, toast]);
 
   const handleVisibilityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCurrentProduct(prev => ({ ...prev, isVisible: e.target.checked }));
