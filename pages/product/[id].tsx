@@ -142,6 +142,17 @@ const ProductDetail: NextPageWithLayout = () => {
       : { ...product, quantity: 1 };
 
     if (action === "increment") {
+      const currentQuantity = cart.find(item => item.id === cartItem.id)?.quantity || 0;
+      if (currentQuantity >= stock) {
+        toast({
+          title: "No hay suficiente stock",
+          description: "Has alcanzado el límite de unidades disponibles",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
       addToCart(cartItem);
     } else {
       removeFromCart(cartItem);
@@ -149,7 +160,21 @@ const ProductDetail: NextPageWithLayout = () => {
   };
 
   const handleAddToCart = () => {
-    if (!product) return;
+    if (!product || !stock) return;
+    
+    const existingItem = cart.find(item => item.id === product.id);
+    const currentQuantity = existingItem?.quantity || 0;
+    
+    if (currentQuantity >= stock) {
+      toast({
+        title: "No hay suficiente stock",
+        description: "Has alcanzado el límite de unidades disponibles",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
     
     const cartItem: CartItem = {
       ...product,
@@ -276,16 +301,21 @@ const ProductDetail: NextPageWithLayout = () => {
 
               <Skeleton isLoaded={!isLoading}>
                 <Button
-                  size="lg"
                   colorScheme="blue"
-                  leftIcon={<Icon as={FaShoppingCart} />}
+                  size="lg"
+                  width="100%"
                   onClick={handleAddToCart}
-                  width="full"
                   isDisabled={stock === 0}
+                  mb={4}
                 >
                   {stock === 0 ? "Agotado" : "Agregar al carrito"}
                 </Button>
               </Skeleton>
+              {stock > 0 && stock <= 5 && (
+                <Text color="orange.500" fontSize="sm" textAlign="center" mb={4}>
+                  ¡Últimas {stock} unidades disponibles!
+                </Text>
+              )}
 
               <Skeleton isLoaded={!isLoading}>
                 <Box>

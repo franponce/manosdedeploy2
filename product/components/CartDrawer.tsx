@@ -28,7 +28,7 @@ import {
 import { CartItem } from '../types';
 import { parseCurrency } from '../../utils/currency';
 import { INFORMATION } from '../../app/constants';
-import { getPaymentMethods, PaymentMethods } from '../../utils/firebase';
+import { getPaymentMethods, PaymentMethods, stockService } from '../../utils/firebase';
 import { FaArrowLeft, FaShoppingCart, FaWhatsapp } from 'react-icons/fa';
 import { useSiteInfo } from '@/hooks/useSiteInfo';
 
@@ -128,6 +128,36 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
     );
   };
 
+  const handleIncrement = async (item: CartItem) => {
+    try {
+      // Obtener el stock actual
+      const currentStock = await stockService.getProductStock(item.id);
+      const currentQuantity = item.quantity;
+
+      if (currentQuantity >= currentStock) {
+        toast({
+          title: "No hay suficiente stock",
+          description: "Has alcanzado el límite de unidades disponibles",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+
+      onIncrement(item);
+    } catch (error) {
+      console.error('Error al verificar stock:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo verificar el stock disponible",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
   return (
     <Drawer isOpen={isOpen} placement="right" onClose={onClose} size="md">
       <DrawerOverlay>
@@ -163,7 +193,7 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
                     <HStack flexShrink={0}>
                       <Button size="sm" onClick={() => onDecrement(item)}>-</Button>
                       <Text>{item.quantity}</Text>
-                      <Button size="sm" onClick={() => onIncrement(item)}>+</Button>
+                      <Button size="sm" onClick={() => handleIncrement(item)}>+</Button>
                     </HStack>
                   </Flex>
                 ))
