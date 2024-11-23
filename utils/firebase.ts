@@ -243,57 +243,28 @@ export const stockService = {
     await setDoc(docRef, { quantity }, { merge: true });
   },
 
-  async reserveStock(productId: string, quantity: number, reservationId: string): Promise<boolean> {
+  async reserveStock(productId: string, quantity: number): Promise<boolean> {
     const docRef = doc(db, 'stock', productId);
     
     try {
       await runTransaction(db, async (transaction) => {
         const stockDoc = await transaction.get(docRef);
-        const currentStock = stockDoc.exists() ? (stockDoc.data() as StockDocument).quantity : 0;
-        const reservations = stockDoc.exists() 
-          ? (stockDoc.data() as StockDocument).reservations || {}
-          : {};
+        const currentStock = stockDoc.exists() ? stockDoc.data().quantity : 0;
         
-        // Verificar stock disponible (descontando reservas activas)
-        const reservedStock = Object.values(reservations)
-          .reduce((acc, reservation) => acc + reservation.quantity, 0);
-        
-        const availableStock = currentStock - reservedStock;
-
-        if (availableStock < quantity) {
+        if (currentStock < quantity) {
           throw new Error('Stock insuficiente');
         }
-
-        // Crear reserva temporal (15 minutos)
-        transaction.set(docRef, {
-          reservations: {
-            ...reservations,
-            [reservationId]: {
-              quantity,
-              expiresAt: new Date(Date.now() + 15 * 60 * 1000)
-            }
-          }
-        }, { merge: true });
+        
+        transaction.update(docRef, { 
+          quantity: currentStock - quantity 
+        });
       });
-
+      
       return true;
     } catch (error) {
       console.error('Error al reservar stock:', error);
       return false;
     }
-  },
-
-  async releaseReservation(productId: string, reservationId: string): Promise<void> {
-    const docRef = doc(db, 'stock', productId);
-    await runTransaction(db, async (transaction) => {
-      const stockDoc = await transaction.get(docRef);
-      if (!stockDoc.exists()) return;
-
-      const reservations = stockDoc.data().reservations || {};
-      delete reservations[reservationId];
-
-      transaction.set(docRef, { reservations }, { merge: true });
-    });
   }
 };
 

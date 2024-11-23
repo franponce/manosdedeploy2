@@ -31,6 +31,7 @@ import { INFORMATION } from '../../app/constants';
 import { getPaymentMethods, PaymentMethods, stockService } from '../../utils/firebase';
 import { FaArrowLeft, FaShoppingCart, FaWhatsapp } from 'react-icons/fa';
 import { useSiteInfo } from '@/hooks/useSiteInfo';
+import { useStock } from '@/hooks/useStock';
 
 interface Props {
   isOpen: boolean;
@@ -67,13 +68,87 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
     [items]
   );
 
-  const handleWhatsAppRedirect = () => {
+  const handleIncrement = async (item: CartItem) => {
+    try {
+      const currentStock = await stockService.getProductStock(item.id);
+      const currentQuantity = item.quantity;
+
+      if (currentQuantity >= currentStock) {
+        toast({
+          title: "Stock no disponible",
+          description: "No hay más unidades disponibles de este producto",
+          status: "warning",
+          duration: 3000,
+        });
+        return;
+      }
+
+      const reserved = await stockService.reserveStock(item.id, 1);
+      
+      if (!reserved) {
+        toast({
+          title: "Error al reservar stock",
+          description: "No se pudo reservar el producto, intente nuevamente",
+          status: "error",
+          duration: 3000,
+        });
+        return;
+      }
+
+      onIncrement(item);
+    } catch (error) {
+      console.error('Error al manejar el stock:', error);
+      toast({
+        title: "Error",
+        description: "Hubo un problema al actualizar el carrito",
+        status: "error",
+        duration: 3000,
+      });
+    }
+  };
+
+  const handleDecrement = async (item: CartItem) => {
+    try {
+      await stockService.updateStock(item.id, 1);
+      onDecrement(item);
+    } catch (error) {
+      console.error('Error al liberar stock:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar el carrito",
+        status: "error",
+        duration: 3000,
+      });
+    }
+  };
+
+  const validateCartStock = async (): Promise<boolean> => {
+    for (const item of items) {
+      const currentStock = await stockService.getProductStock(item.id);
+      if (item.quantity > currentStock) {
+        toast({
+          title: "Stock insuficiente",
+          description: `No hay suficiente stock de ${item.title}`,
+          status: "error",
+          duration: 3000,
+        });
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const handleWhatsAppRedirect = async () => {
     if (!fullName.trim()) {
       setIsFullNameError(true);
       return;
     }
-    setIsFullNameError(false);
+    
+    const stockValid = await validateCartStock();
+    if (!stockValid) return;
 
+    setIsFullNameError(false);
+    
     const whatsappMessage = encodeURIComponent(
       `*Simple E-commerce | ${siteInfo?.title || 'Tienda'} | Nuevo pedido*\n\n` +
       `¡Hola! Me gustaría realizar el siguiente pedido:\n\n${items
@@ -92,7 +167,21 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
       `*Total: ${total} ${siteInfo?.currency}*`
     );
     const whatsappURL = `https://wa.me/${INFORMATION.whatsappCart}?text=${whatsappMessage}`;
-    window.open(whatsappURL, "_blank");
+    
+    try {
+      for (const item of items) {
+        await stockService.reserveStock(item.id, item.quantity);
+      }
+      window.open(whatsappURL, "_blank");
+    } catch (error) {
+      console.error('Error al reservar stock:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo completar la compra",
+        status: "error",
+        duration: 3000,
+      });
+    }
   };
 
   const getFirstImage = (images: string | string[]): string => {
@@ -128,36 +217,6 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
     );
   };
 
-  const handleIncrement = async (item: CartItem) => {
-    try {
-      // Obtener el stock actual
-      const currentStock = await stockService.getProductStock(item.id);
-      const currentQuantity = item.quantity;
-
-      if (currentQuantity >= currentStock) {
-        toast({
-          title: "No hay suficiente stock",
-          description: "Has alcanzado el límite de unidades disponibles",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-        return;
-      }
-
-      onIncrement(item);
-    } catch (error) {
-      console.error('Error al verificar stock:', error);
-      toast({
-        title: "Error",
-        description: "No se pudo verificar el stock disponible",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    }
-  };
-
   return (
     <Drawer isOpen={isOpen} placement="right" onClose={onClose} size="md">
       <DrawerOverlay>
@@ -191,9 +250,19 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
                       <Text fontSize="sm">{parseCurrency(item.price)} {siteInfo?.currency}</Text>
                     </Box>
                     <HStack flexShrink={0}>
-                      <Button size="sm" onClick={() => onDecrement(item)}>-</Button>
+                      <Button 
+                        size="sm" 
+                        onClick={() => handleDecrement(item)}
+                      >
+                        -
+                      </Button>
                       <Text>{item.quantity}</Text>
-                      <Button size="sm" onClick={() => handleIncrement(item)}>+</Button>
+                      <Button 
+                        size="sm" 
+                        onClick={() => handleIncrement(item)}
+                      >
+                        +
+                      </Button>
                     </HStack>
                   </Flex>
                 ))

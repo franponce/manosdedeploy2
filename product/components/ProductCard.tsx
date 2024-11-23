@@ -20,6 +20,7 @@ import { useRouter } from 'next/router';
 import { VisibilityToggle } from './VisibilityToggle';
 import ImageCarousel from './ImageCarousel';
 import { stockService } from '../../utils/firebase';
+import { useStock } from '@/hooks/useStock';
 
 interface Props {
   product: Product;
@@ -33,24 +34,11 @@ interface Props {
 }
 
 const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading: cardLoading, onEdit, onDelete, onVisibilityToggle, isAdminView = false, showStock = false }) => {
+  const { stock, isLoading: stockLoading } = useStock(product.id);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [isTitleExpanded, setIsTitleExpanded] = useState(false);
   const [isMobile] = useMediaQuery("(max-width: 48em)");
   const router = useRouter();
-  const [stock, setStock] = useState<number | null>(null);
-
-  useEffect(() => {
-    const fetchStock = async () => {
-      try {
-        const stockValue = await stockService.getProductStock(product.id);
-        setStock(stockValue);
-      } catch (error) {
-        console.error('Error fetching stock:', error);
-      }
-    };
-    
-    fetchStock();
-  }, [product.id]);
 
   const handleProductClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -153,8 +141,6 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading: cardLoading, 
     );
   };
 
-  const stockValue = stock ?? 0;
-
   return (
     <Box 
       borderWidth={1} 
@@ -192,22 +178,20 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading: cardLoading, 
               <Text fontWeight="bold" fontSize="xl">
                 {parseCurrency(product.price || 0)}
               </Text>
-              {showStock && (
-                <Text fontSize="sm" color={stockValue === 0 ? "red.500" : "gray.600"}>
-                  {stockValue === 0 ? "Agotado" : `Stock disponible: ${stockValue}`}
-                </Text>
-              )}
+              <Text fontSize="sm" color={stock === 0 ? "red.500" : "gray.600"}>
+                {stock === 0 ? "Agotado" : `Stock disponible: ${stock}`}
+              </Text>
               <Button
                 colorScheme="blue"
                 onClick={handleProductClick}
                 width="100%"
-                isDisabled={stockValue === 0}
+                isDisabled={stock === 0}
               >
-                {stockValue === 0 ? "Agotado" : "Ver detalle"}
+                {stock === 0 ? "Agotado" : "Ver detalle"}
               </Button>
-              {stockValue > 0 && stockValue <= 5 && (
+              {stock > 0 && stock <= 5 && (
                 <Text color="orange.500" fontSize="sm" mt={2}>
-                  ¡Últimas {stockValue} unidades!
+                  ¡Últimas {stock} unidades!
                 </Text>
               )}
             </>
