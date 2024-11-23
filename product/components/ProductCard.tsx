@@ -174,13 +174,29 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading: cardLoading, 
               <Text fontWeight="bold" fontSize="xl">
                 {parseCurrency(product.price || 0)}
               </Text>
-              <Button
-                colorScheme="blue"
-                onClick={handleProductClick}
-                width="full"
-              >
-                Ver detalle
-              </Button>
+              {product.stock === 0 ? (
+                <Button
+                  colorScheme="gray"
+                  isDisabled
+                  width="100%"
+                >
+                  Agotado
+                </Button>
+              ) : (
+                <Button
+                  colorScheme="blue"
+                  onClick={handleProductClick}
+                  width="100%"
+                  isDisabled={product.stock < 1}
+                >
+                  Ver detalle
+                </Button>
+              )}
+              {product.stock > 0 && product.stock <= 5 && (
+                <Text color="orange.500" fontSize="sm" mt={2}>
+                  ¡Últimas {product.stock} unidades!
+                </Text>
+              )}
             </>
           )}
         </Stack>

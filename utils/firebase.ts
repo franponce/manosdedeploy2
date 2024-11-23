@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getFirestore, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, runTransaction } from "firebase/firestore";
 import { getStorage, ref, uploadString, getDownloadURL, uploadBytes, deleteObject, listAll } from "firebase/storage";
 import { 
   getAuth, 
@@ -216,6 +216,84 @@ export const productImageService = {
     await Promise.all(
       list.items.map(item => deleteObject(item))
     );
+  }
+};
+
+interface StockReservation {
+  quantity: number;
+  expiresAt: Date;
+}
+
+interface StockDocument {
+  quantity: number;
+  reservations: {
+    [key: string]: StockReservation;
+  };
+}
+
+export const stockService = {
+  async getProductStock(productId: string): Promise<number> {
+    const docRef = doc(db, 'stock', productId);
+    const docSnap = await getDoc(docRef);
+    return docSnap.exists() ? docSnap.data().quantity : 0;
+  },
+
+  async updateStock(productId: string, quantity: number): Promise<void> {
+    const docRef = doc(db, 'stock', productId);
+    await setDoc(docRef, { quantity }, { merge: true });
+  },
+
+  async reserveStock(productId: string, quantity: number, reservationId: string): Promise<boolean> {
+    const docRef = doc(db, 'stock', productId);
+    
+    try {
+      await runTransaction(db, async (transaction) => {
+        const stockDoc = await transaction.get(docRef);
+        const currentStock = stockDoc.exists() ? (stockDoc.data() as StockDocument).quantity : 0;
+        const reservations = stockDoc.exists() 
+          ? (stockDoc.data() as StockDocument).reservations || {}
+          : {};
+        
+        // Verificar stock disponible (descontando reservas activas)
+        const reservedStock = Object.values(reservations)
+          .reduce((acc, reservation) => acc + reservation.quantity, 0);
+        
+        const availableStock = currentStock - reservedStock;
+
+        if (availableStock < quantity) {
+          throw new Error('Stock insuficiente');
+        }
+
+        // Crear reserva temporal (15 minutos)
+        transaction.set(docRef, {
+          reservations: {
+            ...reservations,
+            [reservationId]: {
+              quantity,
+              expiresAt: new Date(Date.now() + 15 * 60 * 1000)
+            }
+          }
+        }, { merge: true });
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Error al reservar stock:', error);
+      return false;
+    }
+  },
+
+  async releaseReservation(productId: string, reservationId: string): Promise<void> {
+    const docRef = doc(db, 'stock', productId);
+    await runTransaction(db, async (transaction) => {
+      const stockDoc = await transaction.get(docRef);
+      if (!stockDoc.exists()) return;
+
+      const reservations = stockDoc.data().reservations || {};
+      delete reservations[reservationId];
+
+      transaction.set(docRef, { reservations }, { merge: true });
+    });
   }
 };
 
