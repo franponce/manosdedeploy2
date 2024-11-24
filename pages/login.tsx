@@ -214,56 +214,31 @@ const LoginPage: React.FC = () => {
           mx={4}
         >
           <Skeleton isLoaded={!siteInfoLoading} borderRadius="full">
-            <Box
-              backgroundColor="white"
-              borderRadius="full"
-              boxShadow="md"
-              boxSize="120px"
-              overflow="hidden"
-              position="relative"
-              mx="auto"
-              mb={2}
-            >
-              <Image
-                src={siteInfo?.logoUrl}
-                alt="Store logo"
-                objectFit="cover"
-                width="100%"
-                height="100%"
-                loading="eager"
-              />
+            <Box boxSize="120px" mx="auto">
+              {siteInfo?.logoUrl ? (
+                <Image
+                  src={siteInfo.logoUrl}
+                  alt="Store logo"
+                  objectFit="cover"
+                  width="100%"
+                  height="100%"
+                />
+              ) : (
+                <Box bg="gray.100" width="100%" height="100%" borderRadius="full" />
+              )}
             </Box>
           </Skeleton>
-
-          <Stack
-            align="center"
-            spacing={6}
-            textAlign="center"
-            px={6}
-          >
-            <Skeleton isLoaded={!siteInfoLoading}>
-              <Heading size="lg">{siteInfo?.title}</Heading>
+          
+          <Stack align="center" spacing={6}>
+            <Skeleton isLoaded={!siteInfoLoading} height="40px" width="200px">
+              <Heading size="lg">{siteInfo?.title || ''}</Heading>
             </Skeleton>
             
-            <Skeleton isLoaded={!siteInfoLoading}>
-              <Text 
-                color="gray.600" 
-                fontSize="md"
-                lineHeight="tall"
-                dangerouslySetInnerHTML={{ __html: siteInfo?.description || '' }}
-              />
+            <Skeleton isLoaded={!siteInfoLoading} height="20px" width="300px">
+              <Text color="gray.600" fontSize="md">
+                {siteInfo?.description || ''}
+              </Text>
             </Skeleton>
-            
-            {siteInfo?.description2 && (
-              <Skeleton isLoaded={!siteInfoLoading}>
-                <Text 
-                  color="gray.600" 
-                  fontSize="md"
-                  lineHeight="tall"
-                  dangerouslySetInnerHTML={{ __html: siteInfo?.description2 || '' }}
-                />
-              </Skeleton>
-            )}
           </Stack>
         </Stack>
       </Box>

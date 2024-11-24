@@ -15,6 +15,7 @@ import {
   Button,
   Icon,
   useToast,
+  Skeleton,
 } from "@chakra-ui/react";
 import { AppProps } from "next/app";
 import { Global, css } from "@emotion/react";
@@ -255,7 +256,24 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
 
   const logoUrl = React.useMemo(() => siteInfo?.logoUrl || '', [siteInfo?.logoUrl]);
 
-  if (isLoading) return <Box display="flex" justifyContent="center" alignItems="center" height="100vh"><Spinner /></Box>;
+  if (isLoading) {
+    return (
+      <Box p={4}>
+        <Flex justify="space-between" align="center" mb={8}>
+          <Skeleton height="40px" width="200px" />
+          <Skeleton height="40px" width="40px" borderRadius="full" />
+        </Flex>
+        <Stack spacing={8}>
+          <Skeleton height="200px" borderRadius="lg" />
+          <Stack spacing={4}>
+            <Skeleton height="30px" width="200px" />
+            <Skeleton height="20px" width="300px" />
+            <Skeleton height="20px" width="250px" />
+          </Stack>
+        </Stack>
+      </Box>
+    );
+  }
   if (isError) return <Box>Error al cargar la información del sitio</Box>;
 
   const getLayout = Component.getLayout ?? ((page) => {
