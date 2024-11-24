@@ -274,8 +274,21 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
     }
   };
 
+  // Limpiar al cerrar el drawer
+  const handleClose = async () => {
+    // Limpiar reservas expiradas para todos los items
+    await Promise.all(
+      items.map(item => stockService.cleanupExpiredReservations(item.id))
+    );
+    onClose();
+  };
+
   return (
-    <Drawer isOpen={isOpen} onClose={onClose} size="md">
+    <Drawer 
+      isOpen={isOpen} 
+      onClose={handleClose} 
+      size="md"
+    >
       <DrawerContent>
         <DrawerHeader>
           <Flex align="center">

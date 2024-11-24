@@ -233,6 +233,19 @@ interface StockDocument {
   };
 }
 
+// Constante para el tiempo de expiración (5 minutos)
+const RESERVATION_EXPIRATION_TIME = 5 * 60 * 1000; // 5 minutos en milisegundos
+
+// Definir interfaces para el tipado
+interface StockReservation {
+  quantity: number;
+  timestamp: number;
+}
+
+interface Reservations {
+  [sessionId: string]: StockReservation;
+}
+
 export const stockService = {
   async initializeStockDocument(productId: string, initialQuantity: number = 0): Promise<void> {
     const stockRef = doc(db, 'stock', productId);
@@ -427,20 +440,14 @@ export const stockService = {
 
   async getAvailableStock(productId: string): Promise<number> {
     try {
+      // Primero limpiar reservas expiradas
+      await cleanupExpiredReservations(productId);
+      
+      // Luego obtener el stock actualizado
       const stockRef = doc(db, 'stock', productId);
       const stockDoc = await getDoc(stockRef);
       
-      if (!stockDoc.exists()) {
-        return 0;
-      }
-
-      const stockData = stockDoc.data() as StockDocument;
-      
-      // Calcular stock disponible considerando reservas
-      const available = stockData.available || 0;
-      const reserved = stockData.reserved || 0;
-      
-      return Math.max(0, available - reserved);
+      return stockDoc.data()?.available || 0;
     } catch (error) {
       console.error('Error getting available stock:', error);
       return 0;
@@ -506,18 +513,42 @@ export const stockService = {
       console.error('Error getting product stock:', error);
       return 0;
     }
+  },
+
+  async cleanupExpiredReservations(productId: string) {
+    try {
+      const stockRef = doc(db, 'stock', productId);
+      
+      return await runTransaction(db, async (transaction) => {
+        const stockDoc = await transaction.get(stockRef);
+        const currentStock = stockDoc.data()?.available || 0;
+        const reservations = stockDoc.data()?.reservations as Reservations || {};
+        const now = Date.now();
+        let stockToRestore = 0;
+
+        // Ahora TypeScript sabe que reservation es de tipo StockReservation
+        Object.entries(reservations).forEach(([sessionId, reservation]: [string, StockReservation]) => {
+          if (now - reservation.timestamp > RESERVATION_EXPIRATION_TIME) {
+            stockToRestore += reservation.quantity;
+            delete reservations[sessionId];
+          }
+        });
+
+        if (stockToRestore > 0) {
+          transaction.update(stockRef, {
+            available: currentStock + stockToRestore,
+            reservations
+          });
+        }
+
+        return true;
+      });
+    } catch (error) {
+      console.error('Error cleaning up reservations:', error);
+      return false;
+    }
   }
 };
-
-// Definir la interfaz para las reservas
-interface StockReservation {
-  quantity: number;
-  timestamp: number;
-}
-
-interface Reservations {
-  [sessionId: string]: StockReservation;
-}
 
 const cleanupExpiredReservations = async (productId: string) => {
   try {
