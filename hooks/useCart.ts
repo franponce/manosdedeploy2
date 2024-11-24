@@ -59,17 +59,19 @@ export const useCart = () => {
 
   const updateItemQuantity = useCallback((productId: string, newQuantity: number) => {
     setCart(currentCart => {
-      const updatedCart = currentCart.map(item => {
+      let updatedCart = currentCart.map(item => {
         if (item.id === productId) {
           return {
             ...item,
-            quantity: Math.min(999, Math.max(0, newQuantity))
+            quantity: Math.max(0, Math.min(999, newQuantity))
           };
         }
         return item;
       });
 
-      // Guardar en localStorage
+      // Filtrar items con cantidad 0
+      updatedCart = updatedCart.filter(item => item.quantity > 0);
+
       localStorage.setItem('cart', JSON.stringify(updatedCart));
       return updatedCart;
     });

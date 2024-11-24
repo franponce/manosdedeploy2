@@ -70,7 +70,7 @@ const generateWhatsAppText = (
   return `${header}${itemsList}${details}${customerInfo}`;
 };
 
-const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDecrement }) => {
+const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement: parentIncrement, onDecrement: parentDecrement }) => {
   const { sessionId, isReady } = useSessionId();
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethods>({
     mercadoPago: false,
@@ -112,52 +112,30 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
     [items]
   );
 
-  const handleIncrement = async (item: CartItem) => {
-    if (!isReady) {
-      toast({
-        title: "Espera un momento",
-        description: "Inicializando sesión...",
-        status: "info",
-        duration: 2000,
-      });
-      return;
-    }
+  const handleQuantityChange = (item: CartItem, value: string) => {
+    if (value === '' || /^\d+$/.test(value)) {
+      setTempQuantities(prev => ({
+        ...prev,
+        [item.id]: value
+      }));
 
-    try {
-      const reserved = await stockService.reserveStock(item.id, 1, sessionId);
-      
-      if (!reserved) {
-        toast({
-          title: "Stock insuficiente",
-          description: "No hay suficiente stock disponible",
-          status: "error",
-          duration: 3000,
-        });
-        return;
+      const numValue = parseInt(value);
+      if (!isNaN(numValue)) {
+        updateItemQuantity(item.id, numValue);
       }
-
-      onIncrement(item);
-    } catch (error) {
-      console.error('Error al reservar stock:', error);
-      toast({
-        title: "Error",
-        description: "Hubo un problema al actualizar el carrito",
-        status: "error",
-        duration: 3000,
-      });
     }
   };
 
-  const handleDecrement = async (item: CartItem) => {
-    if (!isReady) return;
+  const handleDecrement = (item: CartItem) => {
+    const newValue = Math.max(0, item.quantity - 1).toString();
+    handleQuantityChange(item, newValue);
+    parentDecrement(item);
+  };
 
-    try {
-      await stockService.releaseReservation(item.id, sessionId);
-      onDecrement(item);
-    } catch (error) {
-      console.error('Error al liberar stock:', error);
-      onDecrement(item);
-    }
+  const handleIncrement = (item: CartItem) => {
+    const newValue = Math.min(999, item.quantity + 1).toString();
+    handleQuantityChange(item, newValue);
+    parentIncrement(item);
   };
 
   const validateCartStock = async (): Promise<boolean> => {
@@ -336,20 +314,6 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
     );
   };
 
-  const handleQuantityChange = (item: CartItem, value: string) => {
-    if (value === '' || /^\d+$/.test(value)) {
-      setTempQuantities(prev => ({
-        ...prev,
-        [item.id]: value
-      }));
-
-      const numValue = parseInt(value);
-      if (!isNaN(numValue)) {
-        updateItemQuantity(item.id, numValue);
-      }
-    }
-  };
-
   return (
     <Drawer isOpen={isOpen} placement="right" onClose={onClose} size="md">
       <DrawerOverlay>
@@ -386,11 +350,9 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
                       <IconButton
                         aria-label="Decrementar"
                         icon={<MinusIcon />}
-                        onClick={() => {
-                          const newValue = Math.max(0, item.quantity - 1).toString();
-                          handleQuantityChange(item, newValue);
-                        }}
+                        onClick={() => handleDecrement(item)}
                         size="sm"
+                        isDisabled={item.quantity <= 0}
                       />
                       
                       <Input
@@ -404,11 +366,9 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
                       <IconButton
                         aria-label="Incrementar"
                         icon={<AddIcon />}
-                        onClick={() => {
-                          const newValue = (item.quantity + 1).toString();
-                          handleQuantityChange(item, newValue);
-                        }}
+                        onClick={() => handleIncrement(item)}
                         size="sm"
+                        isDisabled={item.quantity >= 999}
                       />
                     </HStack>
                   </Flex>
