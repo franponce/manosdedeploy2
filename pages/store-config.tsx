@@ -105,7 +105,7 @@ const StoreConfigPage: React.FC = () => {
   return (
     <Box>
       <Container maxW="container.xl" p={4}>
-      {/* <Flex justifyContent="space-between" alignItems="center" mb={8}>
+        <Flex justifyContent="space-between" alignItems="center">
           <Button
             leftIcon={<Icon as={FaArrowLeft} />}
             onClick={handleBackToAdmin}
@@ -113,7 +113,7 @@ const StoreConfigPage: React.FC = () => {
           >
             Volver a la gestión de productos
           </Button>
-        </Flex>*/}
+        </Flex>
 
         <Flex direction="column" alignItems="center" mb={8}>
           <Box
