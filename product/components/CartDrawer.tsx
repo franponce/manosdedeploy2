@@ -85,7 +85,6 @@ const getFirstImage = (images: string | string[]): string => {
 };
 
 const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDecrement }) => {
-  const [tempQuantities, setTempQuantities] = useState<{ [key: string]: string }>({});
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethods>({
     mercadoPago: false,
     cash: false,
@@ -102,16 +101,6 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
   const { clearCart } = useCart();
 
   useEffect(() => {
-    if (isOpen) {
-      const initialQuantities = items.reduce((acc, item) => ({
-        ...acc,
-        [item.id]: item.quantity.toString()
-      }), {});
-      setTempQuantities(initialQuantities);
-    }
-  }, [isOpen, items]);
-
-  useEffect(() => {
     fetchPaymentMethods();
   }, [isOpen]);
 
@@ -124,31 +113,6 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
     () => parseCurrency(items.reduce((total, item) => total + item.price * item.quantity, 0)),
     [items]
   );
-
-  const handleQuantityChange = (item: CartItem, value: string) => {
-    if (value === '' || /^\d+$/.test(value)) {
-      setTempQuantities(prev => ({
-        ...prev,
-        [item.id]: value
-      }));
-
-      if (value === '') return;
-
-      const numValue = parseInt(value);
-      if (!isNaN(numValue) && numValue >= 0) {
-        const diff = numValue - item.quantity;
-        if (diff > 0) {
-          for (let i = 0; i < diff; i++) {
-            onIncrement(item);
-          }
-        } else if (diff < 0) {
-          for (let i = 0; i < Math.abs(diff); i++) {
-            onDecrement(item);
-          }
-        }
-      }
-    }
-  };
 
   const validateCartStock = async (): Promise<boolean> => {
     if (!isReady) {
@@ -314,7 +278,10 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
     <Drawer isOpen={isOpen} onClose={onClose} size="md">
       <DrawerContent>
         <DrawerHeader>
-          <Text>Tu carrito</Text>
+          <Flex align="center">
+            <Icon as={FaShoppingCart} mr={2} />
+            <Text>Tu carrito</Text>
+          </Flex>
           <DrawerCloseButton />
         </DrawerHeader>
 
@@ -345,16 +312,7 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
                     size="sm"
                     variant="outline"
                   />
-                  
-                  <Input
-                    value={tempQuantities[item.id] || ''}
-                    onChange={(e) => handleQuantityChange(item, e.target.value)}
-                    size="sm"
-                    width="50px"
-                    textAlign="center"
-                    p={1}
-                  />
-                  
+                  <Text>{item.quantity}</Text>
                   <IconButton
                     aria-label="Incrementar"
                     icon={<AddIcon />}
@@ -369,18 +327,74 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
                 </Text>
               </HStack>
             ))}
+
+            <Divider />
+
+            <FormControl isInvalid={isFullNameError} isRequired>
+              <FormLabel>Nombre completo</FormLabel>
+              <Input
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="Ingresa tu nombre completo"
+              />
+              {isFullNameError && (
+                <FormErrorMessage>El nombre completo es requerido</FormErrorMessage>
+              )}
+            </FormControl>
+
+            <FormControl isRequired>
+              <FormLabel>Método de pago</FormLabel>
+              <RadioGroup onChange={setSelectedPaymentMethod} value={selectedPaymentMethod}>
+                <VStack align="start">
+                  {paymentMethods.mercadoPago && (
+                    <Radio value="MercadoPago">MercadoPago</Radio>
+                  )}
+                  {paymentMethods.cash && (
+                    <Radio value="Efectivo">Efectivo</Radio>
+                  )}
+                  {paymentMethods.bankTransfer && (
+                    <Radio value="Transferencia bancaria">Transferencia bancaria</Radio>
+                  )}
+                </VStack>
+              </RadioGroup>
+            </FormControl>
+
+            <FormControl>
+              <FormLabel>Aclaración (opcional)</FormLabel>
+              <Textarea
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder="Agrega una aclaración si lo deseas"
+              />
+            </FormControl>
           </VStack>
         </DrawerBody>
 
-        <DrawerFooter>
-          <VStack spacing={4} width="100%">
-            <HStack justify="space-between" width="100%">
-              <Text fontSize="lg" fontWeight="bold">Total:</Text>
-              <Text fontSize="lg" fontWeight="bold">
-                {parseCurrency(items.reduce((total, item) => total + (item.price * item.quantity), 0))}
-              </Text>
-            </HStack>
-          </VStack>
+        <DrawerFooter flexDirection="column">
+          <Divider mb={4} />
+          <Flex justify="space-between" width="100%" mb={4}>
+            <Text fontWeight="bold">Total:</Text>
+            <Text fontWeight="bold">{total} {siteInfo?.currency}</Text>
+          </Flex>
+          <Button
+            colorScheme="green"
+            width="100%"
+            onClick={handleWhatsAppRedirect}
+            isDisabled={items.length === 0 || !selectedPaymentMethod || !fullName.trim() || isProcessing}
+            leftIcon={<Icon as={FaWhatsapp} />}
+            mb={2}
+            isLoading={isProcessing}
+          >
+            {isProcessing ? "Procesando..." : "Enviar pedido por WhatsApp"}
+          </Button>
+          <Button
+            variant="outline"
+            width="100%"
+            onClick={onClose}
+            leftIcon={<Icon as={FaArrowLeft} />}
+          >
+            Seguir comprando
+          </Button>
         </DrawerFooter>
       </DrawerContent>
     </Drawer>
