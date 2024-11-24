@@ -70,7 +70,58 @@ const generateWhatsAppText = (
   return `${header}${itemsList}${details}${customerInfo}`;
 };
 
+const getFirstImage = (images: string | string[]): string => {
+  if (typeof images === 'string') {
+    const matches = images.match(/data:image\/[^;]+;base64,[^,]+/g);
+    if (matches && matches.length > 0) {
+      return matches[0];
+    }
+    return images;
+  }
+  if (Array.isArray(images) && images.length > 0) {
+    return images[0];
+  }
+  return '';
+};
+
 const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDecrement }) => {
+  const [tempQuantities, setTempQuantities] = useState<{ [key: string]: string }>({});
+
+  useEffect(() => {
+    if (isOpen) {
+      const initialQuantities = items.reduce((acc, item) => ({
+        ...acc,
+        [item.id]: item.quantity.toString()
+      }), {});
+      setTempQuantities(initialQuantities);
+    }
+  }, [isOpen, items]);
+
+  const handleQuantityChange = (item: CartItem, value: string) => {
+    if (value === '' || /^\d+$/.test(value)) {
+      setTempQuantities(prev => ({
+        ...prev,
+        [item.id]: value
+      }));
+
+      if (value === '') return;
+
+      const numValue = parseInt(value);
+      if (!isNaN(numValue) && numValue >= 0) {
+        const diff = numValue - item.quantity;
+        if (diff > 0) {
+          for (let i = 0; i < diff; i++) {
+            onIncrement(item);
+          }
+        } else if (diff < 0) {
+          for (let i = 0; i < Math.abs(diff); i++) {
+            onDecrement(item);
+          }
+        }
+      }
+    }
+  };
+
   return (
     <Drawer isOpen={isOpen} onClose={onClose} size="md">
       <DrawerContent>
@@ -84,13 +135,13 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
             {items.map((item) => (
               <HStack key={item.id} spacing={4}>
                 <Image
-                  src={item.images[0]}
+                  src={getFirstImage(item.images)}
                   alt={item.title}
-                  width="80px"
-                  height="80px"
+                  boxSize="50px"
                   objectFit="cover"
-                  borderRadius="md"
-                  fallbackSrc="/placeholder.png"
+                  mr={2}
+                  flexShrink={0}
+                  fallback={<Box bg="gray.200" boxSize="50px" />}
                 />
                 
                 <VStack flex={1} align="flex-start" spacing={1}>
@@ -98,7 +149,7 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
                   <Text color="gray.600">{parseCurrency(item.price)}</Text>
                 </VStack>
 
-                <HStack>
+                <HStack flexShrink={0}>
                   <IconButton
                     aria-label="Decrementar"
                     icon={<MinusIcon />}
@@ -107,9 +158,14 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
                     variant="outline"
                   />
                   
-                  <Text width="40px" textAlign="center">
-                    {item.quantity}
-                  </Text>
+                  <Input
+                    value={tempQuantities[item.id] || ''}
+                    onChange={(e) => handleQuantityChange(item, e.target.value)}
+                    size="sm"
+                    width="50px"
+                    textAlign="center"
+                    p={1}
+                  />
                   
                   <IconButton
                     aria-label="Incrementar"
