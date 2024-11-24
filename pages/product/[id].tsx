@@ -41,6 +41,7 @@ import { Product, CartItem } from '@/product/types';
 import { NextPage } from 'next';
 import ImageCarousel from '@/product/components/ImageCarousel';
 import error from 'next/error';
+import { useProductsStock } from '@/hooks/useProductsStock';
 
 type NextPageWithLayout = NextPage & {
   getLayout?: (page: React.ReactElement) => React.ReactElement;
@@ -75,13 +76,19 @@ const processImages = (images: string[] = []) => {
 const ProductDetail: NextPageWithLayout = () => {
   const router = useRouter();
   const { id } = router.query;
-  const { product, isLoading, error, available } = useProduct(id ? id as string : null);
+  const { product, isLoading, error } = useProduct(id ? id as string : null);
   const { siteInfo } = useSiteInfo();
   const toast = useToast();
   const { cart, addToCart, removeFromCart } = useCart();
   const [isCartOpen, toggleCart] = useState(false);
   const [copied, setCopied] = useState(false);
   const [pageUrl, setPageUrl] = useState<string>('');
+
+  const { stocks, isLoading: stocksLoading } = useProductsStock(
+    product ? [product] : []
+  );
+
+  const available = product ? stocks[product.id] || 0 : 0;
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -97,14 +104,13 @@ const ProductDetail: NextPageWithLayout = () => {
     router.prefetch('/');
   }, [router]);
 
-  if (isLoading) {
+  if (isLoading || stocksLoading) {
     return (
       <Container maxW="container.xl" py={8}>
         <VStack spacing={6} align="stretch">
           <Skeleton height="400px" />
           <Box>
             <SkeletonText noOfLines={4} spacing={4} />
-            <Text mt={4}>Stock disponible: {available}</Text>
           </Box>
         </VStack>
       </Container>
