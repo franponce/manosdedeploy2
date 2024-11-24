@@ -287,46 +287,50 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
 
         <DrawerBody>
           <VStack spacing={4} align="stretch">
-            {items.map((item) => (
-              <HStack key={item.id} spacing={4}>
-                <Image
-                  src={getFirstImage(item.images)}
-                  alt={item.title}
-                  boxSize="50px"
-                  objectFit="cover"
-                  mr={2}
-                  flexShrink={0}
-                  fallback={<Box bg="gray.200" boxSize="50px" />}
-                />
-                
-                <VStack flex={1} align="flex-start" spacing={1}>
-                  <Text fontWeight="bold">{item.title}</Text>
-                  <Text color="gray.600">{parseCurrency(item.price)}</Text>
-                </VStack>
+            {items.length > 0 ? (
+              items.map((item) => (
+                <HStack key={item.id} spacing={4}>
+                  <Image
+                    src={getFirstImage(item.images)}
+                    alt={item.title}
+                    boxSize="50px"
+                    objectFit="cover"
+                    mr={2}
+                    flexShrink={0}
+                    fallback={<Box bg="gray.200" boxSize="50px" />}
+                  />
+                  
+                  <VStack flex={1} align="flex-start" spacing={1}>
+                    <Text fontWeight="bold">{item.title}</Text>
+                    <Text color="gray.600">{parseCurrency(item.price)}</Text>
+                  </VStack>
 
-                <HStack flexShrink={0}>
-                  <IconButton
-                    aria-label="Decrementar"
-                    icon={<MinusIcon />}
-                    onClick={() => onDecrement(item)}
-                    size="sm"
-                    variant="outline"
-                  />
-                  <Text>{item.quantity}</Text>
-                  <IconButton
-                    aria-label="Incrementar"
-                    icon={<AddIcon />}
-                    onClick={() => onIncrement(item)}
-                    size="sm"
-                    variant="outline"
-                  />
+                  <HStack flexShrink={0}>
+                    <IconButton
+                      aria-label="Decrementar"
+                      icon={<MinusIcon />}
+                      onClick={() => onDecrement(item)}
+                      size="sm"
+                      variant="outline"
+                    />
+                    <Text>{item.quantity}</Text>
+                    <IconButton
+                      aria-label="Incrementar"
+                      icon={<AddIcon />}
+                      onClick={() => onIncrement(item)}
+                      size="sm"
+                      variant="outline"
+                    />
+                  </HStack>
+                  
+                  <Text fontWeight="bold">
+                    {parseCurrency(item.price * item.quantity)}
+                  </Text>
                 </HStack>
-                
-                <Text fontWeight="bold">
-                  {parseCurrency(item.price * item.quantity)}
-                </Text>
-              </HStack>
-            ))}
+              ))
+            ) : (
+              <Text textAlign="center">Tu carrito está vacío</Text>
+            )}
 
             <Divider />
 
