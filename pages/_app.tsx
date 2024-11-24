@@ -204,7 +204,6 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
           }}
           variant="outline"
           alignSelf="flex-start"
-          mb={4}
         >
           <Text fontWeight="bold">Volver a la gestión de productos</Text>
         </Button>
