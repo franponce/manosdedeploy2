@@ -45,7 +45,8 @@ const SiteInfoCollapsible: React.FC<SiteInfoCollapsibleProps> = ({ siteInfo, onC
       as="button" 
       width="100%" 
       onClick={() => setIsExpanded(!isExpanded)}
-      _hover={{ bg: "gray.50" }}
+      bg="gray.50"
+      _hover={{ bg: "gray.100" }}
       transition="background 0.2s"
       p={4}
       borderRadius="md"
