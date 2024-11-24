@@ -86,6 +86,20 @@ const getFirstImage = (images: string | string[]): string => {
 
 const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDecrement }) => {
   const [tempQuantities, setTempQuantities] = useState<{ [key: string]: string }>({});
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethods>({
+    mercadoPago: false,
+    cash: false,
+    bankTransfer: false,
+  });
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('');
+  const [note, setNote] = useState<string>('');
+  const [fullName, setFullName] = useState<string>('');
+  const [isFullNameError, setIsFullNameError] = useState<boolean>(false);
+  const toast = useToast();
+  const { siteInfo } = useSiteInfo();
+  const { sessionId, isReady } = useSessionId();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const { clearCart } = useCart();
 
   useEffect(() => {
     if (isOpen) {
@@ -96,6 +110,20 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
       setTempQuantities(initialQuantities);
     }
   }, [isOpen, items]);
+
+  useEffect(() => {
+    fetchPaymentMethods();
+  }, [isOpen]);
+
+  const fetchPaymentMethods = async () => {
+    const methods = await getPaymentMethods();
+    setPaymentMethods(methods);
+  };
+
+  const total = useMemo(
+    () => parseCurrency(items.reduce((total, item) => total + item.price * item.quantity, 0)),
+    [items]
+  );
 
   const handleQuantityChange = (item: CartItem, value: string) => {
     if (value === '' || /^\d+$/.test(value)) {
@@ -119,6 +147,166 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
           }
         }
       }
+    }
+  };
+
+  const validateCartStock = async (): Promise<boolean> => {
+    if (!isReady) {
+      toast({
+        title: "Espera un momento",
+        description: "Inicializando sesión...",
+        status: "info",
+        duration: 2000,
+      });
+      return false;
+    }
+
+    for (const item of items) {
+      const currentStock = await stockService.getAvailableStock(item.id);
+      if (item.quantity > currentStock) {
+        toast({
+          title: "Stock insuficiente",
+          description: `No hay suficiente stock de ${item.title}`,
+          status: "error",
+          duration: 3000,
+        });
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const createReservations = async (): Promise<boolean> => {
+    for (const item of items) {
+      try {
+        const reserved = await stockService.reserveStock(
+          item.id,
+          item.quantity,
+          sessionId
+        );
+        
+        if (!reserved) {
+          toast({
+            title: "Error",
+            description: `No se pudo reservar el producto ${item.title}`,
+            status: "error",
+            duration: 3000,
+          });
+          return false;
+        }
+      } catch (error) {
+        console.error('Error reserving stock:', error);
+        toast({
+          title: "Error",
+          description: `Error al reservar ${item.title}`,
+          status: "error",
+          duration: 3000,
+        });
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const handleWhatsAppRedirect = async () => {
+    if (!isReady || !fullName.trim()) {
+      toast({
+        title: "Error",
+        description: "Por favor completa tu nombre",
+        status: "error",
+        duration: 3000,
+      });
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      // 1. Validar stock disponible
+      const stockValid = await validateCartStock();
+      if (!stockValid) {
+        setIsProcessing(false);
+        return;
+      }
+
+      // 2. Crear reservas para todos los items
+      const reservationsCreated = await createReservations();
+      if (!reservationsCreated) {
+        setIsProcessing(false);
+        return;
+      }
+
+      // 3. Confirmar cada item del carrito
+      for (const item of items) {
+        try {
+          const confirmed = await stockService.confirmPurchase(
+            item.id,
+            item.quantity,
+            sessionId
+          );
+          
+          if (!confirmed) {
+            throw new Error(`No se pudo confirmar la compra del producto ${item.title}`);
+          }
+        } catch (error) {
+          console.error('Error confirming purchase:', error);
+          // Intentar liberar las reservas
+          items.forEach(async (cartItem) => {
+            try {
+              await stockService.releaseReservation(cartItem.id, sessionId);
+            } catch (releaseError) {
+              console.error('Error releasing reservation:', releaseError);
+            }
+          });
+
+          toast({
+            title: "Error",
+            description: `No se pudo confirmar la compra de ${item.title}. Por favor, intenta nuevamente.`,
+            status: "error",
+            duration: 5000,
+          });
+          setIsProcessing(false);
+          return;
+        }
+      }
+
+      // 4. Si todo está bien, enviar mensaje de WhatsApp
+      const whatsappMessage = encodeURIComponent(
+        `*Simple E-commerce | ${siteInfo?.title || 'Tienda'} | Nuevo pedido*\n\n` +
+        `¡Hola! Me gustaría realizar el siguiente pedido:\n\n${items
+          .map(
+            (item) =>
+              `${item.title} (x${item.quantity}) - ${parseCurrency(
+                item.price * item.quantity
+              )} ${siteInfo?.currency}`
+          )
+          .join("\n")}\n\n` +
+        `-- \n\n` +
+        `*Detalle de la compra*\n\n` +
+        `Nombre completo: ${fullName}\n` +
+        `Método de pago: ${selectedPaymentMethod}\n` +
+        `Aclaración: ${note.trim() || 'Sin aclaración'}\n` +
+        `*Total: ${total} ${siteInfo?.currency}*`
+      );
+      
+      window.open(`https://wa.me/${INFORMATION.whatsappCart}?text=${whatsappMessage}`);
+      clearCart();
+      onClose();
+      toast({
+        title: "¡Pedido enviado!",
+        description: "Tu pedido ha sido enviado correctamente",
+        status: "success",
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error('Error processing purchase:', error);
+      toast({
+        title: "Error",
+        description: "Hubo un problema al procesar tu pedido. Por favor, intenta nuevamente.",
+        status: "error",
+        duration: 5000,
+      });
+    } finally {
+      setIsProcessing(false);
     }
   };
 
