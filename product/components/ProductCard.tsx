@@ -26,22 +26,30 @@ interface Props {
   product: Product;
   onAdd: (product: Product) => void;
   isLoading: boolean;
-  onEdit: (product: Product) => void;
-  onDelete: (id: string) => void;
-  onVisibilityToggle: (id: string, isVisible: boolean) => void;
-  isAdminView?: boolean;
+  onEdit: () => void;
+  onDelete: () => void;
+  onVisibilityToggle: () => void;
+  isAdminView: boolean;
   showStock?: boolean;
+  available?: number;
 }
 
-const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading: cardLoading, onEdit, onDelete, onVisibilityToggle, isAdminView = false, showStock = false }) => {
-  const { available, isLoading: stockLoading } = useStock(product.id);
+const ProductCard: React.FC<Props> = ({
+  product,
+  onAdd,
+  isLoading,
+  onEdit,
+  onDelete,
+  onVisibilityToggle,
+  isAdminView,
+  showStock = false,
+  available = 0
+}) => {
+  const { available: stockAvailable, isLoading: stockLoading } = useStock(product.id);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [isTitleExpanded, setIsTitleExpanded] = useState(false);
   const [isMobile] = useMediaQuery("(max-width: 48em)");
   const router = useRouter();
-
-  // Asegurarse de que available sea un número
-  const stockAvailable = Number(available) || 0;
 
   const handleProductClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -153,7 +161,7 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading: cardLoading, 
       _hover={{ transform: 'translateY(-4px)', boxShadow: 'lg' }}
     >
       <AspectRatio ratio={1}>
-        {cardLoading ? (
+        {isLoading ? (
           <Skeleton />
         ) : (
           <Box position="relative" onClick={(e) => e.preventDefault()}>
@@ -167,7 +175,7 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading: cardLoading, 
       </AspectRatio>
       <Box p={4}>
         <Stack spacing={2}>
-          {cardLoading ? (
+          {isLoading ? (
             <>
               <SkeletonText noOfLines={2} spacing="4" />
               <SkeletonText noOfLines={3} spacing="4" />

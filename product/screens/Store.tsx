@@ -29,6 +29,7 @@ import { SWR_KEYS } from '../constants';
 import SiteInfoBanner from '../../components/SiteInfoBanner';
 import { useSiteInfo } from '../../hooks/useSiteInfo';
 import { useRouter } from 'next/router';
+import { useStock } from '../../hooks/useStock';
 
 const fetcher = async (url: string) => {
   const response = await fetch(url);
@@ -355,24 +356,30 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
               sm: "repeat(auto-fill, minmax(280px, 1fr))",
             }}
           >
-            {displayedProducts.map((product, index) => (
-              <Box
-                key={product.id}
-                ref={index === displayedProducts.length - 1 ? lastProductElementRef : null}
-                id={`product-${product.id}`}
-              >
-                <ProductCard
-                  product={product}
-                  onAdd={(product) => handleEditCart(product, "increment")}
-                  isLoading={false}
-                  onEdit={() => {}}
-                  onDelete={() => {}}
-                  onVisibilityToggle={() => {}}
-                  isAdminView={false}
-                  showStock={true}
-                />
-              </Box>
-            ))}
+            {displayedProducts.map((product, index) => {
+              const { available } = useStock(product.id);
+              const isLastElement = index === displayedProducts.length - 1;
+
+              return (
+                <Box
+                  key={product.id}
+                  ref={isLastElement ? lastProductElementRef : null}
+                  id={`product-${product.id}`}
+                >
+                  <ProductCard
+                    product={product}
+                    onAdd={(product) => handleEditCart(product, "increment")}
+                    isLoading={false}
+                    available={available}
+                    onEdit={() => {}}
+                    onDelete={() => {}}
+                    onVisibilityToggle={() => {}}
+                    isAdminView={false}
+                    showStock={true}
+                  />
+                </Box>
+              );
+            })}
           </Grid>
         ) : (
           <NoProductsFound />
