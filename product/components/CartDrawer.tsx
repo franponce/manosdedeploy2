@@ -112,7 +112,7 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement: pare
     [items]
   );
 
-  const handleQuantityChange = async (item: CartItem, value: string) => {
+  const handleQuantityChange = (item: CartItem, value: string) => {
     if (value === '' || /^\d+$/.test(value)) {
       setTempQuantities(prev => ({
         ...prev,
@@ -121,30 +121,25 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement: pare
 
       if (value === '') return;
 
-      const numValue = parseInt(value);
-      if (!isNaN(numValue)) {
-        if (numValue > 999) {
-          toast({
-            title: "Cantidad no válida",
-            description: "La cantidad máxima permitida es 999",
-            status: "error",
-            duration: 3000,
-          });
-          return;
-        }
+      const newQuantity = parseInt(value);
+      
+      if (newQuantity > 999) {
+        toast({
+          title: "Cantidad no válida",
+          description: "La cantidad máxima permitida es 999",
+          status: "error",
+          duration: 3000,
+        });
+        return;
+      }
 
-        const updatedItem = { ...item, quantity: numValue };
-        
-        if (numValue > item.quantity) {
-          for (let i = item.quantity; i < numValue; i++) {
-            await parentIncrement(updatedItem);
-          }
-        }
-        else if (numValue < item.quantity) {
-          for (let i = item.quantity; i > numValue; i--) {
-            await parentDecrement(updatedItem);
-          }
-        }
+      const currentQuantity = item.quantity;
+      const diff = newQuantity - currentQuantity;
+
+      if (diff > 0) {
+        parentIncrement({ ...item, quantity: diff });
+      } else if (diff < 0) {
+        parentDecrement({ ...item, quantity: Math.abs(diff) });
       }
     }
   };
@@ -368,7 +363,10 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement: pare
                       <IconButton
                         aria-label="Decrementar"
                         icon={<MinusIcon />}
-                        onClick={() => handleQuantityChange(item, Math.max(0, item.quantity - 1).toString())}
+                        onClick={() => {
+                          const newQuantity = Math.max(0, item.quantity - 1);
+                          handleQuantityChange(item, newQuantity.toString());
+                        }}
                         size="sm"
                         isDisabled={item.quantity <= 0}
                       />
@@ -384,7 +382,10 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement: pare
                       <IconButton
                         aria-label="Incrementar"
                         icon={<AddIcon />}
-                        onClick={() => handleQuantityChange(item, (item.quantity + 1).toString())}
+                        onClick={() => {
+                          const newQuantity = Math.min(999, item.quantity + 1);
+                          handleQuantityChange(item, newQuantity.toString());
+                        }}
                         size="sm"
                         isDisabled={item.quantity >= 999}
                       />
