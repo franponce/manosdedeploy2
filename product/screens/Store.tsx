@@ -33,6 +33,7 @@ import { useStock } from '../../hooks/useStock';
 import { useState, useEffect } from 'react';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { useProductsStock } from '../../hooks/useProductsStock';
+import { stockService } from '../../utils/firebase';
 
 const fetcher = async (url: string) => {
   const response = await fetch(url);
@@ -212,6 +213,30 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
   }
 
   const { stocks, isLoading: stocksLoading } = useProductsStock(displayedProducts);
+
+  // Agregar efecto para limpiar reservas expiradas y actualizar stocks
+  React.useEffect(() => {
+    const cleanupAndUpdateStocks = async () => {
+      if (displayedProducts.length > 0) {
+        // Limpiar reservas expiradas para todos los productos mostrados
+        await Promise.all(
+          displayedProducts.map(async (product) => {
+            await stockService.cleanupExpiredReservations(product.id);
+          })
+        );
+        // Forzar actualización de stocks
+        mutate('/api/products/stock');
+      }
+    };
+
+    // Ejecutar limpieza inicial
+    cleanupAndUpdateStocks();
+
+    // Configurar intervalo para limpiar cada minuto
+    const interval = setInterval(cleanupAndUpdateStocks, 60000);
+
+    return () => clearInterval(interval);
+  }, [displayedProducts]);
 
   if (error) return <div>Failed to load products</div>;
 
