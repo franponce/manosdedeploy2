@@ -70,402 +70,75 @@ const generateWhatsAppText = (
   return `${header}${itemsList}${details}${customerInfo}`;
 };
 
-const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement: parentIncrement, onDecrement: parentDecrement }) => {
-  const { sessionId, isReady } = useSessionId();
-  const [paymentMethods, setPaymentMethods] = useState<PaymentMethods>({
-    mercadoPago: false,
-    cash: false,
-    bankTransfer: false,
-  });
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('');
-  const [note, setNote] = useState<string>('');
-  const [fullName, setFullName] = useState<string>('');
-  const [isFullNameError, setIsFullNameError] = useState<boolean>(false);
-  const toast = useToast();
-  const { siteInfo } = useSiteInfo();
-  const [isProcessing, setIsProcessing] = useState(false);
-  const { clearCart } = useCart();
-  const [tempQuantities, setTempQuantities] = useState<{ [key: string]: string }>({});
-  const { updateItemQuantity } = useCart();
-
-  useEffect(() => {
-    fetchPaymentMethods();
-  }, [isOpen]);
-
-  useEffect(() => {
-    if (isOpen) {
-      const initialQuantities = items.reduce((acc, item) => ({
-        ...acc,
-        [item.id]: item.quantity.toString()
-      }), {});
-      setTempQuantities(initialQuantities);
-    }
-  }, [isOpen, items]);
-
-  const fetchPaymentMethods = async () => {
-    const methods = await getPaymentMethods();
-    setPaymentMethods(methods);
-  };
-
-  const total = useMemo(
-    () => parseCurrency(items.reduce((total, item) => total + item.price * item.quantity, 0)),
-    [items]
-  );
-
-  const handleQuantityChange = (item: CartItem, value: string) => {
-    if (value === '' || /^\d+$/.test(value)) {
-      setTempQuantities(prev => ({
-        ...prev,
-        [item.id]: value
-      }));
-
-      if (value === '') return;
-
-      const newQuantity = parseInt(value);
-      
-      if (newQuantity > 999) {
-        toast({
-          title: "Cantidad no válida",
-          description: "La cantidad máxima permitida es 999",
-          status: "error",
-          duration: 3000,
-        });
-        return;
-      }
-
-      const currentQuantity = item.quantity;
-      const diff = newQuantity - currentQuantity;
-
-      if (diff > 0) {
-        parentIncrement({ ...item, quantity: diff });
-      } else if (diff < 0) {
-        parentDecrement({ ...item, quantity: Math.abs(diff) });
-      }
-    }
-  };
-
-  const calculateTotal = () => {
-    return items.reduce((total, item) => {
-      const quantity = parseInt(tempQuantities[item.id]) || 0;
-      return total + (item.price * quantity);
-    }, 0);
-  };
-
-  const validateCartStock = async (): Promise<boolean> => {
-    if (!isReady) {
-      toast({
-        title: "Espera un momento",
-        description: "Inicializando sesión...",
-        status: "info",
-        duration: 2000,
-      });
-      return false;
-    }
-
-    for (const item of items) {
-      const currentStock = await stockService.getAvailableStock(item.id);
-      if (item.quantity > currentStock) {
-        toast({
-          title: "Stock insuficiente",
-          description: `No hay suficiente stock de ${item.title}`,
-          status: "error",
-          duration: 3000,
-        });
-        return false;
-      }
-    }
-    return true;
-  };
-
-  const createReservations = async (): Promise<boolean> => {
-    for (const item of items) {
-      try {
-        const reserved = await stockService.reserveStock(
-          item.id,
-          item.quantity,
-          sessionId
-        );
-        
-        if (!reserved) {
-          toast({
-            title: "Error",
-            description: `No se pudo reservar el producto ${item.title}`,
-            status: "error",
-            duration: 3000,
-          });
-          return false;
-        }
-      } catch (error) {
-        console.error('Error reserving stock:', error);
-        toast({
-          title: "Error",
-          description: `Error al reservar ${item.title}`,
-          status: "error",
-          duration: 3000,
-        });
-        return false;
-      }
-    }
-    return true;
-  };
-
-  const handleWhatsAppRedirect = async () => {
-    if (!isReady || !fullName.trim()) {
-      toast({
-        title: "Error",
-        description: "Por favor completa tu nombre",
-        status: "error",
-        duration: 3000,
-      });
-      return;
-    }
-
-    setIsProcessing(true);
-    try {
-      // 1. Validar stock disponible
-      const stockValid = await validateCartStock();
-      if (!stockValid) {
-        setIsProcessing(false);
-        return;
-      }
-
-      // 2. Crear reservas para todos los items
-      const reservationsCreated = await createReservations();
-      if (!reservationsCreated) {
-        setIsProcessing(false);
-        return;
-      }
-
-      // 3. Confirmar cada item del carrito
-      for (const item of items) {
-        try {
-          const confirmed = await stockService.confirmPurchase(
-            item.id,
-            item.quantity,
-            sessionId
-          );
-          
-          if (!confirmed) {
-            throw new Error(`No se pudo confirmar la compra del producto ${item.title}`);
-          }
-        } catch (error) {
-          console.error('Error confirming purchase:', error);
-          // Intentar liberar las reservas
-          items.forEach(async (cartItem) => {
-            try {
-              await stockService.releaseReservation(cartItem.id, sessionId);
-            } catch (releaseError) {
-              console.error('Error releasing reservation:', releaseError);
-            }
-          });
-
-          toast({
-            title: "Error",
-            description: `No se pudo confirmar la compra de ${item.title}. Por favor, intenta nuevamente.`,
-            status: "error",
-            duration: 5000,
-          });
-          setIsProcessing(false);
-          return;
-        }
-      }
-
-      // 4. Si todo está bien, enviar mensaje de WhatsApp
-      const text = generateWhatsAppText(items, fullName, selectedPaymentMethod, note, siteInfo?.storeName);
-      window.open(`https://wa.me/${siteInfo?.whatsappCart}?text=${encodeURIComponent(text)}`);
-      clearCart();
-      onClose();
-      toast({
-        title: "¡Pedido enviado!",
-        description: "Tu pedido ha sido enviado correctamente",
-        status: "success",
-        duration: 3000,
-      });
-    } catch (error) {
-      console.error('Error processing purchase:', error);
-      toast({
-        title: "Error",
-        description: "Hubo un problema al procesar tu pedido. Por favor, intenta nuevamente.",
-        status: "error",
-        duration: 5000,
-      });
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const getFirstImage = (images: string | string[]): string => {
-    if (typeof images === 'string') {
-      const matches = images.match(/data:image\/[^;]+;base64,[^,]+/g);
-      if (matches && matches.length > 0) {
-        return matches[0];
-      }
-      return images;
-    }
-    if (Array.isArray(images) && images.length > 0) {
-      return images[0];
-    }
-    return '';
-  };
-
-  const renderTitle = (item: CartItem) => {
-    return (
-      <Text
-        fontWeight="bold"
-        fontSize="sm"
-        lineHeight="short"
-        overflow="hidden"
-        textOverflow="ellipsis"
-        style={{
-          display: '-webkit-box',
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical',
-        }}
-      >
-        {item.title}
-      </Text>
-    );
-  };
-
+const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDecrement }) => {
   return (
-    <Drawer isOpen={isOpen} placement="right" onClose={onClose} size="md">
-      <DrawerOverlay>
-        <DrawerContent>
+    <Drawer isOpen={isOpen} onClose={onClose} size="md">
+      <DrawerContent>
+        <DrawerHeader>
+          <Text>Tu carrito</Text>
           <DrawerCloseButton />
-          <DrawerHeader>
-            <Flex align="center">
-              <Icon as={FaShoppingCart} mr={2} />
-              <Text>Tu carrito</Text>
-            </Flex>
-          </DrawerHeader>
+        </DrawerHeader>
 
-          <Divider />
-
-          <DrawerBody>
-            <VStack spacing={4} align="stretch">
-              {items.length > 0 ? (
-                items.map((item) => (
-                  <Flex key={item.id} justify="space-between" align="flex-start">
-                    <Image 
-                      src={getFirstImage(item.images)}
-                      alt={item.title} 
-                      boxSize="50px" 
-                      objectFit="cover" 
-                      mr={2}
-                      flexShrink={0}
-                      fallback={<Box bg="gray.200" boxSize="50px" />}
-                    />
-                    <Box flex={1} minWidth={0}>
-                      {renderTitle(item)}
-                      <Text fontSize="sm">{parseCurrency(item.price)} {siteInfo?.currency}</Text>
-                    </Box>
-                    <HStack flexShrink={0}>
-                      <IconButton
-                        aria-label="Decrementar"
-                        icon={<MinusIcon />}
-                        onClick={() => {
-                          const newQuantity = Math.max(0, item.quantity - 1);
-                          handleQuantityChange(item, newQuantity.toString());
-                        }}
-                        size="sm"
-                        isDisabled={item.quantity <= 0}
-                      />
-                      
-                      <Input
-                        value={tempQuantities[item.id] || ''}
-                        onChange={(e) => handleQuantityChange(item, e.target.value)}
-                        width="60px"
-                        textAlign="center"
-                        maxLength={3}
-                      />
-                      
-                      <IconButton
-                        aria-label="Incrementar"
-                        icon={<AddIcon />}
-                        onClick={() => {
-                          const newQuantity = Math.min(999, item.quantity + 1);
-                          handleQuantityChange(item, newQuantity.toString());
-                        }}
-                        size="sm"
-                        isDisabled={item.quantity >= 999}
-                      />
-                    </HStack>
-                  </Flex>
-                ))
-              ) : (
-                <Text textAlign="center">Tu carrito está vacío</Text>
-              )}
-
-              <Divider />
-
-              <FormControl isInvalid={isFullNameError} isRequired>
-                <FormLabel>Nombre completo</FormLabel>
-                <Input
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Ingresa tu nombre completo"
+        <DrawerBody>
+          <VStack spacing={4} align="stretch">
+            {items.map((item) => (
+              <HStack key={item.id} spacing={4}>
+                <Image
+                  src={item.images[0]}
+                  alt={item.title}
+                  width="80px"
+                  height="80px"
+                  objectFit="cover"
+                  borderRadius="md"
+                  fallbackSrc="/placeholder.png"
                 />
-                {isFullNameError && (
-                  <FormErrorMessage>El nombre completo es requerido</FormErrorMessage>
-                )}
-              </FormControl>
+                
+                <VStack flex={1} align="flex-start" spacing={1}>
+                  <Text fontWeight="bold">{item.title}</Text>
+                  <Text color="gray.600">{parseCurrency(item.price)}</Text>
+                </VStack>
 
-              <FormControl isRequired>
-                <FormLabel>Método de pago</FormLabel>
-                <RadioGroup onChange={setSelectedPaymentMethod} value={selectedPaymentMethod}>
-                  <VStack align="start">
-                    {paymentMethods.mercadoPago && (
-                      <Radio value="MercadoPago">MercadoPago</Radio>
-                    )}
-                    {paymentMethods.cash && (
-                      <Radio value="Efectivo">Efectivo</Radio>
-                    )}
-                    {paymentMethods.bankTransfer && (
-                      <Radio value="Transferencia bancaria">Transferencia bancaria</Radio>
-                    )}
-                  </VStack>
-                </RadioGroup>
-              </FormControl>
+                <HStack>
+                  <IconButton
+                    aria-label="Decrementar"
+                    icon={<MinusIcon />}
+                    onClick={() => onDecrement(item)}
+                    size="sm"
+                    variant="outline"
+                  />
+                  
+                  <Text width="40px" textAlign="center">
+                    {item.quantity}
+                  </Text>
+                  
+                  <IconButton
+                    aria-label="Incrementar"
+                    icon={<AddIcon />}
+                    onClick={() => onIncrement(item)}
+                    size="sm"
+                    variant="outline"
+                  />
+                </HStack>
+                
+                <Text fontWeight="bold">
+                  {parseCurrency(item.price * item.quantity)}
+                </Text>
+              </HStack>
+            ))}
+          </VStack>
+        </DrawerBody>
 
-              <FormControl>
-                <FormLabel>Aclaración (opcional)</FormLabel>
-                <Textarea
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  placeholder="Agrega una aclaración si lo deseas"
-                />
-              </FormControl>
-            </VStack>
-          </DrawerBody>
-
-          <DrawerFooter flexDirection="column">
-            <Divider mb={4} />
-            <Flex justify="space-between" width="100%" mb={4}>
-              <Text fontWeight="bold">Total:</Text>
-              <Text fontWeight="bold">{parseCurrency(calculateTotal())} {siteInfo?.currency}</Text>
-            </Flex>
-            <Button
-              colorScheme="green"
-              width="100%"
-              onClick={handleWhatsAppRedirect}
-              isDisabled={items.length === 0 || !selectedPaymentMethod || !fullName.trim() || isProcessing}
-              leftIcon={<Icon as={FaWhatsapp} />}
-              mb={2}
-              isLoading={isProcessing}
-            >
-              {isProcessing ? "Procesando..." : "Enviar pedido por WhatsApp"}
-            </Button>
-            <Button
-              variant="outline"
-              width="100%"
-              onClick={onClose}
-              leftIcon={<Icon as={FaArrowLeft} />}
-            >
-              Seguir comprando
-            </Button>
-          </DrawerFooter>
-        </DrawerContent>
-      </DrawerOverlay>
+        <DrawerFooter>
+          <VStack spacing={4} width="100%">
+            <HStack justify="space-between" width="100%">
+              <Text fontSize="lg" fontWeight="bold">Total:</Text>
+              <Text fontSize="lg" fontWeight="bold">
+                {parseCurrency(items.reduce((total, item) => total + (item.price * item.quantity), 0))}
+              </Text>
+            </HStack>
+          </VStack>
+        </DrawerFooter>
+      </DrawerContent>
     </Drawer>
   );
 };
