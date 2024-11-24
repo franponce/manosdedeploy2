@@ -183,6 +183,26 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     }
   }, [currentProduct.id, currentProduct.images, toast]);
 
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+
+    if (name === 'stock') {
+      if (value === '' || /^\d+$/.test(value)) {
+        const newStockValue = value === '' ? '' : parseInt(value, 10);
+        
+        setCurrentProduct(prev => ({
+          ...prev,
+          stock: newStockValue
+        }));
+      }
+    } else {
+      setCurrentProduct(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentProduct) return;
@@ -211,6 +231,10 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     }
 
     try {
+      if (currentProduct.id && typeof currentProduct.stock === 'number') {
+        await stockService.updateStock(currentProduct.id, currentProduct.stock);
+      }
+
       const productToSubmit: Product = {
         ...currentProduct,
         description: description,
@@ -232,40 +256,6 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
       });
     }
   };
-
-  const handleInputChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-
-    if (name === 'stock') {
-      if (value === '' || /^\d+$/.test(value)) {
-        const newStockValue = value === '' ? '' : parseInt(value, 10);
-        
-        try {
-          if (currentProduct.id && typeof newStockValue === 'number') {
-            await stockService.updateStock(currentProduct.id, newStockValue);
-          }
-          
-          setCurrentProduct(prev => ({
-            ...prev,
-            stock: newStockValue
-          }));
-        } catch (error) {
-          console.error('Error updating stock:', error);
-          toast({
-            title: "Error",
-            description: "No se pudo actualizar el stock",
-            status: "error",
-            duration: 3000,
-          });
-        }
-      }
-    } else {
-      setCurrentProduct(prev => ({
-        ...prev,
-        [name]: value
-      }));
-    }
-  }, [currentProduct.id, toast]);
 
   const handleVisibilityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCurrentProduct(prev => ({ ...prev, isVisible: e.target.checked }));
