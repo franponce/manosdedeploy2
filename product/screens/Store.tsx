@@ -265,6 +265,14 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
     );
   };
 
+  // Crear un objeto para almacenar el stock de cada producto
+  const productStocks = Object.fromEntries(
+    displayedProducts.map(product => [
+      product.id,
+      useStock(product.id)
+    ])
+  );
+
   if (error) return <div>Failed to load products</div>;
 
   return (
@@ -357,8 +365,8 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
             }}
           >
             {displayedProducts.map((product, index) => {
-              const { available } = useStock(product.id);
               const isLastElement = index === displayedProducts.length - 1;
+              const { available } = productStocks[product.id];
 
               return (
                 <Box
