@@ -509,4 +509,35 @@ export const stockService = {
   }
 };
 
+// Definir la interfaz para las reservas
+interface StockReservation {
+  quantity: number;
+  timestamp: number;
+}
+
+interface Reservations {
+  [sessionId: string]: StockReservation;
+}
+
+const cleanupExpiredReservations = async (productId: string) => {
+  try {
+    const stockRef = doc(db, 'stock', productId);
+    const stockDoc = await getDoc(stockRef);
+    if (!stockDoc.exists()) return;
+    
+    const stockData = stockDoc.data() as StockDocument;
+    const reservations = stockData.reservations || {};
+    const now = Date.now();
+    const EXPIRATION_TIME = 30 * 60 * 1000; // 30 minutos
+
+    for (const [sessionId, reservation] of Object.entries(reservations)) {
+      if (now - (reservation as StockReservation).timestamp > EXPIRATION_TIME) {
+        await stockService.releaseReservation(productId, sessionId);
+      }
+    }
+  } catch (error) {
+    console.error('Error cleaning up reservations:', error);
+  }
+};
+
 export { auth, db, storage };
