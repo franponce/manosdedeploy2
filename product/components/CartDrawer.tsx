@@ -131,16 +131,14 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
     }
 
     try {
-      await stockService.releaseReservation(item.id, sessionId);
+      const success = await stockService.releaseReservation(item.id, sessionId);
+      if (!success) {
+        console.warn('No se pudo liberar la reserva, pero continuamos con el decremento');
+      }
       onDecrement(item);
     } catch (error) {
       console.error('Error al liberar stock:', error);
-      toast({
-        title: "Error",
-        description: "Hubo un problema al actualizar el carrito",
-        status: "error",
-        duration: 3000,
-      });
+      onDecrement(item);
     }
   };
 
@@ -271,16 +269,7 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
   };
 
   const handleQuantityChange = async (item: CartItem, newValue: string) => {
-    if (!isReady) {
-      toast({
-        title: "Espera un momento",
-        description: "Inicializando sesión...",
-        status: "info",
-        duration: 2000,
-      });
-      return;
-    }
-
+    if (!isReady) return;
     if (!/^\d*$/.test(newValue)) return;
     
     const newQuantity = newValue === '' ? 0 : parseInt(newValue, 10);
@@ -288,11 +277,11 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
     
     try {
       if (newQuantity > currentQuantity) {
-        const currentStock = await stockService.getAvailableStock(item.id);
-        if (newQuantity > currentStock) {
+        const available = await stockService.getAvailableStock(item.id);
+        if (newQuantity > available) {
           toast({
             title: "Stock no disponible",
-            description: `Solo hay ${currentStock} unidades disponibles`,
+            description: `Solo hay ${available} unidades disponibles`,
             status: "warning",
             duration: 3000,
           });
@@ -321,11 +310,11 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
       const difference = newQuantity - currentQuantity;
       if (difference > 0) {
         for (let i = 0; i < difference; i++) {
-          await onIncrement(item);
+          onIncrement(item);
         }
       } else if (difference < 0) {
         for (let i = 0; i < Math.abs(difference); i++) {
-          await onDecrement(item);
+          onDecrement(item);
         }
       }
     } catch (error) {

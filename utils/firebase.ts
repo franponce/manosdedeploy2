@@ -251,13 +251,26 @@ export const stockService = {
 
   // Nuevos métodos para el manejo mejorado de stock
   async getAvailableStock(productId: string): Promise<number> {
-    const docRef = doc(db, 'stock', productId);
-    const docSnap = await getDoc(docRef);
-    
-    if (!docSnap.exists()) return 0;
-    
-    const stockData = docSnap.data() as StockDocument;
-    return stockData.available - stockData.reserved;
+    try {
+      const stockRef = doc(db, 'stock', productId);
+      const stockDoc = await getDoc(stockRef);
+      
+      if (!stockDoc.exists()) {
+        return 0;
+      }
+
+      const stockData = stockDoc.data() as StockDocument;
+      
+      // Manejar estructura antigua y nueva
+      if (typeof stockData.available !== 'undefined') {
+        return Math.max(0, stockData.available - (stockData.reserved || 0));
+      } else {
+        return stockData.quantity || 0;
+      }
+    } catch (error) {
+      console.error('Error getting available stock:', error);
+      return 0;
+    }
   },
 
   async confirmPurchase(productId: string, quantity: number, sessionId: string): Promise<boolean> {
@@ -363,26 +376,51 @@ export const stockService = {
     }
   },
 
-  async releaseReservation(productId: string, sessionId: string): Promise<void> {
+  async releaseReservation(productId: string, sessionId: string): Promise<boolean> {
     const stockRef = doc(db, 'stock', productId);
     
-    await runTransaction(db, async (transaction) => {
-      const stockDoc = await transaction.get(stockRef);
-      if (!stockDoc.exists()) return;
+    try {
+      await runTransaction(db, async (transaction) => {
+        const stockDoc = await transaction.get(stockRef);
+        if (!stockDoc.exists()) {
+          console.warn('Stock document not found, nothing to release');
+          return;
+        }
 
-      const stockData = stockDoc.data() as StockDocument;
-      const reservation = stockData.reservations[sessionId];
-      
-      if (!reservation) return;
+        const stockData = stockDoc.data() as StockDocument;
+        
+        // Validar estructura del documento
+        if (!stockData.reservations) {
+          stockData.reservations = {};
+        }
+        if (typeof stockData.reserved === 'undefined') {
+          stockData.reserved = 0;
+        }
 
-      const newReserved = stockData.reserved - reservation.quantity;
-      const { [sessionId]: removed, ...newReservations } = stockData.reservations;
+        // Verificar si existe la reserva
+        const reservation = stockData.reservations[sessionId];
+        if (!reservation) {
+          console.warn('No reservation found for session', sessionId);
+          return;
+        }
 
-      transaction.update(stockRef, {
-        reserved: newReserved,
-        reservations: newReservations
+        // Calcular nueva cantidad reservada
+        const newReserved = Math.max(0, stockData.reserved - reservation.quantity);
+
+        // Eliminar la reserva específica y actualizar cantidades
+        const { [sessionId]: removed, ...remainingReservations } = stockData.reservations;
+
+        transaction.update(stockRef, {
+          reservations: remainingReservations,
+          reserved: newReserved
+        });
       });
-    });
+
+      return true;
+    } catch (error) {
+      console.error('Error releasing reservation:', error);
+      return false;
+    }
   }
 };
 
