@@ -35,6 +35,7 @@ import { parseCurrency } from '../../utils/currency';
 import { SWR_KEYS } from '../constants';
 import { useStock } from '../../hooks/useStock';
 import { WarningIcon } from "@chakra-ui/icons";
+import AdminProductCard from './AdminProductCard';
 
 const PRODUCT_LIMIT = 30;
 const SYNC_INTERVAL = 30000; // 30 segundos
@@ -588,7 +589,12 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
           }}
           gap={6}
         >
-          {filteredProducts.map(renderProduct)}
+          {filteredProducts.map((product) => (
+            <AdminProductCard 
+              key={product.id}
+              product={product}
+            />
+          ))}
         </Grid>
       )}
       {isLoading && (
