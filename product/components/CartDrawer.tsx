@@ -104,6 +104,12 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
     fetchPaymentMethods();
   }, [isOpen]);
 
+  useEffect(() => {
+    if (isOpen) {
+      validateStock();
+    }
+  }, [isOpen]);
+
   const fetchPaymentMethods = async () => {
     const methods = await getPaymentMethods();
     setPaymentMethods(methods);
@@ -114,55 +120,13 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
     [items]
   );
 
-  const validateCartStock = async (): Promise<boolean> => {
-    if (!isReady) {
-      toast({
-        title: "Espera un momento",
-        description: "Inicializando sesión...",
-        status: "info",
-        duration: 2000,
-      });
-      return false;
-    }
-
+  const validateStock = async (): Promise<boolean> => {
     for (const item of items) {
       const currentStock = await stockService.getAvailableStock(item.id);
       if (item.quantity > currentStock) {
         toast({
           title: "Stock insuficiente",
           description: `No hay suficiente stock de ${item.title}`,
-          status: "error",
-          duration: 3000,
-        });
-        return false;
-      }
-    }
-    return true;
-  };
-
-  const createReservations = async (): Promise<boolean> => {
-    for (const item of items) {
-      try {
-        const reserved = await stockService.reserveStock(
-          item.id,
-          item.quantity,
-          sessionId
-        );
-        
-        if (!reserved) {
-          toast({
-            title: "Error",
-            description: `No se pudo reservar el producto ${item.title}`,
-            status: "error",
-            duration: 3000,
-          });
-          return false;
-        }
-      } catch (error) {
-        console.error('Error reserving stock:', error);
-        toast({
-          title: "Error",
-          description: `Error al reservar ${item.title}`,
           status: "error",
           duration: 3000,
         });
@@ -186,54 +150,13 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
     setIsProcessing(true);
     try {
       // 1. Validar stock disponible
-      const stockValid = await validateCartStock();
-      if (!stockValid) {
+      const isStockValid = await validateStock();
+      if (!isStockValid) {
         setIsProcessing(false);
         return;
       }
 
-      // 2. Crear reservas para todos los items
-      const reservationsCreated = await createReservations();
-      if (!reservationsCreated) {
-        setIsProcessing(false);
-        return;
-      }
-
-      // 3. Confirmar cada item del carrito
-      for (const item of items) {
-        try {
-          const confirmed = await stockService.confirmPurchase(
-            item.id,
-            item.quantity,
-            sessionId
-          );
-          
-          if (!confirmed) {
-            throw new Error(`No se pudo confirmar la compra del producto ${item.title}`);
-          }
-        } catch (error) {
-          console.error('Error confirming purchase:', error);
-          // Intentar liberar las reservas
-          items.forEach(async (cartItem) => {
-            try {
-              await stockService.releaseReservation(cartItem.id, sessionId);
-            } catch (releaseError) {
-              console.error('Error releasing reservation:', releaseError);
-            }
-          });
-
-          toast({
-            title: "Error",
-            description: `No se pudo confirmar la compra de ${item.title}. Por favor, intenta nuevamente.`,
-            status: "error",
-            duration: 5000,
-          });
-          setIsProcessing(false);
-          return;
-        }
-      }
-
-      // 4. Si todo está bien, enviar mensaje de WhatsApp
+      // 2. Generar mensaje de WhatsApp y redirigir
       const whatsappMessage = encodeURIComponent(
         `*Simple E-commerce | ${siteInfo?.title || 'Tienda'} | Nuevo pedido*\n\n` +
         `¡Hola! Me gustaría realizar el siguiente pedido:\n\n${items
@@ -252,15 +175,9 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
         `*Total: ${total} ${siteInfo?.currency}*`
       );
       
-      window.open(`https://wa.me/${INFORMATION.whatsappCart}?text=${whatsappMessage}`);
+      window.open(`https://wa.me/${siteInfo?.whatsappCart}?text=${whatsappMessage}`, '_blank');
       clearCart();
       onClose();
-      toast({
-        title: "¡Pedido enviado!",
-        description: "Tu pedido ha sido enviado correctamente",
-        status: "success",
-        duration: 3000,
-      });
     } catch (error) {
       console.error('Error processing purchase:', error);
       toast({
@@ -276,10 +193,6 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
 
   // Limpiar al cerrar el drawer
   const handleClose = async () => {
-    // Limpiar reservas expiradas para todos los items
-    await Promise.all(
-      items.map(item => stockService.cleanupExpiredReservations(item.id))
-    );
     onClose();
   };
 

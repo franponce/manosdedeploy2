@@ -227,9 +227,9 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
         const results = await Promise.allSettled(
           displayedProducts.map(async (product) => {
             try {
-              await stockService.cleanupExpiredReservations(product.id);
+              await stockService.getProductStock(product.id);
             } catch (error) {
-              console.error(`Error cleaning up reservations for product ${product.id}:`, error);
+              console.error(`Error getting stock for product ${product.id}:`, error);
             }
           })
         );
@@ -255,6 +255,12 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
       clearInterval(interval);
     };
   }, [displayedProducts]);
+
+  useEffect(() => {
+    if (isCartOpen) {
+      // No es necesario hacer nada aquí
+    }
+  }, [isCartOpen]);
 
   if (error) return <div>Failed to load products</div>;
 

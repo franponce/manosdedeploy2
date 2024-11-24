@@ -219,54 +219,29 @@ export const productImageService = {
   }
 };
 
-interface StockReservation {
-  quantity: number;
-  timestamp: number;
-}
-
 interface StockDocument {
   quantity: number;
   available: number;
-  reserved: number;
-  reservations: {
-    [sessionId: string]: StockReservation;
-  };
 }
 
-// Constante para el tiempo de expiración (5 minutos)
-const RESERVATION_EXPIRATION_TIME = 5 * 60 * 1000; // 5 minutos en milisegundos
-
 export const stockService = {
-  async initializeStockDocument(productId: string, initialQuantity: number = 0): Promise<void> {
+  async initializeStockDocument(productId: string): Promise<void> {
     const stockRef = doc(db, 'stock', productId);
-    const stockDoc = await getDoc(stockRef);
     
     try {
+      const stockDoc = await getDoc(stockRef);
+      
       if (!stockDoc.exists()) {
-        // Crear documento inicial con valores numéricos
         await setDoc(stockRef, {
-          quantity: Number(initialQuantity) || 0,
-          available: Number(initialQuantity) || 0,
-          reserved: 0,
-          reservations: {}
+          quantity: 0,
+          available: 0
         });
       } else {
-        // Actualizar estructura si es necesario
-        const data = stockDoc.data();
         const updates: Partial<StockDocument> = {};
+        const data = stockDoc.data();
         
-        // Asegurarse de que todos los valores sean numéricos
-        if (typeof data.available === 'undefined' || isNaN(data.available)) {
-          updates.available = Number(data.quantity) || 0;
-        }
-        if (typeof data.quantity === 'undefined' || isNaN(data.quantity)) {
-          updates.quantity = Number(data.quantity) || 0;
-        }
-        if (typeof data.reserved === 'undefined' || isNaN(data.reserved)) {
-          updates.reserved = 0;
-        }
-        if (!data.reservations) {
-          updates.reservations = {};
+        if (typeof data.available !== 'number') {
+          updates.available = data.quantity || 0;
         }
         
         if (Object.keys(updates).length > 0) {
@@ -279,146 +254,23 @@ export const stockService = {
     }
   },
 
-  async reserveStock(productId: string, quantity: number, sessionId: string): Promise<boolean> {
-    const stockRef = doc(db, 'stock', productId);
-    
-    try {
-      let success = false;
-
-      await runTransaction(db, async (transaction) => {
-        const stockDoc = await transaction.get(stockRef);
-        
-        if (!stockDoc.exists()) {
-          await this.initializeStockDocument(productId);
-          throw new Error('No hay stock disponible');
-        }
-
-        const stockData = stockDoc.data() as StockDocument;
-        
-        // Inicializar campos si no existen
-        const available = Number(stockData.available) || 0;
-        const reserved = Number(stockData.reserved) || 0;
-        const reservations = stockData.reservations || {};
-
-        // Verificar stock disponible real
-        const realAvailable = available - reserved;
-        if (realAvailable < quantity) {
-          throw new Error(`Stock insuficiente. Disponible: ${realAvailable}, Solicitado: ${quantity}`);
-        }
-
-        // Actualizar o crear reserva
-        const existingReservation = reservations[sessionId];
-        const newReservation = {
-          quantity: quantity,
-          timestamp: Date.now() + (30 * 60 * 1000) // 30 minutos
-        };
-
-        transaction.update(stockRef, {
-          reserved: reserved + quantity,
-          reservations: {
-            ...reservations,
-            [sessionId]: newReservation
-          }
-        });
-
-        success = true;
-      });
-
-      return success;
-    } catch (error) {
-      console.error('Error reserving stock:', error);
-      return false;
-    }
-  },
-
-  async confirmPurchase(productId: string, quantity: number, sessionId: string): Promise<boolean> {
-    const stockRef = doc(db, 'stock', productId);
-    
-    try {
-      let success = false;
-      
-      await runTransaction(db, async (transaction) => {
-        const stockDoc = await transaction.get(stockRef);
-        
-        if (!stockDoc.exists()) {
-          throw new Error('Documento de stock no encontrado');
-        }
-
-        const stockData = stockDoc.data() as StockDocument;
-        
-        // Validar que exista la reserva
-        if (!stockData.reservations || !stockData.reservations[sessionId]) {
-          console.error('No se encontró la reserva para la sesión:', sessionId);
-          throw new Error('Reserva no válida o insuficiente');
-        }
-
-        const reservation = stockData.reservations[sessionId];
-        
-        // Validar cantidad de la reserva
-        if (reservation.quantity < quantity) {
-          console.error('Cantidad reservada insuficiente:', 
-            `necesita ${quantity}, tiene ${reservation.quantity}`);
-          throw new Error('Reserva no válida o insuficiente');
-        }
-
-        // Validar que la reserva no haya expirado
-        if (reservation.timestamp < Date.now()) {
-          console.error('La reserva ha expirado');
-          throw new Error('La reserva ha expirado');
-        }
-
-        // Calcular nuevos valores
-        const newQuantity = Math.max(0, stockData.quantity - quantity);
-        const newReserved = Math.max(0, stockData.reserved - quantity);
-        const newAvailable = Math.max(0, stockData.available - quantity);
-
-        // Remover la reserva usada
-        const { [sessionId]: used, ...remainingReservations } = stockData.reservations;
-
-        // Actualizar el documento
-        transaction.update(stockRef, {
-          quantity: newQuantity,
-          available: newAvailable,
-          reserved: newReserved,
-          reservations: remainingReservations
-        });
-
-        success = true;
-      });
-
-      return success;
-    } catch (error) {
-      console.error('Error confirming purchase:', error);
-      throw error;
-    }
-  },
-
   async updateStock(productId: string, quantity: number): Promise<void> {
     const stockRef = doc(db, 'stock', productId);
     
     try {
       await runTransaction(db, async (transaction) => {
         const stockDoc = await transaction.get(stockRef);
-        
-        // Asegurarse de que quantity sea un número
         const newQuantity = Number(quantity) || 0;
         
         if (!stockDoc.exists()) {
-          // Si no existe, inicializar con los valores correctos
           transaction.set(stockRef, {
             quantity: newQuantity,
-            available: newQuantity,
-            reserved: 0,
-            reservations: {}
+            available: newQuantity
           });
         } else {
-          const stockData = stockDoc.data() as StockDocument;
-          const currentReserved = Number(stockData.reserved) || 0;
-          
           transaction.update(stockRef, {
             quantity: newQuantity,
-            available: newQuantity,
-            reserved: currentReserved
+            available: newQuantity
           });
         }
       });
@@ -430,10 +282,6 @@ export const stockService = {
 
   async getAvailableStock(productId: string): Promise<number> {
     try {
-      // Primero limpiar reservas expiradas
-      await cleanupExpiredReservations(productId);
-      
-      // Luego obtener el stock actualizado
       const stockRef = doc(db, 'stock', productId);
       const stockDoc = await getDoc(stockRef);
       
@@ -441,50 +289,6 @@ export const stockService = {
     } catch (error) {
       console.error('Error getting available stock:', error);
       return 0;
-    }
-  },
-
-  async releaseReservation(productId: string, sessionId: string): Promise<boolean> {
-    const stockRef = doc(db, 'stock', productId);
-    
-    try {
-      await runTransaction(db, async (transaction) => {
-        const stockDoc = await transaction.get(stockRef);
-        if (!stockDoc.exists()) {
-          console.warn('Stock document not found, nothing to release');
-          return;
-        }
-
-        const stockData = stockDoc.data() as StockDocument;
-        
-        // Validar estructura del documento
-        if (!stockData.reservations) {
-          stockData.reservations = {};
-        }
-        
-        // Verificar si existe la reserva
-        const reservation = stockData.reservations[sessionId];
-        if (!reservation) {
-          console.warn('No reservation found for session', sessionId);
-          return;
-        }
-
-        // Calcular nueva cantidad reservada
-        const newReserved = Math.max(0, (stockData.reserved || 0) - reservation.quantity);
-
-        // Eliminar la reserva específica
-        const { [sessionId]: removed, ...remainingReservations } = stockData.reservations;
-
-        transaction.update(stockRef, {
-          reservations: remainingReservations,
-          reserved: newReserved
-        });
-      });
-
-      return true;
-    } catch (error) {
-      console.error('Error releasing reservation:', error);
-      return false;
     }
   },
 
@@ -503,104 +307,6 @@ export const stockService = {
       console.error('Error getting product stock:', error);
       return 0;
     }
-  },
-
-  async cleanupExpiredReservations(productId: string, retryCount = 3) {
-    for (let attempt = 1; attempt <= retryCount; attempt++) {
-      try {
-        const stockRef = doc(db, 'stock', productId);
-        
-        return await runTransaction(db, async (transaction) => {
-          const stockDoc = await transaction.get(stockRef);
-          if (!stockDoc.exists()) return true;
-
-          const data = stockDoc.data() as StockDocument;
-          const currentStock = data?.available || 0;
-          const reservations = data?.reservations || {};
-          const now = Date.now();
-          let stockToRestore = 0;
-
-          Object.entries(reservations).forEach(([sessionId, reservation]: [string, StockReservation]) => {
-            if (now - reservation.timestamp > RESERVATION_EXPIRATION_TIME) {
-              stockToRestore += reservation.quantity;
-              delete reservations[sessionId];
-            }
-          });
-
-          if (stockToRestore > 0) {
-            transaction.update(stockRef, {
-              available: currentStock + stockToRestore,
-              reservations
-            });
-          }
-
-          return true;
-        });
-      } catch (error) {
-        if (attempt === retryCount) {
-          console.error('Error cleaning up reservations after all retries:', error);
-          return false;
-        }
-        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-      }
-    }
-    return false;
-  },
-
-  async makeReservation(productId: string, sessionId: string, quantity: number): Promise<boolean> {
-    const stockRef = doc(db, 'stock', productId);
-    
-    try {
-      await runTransaction(db, async (transaction) => {
-        const stockDoc = await transaction.get(stockRef);
-        if (!stockDoc.exists()) throw new Error('Stock document not found');
-
-        const stockData = stockDoc.data() as StockDocument;
-        const available = stockData.available || 0;
-
-        if (available < quantity) {
-          throw new Error('Insufficient stock');
-        }
-
-        // Crear reserva usando timestamp en lugar de expiresAt
-        const reservation: StockReservation = {
-          quantity,
-          timestamp: Date.now()
-        };
-
-        transaction.update(stockRef, {
-          available: available - quantity,
-          reserved: (stockData.reserved || 0) + quantity,
-          [`reservations.${sessionId}`]: reservation
-        });
-      });
-
-      return true;
-    } catch (error) {
-      console.error('Error making reservation:', error);
-      return false;
-    }
-  }
-};
-
-const cleanupExpiredReservations = async (productId: string) => {
-  try {
-    const stockRef = doc(db, 'stock', productId);
-    const stockDoc = await getDoc(stockRef);
-    if (!stockDoc.exists()) return;
-    
-    const stockData = stockDoc.data() as StockDocument;
-    const reservations = stockData.reservations || {};
-    const now = Date.now();
-    const EXPIRATION_TIME = 30 * 60 * 1000; // 30 minutos
-
-    for (const [sessionId, reservation] of Object.entries(reservations)) {
-      if (now - (reservation as StockReservation).timestamp > EXPIRATION_TIME) {
-        await stockService.releaseReservation(productId, sessionId);
-      }
-    }
-  } catch (error) {
-    console.error('Error cleaning up reservations:', error);
   }
 };
 
