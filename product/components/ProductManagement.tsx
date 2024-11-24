@@ -594,8 +594,9 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
               key={product.id}
               product={product}
               onEdit={handleEdit}
-              onDelete={handleDelete}
-            />
+              onDelete={handleDelete} productImageIndex={0} onImageIndexChange={function (productId: string, newIndex: number): void {
+                throw new Error("Function not implemented.");
+              } }            />
           ))}
         </Grid>
       )}
