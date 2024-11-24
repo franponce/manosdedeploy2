@@ -206,7 +206,9 @@ const ProductCard: React.FC<Props> = ({
               </Button>
               {stockAvailable > 0 && stockAvailable <= 5 && (
                 <Text color="orange.500" fontSize="sm" mt={2}>
-                  ¡Últimas {stockAvailable} unidades!
+                  {stockAvailable === 1 
+                    ? "¡Última unidad en stock!" 
+                    : `¡Últimas ${stockAvailable} unidades en stock!`}
                 </Text>
               )}
             </>

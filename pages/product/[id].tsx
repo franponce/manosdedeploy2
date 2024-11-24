@@ -323,7 +323,9 @@ const ProductDetail: NextPageWithLayout = () => {
               </Skeleton>
               {available > 0 && available <= 5 && (
                 <Text color="orange.500" fontSize="sm" textAlign="center" mb={4}>
-                  ¡Últimas {available} unidades disponibles!
+                  {available === 1 
+                    ? "¡Última unidad en stock!" 
+                    : `¡Últimas ${available} unidades en stock!`}
                 </Text>
               )}
 
