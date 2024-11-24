@@ -307,6 +307,31 @@ export const stockService = {
       console.error('Error getting product stock:', error);
       return 0;
     }
+  },
+
+  async decrementStock(productId: string, quantity: number): Promise<void> {
+    const stockRef = doc(db, 'stock', productId);
+    
+    try {
+      await runTransaction(db, async (transaction) => {
+        const stockDoc = await transaction.get(stockRef);
+        
+        if (!stockDoc.exists()) {
+          throw new Error('Stock document does not exist');
+        }
+        
+        const currentStock = stockDoc.data().available || 0;
+        const newStock = Math.max(0, currentStock - quantity);
+        
+        transaction.update(stockRef, {
+          available: newStock,
+          quantity: newStock
+        });
+      });
+    } catch (error) {
+      console.error('Error decrementing stock:', error);
+      throw error;
+    }
   }
 };
 

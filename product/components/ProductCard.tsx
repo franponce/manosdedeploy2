@@ -189,7 +189,11 @@ const ProductCard: React.FC<Props> = ({
               <Text fontWeight="bold" fontSize="xl">
                 {parseCurrency(product.price || 0)}
               </Text>
-              <Text fontSize="sm" color={stockAvailable === 0 ? "red.500" : "gray.600"}>
+              <Text 
+                fontSize="sm" 
+                color={stockAvailable === 0 ? "red.500" : "green.500"}
+                fontWeight={stockAvailable > 0 ? "semibold" : "normal"}
+              >
                 {stockAvailable === 0 ? "Agotado" : `Stock disponible: ${stockAvailable}`}
               </Text>
               <Button

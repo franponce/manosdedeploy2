@@ -156,23 +156,22 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
         return;
       }
 
-      // 2. Generar mensaje de WhatsApp y redirigir
+      // 2. Decrementar stock de cada producto
+      for (const item of items) {
+        const currentStock = await stockService.getAvailableStock(item.id);
+        const newStock = Math.max(0, currentStock - item.quantity);
+        await stockService.updateStock(item.id, newStock);
+      }
+
+      // 3. Generar mensaje y redirigir a WhatsApp
       const whatsappMessage = encodeURIComponent(
-        `*Simple E-commerce | ${siteInfo?.title || 'Tienda'} | Nuevo pedido*\n\n` +
-        `¡Hola! Me gustaría realizar el siguiente pedido:\n\n${items
-          .map(
-            (item) =>
-              `${item.title} (x${item.quantity}) - ${parseCurrency(
-                item.price * item.quantity
-              )} ${siteInfo?.currency}`
-          )
-          .join("\n")}\n\n` +
-        `-- \n\n` +
-        `*Detalle de la compra*\n\n` +
-        `Nombre completo: ${fullName}\n` +
-        `Método de pago: ${selectedPaymentMethod}\n` +
-        `Aclaración: ${note.trim() || 'Sin aclaración'}\n` +
-        `*Total: ${total} ${siteInfo?.currency}*`
+        generateWhatsAppText(
+          items,
+          fullName,
+          selectedPaymentMethod,
+          note,
+          siteInfo?.title
+        )
       );
       
       window.open(`https://wa.me/${siteInfo?.whatsappCart}?text=${whatsappMessage}`, '_blank');
