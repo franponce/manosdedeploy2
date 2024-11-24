@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   Box,
   Heading,
@@ -48,6 +48,10 @@ const AdminPage: React.FC = () => {
   const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
   const { categories } = useCategories();
   const [isProductOrderOpen, setIsProductOrderOpen] = useState(false);
+
+  React.useEffect(() => {
+    router.prefetch('/');
+  }, [router]);
 
   const handleStoreSettings = () => {
     router.push('/store-config');
@@ -108,6 +112,13 @@ const AdminPage: React.FC = () => {
       });
     });
   };
+
+  const handlePreview = useCallback(() => {
+    router.replace('/', undefined, { 
+      shallow: true,
+      scroll: false 
+    });
+  }, [router]);
 
   return (
     <Box 
@@ -175,12 +186,8 @@ const AdminPage: React.FC = () => {
             <MenuList zIndex={10}>
               <MenuItem 
                 icon={<Icon as={FaEye} />}
-                onClick={() => {
-                  router.push('/', undefined, { 
-                    shallow: true, 
-                    scroll: false 
-                  });
-                }}
+                onClick={handlePreview}
+                _hover={{ bg: 'gray.100' }}
               >
                 Previsualizar tienda
               </MenuItem>
