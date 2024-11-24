@@ -33,6 +33,7 @@ import { FaArrowLeft, FaShoppingCart, FaWhatsapp } from 'react-icons/fa';
 import { useSiteInfo } from '@/hooks/useSiteInfo';
 import { useStock } from '@/hooks/useStock';
 import { useSessionId } from '@/hooks/useSessionId';
+import { useCart } from '@/hooks/useCart';
 
 interface Props {
   isOpen: boolean;
@@ -46,25 +47,25 @@ const generateWhatsAppText = (
   items: CartItem[],
   fullName: string,
   paymentMethod: string,
-  note?: string
+  note: string,
+  storeName: string = "Simple E-commerce"
 ): string => {
-  const header = `*Nuevo pedido de ${fullName}*\n\n`;
+  const header = `${storeName} | Nuevo pedido\n\n¡Hola! Me gustaría realizar el siguiente pedido:\n\n`;
   
   const itemsList = items
-    .map(item => `• ${item.quantity}x ${item.title} - ${parseCurrency(item.price * item.quantity)}`)
+    .map(item => `${item.title} (x${item.quantity}) - ${parseCurrency(item.price * item.quantity)}`)
     .join('\n');
   
-  const total = parseCurrency(
-    items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-  );
+  const details = `\n\n-- \n\nDetalle de la compra\n\n`;
   
-  const paymentInfo = `\n\n*Método de pago:* ${paymentMethod}`;
-  
-  const noteText = note ? `\n\n*Nota:* ${note}` : '';
-  
-  const footer = `\n\n*Total:* ${total}`;
+  const customerInfo = [
+    `Nombre completo: ${fullName}`,
+    `Método de pago: ${paymentMethod}`,
+    `Aclaración: ${note.trim() || 'Sin aclaración'}`,
+    `Total: ${parseCurrency(items.reduce((sum, item) => sum + (item.price * item.quantity), 0))}`
+  ].join('\n');
 
-  return `${header}${itemsList}${paymentInfo}${noteText}${footer}`;
+  return `${header}${itemsList}${details}${customerInfo}`;
 };
 
 const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDecrement }) => {
@@ -81,6 +82,7 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
   const toast = useToast();
   const { siteInfo } = useSiteInfo();
   const [isProcessing, setIsProcessing] = useState(false);
+  const { clearCart } = useCart();
 
   useEffect(() => {
     fetchPaymentMethods();
@@ -264,9 +266,16 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
       }
 
       // 4. Si todo está bien, enviar mensaje de WhatsApp
-      const text = generateWhatsAppText(items, fullName, selectedPaymentMethod, note);
+      const text = generateWhatsAppText(items, fullName, selectedPaymentMethod, note, siteInfo?.storeName);
       window.open(`https://wa.me/${siteInfo?.whatsappCart}?text=${encodeURIComponent(text)}`);
+      clearCart();
       onClose();
+      toast({
+        title: "¡Pedido enviado!",
+        description: "Tu pedido ha sido enviado correctamente",
+        status: "success",
+        duration: 3000,
+      });
     } catch (error) {
       console.error('Error processing purchase:', error);
       toast({
