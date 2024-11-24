@@ -57,18 +57,19 @@ export const useCart = () => {
     localStorage.removeItem('cart');
   }, []);
 
-  const updateItemQuantity = useCallback((product: CartItem, quantity: number) => {
+  const updateItemQuantity = useCallback((productId: string, newQuantity: number) => {
     setCart(currentCart => {
       const updatedCart = currentCart.map(item => {
-        if (item.id === product.id) {
+        if (item.id === productId) {
           return {
             ...item,
-            quantity: Math.max(0, quantity)
+            quantity: Math.min(999, Math.max(0, newQuantity))
           };
         }
         return item;
-      }).filter(item => item.quantity > 0);
+      });
 
+      // Guardar en localStorage
       localStorage.setItem('cart', JSON.stringify(updatedCart));
       return updatedCart;
     });

@@ -86,6 +86,7 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
   const [isProcessing, setIsProcessing] = useState(false);
   const { clearCart } = useCart();
   const [tempQuantities, setTempQuantities] = useState<{ [key: string]: string }>({});
+  const { updateItemQuantity } = useCart();
 
   useEffect(() => {
     fetchPaymentMethods();
@@ -336,30 +337,16 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
   };
 
   const handleQuantityChange = (item: CartItem, value: string) => {
-    if (value === '' || /^\d*$/.test(value)) {
+    if (value === '' || /^\d+$/.test(value)) {
       setTempQuantities(prev => ({
         ...prev,
         [item.id]: value
       }));
 
-      if (value !== '') {
-        const numValue = parseInt(value);
-        if (!isNaN(numValue) && numValue >= 0 && numValue <= 999) {
-          const currentQuantity = item.quantity;
-          if (numValue !== currentQuantity) {
-            updateItemQuantity(item, numValue);
-          }
-        }
+      const numValue = parseInt(value);
+      if (!isNaN(numValue)) {
+        updateItemQuantity(item.id, numValue);
       }
-    }
-  };
-
-  const updateItemQuantity = (item: CartItem, newQuantity: number) => {
-    const updatedItem = { ...item, quantity: newQuantity };
-    if (newQuantity > item.quantity) {
-      onIncrement(updatedItem);
-    } else if (newQuantity < item.quantity) {
-      onDecrement(updatedItem);
     }
   };
 
@@ -396,26 +383,33 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
                       <Text fontSize="sm">{parseCurrency(item.price)} {siteInfo?.currency}</Text>
                     </Box>
                     <HStack flexShrink={0}>
-                      <Button 
-                        size="sm" 
-                        onClick={() => handleDecrement(item)}
-                      >
-                        -
-                      </Button>
+                      <IconButton
+                        aria-label="Decrementar"
+                        icon={<MinusIcon />}
+                        onClick={() => {
+                          const newValue = Math.max(0, item.quantity - 1).toString();
+                          handleQuantityChange(item, newValue);
+                        }}
+                        size="sm"
+                      />
+                      
                       <Input
                         value={tempQuantities[item.id] || ''}
                         onChange={(e) => handleQuantityChange(item, e.target.value)}
-                        size="sm"
-                        width="50px"
+                        width="60px"
                         textAlign="center"
-                        p={1}
+                        maxLength={3}
                       />
-                      <Button 
-                        size="sm" 
-                        onClick={() => handleIncrement(item)}
-                      >
-                        +
-                      </Button>
+                      
+                      <IconButton
+                        aria-label="Incrementar"
+                        icon={<AddIcon />}
+                        onClick={() => {
+                          const newValue = (item.quantity + 1).toString();
+                          handleQuantityChange(item, newValue);
+                        }}
+                        size="sm"
+                      />
                     </HStack>
                   </Flex>
                 ))
