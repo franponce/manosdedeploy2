@@ -436,13 +436,15 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
             </Box>
           )}
 
-          {/* Footer común para todas las rutas */}
-          <Box mt="auto">
-            <Divider marginY={4} />
-            <Text textAlign="center" pb={4}>
-              © Copyright {new Date().getFullYear()}. Hecho con ♥ Simple Ecommerce
-            </Text>
-          </Box>
+          {/* Footer condicional: no se muestra en admin */}
+          {!router.pathname.startsWith('/admin') && (
+            <Box mt="auto">
+              <Divider marginY={4} />
+              <Text textAlign="center" pb={4}>
+                © Copyright {new Date().getFullYear()}. Hecho con ♥ Simple Ecommerce
+              </Text>
+            </Box>
+          )}
         </Box>
       </ChakraProvider>
     </SWRConfig>
