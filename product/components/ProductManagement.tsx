@@ -138,18 +138,17 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm("¿Estás seguro de que quieres eliminar este producto?")) {
+  const handleDelete = async (product: Product) => {
+    if (window.confirm(`¿Estás seguro de que quieres eliminar ${product.title}?`)) {
+      setIsLoading(true);
       try {
-        await deleteProduct(id);
-        await fetchProducts();
+        await deleteProduct(product.id);
         toast({
           title: "Producto eliminado",
-          description: "El producto ha sido eliminado exitosamente.",
           status: "success",
-          duration: 3000,
-          isClosable: true,
+          duration: 2000,
         });
+        mutate(SWR_KEYS.PRODUCTS);
       } catch (error) {
         console.error("Error deleting product:", error);
         toast({
@@ -157,8 +156,9 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
           description: "No se pudo eliminar el producto",
           status: "error",
           duration: 3000,
-          isClosable: true,
         });
+      } finally {
+        setIsLoading(false);
       }
     }
   };
@@ -482,7 +482,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
                 flex={1}
                 size="lg"
                 colorScheme="red"
-                onClick={() => handleDelete(product.id)}
+                onClick={() => handleDelete(product)}
                 leftIcon={<Icon as={FaTrash} />}
                 borderRadius="md"
               >
@@ -593,6 +593,8 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
             <AdminProductCard 
               key={product.id}
               product={product}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
             />
           ))}
         </Grid>
