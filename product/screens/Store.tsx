@@ -30,6 +30,9 @@ import SiteInfoBanner from '../../components/SiteInfoBanner';
 import { useSiteInfo } from '../../hooks/useSiteInfo';
 import { useRouter } from 'next/router';
 import { useStock } from '../../hooks/useStock';
+import { useState, useEffect } from 'react';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { useProductsStock } from '../../hooks/useProductsStock';
 
 const fetcher = async (url: string) => {
   const response = await fetch(url);
@@ -208,70 +211,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
     }
   }
 
-  const NoProductsFound = () => {
-    if (!searchTerm && !selectedCategory) {
-      return (
-        <Center flexDirection="column" p={8} bg="gray.50" borderRadius="lg">
-          <Box 
-            as="span" 
-            fontSize="6xl" 
-            mb={4}
-            role="img" 
-            aria-label="No hay productos"
-          >
-            📦
-          </Box>
-          <Heading size="md" mb={2} textAlign="center">
-            No hay productos disponibles
-          </Heading>
-          <Text color="gray.600" textAlign="center">
-            Los productos pueden estar temporalmente ocultos o no disponibles.
-          </Text>
-        </Center>
-      );
-    }
-
-    return (
-      <Center flexDirection="column" p={8} bg="gray.50" borderRadius="lg">
-        <Box 
-          as="span" 
-          fontSize="6xl" 
-          mb={4}
-          role="img" 
-          aria-label="Buscando"
-        >
-          🔍
-        </Box>
-        <Heading size="md" mb={2} textAlign="center">
-          No se encontraron productos
-        </Heading>
-        <Text color="gray.600" textAlign="center">
-          {searchTerm 
-            ? "No hay productos que coincidan con tu búsqueda."
-            : selectedCategory 
-              ? "No hay productos en esta categoría."
-              : "No hay productos disponibles en este momento."}
-        </Text>
-        {searchTerm && (
-          <Button 
-            mt={4} 
-            colorScheme="blue" 
-            onClick={() => setSearchTerm("")}
-          >
-            Limpiar búsqueda
-          </Button>
-        )}
-      </Center>
-    );
-  };
-
-  // Crear un objeto para almacenar el stock de cada producto
-  const productStocks = Object.fromEntries(
-    displayedProducts.map(product => [
-      product.id,
-      useStock(product.id)
-    ])
-  );
+  const { stocks, isLoading: stocksLoading } = useProductsStock(displayedProducts);
 
   if (error) return <div>Failed to load products</div>;
 
@@ -366,7 +306,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
           >
             {displayedProducts.map((product, index) => {
               const isLastElement = index === displayedProducts.length - 1;
-              const { available } = productStocks[product.id];
+              const available = stocks[product.id] || 0;
 
               return (
                 <Box
@@ -377,7 +317,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
                   <ProductCard
                     product={product}
                     onAdd={(product) => handleEditCart(product, "increment")}
-                    isLoading={false}
+                    isLoading={isLoading || stocksLoading}
                     available={available}
                     onEdit={() => {}}
                     onDelete={() => {}}
@@ -390,7 +330,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
             })}
           </Grid>
         ) : (
-          <NoProductsFound />
+          <Text>No se encontraron productos</Text>
         )}
         {isLoading && (
           <Center mt={4}>
