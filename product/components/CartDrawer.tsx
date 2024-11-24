@@ -42,6 +42,31 @@ interface Props {
   onDecrement: (product: CartItem) => void;
 }
 
+const generateWhatsAppText = (
+  items: CartItem[],
+  fullName: string,
+  paymentMethod: string,
+  note?: string
+): string => {
+  const header = `*Nuevo pedido de ${fullName}*\n\n`;
+  
+  const itemsList = items
+    .map(item => `• ${item.quantity}x ${item.title} - ${parseCurrency(item.price * item.quantity)}`)
+    .join('\n');
+  
+  const total = parseCurrency(
+    items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+  );
+  
+  const paymentInfo = `\n\n*Método de pago:* ${paymentMethod}`;
+  
+  const noteText = note ? `\n\n*Nota:* ${note}` : '';
+  
+  const footer = `\n\n*Total:* ${total}`;
+
+  return `${header}${itemsList}${paymentInfo}${noteText}${footer}`;
+};
+
 const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDecrement }) => {
   const { sessionId, isReady } = useSessionId();
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethods>({
@@ -145,52 +170,40 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
   };
 
   const handleWhatsAppRedirect = async () => {
-    if (!isReady) {
+    if (!isReady || !fullName.trim()) {
       toast({
-        title: "Espera un momento",
-        description: "Inicializando sesión...",
-        status: "info",
-        duration: 2000,
+        title: "Error",
+        description: "Por favor completa tu nombre",
+        status: "error",
+        duration: 3000,
       });
       return;
     }
 
-    if (!fullName.trim()) {
-      setIsFullNameError(true);
-      return;
-    }
-    
-    const stockValid = await validateCartStock();
-    if (!stockValid) return;
-
-    setIsFullNameError(false);
-    
-    const whatsappMessage = encodeURIComponent(
-      `*Simple E-commerce | ${siteInfo?.title || 'Tienda'} | Nuevo pedido*\n\n` +
-      `¡Hola! Me gustaría realizar el siguiente pedido:\n\n${items
-        .map(
-          (item) =>
-            `${item.title} (x${item.quantity}) - ${parseCurrency(
-              item.price * item.quantity
-            )} ${siteInfo?.currency}`
-        )
-        .join("\n")}\n\n` +
-      `-- \n\n` +
-      `*Detalle de la compra*\n\n` +
-      `Nombre completo: ${fullName}\n` +
-      `Método de pago: ${selectedPaymentMethod}\n` +
-      `Aclaración: ${note.trim() || 'Sin aclaración'}\n` +
-      `*Total: ${total} ${siteInfo?.currency}*`
-    );
-    const whatsappURL = `https://wa.me/${INFORMATION.whatsappCart}?text=${whatsappMessage}`;
-    
     try {
+      // Validar stock antes de confirmar
+      const stockValid = await validateCartStock();
+      if (!stockValid) {
+        return;
+      }
+
+      // Confirmar cada item del carrito
       for (const item of items) {
-        const success = await stockService.confirmPurchase(item.id, item.quantity, sessionId);
-        if (!success) {
+        try {
+          const confirmed = await stockService.confirmPurchase(
+            item.id,
+            item.quantity,
+            sessionId
+          );
+          
+          if (!confirmed) {
+            throw new Error(`No se pudo confirmar la compra del producto ${item.title}`);
+          }
+        } catch (error) {
+          console.error('Error confirming purchase:', error);
           toast({
-            title: "Error en la compra",
-            description: `No se pudo procesar el producto: ${item.title}. Por favor, intente nuevamente.`,
+            title: "Error",
+            description: `No se pudo confirmar la compra de ${item.title}. Por favor, intenta nuevamente.`,
             status: "error",
             duration: 5000,
           });
@@ -198,13 +211,17 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
         }
       }
 
-      window.open(whatsappURL, "_blank");
+      // Generar texto del mensaje
+      const text = generateWhatsAppText(items, fullName, selectedPaymentMethod, note);
+      
+      // Abrir WhatsApp
+      window.open(`https://wa.me/${siteInfo?.whatsappCart}?text=${encodeURIComponent(text)}`);
       onClose();
     } catch (error) {
-      console.error('Error al procesar la compra:', error);
+      console.error('Error confirming purchase:', error);
       toast({
         title: "Error",
-        description: "Hubo un problema al procesar la compra. Por favor, intente nuevamente.",
+        description: "Hubo un problema al procesar tu pedido. Por favor, intenta nuevamente.",
         status: "error",
         duration: 5000,
       });

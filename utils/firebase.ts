@@ -280,32 +280,47 @@ export const stockService = {
     const stockRef = doc(db, 'stock', productId);
     
     try {
-      await this.initializeStockDocument(productId);
+      let success = false;
 
       await runTransaction(db, async (transaction) => {
         const stockDoc = await transaction.get(stockRef);
+        
+        if (!stockDoc.exists()) {
+          await this.initializeStockDocument(productId);
+          throw new Error('No hay stock disponible');
+        }
+
         const stockData = stockDoc.data() as StockDocument;
+        
+        // Inicializar campos si no existen
+        const available = Number(stockData.available) || 0;
+        const reserved = Number(stockData.reserved) || 0;
+        const reservations = stockData.reservations || {};
 
-        const currentReservation = stockData.reservations[sessionId]?.quantity || 0;
-        const availableStock = stockData.available - (stockData.reserved - currentReservation);
-
-        if (availableStock < quantity) {
+        // Verificar stock disponible
+        if (available - reserved < quantity) {
           throw new Error('Stock insuficiente');
         }
 
+        // Actualizar o crear reserva
+        const existingReservation = reservations[sessionId];
+        const newReservation = {
+          quantity: (existingReservation?.quantity || 0) + quantity,
+          expiresAt: Date.now() + (30 * 60 * 1000) // 30 minutos
+        };
+
         transaction.update(stockRef, {
+          reserved: reserved + quantity,
           reservations: {
-            ...stockData.reservations,
-            [sessionId]: {
-              quantity: (currentReservation + quantity),
-              expiresAt: Date.now() + 30 * 60 * 1000 // 30 minutos
-            }
-          },
-          reserved: stockData.reserved - currentReservation + (currentReservation + quantity)
+            ...reservations,
+            [sessionId]: newReservation
+          }
         });
+
+        success = true;
       });
 
-      return true;
+      return success;
     } catch (error) {
       console.error('Error reserving stock:', error);
       return false;
@@ -316,39 +331,61 @@ export const stockService = {
     const stockRef = doc(db, 'stock', productId);
     
     try {
+      let success = false;
+      
       await runTransaction(db, async (transaction) => {
         const stockDoc = await transaction.get(stockRef);
+        
         if (!stockDoc.exists()) {
-          throw new Error('Stock document not found');
+          throw new Error('Documento de stock no encontrado');
         }
 
         const stockData = stockDoc.data() as StockDocument;
-        const reservation = stockData.reservations[sessionId];
-
-        if (!reservation || reservation.quantity < quantity) {
+        
+        // Validar que exista la reserva
+        if (!stockData.reservations || !stockData.reservations[sessionId]) {
+          console.error('No se encontró la reserva para la sesión:', sessionId);
           throw new Error('Reserva no válida o insuficiente');
         }
 
-        // Actualizar cantidades
-        const newAvailable = stockData.available - quantity;
-        const newReserved = stockData.reserved - quantity;
-        const newQuantity = stockData.quantity - quantity;
+        const reservation = stockData.reservations[sessionId];
+        
+        // Validar cantidad de la reserva
+        if (reservation.quantity < quantity) {
+          console.error('Cantidad reservada insuficiente:', 
+            `necesita ${quantity}, tiene ${reservation.quantity}`);
+          throw new Error('Reserva no válida o insuficiente');
+        }
 
-        // Eliminar la reserva específica
-        const { [sessionId]: removed, ...remainingReservations } = stockData.reservations;
+        // Validar que la reserva no haya expirado
+        if (reservation.expiresAt < Date.now()) {
+          console.error('La reserva ha expirado');
+          throw new Error('La reserva ha expirado');
+        }
 
+        // Calcular nuevos valores
+        const newQuantity = Math.max(0, stockData.quantity - quantity);
+        const newReserved = Math.max(0, stockData.reserved - quantity);
+        const newAvailable = Math.max(0, stockData.available - quantity);
+
+        // Remover la reserva usada
+        const { [sessionId]: used, ...remainingReservations } = stockData.reservations;
+
+        // Actualizar el documento
         transaction.update(stockRef, {
+          quantity: newQuantity,
           available: newAvailable,
           reserved: newReserved,
-          quantity: newQuantity,
           reservations: remainingReservations
         });
+
+        success = true;
       });
 
-      return true;
+      return success;
     } catch (error) {
       console.error('Error confirming purchase:', error);
-      return false;
+      throw error;
     }
   },
 
