@@ -57,10 +57,28 @@ export const useCart = () => {
     localStorage.removeItem('cart');
   }, []);
 
+  const updateItemQuantity = useCallback((product: CartItem, quantity: number) => {
+    setCart(currentCart => {
+      const updatedCart = currentCart.map(item => {
+        if (item.id === product.id) {
+          return {
+            ...item,
+            quantity: Math.max(0, quantity)
+          };
+        }
+        return item;
+      }).filter(item => item.quantity > 0);
+
+      localStorage.setItem('cart', JSON.stringify(updatedCart));
+      return updatedCart;
+    });
+  }, []);
+
   return {
     cart,
     addToCart,
     removeFromCart,
     clearCart,
+    updateItemQuantity
   };
 }; 

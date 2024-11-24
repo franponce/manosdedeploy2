@@ -24,6 +24,7 @@ import {
   FormLabel,
   FormErrorMessage,
   Input,
+  IconButton,
 } from '@chakra-ui/react';
 import { CartItem } from '../types';
 import { parseCurrency } from '../../utils/currency';
@@ -34,6 +35,7 @@ import { useSiteInfo } from '@/hooks/useSiteInfo';
 import { useStock } from '@/hooks/useStock';
 import { useSessionId } from '@/hooks/useSessionId';
 import { useCart } from '@/hooks/useCart';
+import { MinusIcon, AddIcon } from '@chakra-ui/icons';
 
 interface Props {
   isOpen: boolean;
@@ -83,10 +85,21 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
   const { siteInfo } = useSiteInfo();
   const [isProcessing, setIsProcessing] = useState(false);
   const { clearCart } = useCart();
+  const [tempQuantities, setTempQuantities] = useState<{ [key: string]: string }>({});
 
   useEffect(() => {
     fetchPaymentMethods();
   }, [isOpen]);
+
+  useEffect(() => {
+    if (isOpen) {
+      const initialQuantities = items.reduce((acc, item) => ({
+        ...acc,
+        [item.id]: item.quantity.toString()
+      }), {});
+      setTempQuantities(initialQuantities);
+    }
+  }, [isOpen, items]);
 
   const fetchPaymentMethods = async () => {
     const methods = await getPaymentMethods();
@@ -322,63 +335,24 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
     );
   };
 
-  const handleQuantityChange = async (item: CartItem, newValue: string) => {
-    if (!isReady) return;
-    if (!/^\d*$/.test(newValue)) return;
-    
-    const newQuantity = newValue === '' ? 0 : parseInt(newValue, 10);
-    const currentQuantity = item.quantity;
-    
-    try {
-      if (newQuantity > currentQuantity) {
-        const available = await stockService.getAvailableStock(item.id);
-        if (newQuantity > available) {
-          toast({
-            title: "Stock no disponible",
-            description: `Solo hay ${available} unidades disponibles`,
-            status: "warning",
-            duration: 3000,
-          });
-          return;
-        }
+  const handleQuantityChange = (item: CartItem, value: string) => {
+    setTempQuantities(prev => ({
+      ...prev,
+      [item.id]: value
+    }));
 
-        const reserved = await stockService.reserveStock(
-          item.id, 
-          newQuantity - currentQuantity,
-          sessionId
-        );
-
-        if (!reserved) {
-          toast({
-            title: "Error al reservar stock",
-            description: "No se pudo reservar el producto",
-            status: "error",
-            duration: 3000,
-          });
-          return;
-        }
-      } else if (newQuantity < currentQuantity) {
-        await stockService.releaseReservation(item.id, sessionId);
-      }
-      
-      const difference = newQuantity - currentQuantity;
-      if (difference > 0) {
-        for (let i = 0; i < difference; i++) {
+    const numValue = parseInt(value);
+    if (!isNaN(numValue) && numValue >= 0) {
+      const diff = numValue - item.quantity;
+      if (diff > 0) {
+        for (let i = 0; i < diff; i++) {
           onIncrement(item);
         }
-      } else if (difference < 0) {
-        for (let i = 0; i < Math.abs(difference); i++) {
+      } else if (diff < 0) {
+        for (let i = 0; i < Math.abs(diff); i++) {
           onDecrement(item);
         }
       }
-    } catch (error) {
-      console.error('Error al actualizar cantidad:', error);
-      toast({
-        title: "Error",
-        description: "No se pudo actualizar la cantidad",
-        status: "error",
-        duration: 3000,
-      });
     }
   };
 
@@ -422,7 +396,7 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
                         -
                       </Button>
                       <Input
-                        value={item.quantity}
+                        value={tempQuantities[item.id] || ''}
                         onChange={(e) => handleQuantityChange(item, e.target.value)}
                         size="sm"
                         width="50px"
