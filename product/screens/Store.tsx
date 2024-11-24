@@ -214,28 +214,46 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
 
   const { stocks, isLoading: stocksLoading } = useProductsStock(displayedProducts);
 
-  // Agregar efecto para limpiar reservas expiradas y actualizar stocks
+  // Modificar el efecto de limpieza para incluir manejo de errores y debounce
   React.useEffect(() => {
+    let isSubscribed = true;
+    let timeoutId: NodeJS.Timeout;
+
     const cleanupAndUpdateStocks = async () => {
-      if (displayedProducts.length > 0) {
-        // Limpiar reservas expiradas para todos los productos mostrados
-        await Promise.all(
+      if (!isSubscribed || !displayedProducts.length) return;
+
+      try {
+        // Usar Promise.allSettled en lugar de Promise.all para manejar errores individuales
+        const results = await Promise.allSettled(
           displayedProducts.map(async (product) => {
-            await stockService.cleanupExpiredReservations(product.id);
+            try {
+              await stockService.cleanupExpiredReservations(product.id);
+            } catch (error) {
+              console.error(`Error cleaning up reservations for product ${product.id}:`, error);
+            }
           })
         );
-        // Forzar actualización de stocks
-        mutate('/api/products/stock');
+
+        // Solo actualizar si el componente sigue montado
+        if (isSubscribed) {
+          mutate(SWR_KEYS.PRODUCTS_STOCK);
+        }
+      } catch (error) {
+        console.error('Error in cleanup process:', error);
       }
     };
 
-    // Ejecutar limpieza inicial
-    cleanupAndUpdateStocks();
+    // Debounce la limpieza para evitar demasiadas llamadas
+    timeoutId = setTimeout(cleanupAndUpdateStocks, 1000);
 
-    // Configurar intervalo para limpiar cada minuto
-    const interval = setInterval(cleanupAndUpdateStocks, 60000);
+    // Configurar intervalo con un tiempo más largo
+    const interval = setInterval(cleanupAndUpdateStocks, 300000); // 5 minutos
 
-    return () => clearInterval(interval);
+    return () => {
+      isSubscribed = false;
+      clearTimeout(timeoutId);
+      clearInterval(interval);
+    };
   }, [displayedProducts]);
 
   if (error) return <div>Failed to load products</div>;

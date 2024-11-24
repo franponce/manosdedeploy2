@@ -221,13 +221,13 @@ export const productImageService = {
 
 interface StockReservation {
   quantity: number;
-  expiresAt: number;
+  timestamp: number;
 }
 
 interface StockDocument {
-  quantity: number;      // stock total
-  available: number;     // stock disponible
-  reserved: number;      // stock reservado
+  quantity: number;
+  available: number;
+  reserved: number;
   reservations: {
     [sessionId: string]: StockReservation;
   };
@@ -235,16 +235,6 @@ interface StockDocument {
 
 // Constante para el tiempo de expiración (5 minutos)
 const RESERVATION_EXPIRATION_TIME = 5 * 60 * 1000; // 5 minutos en milisegundos
-
-// Definir interfaces para el tipado
-interface StockReservation {
-  quantity: number;
-  timestamp: number;
-}
-
-interface Reservations {
-  [sessionId: string]: StockReservation;
-}
 
 export const stockService = {
   async initializeStockDocument(productId: string, initialQuantity: number = 0): Promise<void> {
@@ -320,7 +310,7 @@ export const stockService = {
         const existingReservation = reservations[sessionId];
         const newReservation = {
           quantity: quantity,
-          expiresAt: Date.now() + (30 * 60 * 1000) // 30 minutos
+          timestamp: Date.now() + (30 * 60 * 1000) // 30 minutos
         };
 
         transaction.update(stockRef, {
@@ -372,7 +362,7 @@ export const stockService = {
         }
 
         // Validar que la reserva no haya expirado
-        if (reservation.expiresAt < Date.now()) {
+        if (reservation.timestamp < Date.now()) {
           console.error('La reserva ha expirado');
           throw new Error('La reserva ha expirado');
         }
@@ -515,36 +505,79 @@ export const stockService = {
     }
   },
 
-  async cleanupExpiredReservations(productId: string) {
-    try {
-      const stockRef = doc(db, 'stock', productId);
-      
-      return await runTransaction(db, async (transaction) => {
-        const stockDoc = await transaction.get(stockRef);
-        const currentStock = stockDoc.data()?.available || 0;
-        const reservations = stockDoc.data()?.reservations as Reservations || {};
-        const now = Date.now();
-        let stockToRestore = 0;
+  async cleanupExpiredReservations(productId: string, retryCount = 3) {
+    for (let attempt = 1; attempt <= retryCount; attempt++) {
+      try {
+        const stockRef = doc(db, 'stock', productId);
+        
+        return await runTransaction(db, async (transaction) => {
+          const stockDoc = await transaction.get(stockRef);
+          if (!stockDoc.exists()) return true;
 
-        // Ahora TypeScript sabe que reservation es de tipo StockReservation
-        Object.entries(reservations).forEach(([sessionId, reservation]: [string, StockReservation]) => {
-          if (now - reservation.timestamp > RESERVATION_EXPIRATION_TIME) {
-            stockToRestore += reservation.quantity;
-            delete reservations[sessionId];
-          }
-        });
+          const data = stockDoc.data() as StockDocument;
+          const currentStock = data?.available || 0;
+          const reservations = data?.reservations || {};
+          const now = Date.now();
+          let stockToRestore = 0;
 
-        if (stockToRestore > 0) {
-          transaction.update(stockRef, {
-            available: currentStock + stockToRestore,
-            reservations
+          Object.entries(reservations).forEach(([sessionId, reservation]: [string, StockReservation]) => {
+            if (now - reservation.timestamp > RESERVATION_EXPIRATION_TIME) {
+              stockToRestore += reservation.quantity;
+              delete reservations[sessionId];
+            }
           });
+
+          if (stockToRestore > 0) {
+            transaction.update(stockRef, {
+              available: currentStock + stockToRestore,
+              reservations
+            });
+          }
+
+          return true;
+        });
+      } catch (error) {
+        if (attempt === retryCount) {
+          console.error('Error cleaning up reservations after all retries:', error);
+          return false;
+        }
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+      }
+    }
+    return false;
+  },
+
+  async makeReservation(productId: string, sessionId: string, quantity: number): Promise<boolean> {
+    const stockRef = doc(db, 'stock', productId);
+    
+    try {
+      await runTransaction(db, async (transaction) => {
+        const stockDoc = await transaction.get(stockRef);
+        if (!stockDoc.exists()) throw new Error('Stock document not found');
+
+        const stockData = stockDoc.data() as StockDocument;
+        const available = stockData.available || 0;
+
+        if (available < quantity) {
+          throw new Error('Insufficient stock');
         }
 
-        return true;
+        // Crear reserva usando timestamp en lugar de expiresAt
+        const reservation: StockReservation = {
+          quantity,
+          timestamp: Date.now()
+        };
+
+        transaction.update(stockRef, {
+          available: available - quantity,
+          reserved: (stockData.reserved || 0) + quantity,
+          [`reservations.${sessionId}`]: reservation
+        });
       });
+
+      return true;
     } catch (error) {
-      console.error('Error cleaning up reservations:', error);
+      console.error('Error making reservation:', error);
       return false;
     }
   }
