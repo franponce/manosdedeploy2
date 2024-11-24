@@ -10,37 +10,23 @@ interface StockHookReturn {
 
 export const useStock = (productId: string | null): StockHookReturn => {
   const [available, setAvailable] = useState<number>(0);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     if (!productId) return;
 
-    const fetchStock = async () => {
-      try {
-        setIsLoading(true);
-        const stockValue = await stockService.getAvailableStock(productId);
-        setAvailable(stockValue);
-      } catch (err) {
-        setError(err as Error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchStock();
-
-    // Suscripción a cambios en tiempo real del stock disponible
     const unsubscribe = onSnapshot(doc(db, 'stock', productId), (docSnapshot) => {
       if (docSnapshot.exists()) {
         const data = docSnapshot.data();
-        const availableStock = data.available - data.reserved;
-        setAvailable(availableStock);
+        const availableStock = Number(data.available) || 0;
+        const reservedStock = Number(data.reserved) || 0;
+        setAvailable(Math.max(0, availableStock - reservedStock));
+      } else {
+        setAvailable(0);
       }
     });
 
     return () => unsubscribe();
   }, [productId]);
 
-  return { available, isLoading, error };
+  return { available, isLoading: false, error: null };
 }; 

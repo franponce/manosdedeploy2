@@ -40,6 +40,9 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading: cardLoading, 
   const [isMobile] = useMediaQuery("(max-width: 48em)");
   const router = useRouter();
 
+  // Asegurarse de que available sea un número
+  const stockAvailable = Number(available) || 0;
+
   const handleProductClick = (e: React.MouseEvent) => {
     e.preventDefault();
     router.push(`/product/${product.id}`);
@@ -178,20 +181,20 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading: cardLoading, 
               <Text fontWeight="bold" fontSize="xl">
                 {parseCurrency(product.price || 0)}
               </Text>
-              <Text fontSize="sm" color={available === 0 ? "red.500" : "gray.600"}>
-                {available === 0 ? "Agotado" : `Stock disponible: ${available}`}
+              <Text fontSize="sm" color={stockAvailable === 0 ? "red.500" : "gray.600"}>
+                {stockAvailable === 0 ? "Agotado" : `Stock disponible: ${stockAvailable}`}
               </Text>
               <Button
                 colorScheme="blue"
                 onClick={handleProductClick}
                 width="100%"
-                isDisabled={available === 0}
+                isDisabled={stockAvailable === 0}
               >
-                {available === 0 ? "Agotado" : "Ver detalle"}
+                {stockAvailable === 0 ? "Agotado" : "Ver detalle"}
               </Button>
-              {available > 0 && available <= 5 && (
+              {stockAvailable > 0 && stockAvailable <= 5 && (
                 <Text color="orange.500" fontSize="sm" mt={2}>
-                  ¡Últimas {available} unidades!
+                  ¡Últimas {stockAvailable} unidades!
                 </Text>
               )}
             </>

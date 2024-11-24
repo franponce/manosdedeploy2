@@ -234,36 +234,45 @@ interface StockDocument {
 }
 
 export const stockService = {
-  async initializeStockDocument(productId: string): Promise<void> {
+  async initializeStockDocument(productId: string, initialQuantity: number = 0): Promise<void> {
     const stockRef = doc(db, 'stock', productId);
     const stockDoc = await getDoc(stockRef);
     
-    if (!stockDoc.exists()) {
-      // Crear documento inicial
-      await setDoc(stockRef, {
-        quantity: 0,
-        available: 0,
-        reserved: 0,
-        reservations: {}
-      });
-    } else {
-      // Actualizar estructura si es necesario
-      const data = stockDoc.data();
-      const updates: Partial<StockDocument> = {};
-      
-      if (typeof data.available === 'undefined') {
-        updates.available = data.quantity || 0;
+    try {
+      if (!stockDoc.exists()) {
+        // Crear documento inicial con valores numéricos
+        await setDoc(stockRef, {
+          quantity: Number(initialQuantity) || 0,
+          available: Number(initialQuantity) || 0,
+          reserved: 0,
+          reservations: {}
+        });
+      } else {
+        // Actualizar estructura si es necesario
+        const data = stockDoc.data();
+        const updates: Partial<StockDocument> = {};
+        
+        // Asegurarse de que todos los valores sean numéricos
+        if (typeof data.available === 'undefined' || isNaN(data.available)) {
+          updates.available = Number(data.quantity) || 0;
+        }
+        if (typeof data.quantity === 'undefined' || isNaN(data.quantity)) {
+          updates.quantity = Number(data.quantity) || 0;
+        }
+        if (typeof data.reserved === 'undefined' || isNaN(data.reserved)) {
+          updates.reserved = 0;
+        }
+        if (!data.reservations) {
+          updates.reservations = {};
+        }
+        
+        if (Object.keys(updates).length > 0) {
+          await updateDoc(stockRef, updates);
+        }
       }
-      if (typeof data.reserved === 'undefined') {
-        updates.reserved = 0;
-      }
-      if (!data.reservations) {
-        updates.reservations = {};
-      }
-      
-      if (Object.keys(updates).length > 0) {
-        await updateDoc(stockRef, updates);
-      }
+    } catch (error) {
+      console.error('Error initializing stock document:', error);
+      throw error;
     }
   },
 
@@ -349,25 +358,28 @@ export const stockService = {
     try {
       await runTransaction(db, async (transaction) => {
         const stockDoc = await transaction.get(stockRef);
-        const stockData = stockDoc.exists() ? stockDoc.data() as StockDocument : {
-          quantity: 0,
-          available: 0,
-          reserved: 0,
-          reservations: {}
-        };
-
-        const newQuantity = stockData.quantity + quantity;
-        const newAvailable = stockData.available + quantity;
-
-        if (newQuantity < 0 || newAvailable < 0) {
-          throw new Error('Stock no puede ser negativo');
+        
+        // Asegurarse de que quantity sea un número
+        const newQuantity = Number(quantity) || 0;
+        
+        if (!stockDoc.exists()) {
+          // Si no existe, inicializar con los valores correctos
+          transaction.set(stockRef, {
+            quantity: newQuantity,
+            available: newQuantity,
+            reserved: 0,
+            reservations: {}
+          });
+        } else {
+          const stockData = stockDoc.data() as StockDocument;
+          const currentReserved = Number(stockData.reserved) || 0;
+          
+          transaction.update(stockRef, {
+            quantity: newQuantity,
+            available: newQuantity,
+            reserved: currentReserved
+          });
         }
-
-        transaction.set(stockRef, {
-          ...stockData,
-          quantity: newQuantity,
-          available: newAvailable
-        });
       });
     } catch (error) {
       console.error('Error updating stock:', error);
