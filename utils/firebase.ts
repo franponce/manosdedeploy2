@@ -49,9 +49,9 @@ export interface SiteInformation {
 }
 
 export const DEFAULT_SITE_INFORMATION: SiteInformation = {
-  title: "Mi Tienda",
-  description: "Bienvenido a tu tienda online",
-  description2: "Gestiona tus productos y ventas de manera simple",
+  title: "Cargando tienda...",
+  description: "Estamos preparando todo para mostrarte los mejores productos",
+  description2: "¡En unos segundos podrás ver todo el catálogo! 🛍️",
   whatsappCart: "",
   sheet: "",
   color: "teal",
