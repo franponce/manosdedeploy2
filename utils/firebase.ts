@@ -85,17 +85,14 @@ export interface PaymentMethods {
 }
 
 export async function getSiteInformation(): Promise<SiteInformation> {
-  try {
-    const docRef = doc(db, "siteInfo", "main");
-    const docSnap = await getDoc(docRef);
-      
-    if (docSnap.exists()) {
-      return docSnap.data() as SiteInformation;
-    }
-  } catch (error) {
-    console.error('Error fetching site information:', error);
+  const docRef = doc(db, "siteInfo", "main");
+  const docSnap = await getDoc(docRef);
+    
+  if (docSnap.exists()) {
+    return docSnap.data() as SiteInformation;
   }
-  return DEFAULT_SITE_INFORMATION;
+  
+  throw new Error('No site information found');
 }
 
 export const updateSiteInfo = async (siteInfo: Partial<SiteInformation>): Promise<void> => {

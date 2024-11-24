@@ -104,51 +104,8 @@ const LoginPage: React.FC = () => {
 
   if (siteInfoLoading) {
     return (
-      <Box 
-        display="flex" 
-        flexDirection={{ base: "column", md: "row" }}
-        minHeight="calc(100vh - 70px)"
-        gap={{ base: 8, md: 0 }}
-      >
-        {/* Lado izquierdo - Skeleton del formulario */}
-        <Box flex="1" p={{ base: 4, md: 8 }} display="flex" alignItems="center" justifyContent="center">
-          <VStack spacing={6} align="stretch" maxW="400px" width="100%">
-            <Stack spacing={3}>
-              <Skeleton height="40px" width="250px" />
-              <Skeleton height="24px" width="200px" />
-            </Stack>
-            <Stack spacing={4}>
-              <Skeleton height="40px" />
-              <Skeleton height="40px" />
-              <Skeleton height="40px" />
-            </Stack>
-          </VStack>
-        </Box>
-
-        {/* Lado derecho - Skeleton del logo y descripción */}
-        <Box 
-          flex="1"
-          display={{ base: "none", md: "flex" }}
-          bg="gray.50"
-          alignItems="center"
-          justifyContent="center"
-        >
-          <Stack
-            spacing={8}
-            maxW="400px"
-            w="100%"
-            p={8}
-            bg="white"
-            borderRadius="3xl"
-            boxShadow="lg"
-          >
-            <Skeleton height="120px" width="120px" borderRadius="full" mx="auto" />
-            <Stack spacing={6} align="center">
-              <Skeleton height="40px" width="200px" />
-              <Skeleton height="20px" width="300px" />
-            </Stack>
-          </Stack>
-        </Box>
+      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+        <Spinner />
       </Box>
     );
   }
@@ -257,31 +214,56 @@ const LoginPage: React.FC = () => {
           mx={4}
         >
           <Skeleton isLoaded={!siteInfoLoading} borderRadius="full">
-            <Box boxSize="120px" mx="auto">
-              {siteInfo?.logoUrl ? (
-                <Image
-                  src={siteInfo.logoUrl}
-                  alt="Store logo"
-                  objectFit="cover"
-                  width="100%"
-                  height="100%"
-                />
-              ) : (
-                <Box bg="gray.100" width="100%" height="100%" borderRadius="full" />
-              )}
+            <Box
+              backgroundColor="white"
+              borderRadius="full"
+              boxShadow="md"
+              boxSize="120px"
+              overflow="hidden"
+              position="relative"
+              mx="auto"
+              mb={2}
+            >
+              <Image
+                src={siteInfo?.logoUrl}
+                alt="Store logo"
+                objectFit="cover"
+                width="100%"
+                height="100%"
+                loading="eager"
+              />
             </Box>
           </Skeleton>
-          
-          <Stack align="center" spacing={6}>
-            <Skeleton isLoaded={!siteInfoLoading} height="40px" width="200px">
-              <Heading size="lg">{siteInfo?.title || ''}</Heading>
+
+          <Stack
+            align="center"
+            spacing={6}
+            textAlign="center"
+            px={6}
+          >
+            <Skeleton isLoaded={!siteInfoLoading}>
+              <Heading size="lg">{siteInfo?.title}</Heading>
             </Skeleton>
             
-            <Skeleton isLoaded={!siteInfoLoading} height="20px" width="300px">
-              <Text color="gray.600" fontSize="md">
-                {siteInfo?.description || ''}
-              </Text>
+            <Skeleton isLoaded={!siteInfoLoading}>
+              <Text 
+                color="gray.600" 
+                fontSize="md"
+                lineHeight="tall"
+                dangerouslySetInnerHTML={{ __html: siteInfo?.description || '' }}
+              />
             </Skeleton>
+            
+            {siteInfo?.description2 && (
+              <Skeleton isLoaded={!siteInfoLoading}>
+                <Text 
+                  color="gray.600" 
+                  fontSize="md"
+                  lineHeight="tall"
+                  dangerouslySetInnerHTML={{ __html: siteInfo?.description2 || '' }}
+                />
+              </Skeleton>
+            )}
           </Stack>
         </Stack>
       </Box>
