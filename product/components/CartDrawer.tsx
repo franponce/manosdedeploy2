@@ -336,23 +336,30 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
   };
 
   const handleQuantityChange = (item: CartItem, value: string) => {
-    setTempQuantities(prev => ({
-      ...prev,
-      [item.id]: value
-    }));
+    if (value === '' || /^\d*$/.test(value)) {
+      setTempQuantities(prev => ({
+        ...prev,
+        [item.id]: value
+      }));
 
-    const numValue = parseInt(value);
-    if (!isNaN(numValue) && numValue >= 0) {
-      const diff = numValue - item.quantity;
-      if (diff > 0) {
-        for (let i = 0; i < diff; i++) {
-          onIncrement(item);
-        }
-      } else if (diff < 0) {
-        for (let i = 0; i < Math.abs(diff); i++) {
-          onDecrement(item);
+      if (value !== '') {
+        const numValue = parseInt(value);
+        if (!isNaN(numValue) && numValue >= 0 && numValue <= 999) {
+          const currentQuantity = item.quantity;
+          if (numValue !== currentQuantity) {
+            updateItemQuantity(item, numValue);
+          }
         }
       }
+    }
+  };
+
+  const updateItemQuantity = (item: CartItem, newQuantity: number) => {
+    const updatedItem = { ...item, quantity: newQuantity };
+    if (newQuantity > item.quantity) {
+      onIncrement(updatedItem);
+    } else if (newQuantity < item.quantity) {
+      onDecrement(updatedItem);
     }
   };
 
