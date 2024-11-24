@@ -58,7 +58,7 @@ const CART_EXPIRY_TIME = 24 * 60 * 60 * 1000; // 24 horas en milisegundos
 const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCategories }) => {
   const { cart, addToCart, removeFromCart } = useCart();
   const toast = useToast();
-  const [isCartOpen, toggleCart] = React.useState<boolean>(false);
+  const [isCartOpen, setIsCartOpen] = React.useState<boolean>(false);
   const [page, setPage] = React.useState(1);
   const [displayedProducts, setDisplayedProducts] = React.useState<Product[]>([]);
   const [hasMore, setHasMore] = React.useState(true);
@@ -382,15 +382,21 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
             <Spinner size="xl" />
           </Center>
         )}
-        {Boolean(cart.length) && (
-          <Flex alignItems="center" bottom={4} justifyContent="center" position="sticky">
+        {cart.length > 0 && (
+          <Flex 
+            alignItems="center" 
+            bottom={4} 
+            justifyContent="center" 
+            position="sticky"
+            zIndex={3}
+            padding={4}
+          >
             <Button
               boxShadow="xl"
               colorScheme="primary"
-              data-testid="show-cart"
               size="lg"
               width={{ base: "100%", sm: "fit-content" }}
-              onClick={() => toggleCart(true)}
+              onClick={() => setIsCartOpen(true)}
             >
               <Stack alignItems="center" direction="row" spacing={6}>
                 <Stack alignItems="center" direction="row" spacing={3}>
@@ -406,11 +412,11 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
                     paddingX={2}
                     paddingY={1}
                   >
-                    {quantity} {quantity === 1 ? "item" : "items"}
+                    {cart.reduce((total, item) => total + item.quantity, 0)} items
                   </Text>
                 </Stack>
                 <Text fontSize="md" lineHeight={6}>
-                  {total}
+                  {parseCurrency(cart.reduce((total, item) => total + (item.price * item.quantity), 0))}
                 </Text>
               </Stack>
             </Button>
@@ -419,10 +425,10 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
       </Stack>
       <CartDrawer
         isOpen={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
         items={cart}
-        onClose={() => toggleCart(false)}
-        onDecrement={(product) => handleEditCart(product, "decrement")}
-        onIncrement={(product) => handleEditCart(product, "increment")}
+        onIncrement={addToCart}
+        onDecrement={removeFromCart}
       />
     </>
   );
