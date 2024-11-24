@@ -323,7 +323,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
   };
 
   const renderProduct = (product: Product) => {
-    const { available } = useStock(product.id);
+    const { available, isLoading: stockLoading } = useStock(product.id);
     
     return (
       <Box
@@ -402,12 +402,14 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
               px={3}
               py={1}
               borderRadius="full"
-              colorScheme={available === 0 ? "red" : available <= 5 ? "orange" : "green"}
+              colorScheme={stockLoading ? "gray" : available === 0 ? "red" : available <= 5 ? "orange" : "green"}
               fontSize="sm"
             >
-              {available === 0 ? (
-                <HStack spacing={1}>
-                  <WarningIcon />
+              {stockLoading ? (
+                "Cargando..."
+              ) : available === 0 ? (
+                <HStack spacing={1} alignItems="center">
+                  <WarningIcon boxSize="12px" />
                   <Text>Sin stock</Text>
                 </HStack>
               ) : (
