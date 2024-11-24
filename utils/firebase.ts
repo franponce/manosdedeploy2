@@ -49,18 +49,24 @@ export interface SiteInformation {
 }
 
 export const DEFAULT_SITE_INFORMATION: SiteInformation = {
-  title: "Manos de manteca",
-  description: "Envianos tu pedido y a la brevedad te respondemos.",
-  description2: "👉 Nuestro horario de atención es de X a X de X a X hs. Hacemos envíos 🚴‍♀",
-  whatsappCart: "5492954271140",
-  sheet: "https://docs.google.com/spreadsheets/d/e/2PACX-1vReSQMLVR-O0uKqZr28Y9j29RN1YYoaFkb29qVJjofGNZSRUnhCsgoohDDDrsAV0FW4R9xdulrn0aYE/pub?output=csv",
+  title: "Mi Tienda",
+  description: "Bienvenido a tu tienda online",
+  description2: "Gestiona tus productos y ventas de manera simple",
+  whatsappCart: "",
+  sheet: "",
   color: "teal",
   social: [
-    { name: "instagram", url: "https://www.hola.com" },
-    { name: "whatsapp", url: "https://wa.me/54929542201999" }
+    {
+      name: "instagram",
+      url: "#"
+    },
+    {
+      name: "whatsapp",
+      url: "#"
+    }
   ],
-  logoUrl: "/default-logo.png",
-  bannerUrl: "/default-banner.jpg",
+  logoUrl: "",
+  bannerUrl: "",
   currency: 'ARS',
   exchangeRates: {},
   storeName: "",
@@ -306,31 +312,6 @@ export const stockService = {
     } catch (error) {
       console.error('Error getting product stock:', error);
       return 0;
-    }
-  },
-
-  async decrementStock(productId: string, quantity: number): Promise<void> {
-    const stockRef = doc(db, 'stock', productId);
-    
-    try {
-      await runTransaction(db, async (transaction) => {
-        const stockDoc = await transaction.get(stockRef);
-        
-        if (!stockDoc.exists()) {
-          throw new Error('Stock document does not exist');
-        }
-        
-        const currentStock = stockDoc.data().available || 0;
-        const newStock = Math.max(0, currentStock - quantity);
-        
-        transaction.update(stockRef, {
-          available: newStock,
-          quantity: newStock
-        });
-      });
-    } catch (error) {
-      console.error('Error decrementing stock:', error);
-      throw error;
     }
   }
 };
