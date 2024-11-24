@@ -34,7 +34,7 @@ interface Props {
 }
 
 const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading: cardLoading, onEdit, onDelete, onVisibilityToggle, isAdminView = false, showStock = false }) => {
-  const { stock, isLoading: stockLoading } = useStock(product.id);
+  const { available, isLoading: stockLoading } = useStock(product.id);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [isTitleExpanded, setIsTitleExpanded] = useState(false);
   const [isMobile] = useMediaQuery("(max-width: 48em)");
@@ -178,20 +178,20 @@ const ProductCard: React.FC<Props> = ({ product, onAdd, isLoading: cardLoading, 
               <Text fontWeight="bold" fontSize="xl">
                 {parseCurrency(product.price || 0)}
               </Text>
-              <Text fontSize="sm" color={stock === 0 ? "red.500" : "gray.600"}>
-                {stock === 0 ? "Agotado" : `Stock disponible: ${stock}`}
+              <Text fontSize="sm" color={available === 0 ? "red.500" : "gray.600"}>
+                {available === 0 ? "Agotado" : `Stock disponible: ${available}`}
               </Text>
               <Button
                 colorScheme="blue"
                 onClick={handleProductClick}
                 width="100%"
-                isDisabled={stock === 0}
+                isDisabled={available === 0}
               >
-                {stock === 0 ? "Agotado" : "Ver detalle"}
+                {available === 0 ? "Agotado" : "Ver detalle"}
               </Button>
-              {stock > 0 && stock <= 5 && (
+              {available > 0 && available <= 5 && (
                 <Text color="orange.500" fontSize="sm" mt={2}>
-                  ¡Últimas {stock} unidades!
+                  ¡Últimas {available} unidades!
                 </Text>
               )}
             </>

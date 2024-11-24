@@ -75,7 +75,7 @@ const processImages = (images: string[] = []) => {
 const ProductDetail: NextPageWithLayout = () => {
   const router = useRouter();
   const { id } = router.query;
-  const { product, isLoading, error, stock } = useProduct(id ? id as string : null);
+  const { product, isLoading, error, available } = useProduct(id ? id as string : null);
   const { siteInfo } = useSiteInfo();
   const toast = useToast();
   const { cart, addToCart, removeFromCart } = useCart();
@@ -102,6 +102,10 @@ const ProductDetail: NextPageWithLayout = () => {
       <Container maxW="container.xl" py={8}>
         <VStack spacing={6} align="stretch">
           <Skeleton height="400px" />
+          <Box>
+            <SkeletonText noOfLines={4} spacing={4} />
+            <Text mt={4}>Stock disponible: {available}</Text>
+          </Box>
         </VStack>
       </Container>
     );
@@ -143,7 +147,7 @@ const ProductDetail: NextPageWithLayout = () => {
 
     if (action === "increment") {
       const currentQuantity = cart.find(item => item.id === cartItem.id)?.quantity || 0;
-      if (currentQuantity >= stock) {
+      if (currentQuantity >= available) {
         toast({
           title: "No hay suficiente stock",
           description: "Has alcanzado el límite de unidades disponibles",
@@ -160,12 +164,12 @@ const ProductDetail: NextPageWithLayout = () => {
   };
 
   const handleAddToCart = () => {
-    if (!product || !stock) return;
+    if (!product || !available) return;
     
     const existingItem = cart.find(item => item.id === product.id);
     const currentQuantity = existingItem?.quantity || 0;
     
-    if (currentQuantity >= stock) {
+    if (currentQuantity >= available) {
       toast({
         title: "No hay suficiente stock",
         description: "Has alcanzado el límite de unidades disponibles",
@@ -289,8 +293,8 @@ const ProductDetail: NextPageWithLayout = () => {
                 </Heading>
               </Skeleton>
 
-              <Text fontSize="lg" color={stock === 0 ? "red.500" : "gray.600"}>
-                {stock === 0 ? "Agotado" : `Stock disponible: ${stock}`}
+              <Text fontSize="sm" color={available === 0 ? "red.500" : "gray.600"}>
+                {available === 0 ? "Agotado" : `Stock disponible: ${available}`}
               </Text>
 
               <Skeleton isLoaded={!isLoading}>
@@ -305,15 +309,15 @@ const ProductDetail: NextPageWithLayout = () => {
                   size="lg"
                   width="100%"
                   onClick={handleAddToCart}
-                  isDisabled={stock === 0}
+                  isDisabled={available === 0}
                   mb={4}
                 >
-                  {stock === 0 ? "Agotado" : "Agregar al carrito"}
+                  {available === 0 ? "Agotado" : "Agregar al carrito"}
                 </Button>
               </Skeleton>
-              {stock > 0 && stock <= 5 && (
+              {available > 0 && available <= 5 && (
                 <Text color="orange.500" fontSize="sm" textAlign="center" mb={4}>
-                  ¡Últimas {stock} unidades disponibles!
+                  ¡Últimas {available} unidades disponibles!
                 </Text>
               )}
 

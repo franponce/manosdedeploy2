@@ -3,13 +3,13 @@ import { doc, onSnapshot } from 'firebase/firestore';
 import { db, stockService } from '../utils/firebase';
 
 interface StockHookReturn {
-  stock: number;
+  available: number;
   isLoading: boolean;
   error: Error | null;
 }
 
 export const useStock = (productId: string | null): StockHookReturn => {
-  const [stock, setStock] = useState<number>(0);
+  const [available, setAvailable] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -19,8 +19,8 @@ export const useStock = (productId: string | null): StockHookReturn => {
     const fetchStock = async () => {
       try {
         setIsLoading(true);
-        const stockValue = await stockService.getProductStock(productId);
-        setStock(stockValue);
+        const stockValue = await stockService.getAvailableStock(productId);
+        setAvailable(stockValue);
       } catch (err) {
         setError(err as Error);
       } finally {
@@ -30,15 +30,17 @@ export const useStock = (productId: string | null): StockHookReturn => {
 
     fetchStock();
 
-    // Suscripción a cambios en tiempo real
+    // Suscripción a cambios en tiempo real del stock disponible
     const unsubscribe = onSnapshot(doc(db, 'stock', productId), (docSnapshot) => {
       if (docSnapshot.exists()) {
-        setStock(docSnapshot.data().quantity);
+        const data = docSnapshot.data();
+        const availableStock = data.available - data.reserved;
+        setAvailable(availableStock);
       }
     });
 
     return () => unsubscribe();
   }, [productId]);
 
-  return { stock, isLoading, error };
+  return { available, isLoading, error };
 }; 

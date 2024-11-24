@@ -82,25 +82,12 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
     }
 
     try {
-      const currentStock = await stockService.getProductStock(item.id);
-      const currentQuantity = item.quantity;
-
-      if (currentQuantity >= currentStock) {
-        toast({
-          title: "Stock no disponible",
-          description: "No hay más unidades disponibles de este producto",
-          status: "warning",
-          duration: 3000,
-        });
-        return;
-      }
-
       const reserved = await stockService.reserveStock(item.id, 1, sessionId);
       
       if (!reserved) {
         toast({
-          title: "Error al reservar stock",
-          description: "No se pudo reservar el producto, intente nuevamente",
+          title: "Stock insuficiente",
+          description: "No hay suficiente stock disponible",
           status: "error",
           duration: 3000,
         });
@@ -109,7 +96,7 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
 
       onIncrement(item);
     } catch (error) {
-      console.error('Error al manejar el stock:', error);
+      console.error('Error al reservar stock:', error);
       toast({
         title: "Error",
         description: "Hubo un problema al actualizar el carrito",
@@ -120,21 +107,10 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
   };
 
   const handleDecrement = async (item: CartItem) => {
-    if (!isReady) {
-      toast({
-        title: "Espera un momento",
-        description: "Inicializando sesión...",
-        status: "info",
-        duration: 2000,
-      });
-      return;
-    }
+    if (!isReady) return;
 
     try {
-      const success = await stockService.releaseReservation(item.id, sessionId);
-      if (!success) {
-        console.warn('No se pudo liberar la reserva, pero continuamos con el decremento');
-      }
+      await stockService.releaseReservation(item.id, sessionId);
       onDecrement(item);
     } catch (error) {
       console.error('Error al liberar stock:', error);
