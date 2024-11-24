@@ -80,6 +80,7 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
   const [isFullNameError, setIsFullNameError] = useState<boolean>(false);
   const toast = useToast();
   const { siteInfo } = useSiteInfo();
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     fetchPaymentMethods();
@@ -169,6 +170,38 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
     return true;
   };
 
+  const createReservations = async (): Promise<boolean> => {
+    for (const item of items) {
+      try {
+        const reserved = await stockService.reserveStock(
+          item.id,
+          item.quantity,
+          sessionId
+        );
+        
+        if (!reserved) {
+          toast({
+            title: "Error",
+            description: `No se pudo reservar el producto ${item.title}`,
+            status: "error",
+            duration: 3000,
+          });
+          return false;
+        }
+      } catch (error) {
+        console.error('Error reserving stock:', error);
+        toast({
+          title: "Error",
+          description: `Error al reservar ${item.title}`,
+          status: "error",
+          duration: 3000,
+        });
+        return false;
+      }
+    }
+    return true;
+  };
+
   const handleWhatsAppRedirect = async () => {
     if (!isReady || !fullName.trim()) {
       toast({
@@ -180,14 +213,23 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
       return;
     }
 
+    setIsProcessing(true);
     try {
-      // Validar stock antes de confirmar
+      // 1. Validar stock disponible
       const stockValid = await validateCartStock();
       if (!stockValid) {
+        setIsProcessing(false);
         return;
       }
 
-      // Confirmar cada item del carrito
+      // 2. Crear reservas para todos los items
+      const reservationsCreated = await createReservations();
+      if (!reservationsCreated) {
+        setIsProcessing(false);
+        return;
+      }
+
+      // 3. Confirmar cada item del carrito
       for (const item of items) {
         try {
           const confirmed = await stockService.confirmPurchase(
@@ -201,30 +243,40 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
           }
         } catch (error) {
           console.error('Error confirming purchase:', error);
+          // Intentar liberar las reservas
+          items.forEach(async (cartItem) => {
+            try {
+              await stockService.releaseReservation(cartItem.id, sessionId);
+            } catch (releaseError) {
+              console.error('Error releasing reservation:', releaseError);
+            }
+          });
+
           toast({
             title: "Error",
             description: `No se pudo confirmar la compra de ${item.title}. Por favor, intenta nuevamente.`,
             status: "error",
             duration: 5000,
           });
+          setIsProcessing(false);
           return;
         }
       }
 
-      // Generar texto del mensaje
+      // 4. Si todo está bien, enviar mensaje de WhatsApp
       const text = generateWhatsAppText(items, fullName, selectedPaymentMethod, note);
-      
-      // Abrir WhatsApp
       window.open(`https://wa.me/${siteInfo?.whatsappCart}?text=${encodeURIComponent(text)}`);
       onClose();
     } catch (error) {
-      console.error('Error confirming purchase:', error);
+      console.error('Error processing purchase:', error);
       toast({
         title: "Error",
         description: "Hubo un problema al procesar tu pedido. Por favor, intenta nuevamente.",
         status: "error",
         duration: 5000,
       });
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -433,11 +485,12 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
               colorScheme="green"
               width="100%"
               onClick={handleWhatsAppRedirect}
-              isDisabled={items.length === 0 || !selectedPaymentMethod || !fullName.trim()}
+              isDisabled={items.length === 0 || !selectedPaymentMethod || !fullName.trim() || isProcessing}
               leftIcon={<Icon as={FaWhatsapp} />}
               mb={2}
+              isLoading={isProcessing}
             >
-              Enviar pedido por WhatsApp
+              {isProcessing ? "Procesando..." : "Enviar pedido por WhatsApp"}
             </Button>
             <Button
               variant="outline"

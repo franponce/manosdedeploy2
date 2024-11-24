@@ -297,15 +297,16 @@ export const stockService = {
         const reserved = Number(stockData.reserved) || 0;
         const reservations = stockData.reservations || {};
 
-        // Verificar stock disponible
-        if (available - reserved < quantity) {
-          throw new Error('Stock insuficiente');
+        // Verificar stock disponible real
+        const realAvailable = available - reserved;
+        if (realAvailable < quantity) {
+          throw new Error(`Stock insuficiente. Disponible: ${realAvailable}, Solicitado: ${quantity}`);
         }
 
         // Actualizar o crear reserva
         const existingReservation = reservations[sessionId];
         const newReservation = {
-          quantity: (existingReservation?.quantity || 0) + quantity,
+          quantity: quantity,
           expiresAt: Date.now() + (30 * 60 * 1000) // 30 minutos
         };
 
