@@ -138,7 +138,7 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
   };
 
   const handleWhatsAppRedirect = async () => {
-    if (!isReady || !fullName.trim()) {
+    if (!fullName.trim()) {
       toast({
         title: "Error",
         description: "Por favor completa tu nombre",
@@ -178,23 +178,27 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
       // 4. Abrir WhatsApp
       window.open(`https://wa.me/${siteInfo?.whatsappCart}?text=${whatsappMessage}`, '_blank');
       
-      // 5. Limpiar todo
-      clearCart(); // Limpia el carrito
-      localStorage.removeItem('cart'); // Elimina la persistencia del carrito
-      setFullName(''); // Limpia el formulario
+      // 5. Limpiar absolutamente todo
+      clearCart(); // Limpia el estado global del carrito
+      localStorage.removeItem('cart'); // Elimina la persistencia
+      window.localStorage.clear(); // Limpia todo el localStorage
+      setFullName('');
       setNote('');
       setSelectedPaymentMethod('');
       
-      // 6. Cerrar el drawer
+      // 6. Cerrar el drawer y mostrar mensaje
       onClose();
-      
-      // 7. Mostrar mensaje de éxito
       toast({
         title: "¡Pedido enviado!",
         description: "Tu pedido fue enviado correctamente",
         status: "success",
         duration: 3000,
+        position: 'top',
       });
+
+      // 7. Forzar recarga de la página para limpiar todos los estados
+      window.location.reload();
+      
     } catch (error) {
       console.error('Error processing purchase:', error);
       toast({
