@@ -2,14 +2,36 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { getProducts, createProduct, updateProduct, deleteProduct } from '../../utils/googleSheets';
 import { Product } from '../../product/types';
 
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
+let cachedProducts: {
+  data: Product[];
+  timestamp: number;
+} | null = null;
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   switch (req.method) {
     case 'GET':
       try {
+        // Verificar cache
+        if (cachedProducts && Date.now() - cachedProducts.timestamp < CACHE_DURATION) {
+          return res.status(200).json(cachedProducts.data);
+        }
+
         const products = await getProducts();
+        
+        // Actualizar cache
+        cachedProducts = {
+          data: products,
+          timestamp: Date.now()
+        };
+        
         res.status(200).json(products);
       } catch (error) {
         console.error('Error fetching products:', error);
+        // Si hay error y tenemos cache, usarlo aunque haya expirado
+        if (cachedProducts) {
+          return res.status(200).json(cachedProducts.data);
+        }
         res.status(500).json({ error: 'Failed to fetch products' });
       }
       break;
