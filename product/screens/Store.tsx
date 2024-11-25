@@ -230,17 +230,18 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
         return;
       }
       addToCart(cartItem);
-      setCartUpdated(true);
-      toast({
-        title: "Producto agregado",
-        description: "El producto se agregó al carrito",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
+      // Solo mostrar toast si es la primera vez que se agrega el producto
+      if (currentQuantity === 0) {
+        toast({
+          title: "Producto agregado",
+          description: "El producto se agregó al carrito",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
     } else {
       removeFromCart(cartItem);
-      setCartUpdated(true);
     }
   }
 
@@ -432,13 +433,9 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
             justifyContent="center" 
             position="sticky"
             zIndex={3}
-            padding={4}
-            background="white"
-            boxShadow="lg"
-            borderTopWidth="1px"
-            borderTopColor="gray.200"
           >
             <Button
+              boxShadow="xl"
               colorScheme="primary"
               size="lg"
               width={{ base: "100%", sm: "fit-content" }}

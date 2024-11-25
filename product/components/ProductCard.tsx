@@ -95,13 +95,15 @@ const ProductCard: React.FC<Props> = ({
       onAdd(product);
     }
     
-    toast({
-      title: "Producto agregado",
-      description: "El producto se agregó al carrito",
-      status: "success",
-      duration: 3000,
-      isClosable: true,
-    });
+    if (!existingItem) {
+      toast({
+        title: "Producto agregado",
+        description: "El producto se agregó al carrito",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
 
   const renderTitle = () => {
