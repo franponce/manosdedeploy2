@@ -205,8 +205,21 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
           }}
           variant="outline"
           alignSelf="flex-start"
+          size={{ base: "sm", md: "md" }}
+          px={{ base: 2, sm: 4 }}
+          fontSize={{ base: "xs", sm: "sm", md: "md" }}
+          maxW={{ base: "180px", sm: "none" }}
+          whiteSpace="normal"
+          height="auto"
+          py={2}
         >
-          <Text fontWeight="bold">Volver a la gestión de productos</Text>
+          <Text 
+            fontWeight="bold"
+            display="block"
+            lineHeight="short"
+          >
+            {window.innerWidth < 480 ? "Volver" : "Volver a la gestión de productos"}
+          </Text>
         </Button>
       );
     }
@@ -361,12 +374,13 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
               <Flex
                 justify="space-between"
                 align="center"
-                padding={4}
+                padding={{ base: 2, sm: 4 }}
+                gap={2}
               >
-                <Flex align="center">
+                <Box flex="1" maxW={{ base: "70%", sm: "auto" }}>
                   {getWelcomeMessage()}
-                </Flex>
-                <Flex align="center">
+                </Box>
+                <Box>
                   {shouldShowMenu && (
                     <HamburgerMenu
                       isLoggedIn={isLoggedIn}
@@ -376,7 +390,7 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
                       userName={userName}
                     />
                   )}
-                </Flex>
+                </Box>
               </Flex>
             </Container>
           </Box>
