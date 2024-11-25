@@ -175,18 +175,18 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
         )
       );
       
-      // 4. Abrir WhatsApp
-      window.open(`https://wa.me/${siteInfo?.whatsappCart}?text=${whatsappMessage}`, '_blank');
+      // 4. Abrir WhatsApp en una nueva pestaña
+      const whatsappWindow = window.open(`https://wa.me/${siteInfo?.whatsappCart}?text=${whatsappMessage}`, '_blank');
       
-      // 5. Limpiar absolutamente todo
-      clearCart(); // Limpia el estado global del carrito
-      localStorage.removeItem('cart'); // Elimina la persistencia
-      window.localStorage.clear(); // Limpia todo el localStorage
+      // 5. Limpiar todo
+      clearCart();
+      localStorage.removeItem('cart');
+      window.localStorage.clear();
       setFullName('');
       setNote('');
       setSelectedPaymentMethod('');
       
-      // 6. Cerrar el drawer y mostrar mensaje
+      // 6. Cerrar drawer y mostrar mensaje
       onClose();
       toast({
         title: "¡Pedido enviado!",
@@ -196,8 +196,8 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
         position: 'top',
       });
 
-      // 7. Forzar recarga de la página para limpiar todos los estados
-      window.location.reload();
+      // 7. Redirigir al home y recargar
+      window.location.href = '/';
       
     } catch (error) {
       console.error('Error processing purchase:', error);
