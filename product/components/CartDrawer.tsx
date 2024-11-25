@@ -175,9 +175,26 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
         )
       );
       
+      // 4. Abrir WhatsApp
       window.open(`https://wa.me/${siteInfo?.whatsappCart}?text=${whatsappMessage}`, '_blank');
-      clearCart();
+      
+      // 5. Limpiar todo
+      clearCart(); // Limpia el carrito
+      localStorage.removeItem('cart'); // Elimina la persistencia del carrito
+      setFullName(''); // Limpia el formulario
+      setNote('');
+      setSelectedPaymentMethod('');
+      
+      // 6. Cerrar el drawer
       onClose();
+      
+      // 7. Mostrar mensaje de éxito
+      toast({
+        title: "¡Pedido enviado!",
+        description: "Tu pedido fue enviado correctamente",
+        status: "success",
+        duration: 3000,
+      });
     } catch (error) {
       console.error('Error processing purchase:', error);
       toast({
