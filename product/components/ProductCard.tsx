@@ -43,7 +43,7 @@ const ProductCard: React.FC<Props> = ({
   onEdit,
   onDelete,
   onVisibilityToggle,
-  isAdminView,
+  isAdminView = false,
   showStock = false,
   available = 0
 }) => {
@@ -52,22 +52,18 @@ const ProductCard: React.FC<Props> = ({
   const [isTitleExpanded, setIsTitleExpanded] = useState(false);
   const [isMobile] = useMediaQuery("(max-width: 48em)");
   const router = useRouter();
-  const toast = useToast();
+  const toast = useToast({
+    position: 'top',
+  });
   const { cart, addToCart } = useCart();
 
-  const handleProductClick = (e: React.MouseEvent) => {
-    e.preventDefault();
+  const handleViewDetail = (e: React.MouseEvent) => {
+    e.stopPropagation();
     router.push(`/product/${product.id}`);
   };
 
-  const handleClick = (e: React.MouseEvent) => {
-    if (onAdd) {
-      onAdd(product);
-    }
-  };
-
   const handleAddToCart = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevenir navegación al detalle
+    e.stopPropagation();
 
     if (!product || !available) {
       toast({
@@ -112,7 +108,7 @@ const ProductCard: React.FC<Props> = ({
         noOfLines={isTitleExpanded ? undefined : 2}
         cursor="pointer"
         _hover={{ color: "blue.500" }}
-        onClick={handleProductClick}
+        onClick={handleViewDetail}
       >
         {product.title || 'Untitled Product'}
       </Text>
@@ -245,6 +241,7 @@ const ProductCard: React.FC<Props> = ({
                   size="sm"
                   width="100%"
                   isDisabled={available === 0}
+                  onClick={handleViewDetail}
                 >
                   {available === 0 ? "Agotado" : "Ver detalle"}
                 </Button>

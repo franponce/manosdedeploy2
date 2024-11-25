@@ -62,7 +62,9 @@ const CART_EXPIRY_TIME = 24 * 60 * 60 * 1000; // 24 horas en milisegundos
 
 const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCategories }) => {
   const { cart, addToCart, removeFromCart } = useCart();
-  const toast = useToast();
+  const toast = useToast({
+    position: 'top',
+  });
   const [isCartOpen, setIsCartOpen] = React.useState<boolean>(false);
   const [page, setPage] = React.useState(1);
   const [displayedProducts, setDisplayedProducts] = React.useState<Product[]>([]);
@@ -206,7 +208,25 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
     };
     
     if (action === "increment") {
+      const currentQuantity = cart.find(item => item.id === cartItem.id)?.quantity || 0;
+      if (currentQuantity >= (stocks[product.id] || 0)) {
+        toast({
+          title: "No hay suficiente stock",
+          description: "Has alcanzado el límite de unidades disponibles",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
       addToCart(cartItem);
+      toast({
+        title: "Producto agregado",
+        description: "El producto se agregó al carrito",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
     } else {
       removeFromCart(cartItem);
     }
