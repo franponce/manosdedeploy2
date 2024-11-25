@@ -281,6 +281,7 @@ const ProductDetail: NextPageWithLayout = () => {
             variant="ghost"
             onClick={handleBack}
             size="md"
+            bg="gray.50"
           >
             Volver a la tienda
           </Button>
