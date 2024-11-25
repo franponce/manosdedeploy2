@@ -228,12 +228,27 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
     }, 250);
   };
 
+  const renderTitle = (item: CartItem) => {
+    return (
+      <Text
+        fontWeight="bold"
+        fontSize="sm"
+        lineHeight="short"
+        overflow="hidden"
+        textOverflow="ellipsis"
+        style={{
+          display: '-webkit-box',
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: 'vertical',
+        }}
+      >
+        {item.title}
+      </Text>
+    );
+  };
+
   return (
-    <Drawer 
-      isOpen={isOpen} 
-      onClose={handleClose} 
-      size="md"
-    >
+    <Drawer isOpen={isOpen} onClose={handleClose} size="md">
       <DrawerContent>
         <DrawerHeader>
           <Flex align="center">
@@ -243,11 +258,13 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
           <DrawerCloseButton />
         </DrawerHeader>
 
+        <Divider />
+
         <DrawerBody>
           <VStack spacing={4} align="stretch">
             {items.length > 0 ? (
               items.map((item) => (
-                <HStack key={item.id} spacing={4}>
+                <Flex key={item.id} justify="space-between" align="flex-start">
                   <Image
                     src={getFirstImage(item.images)}
                     alt={item.title}
@@ -257,12 +274,12 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
                     flexShrink={0}
                     fallback={<Box bg="gray.200" boxSize="50px" />}
                   />
-                  
-                  <VStack flex={1} align="flex-start" spacing={1}>
-                    <Text fontWeight="bold">{item.title}</Text>
-                    <Text color="gray.600">{parseCurrency(item.price)}</Text>
-                  </VStack>
-
+                  <Box flex={1} minWidth={0}>
+                    {renderTitle(item)}
+                    <Text fontSize="sm" color="gray.600">
+                      {parseCurrency(item.price)} {siteInfo?.currency}
+                    </Text>
+                  </Box>
                   <HStack flexShrink={0}>
                     <IconButton
                       aria-label="Decrementar"
@@ -282,11 +299,7 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
                       isDisabled={processingItems[item.id]}
                     />
                   </HStack>
-                  
-                  <Text fontWeight="bold">
-                    {parseCurrency(item.price * item.quantity)}
-                  </Text>
-                </HStack>
+                </Flex>
               ))
             ) : (
               <Text textAlign="center">Tu carrito está vacío</Text>
