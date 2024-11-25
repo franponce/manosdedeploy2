@@ -229,9 +229,10 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
         });
         return;
       }
-      addToCart(cartItem);
+      
       // Solo mostrar toast si es la primera vez que se agrega el producto
       if (currentQuantity === 0) {
+        addToCart(cartItem);
         toast({
           title: "Producto agregado",
           description: "El producto se agregó al carrito",
@@ -239,6 +240,8 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
           duration: 3000,
           isClosable: true,
         });
+      } else {
+        addToCart(cartItem);
       }
     } else {
       removeFromCart(cartItem);
