@@ -13,6 +13,7 @@ import {
   Switch,
   FormControl,
   FormLabel,
+  useToast,
 } from '@chakra-ui/react';
 import { Product } from '../types';
 import { parseCurrency } from '../../utils/currency';
@@ -21,6 +22,7 @@ import { VisibilityToggle } from './VisibilityToggle';
 import ImageCarousel from './ImageCarousel';
 import { stockService } from '../../utils/firebase';
 import { useStock } from '@/hooks/useStock';
+import { useCart } from '@/hooks/useCart';
 
 interface Props {
   product: Product;
@@ -50,6 +52,8 @@ const ProductCard: React.FC<Props> = ({
   const [isTitleExpanded, setIsTitleExpanded] = useState(false);
   const [isMobile] = useMediaQuery("(max-width: 48em)");
   const router = useRouter();
+  const toast = useToast();
+  const { cart, addToCart } = useCart();
 
   const handleProductClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -60,6 +64,44 @@ const ProductCard: React.FC<Props> = ({
     if (onAdd) {
       onAdd(product);
     }
+  };
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevenir navegación al detalle
+
+    if (!product || !available) {
+      toast({
+        title: "No hay stock disponible",
+        description: "Este producto está agotado",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    const existingItem = cart.find(item => item.id === product.id);
+    const currentQuantity = existingItem?.quantity || 0;
+    
+    if (currentQuantity >= available) {
+      toast({
+        title: "No hay suficiente stock",
+        description: "Has alcanzado el límite de unidades disponibles",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    addToCart({ ...product, quantity: 1 });
+    toast({
+      title: "Producto agregado",
+      description: "El producto se agregó al carrito",
+      status: "success",
+      duration: 3000,
+      isClosable: true,
+    });
   };
 
   const renderTitle = () => {
@@ -196,14 +238,28 @@ const ProductCard: React.FC<Props> = ({
               >
                 {stockAvailable === 0 ? "Agotado" : `Stock disponible: ${stockAvailable}`}
               </Text>
-              <Button
-                colorScheme="blue"
-                onClick={handleProductClick}
-                width="100%"
-                isDisabled={stockAvailable === 0}
-              >
-                {stockAvailable === 0 ? "Agotado" : "Ver detalle"}
-              </Button>
+              <Stack spacing={1}>
+                <Button
+                  colorScheme="blue"
+                  variant="solid"
+                  size="sm"
+                  width="100%"
+                  isDisabled={available === 0}
+                >
+                  {available === 0 ? "Agotado" : "Ver detalle"}
+                </Button>
+                
+                <Button
+                  colorScheme="green"
+                  variant="outline"
+                  size="sm"
+                  width="100%"
+                  onClick={handleAddToCart}
+                  isDisabled={available === 0}
+                >
+                  Agregar al carrito
+                </Button>
+              </Stack>
               {stockAvailable > 0 && stockAvailable <= 5 && (
                 <Text color="orange.500" fontSize="sm" mt={2}>
                   {stockAvailable === 1 
