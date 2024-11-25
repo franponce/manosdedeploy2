@@ -201,10 +201,26 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
     
     setProcessingItems(prev => ({ ...prev, [item.id]: true }));
     
+    // Validar el stock antes de incrementar
     if (action === 'increment') {
-      await onIncrement(item);
+      const currentStock = await stockService.getAvailableStock(item.id);
+      if (item.quantity >= currentStock) {
+        toast({
+          title: "Stock insuficiente",
+          description: `No hay suficiente stock de ${item.title}`,
+          status: "error",
+          duration: 3000,
+        });
+        setProcessingItems(prev => ({ ...prev, [item.id]: false }));
+        return;
+      }
+    }
+    
+    // Siempre incrementar/decrementar de a 1
+    if (action === 'increment') {
+      await onIncrement({...item, quantity: 1});
     } else {
-      await onDecrement(item);
+      await onDecrement({...item, quantity: 1});
     }
     
     setTimeout(() => {
