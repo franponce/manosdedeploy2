@@ -65,7 +65,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
   const toast = useToast({
     position: 'top',
   });
-  const [isCartOpen, setIsCartOpen] = React.useState<boolean>(true);
+  const [isCartOpen, setIsCartOpen] = React.useState<boolean>(false);
   const [page, setPage] = React.useState(1);
   const [displayedProducts, setDisplayedProducts] = React.useState<Product[]>([]);
   const [hasMore, setHasMore] = React.useState(true);
