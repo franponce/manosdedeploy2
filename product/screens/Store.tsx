@@ -71,6 +71,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
   const [hasMore, setHasMore] = React.useState(true);
   const observer = React.useRef<IntersectionObserver | null>(null);
   const router = useRouter();
+  const [cartUpdated, setCartUpdated] = React.useState<boolean>(false);
 
   // Prefetch de datos
   React.useEffect(() => {
@@ -229,6 +230,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
         return;
       }
       addToCart(cartItem);
+      setCartUpdated(true);
       toast({
         title: "Producto agregado",
         description: "El producto se agregó al carrito",
@@ -238,6 +240,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
       });
     } else {
       removeFromCart(cartItem);
+      setCartUpdated(true);
     }
   }
 
@@ -290,6 +293,13 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
       // No es necesario hacer nada aquí
     }
   }, [isCartOpen]);
+
+  // Efecto para asegurar que el componente se re-renderice cuando el carrito cambia
+  React.useEffect(() => {
+    if (cartUpdated) {
+      setCartUpdated(false);
+    }
+  }, [cartUpdated]);
 
   if (error) return <div>Failed to load products</div>;
 
@@ -415,16 +425,20 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
             <Spinner size="xl" />
           </Center>
         )}
-        {cart.length > 0 && (
+        {Boolean(cart.length) && (
           <Flex 
             alignItems="center" 
             bottom={4} 
             justifyContent="center" 
             position="sticky"
             zIndex={3}
+            padding={4}
+            background="white"
+            boxShadow="lg"
+            borderTopWidth="1px"
+            borderTopColor="gray.200"
           >
             <Button
-              boxShadow="xl"
               colorScheme="primary"
               size="lg"
               width={{ base: "100%", sm: "fit-content" }}

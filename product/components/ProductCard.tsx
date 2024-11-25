@@ -91,6 +91,10 @@ const ProductCard: React.FC<Props> = ({
     }
 
     addToCart({ ...product, quantity: 1 });
+    if (onAdd) {
+      onAdd(product);
+    }
+    
     toast({
       title: "Producto agregado",
       description: "El producto se agregó al carrito",
