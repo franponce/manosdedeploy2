@@ -393,7 +393,6 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
             justifyContent="center" 
             position="sticky"
             zIndex={3}
-            padding={4}
           >
             <Button
               boxShadow="xl"
@@ -416,11 +415,11 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
                     paddingX={2}
                     paddingY={1}
                   >
-                    {cart.reduce((total, item) => total + item.quantity, 0)} items
+                    {quantity} {quantity === 1 ? "item" : "items"}
                   </Text>
                 </Stack>
                 <Text fontSize="md" lineHeight={6}>
-                  {parseCurrency(cart.reduce((total, item) => total + (item.price * item.quantity), 0))}
+                  {total}
                 </Text>
               </Stack>
             </Button>
