@@ -78,7 +78,9 @@ const ProductDetail: NextPageWithLayout = () => {
   const { id } = router.query;
   const { product, isLoading, error } = useProduct(id ? id as string : null);
   const { siteInfo } = useSiteInfo();
-  const toast = useToast();
+  const toast = useToast({
+    position: 'top',
+  });
   const { cart, addToCart, removeFromCart } = useCart();
   const [isCartOpen, toggleCart] = useState(false);
   const [copied, setCopied] = useState(false);

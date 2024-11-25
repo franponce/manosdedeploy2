@@ -99,6 +99,7 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
   const { sessionId, isReady } = useSessionId();
   const [isProcessing, setIsProcessing] = useState(false);
   const { clearCart } = useCart();
+  const [processingItems, setProcessingItems] = useState<{[key: string]: boolean}>({});
 
   useEffect(() => {
     fetchPaymentMethods();
@@ -195,6 +196,22 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
     onClose();
   };
 
+  const handleQuantityChange = async (item: CartItem, action: 'increment' | 'decrement') => {
+    if (processingItems[item.id]) return;
+    
+    setProcessingItems(prev => ({ ...prev, [item.id]: true }));
+    
+    if (action === 'increment') {
+      await onIncrement(item);
+    } else {
+      await onDecrement(item);
+    }
+    
+    setTimeout(() => {
+      setProcessingItems(prev => ({ ...prev, [item.id]: false }));
+    }, 250);
+  };
+
   return (
     <Drawer 
       isOpen={isOpen} 
@@ -234,17 +251,19 @@ const CartDrawer: React.FC<Props> = ({ isOpen, onClose, items, onIncrement, onDe
                     <IconButton
                       aria-label="Decrementar"
                       icon={<MinusIcon />}
-                      onClick={() => onDecrement(item)}
+                      onClick={() => handleQuantityChange(item, 'decrement')}
                       size="sm"
                       variant="outline"
+                      isDisabled={processingItems[item.id]}
                     />
                     <Text>{item.quantity}</Text>
                     <IconButton
                       aria-label="Incrementar"
                       icon={<AddIcon />}
-                      onClick={() => onIncrement(item)}
+                      onClick={() => handleQuantityChange(item, 'increment')}
                       size="sm"
                       variant="outline"
+                      isDisabled={processingItems[item.id]}
                     />
                   </HStack>
                   
