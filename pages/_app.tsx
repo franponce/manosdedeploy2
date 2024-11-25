@@ -55,6 +55,7 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
   const [hasRefreshed, setHasRefreshed] = React.useState(false);
   const [isPreviewMode, setIsPreviewMode] = React.useState(false);
   const toast = useToast();
+  const [buttonText, setButtonText] = React.useState("Volver a la gestión de productos");
 
   const showPreviewBanner = React.useMemo(() => {
     if (typeof window === 'undefined') return false;
@@ -158,6 +159,19 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
   const isAdminRoute = router.pathname === '/admin' || router.pathname === '/store-config';
   const isStoreConfigRoute = router.pathname === '/store-config';
 
+  React.useEffect(() => {
+    const handleResize = () => {
+      setButtonText(window.innerWidth < 480 
+        ? "Volver" 
+        : "Volver a la gestión de productos"
+      );
+    };
+    
+    handleResize(); // Set initial text
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const getWelcomeMessage = () => {
     if (router.pathname === '/login') {
       return (
@@ -208,7 +222,7 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
           size={{ base: "sm", md: "md" }}
           px={{ base: 2, sm: 4 }}
           fontSize={{ base: "xs", sm: "sm", md: "md" }}
-          maxW={{ base: "180px", sm: "none" }}
+          maxW={{ base: "120px", sm: "none" }}
           whiteSpace="normal"
           height="auto"
           py={2}
@@ -218,7 +232,7 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
             display="block"
             lineHeight="short"
           >
-            {window.innerWidth < 480 ? "Volver" : "Volver a la gestión de productos"}
+            {buttonText}
           </Text>
         </Button>
       );
