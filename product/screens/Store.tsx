@@ -415,43 +415,45 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
             <Spinner size="xl" />
           </Center>
         )}
-        <Flex 
-          alignItems="center" 
-          bottom={4} 
-          justifyContent="center" 
-          position="sticky"
-          zIndex={3}
-        >
-          <Button
-            boxShadow="xl"
-            colorScheme="primary"
-            size="lg"
-            width={{ base: "100%", sm: "fit-content" }}
-            onClick={() => setIsCartOpen(true)}
+        {cart.length > 0 && (
+          <Flex 
+            alignItems="center" 
+            bottom={4} 
+            justifyContent="center" 
+            position="sticky"
+            zIndex={3}
           >
-            <Stack alignItems="center" direction="row" spacing={6}>
-              <Stack alignItems="center" direction="row" spacing={3}>
+            <Button
+              boxShadow="xl"
+              colorScheme="primary"
+              size="lg"
+              width={{ base: "100%", sm: "fit-content" }}
+              onClick={() => setIsCartOpen(true)}
+            >
+              <Stack alignItems="center" direction="row" spacing={6}>
+                <Stack alignItems="center" direction="row" spacing={3}>
+                  <Text fontSize="md" lineHeight={6}>
+                    Ver carrito
+                  </Text>
+                  <Text
+                    backgroundColor="rgba(0,0,0,0.25)"
+                    borderRadius="sm"
+                    color="gray.100"
+                    fontSize="xs"
+                    fontWeight="500"
+                    paddingX={2}
+                    paddingY={1}
+                  >
+                    {quantity} {quantity === 1 ? "item" : "items"}
+                  </Text>
+                </Stack>
                 <Text fontSize="md" lineHeight={6}>
-                  Ver carrito
-                </Text>
-                <Text
-                  backgroundColor="rgba(0,0,0,0.25)"
-                  borderRadius="sm"
-                  color="gray.100"
-                  fontSize="xs"
-                  fontWeight="500"
-                  paddingX={2}
-                  paddingY={1}
-                >
-                  {quantity} {quantity === 1 ? "item" : "items"}
+                  {total}
                 </Text>
               </Stack>
-              <Text fontSize="md" lineHeight={6}>
-                {total}
-              </Text>
-            </Stack>
-          </Button>
-        </Flex>
+            </Button>
+          </Flex>
+        )}
       </Stack>
       <CartDrawer
         isOpen={isCartOpen}
