@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Switch,
   FormControl,
@@ -11,6 +11,7 @@ import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { updateProductVisibility } from '../../utils/googleSheets';
 import { mutate } from 'swr';
 import { SWR_KEYS } from '../constants';
+import { visibilityService } from '../../utils/firebase';
 
 interface VisibilityToggleProps {
   isVisible: boolean;
@@ -18,28 +19,27 @@ interface VisibilityToggleProps {
 }
 
 export const VisibilityToggle: React.FC<VisibilityToggleProps> = ({ 
-  isVisible, 
+  isVisible: initialIsVisible,
   productId 
 }) => {
+  const [isUpdating, setIsUpdating] = useState(false);
   const toast = useToast();
-  const [isUpdating, setIsUpdating] = React.useState(false);
 
   const handleToggle = async () => {
     setIsUpdating(true);
     try {
-      await updateProductVisibility(productId, !isVisible);
-      await mutate(SWR_KEYS.PRODUCTS);
+      // Primero actualizamos Firebase
+      await visibilityService.updateVisibility(productId, !initialIsVisible);
       
-      toast({
-        title: isVisible ? "Producto ocultado" : "Producto visible",
-        status: "success",
-        duration: 2000,
-      });
+      // Luego actualizamos Google Sheets
+      await updateProductVisibility(productId, !initialIsVisible);
+      
+      mutate(SWR_KEYS.PRODUCTS);
     } catch (error) {
-      console.error('Error toggling visibility:', error);
+      console.error('Error updating visibility:', error);
       toast({
-        title: "Error al cambiar visibilidad",
-        description: "Por favor, intenta nuevamente",
+        title: "Error",
+        description: "No se pudo actualizar la visibilidad del producto",
         status: "error",
         duration: 3000,
       });
@@ -51,14 +51,14 @@ export const VisibilityToggle: React.FC<VisibilityToggleProps> = ({
   return (
     <FormControl display="flex" alignItems="center">
       <HStack spacing={2}>
-        <Tooltip label={isVisible ? 'Visible en la tienda' : 'Oculto en la tienda'}>
+        <Tooltip label={initialIsVisible ? 'Visible en la tienda' : 'Oculto en la tienda'}>
           <Icon 
-            as={isVisible ? FaEye : FaEyeSlash} 
-            color={isVisible ? 'green.500' : 'gray.500'}
+            as={initialIsVisible ? FaEye : FaEyeSlash} 
+            color={initialIsVisible ? 'green.500' : 'gray.500'}
           />
         </Tooltip>
         <Switch
-          isChecked={isVisible}
+          isChecked={initialIsVisible}
           onChange={handleToggle}
           colorScheme="green"
           size="md"

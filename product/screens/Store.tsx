@@ -34,6 +34,7 @@ import { useState, useEffect } from 'react';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { useProductsStock } from '../../hooks/useProductsStock';
 import { stockService } from '../../utils/firebase';
+import { useVisibility } from '@/hooks/useVisibility';
 
 const fetcher = async (url: string) => {
   const response = await fetch(url);
@@ -153,44 +154,20 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
     return () => clearInterval(interval);
   }, [products, mutate]);
 
-  React.useEffect(() => {
-    if (products) {
-      // Asegurarnos de que los productos sean únicos por ID
-      const uniqueProducts = Array.from(
-        new Map(products.map(product => [product.id, product])).values()
-      );
-
-      let filteredProducts = uniqueProducts.filter(product => {
-        const isValidProduct = Boolean(
-          product?.id &&
-          product?.title &&
-          product?.images &&
-          product?.price &&
-          !product?.isScheduled
-        );
-
-        // Ser explícitos con la visibilidad
-        const isVisible = product.isVisible !== false;
-
-        return isValidProduct && isVisible;
-      });
-
-      if (searchTerm) {
-        filteredProducts = filteredProducts.filter(product =>
-          product.title.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-      }
-
-      if (selectedCategory) {
-        filteredProducts = filteredProducts.filter(product => 
-          product.categoryId === selectedCategory
-        );
-      }
-
-      setDisplayedProducts(filteredProducts.slice(0, page * PRODUCTS_PER_PAGE));
-      setHasMore(page * PRODUCTS_PER_PAGE < filteredProducts.length);
-    }
-  }, [products, page, searchTerm, selectedCategory]);
+  const filteredProducts = React.useMemo(() => {
+    if (!products) return [];
+    
+    return products.filter(product => {
+      const { isVisible } = useVisibility(product.id);
+      const matchesSearch = !searchTerm ||
+        product.title.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesCategory = !selectedCategory ||
+        product.categoryId === selectedCategory;
+      
+      return matchesSearch && matchesCategory && isVisible;
+    });
+  }, [products, searchTerm, selectedCategory]);
 
   React.useEffect(() => {
     const lastViewedProductId = sessionStorage.getItem('lastViewedProductId');

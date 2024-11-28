@@ -13,6 +13,7 @@ import { ChevronLeftIcon, ChevronRightIcon, WarningIcon } from '@chakra-ui/icons
 import { FaTrash } from 'react-icons/fa';
 import { Product } from '../types';
 import { useStock } from '@/hooks/useStock';
+import { useVisibility } from '@/hooks/useVisibility';
 
 interface AdminProductCardProps {
   product: Product;
@@ -30,6 +31,7 @@ const AdminProductCard: React.FC<AdminProductCardProps> = ({
   onImageIndexChange,
 }) => {
   const { available, isLoading: stockLoading } = useStock(product.id);
+  const { isVisible, isLoading: visibilityLoading } = useVisibility(product.id);
   const [expandedTitle, setExpandedTitle] = useState(false);
   const [expandedDescription, setExpandedDescription] = useState(false);
 
@@ -102,10 +104,10 @@ const AdminProductCard: React.FC<AdminProductCardProps> = ({
             px={3}
             py={1}
             borderRadius="full"
-            colorScheme={product.isVisible ? "green" : "red"}
+            colorScheme={isVisible ? "green" : "red"}
             fontSize="sm"
           >
-            {product.isVisible ? "Visible" : "Oculto"}
+            {isVisible ? "Visible" : "Oculto"}
           </Badge>
           
           <Badge

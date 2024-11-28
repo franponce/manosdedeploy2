@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getFirestore, doc, getDoc, setDoc, updateDoc, runTransaction } from "firebase/firestore";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, runTransaction, serverTimestamp } from "firebase/firestore";
 import { getStorage, ref, uploadString, getDownloadURL, uploadBytes, deleteObject, listAll } from "firebase/storage";
 import { 
   getAuth, 
@@ -309,6 +309,40 @@ export const stockService = {
     } catch (error) {
       console.error('Error getting product stock:', error);
       return 0;
+    }
+  }
+};
+
+export const visibilityService = {
+  async initializeVisibility(productId: string, isVisible: boolean): Promise<void> {
+    const visibilityRef = doc(db, 'visibility', productId);
+    
+    try {
+      const visibilityDoc = await getDoc(visibilityRef);
+      
+      if (!visibilityDoc.exists()) {
+        await setDoc(visibilityRef, {
+          isVisible,
+          lastUpdated: serverTimestamp()
+        });
+      }
+    } catch (error) {
+      console.error('Error initializing visibility document:', error);
+      throw error;
+    }
+  },
+
+  async updateVisibility(productId: string, isVisible: boolean): Promise<void> {
+    const visibilityRef = doc(db, 'visibility', productId);
+    
+    try {
+      await setDoc(visibilityRef, {
+        isVisible,
+        lastUpdated: serverTimestamp()
+      });
+    } catch (error) {
+      console.error('Error updating visibility:', error);
+      throw error;
     }
   }
 };
