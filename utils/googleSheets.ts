@@ -249,6 +249,20 @@ if (typeof window === 'undefined') {
         const { google } = await import('googleapis');
         const sheets = google.sheets({ version: 'v4', auth });
 
+        // Primero encontrar la fila correcta del producto
+        const response = await sheets.spreadsheets.values.get({
+          spreadsheetId: SPREADSHEET_ID,
+          range: PRODUCT_RANGE
+        });
+
+        const rows = response.data.values || [];
+        const rowIndex = rows.findIndex(row => row[0] === id);
+
+        if (rowIndex === -1) {
+          throw new Error('Producto no encontrado');
+        }
+
+        // Obtener el sheetId
         const spreadsheet = await sheets.spreadsheets.get({
           spreadsheetId: SPREADSHEET_ID,
         });
@@ -259,18 +273,7 @@ if (typeof window === 'undefined') {
           throw new Error('No se pudo encontrar el ID de la hoja');
         }
 
-        const response = await sheets.spreadsheets.values.get({
-          spreadsheetId: SPREADSHEET_ID,
-          range: PRODUCT_RANGE
-        });
-
-        const rows = response.data.values || [];
-        const rowIndex = parseInt(id);
-        
-        if (rowIndex < 2 || rowIndex > rows.length + 1) {
-          throw new Error(`Fila inválida: ${rowIndex}`);
-        }
-
+        // Eliminar la fila correcta (rowIndex + 2 porque la primera fila es el encabezado y las filas en Sheets empiezan en 1)
         await sheets.spreadsheets.batchUpdate({
           spreadsheetId: SPREADSHEET_ID,
           requestBody: {
@@ -279,31 +282,30 @@ if (typeof window === 'undefined') {
                 range: {
                   sheetId: sheetId,
                   dimension: 'ROWS',
-                  startIndex: rowIndex - 1,
-                  endIndex: rowIndex
+                  startIndex: rowIndex + 1, // +1 porque el encabezado está en la fila 1
+                  endIndex: rowIndex + 2    // +2 para incluir la fila a eliminar
                 }
               }
             }]
           }
         });
 
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
+        // Actualizar los IDs secuenciales
         const updatedResponse = await sheets.spreadsheets.values.get({
           spreadsheetId: SPREADSHEET_ID,
-          range: 'A:A',
+          range: 'A2:A', // Comenzar desde A2 para omitir el encabezado
         });
 
         const updatedRows = updatedResponse.data.values;
-        if (updatedRows && updatedRows.length > 1) {
-          const updates = updatedRows.slice(1).map((_, index) => (index + 1).toString());
+        if (updatedRows && updatedRows.length > 0) {
+          const updates = updatedRows.map((_, index) => [(index + 1).toString()]);
           
           await sheets.spreadsheets.values.update({
             spreadsheetId: SPREADSHEET_ID,
             range: 'A2:A' + (updates.length + 1),
             valueInputOption: 'RAW',
             requestBody: {
-              values: updates.map(id => [id]),
+              values: updates
             },
           });
         }
