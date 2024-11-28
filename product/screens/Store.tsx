@@ -33,7 +33,7 @@ import { useStock } from '../../hooks/useStock';
 import { useState, useEffect } from 'react';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { useProductsStock } from '../../hooks/useProductsStock';
-import { stockService } from '../../utils/firebase';
+import { db, stockService } from '../../utils/firebase';
 import { useVisibility } from '@/hooks/useVisibility';
 
 const fetcher = async (url: string) => {
@@ -158,16 +158,48 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
     if (!products) return [];
     
     return products.filter(product => {
-      const { isVisible } = useVisibility(product.id);
       const matchesSearch = !searchTerm ||
         product.title.toLowerCase().includes(searchTerm.toLowerCase());
       
       const matchesCategory = !selectedCategory ||
         product.categoryId === selectedCategory;
       
-      return matchesSearch && matchesCategory && isVisible;
+      return matchesSearch && matchesCategory && product.isVisible;
     });
   }, [products, searchTerm, selectedCategory]);
+
+  const [visibilityStates, setVisibilityStates] = React.useState<{[key: string]: boolean}>({});
+
+  React.useEffect(() => {
+    if (!products?.length) return;
+
+    const unsubscribes = products.map(product => {
+      return onSnapshot(
+        doc(db, 'visibility', product.id),
+        (doc) => {
+          if (doc.exists()) {
+            setVisibilityStates(prev => ({
+              ...prev,
+              [product.id]: doc.data().isVisible
+            }));
+          }
+        },
+        (error) => {
+          console.error('Error fetching visibility:', error);
+        }
+      );
+    });
+
+    return () => {
+      unsubscribes.forEach(unsubscribe => unsubscribe());
+    };
+  }, [products]);
+
+  const visibleProducts = React.useMemo(() => {
+    return filteredProducts.filter(product => 
+      visibilityStates[product.id] ?? product.isVisible
+    );
+  }, [filteredProducts, visibilityStates]);
 
   React.useEffect(() => {
     const lastViewedProductId = sessionStorage.getItem('lastViewedProductId');
@@ -365,7 +397,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
               />
             ))}
           </Grid>
-        ) : displayedProducts.length ? (
+        ) : visibleProducts.length ? (
           <Grid
             gridGap={8}
             templateColumns={{
@@ -373,8 +405,8 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
               sm: "repeat(auto-fill, minmax(280px, 1fr))",
             }}
           >
-            {displayedProducts.map((product, index) => {
-              const isLastElement = index === displayedProducts.length - 1;
+            {visibleProducts.map((product, index) => {
+              const isLastElement = index === visibleProducts.length - 1;
               const available = stocks[product.id] || 0;
 
               return (
