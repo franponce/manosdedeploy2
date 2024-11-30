@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Badge,
@@ -31,9 +31,13 @@ const AdminProductCard: React.FC<AdminProductCardProps> = ({
   onImageIndexChange,
 }) => {
   const { available, isLoading: stockLoading } = useStock(product.id);
-  const { isVisible, isLoading: visibilityLoading } = useVisibility(product.id);
+  const [isVisible, setIsVisible] = useState(product.isVisible);
   const [expandedTitle, setExpandedTitle] = useState(false);
   const [expandedDescription, setExpandedDescription] = useState(false);
+
+  useEffect(() => {
+    setIsVisible(product.isVisible);
+  }, [product.isVisible]);
 
   const truncateText = (text: string, maxLength: number) => {
     if (text.length <= maxLength) return text;
@@ -153,22 +157,12 @@ const AdminProductCard: React.FC<AdminProductCardProps> = ({
           )}
         </Box>
 
-        <Box mb={4} flex="1">
-          <div
-            dangerouslySetInnerHTML={{
-              __html: expandedDescription
-                ? product.description
-                : truncateText(product.description, 150)
-            }}
-            style={{
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              display: '-webkit-box',
-              WebkitLineClamp: expandedDescription ? 'unset' : 3,
-              WebkitBoxOrient: 'vertical',
-              lineHeight: '1.5em',
-              maxHeight: expandedDescription ? 'none' : '4.5em',
-            }}
+        <Box mb={4}>
+          <Text
+            noOfLines={expandedDescription ? undefined : 3}
+            onClick={() => setExpandedDescription(!expandedDescription)}
+            cursor="pointer"
+            dangerouslySetInnerHTML={{ __html: product.description }}
           />
           {product.description.length > 150 && (
             <Button
@@ -178,7 +172,7 @@ const AdminProductCard: React.FC<AdminProductCardProps> = ({
               onClick={() => setExpandedDescription(!expandedDescription)}
               mt={1}
             >
-              {expandedDescription ? "Ver menos" : "Ver más"}
+              {expandedDescription ? "Ver menos" : "Ver descripción completa"}
             </Button>
           )}
         </Box>
