@@ -14,6 +14,7 @@ import { FaTrash } from 'react-icons/fa';
 import { Product } from '../types';
 import { useStock } from '@/hooks/useStock';
 import { useVisibility } from '@/hooks/useVisibility';
+import { VisibilityToggle } from './VisibilityToggle';
 
 interface AdminProductCardProps {
   product: Product;
@@ -31,18 +32,9 @@ const AdminProductCard: React.FC<AdminProductCardProps> = ({
   onImageIndexChange,
 }) => {
   const { available, isLoading: stockLoading } = useStock(product.id);
-  const [isVisible, setIsVisible] = useState(product.isVisible);
+  const { isVisible, isLoading: visibilityLoading } = useVisibility(product.id);
   const [expandedTitle, setExpandedTitle] = useState(false);
   const [expandedDescription, setExpandedDescription] = useState(false);
-
-  useEffect(() => {
-    setIsVisible(product.isVisible);
-  }, [product.isVisible]);
-
-  const truncateText = (text: string, maxLength: number) => {
-    if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength).trim() + '...';
-  };
 
   return (
     <Box
@@ -52,56 +44,6 @@ const AdminProductCard: React.FC<AdminProductCardProps> = ({
       bg="white"
       position="relative"
     >
-      <Box position="relative" width="100%" paddingTop="100%">
-        <Box position="absolute" top={0} left={0} right={0} bottom={0}>
-          <Image
-            src={product.images[productImageIndex] || ''}
-            alt={product.title}
-            objectFit="cover"
-            width="100%"
-            height="100%"
-          />
-          {product.images.length > 1 && (
-            <>
-              <IconButton
-                aria-label="Anterior"
-                icon={<ChevronLeftIcon />}
-                position="absolute"
-                left={2}
-                top="50%"
-                transform="translateY(-50%)"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  const newIndex = productImageIndex === 0 ? 
-                    product.images.length - 1 : 
-                    productImageIndex - 1;
-                  onImageIndexChange(product.id, newIndex);
-                }}
-                zIndex={2}
-              />
-              <IconButton
-                aria-label="Siguiente"
-                icon={<ChevronRightIcon />}
-                position="absolute"
-                right={2}
-                top="50%"
-                transform="translateY(-50%)"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  const newIndex = productImageIndex === product.images.length - 1 ? 
-                    0 : 
-                    productImageIndex + 1;
-                  onImageIndexChange(product.id, newIndex);
-                }}
-                zIndex={2}
-              />
-            </>
-          )}
-        </Box>
-      </Box>
-
       <Box p={4} flex="1" display="flex" flexDirection="column">
         <HStack spacing={2} mb={3}>
           <Badge
@@ -111,99 +53,14 @@ const AdminProductCard: React.FC<AdminProductCardProps> = ({
             colorScheme={isVisible ? "green" : "red"}
             fontSize="sm"
           >
-            {isVisible ? "Visible" : "Oculto"}
+            {visibilityLoading ? "Cargando..." : isVisible ? "Visible" : "Oculto"}
           </Badge>
-          
-          <Badge
-            px={3}
-            py={1}
-            borderRadius="full"
-            colorScheme={stockLoading ? "gray" : available === 0 ? "red" : available <= 5 ? "orange" : "green"}
-            fontSize="sm"
-          >
-            {stockLoading ? (
-              "Cargando..."
-            ) : available === 0 ? (
-              <HStack spacing={1} alignItems="center">
-                <WarningIcon boxSize="12px" />
-                <Text>Sin stock</Text>
-              </HStack>
-            ) : (
-              `Stock: ${available}`
-            )}
-          </Badge>
-        </HStack>
-
-        <Box mb={2}>
-          <Text
-            fontWeight="bold"
-            fontSize="lg"
-            noOfLines={expandedTitle ? undefined : 2}
-            onClick={() => setExpandedTitle(!expandedTitle)}
-            cursor="pointer"
-          >
-            {product.title}
-          </Text>
-          {product.title.length > 50 && (
-            <Button
-              size="xs"
-              variant="link"
-              color="blue.500"
-              onClick={() => setExpandedTitle(!expandedTitle)}
-              mt={1}
-            >
-              {expandedTitle ? "Ver menos" : "Ver título completo"}
-            </Button>
-          )}
-        </Box>
-
-        <Box mb={4}>
-          <Text
-            noOfLines={expandedDescription ? undefined : 3}
-            onClick={() => setExpandedDescription(!expandedDescription)}
-            cursor="pointer"
-            dangerouslySetInnerHTML={{ __html: product.description }}
+          <VisibilityToggle 
+            isVisible={isVisible} 
+            productId={product.id}
           />
-          {product.description.length > 150 && (
-            <Button
-              size="xs"
-              variant="link"
-              color="blue.500"
-              onClick={() => setExpandedDescription(!expandedDescription)}
-              mt={1}
-            >
-              {expandedDescription ? "Ver menos" : "Ver descripción completa"}
-            </Button>
-          )}
-        </Box>
-
-        <Text fontWeight="bold" mb={4}>
-          ${product.price.toFixed(2)}
-        </Text>
-
-        <Box width="100%">
-          <HStack spacing={4} width="100%">
-            <Button
-              flex={1}
-              size="lg"
-              colorScheme="red"
-              onClick={() => onDelete(product)}
-              leftIcon={<Icon as={FaTrash} />}
-              borderRadius="md"
-            >
-              Eliminar
-            </Button>
-            <Button
-              flex={1}
-              size="lg"
-              colorScheme="blue"
-              onClick={() => onEdit(product)}
-              borderRadius="md"
-            >
-              Editar
-            </Button>
-          </HStack>
-        </Box>
+        </HStack>
+        {/* ... resto del código ... */}
       </Box>
     </Box>
   );

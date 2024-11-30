@@ -12,6 +12,7 @@ import { updateProductVisibility } from '../../utils/googleSheets';
 import { mutate } from 'swr';
 import { SWR_KEYS } from '../constants';
 import { visibilityService } from '../../utils/firebase';
+import { useVisibility } from '../../hooks/useVisibility';
 
 interface VisibilityToggleProps {
   isVisible: boolean;
@@ -24,19 +25,20 @@ export const VisibilityToggle: React.FC<VisibilityToggleProps> = ({
 }) => {
   const [isUpdating, setIsUpdating] = useState(false);
   const toast = useToast();
+  const { isVisible } = useVisibility(productId);
 
   const handleToggle = async () => {
     setIsUpdating(true);
     try {
-      await visibilityService.updateVisibility(productId, !initialIsVisible);
+      await visibilityService.updateVisibility(productId, !isVisible);
       
       // Mutate both the visibility state and the products list
-      mutate(`/api/products/${productId}/visibility`);
+      mutate(`/visibility/${productId}`);
       mutate(SWR_KEYS.PRODUCTS);
       
       toast({
         title: "Éxito",
-        description: `Producto ${!initialIsVisible ? 'visible' : 'oculto'} en la tienda`,
+        description: `Producto ${!isVisible ? 'visible' : 'oculto'} en la tienda`,
         status: "success",
         duration: 3000,
       });
@@ -56,14 +58,14 @@ export const VisibilityToggle: React.FC<VisibilityToggleProps> = ({
   return (
     <FormControl display="flex" alignItems="center">
       <HStack spacing={2}>
-        <Tooltip label={initialIsVisible ? 'Visible en la tienda' : 'Oculto en la tienda'}>
+        <Tooltip label={isVisible ? 'Visible en la tienda' : 'Oculto en la tienda'}>
           <Icon 
-            as={initialIsVisible ? FaEye : FaEyeSlash} 
-            color={initialIsVisible ? 'green.500' : 'gray.500'}
+            as={isVisible ? FaEye : FaEyeSlash} 
+            color={isVisible ? 'green.500' : 'gray.500'}
           />
         </Tooltip>
         <Switch
-          isChecked={initialIsVisible}
+          isChecked={isVisible}
           onChange={handleToggle}
           colorScheme="green"
           size="md"

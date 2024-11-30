@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import useSWR from 'swr';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../utils/firebase';
 
@@ -8,32 +8,37 @@ interface VisibilityHookReturn {
   error: Error | null;
 }
 
-export const useVisibility = (productId: string): VisibilityHookReturn => {
-  const [isVisible, setIsVisible] = useState<boolean>(true);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<Error | null>(null);
-
-  useEffect(() => {
-    if (!productId) return;
-
-    setIsLoading(true);
+const fetcher = (productId: string) => 
+  new Promise<boolean>((resolve, reject) => {
     const unsubscribe = onSnapshot(
       doc(db, 'visibility', productId),
       (doc) => {
         if (doc.exists()) {
-          setIsVisible(doc.data().isVisible);
+          resolve(doc.data().isVisible);
+        } else {
+          resolve(true); // valor por defecto
         }
-        setIsLoading(false);
       },
-      (error) => {
-        console.error('Error fetching visibility:', error);
-        setError(error as Error);
-        setIsLoading(false);
-      }
+      reject
     );
-
+    
     return () => unsubscribe();
-  }, [productId]);
+  });
 
-  return { isVisible, isLoading, error };
+export const useVisibility = (productId: string): VisibilityHookReturn => {
+  const { data, error, isLoading } = useSWR(
+    productId ? `/visibility/${productId}` : null,
+    () => fetcher(productId),
+    {
+      refreshInterval: 0,
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+    }
+  );
+
+  return {
+    isVisible: typeof data === 'boolean' ? data : true,
+    isLoading,
+    error: error as Error | null,
+  };
 }; 
