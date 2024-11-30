@@ -22,20 +22,21 @@ export const VisibilityToggle: React.FC<VisibilityToggleProps> = ({
   isVisible: initialIsVisible,
   productId 
 }) => {
-  const [isVisible, setIsVisible] = useState(initialIsVisible);
   const [isUpdating, setIsUpdating] = useState(false);
   const toast = useToast();
 
   const handleToggle = async () => {
     setIsUpdating(true);
     try {
-      await visibilityService.updateVisibility(productId, !isVisible);
-      setIsVisible(!isVisible);
+      await visibilityService.updateVisibility(productId, !initialIsVisible);
+      
+      // Mutate both the visibility state and the products list
+      mutate(`/api/products/${productId}/visibility`);
       mutate(SWR_KEYS.PRODUCTS);
       
       toast({
         title: "Éxito",
-        description: `Producto ${!isVisible ? 'visible' : 'oculto'} en la tienda`,
+        description: `Producto ${!initialIsVisible ? 'visible' : 'oculto'} en la tienda`,
         status: "success",
         duration: 3000,
       });
@@ -55,14 +56,14 @@ export const VisibilityToggle: React.FC<VisibilityToggleProps> = ({
   return (
     <FormControl display="flex" alignItems="center">
       <HStack spacing={2}>
-        <Tooltip label={isVisible ? 'Visible en la tienda' : 'Oculto en la tienda'}>
+        <Tooltip label={initialIsVisible ? 'Visible en la tienda' : 'Oculto en la tienda'}>
           <Icon 
-            as={isVisible ? FaEye : FaEyeSlash} 
-            color={isVisible ? 'green.500' : 'gray.500'}
+            as={initialIsVisible ? FaEye : FaEyeSlash} 
+            color={initialIsVisible ? 'green.500' : 'gray.500'}
           />
         </Tooltip>
         <Switch
-          isChecked={isVisible}
+          isChecked={initialIsVisible}
           onChange={handleToggle}
           colorScheme="green"
           size="md"
