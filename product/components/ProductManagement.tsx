@@ -521,6 +521,25 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
     });
   }, [products, showHiddenProducts, searchTerm, selectedCategory]);
 
+  if (products.length === 0) {
+    return (
+      <Center py={10}>
+        <VStack spacing={4}>
+          <Spinner
+            thickness="4px"
+            speed="0.65s"
+            emptyColor="gray.200"
+            color="blue.500"
+            size="xl"
+          />
+          <Text color="gray.600">
+            Cargando productos...
+          </Text>
+        </VStack>
+      </Center>
+    );
+  }
+
   return (
     <Box>
       <Flex direction="column" mb={6}>
@@ -599,11 +618,6 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
               } }            />
           ))}
         </Grid>
-      )}
-      {isLoading && (
-        <Center mt={4}>
-          <Spinner size="xl" />
-        </Center>
       )}
       <ProductModal
         isOpen={isModalOpen}
