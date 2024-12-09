@@ -131,10 +131,9 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
         <Flex
           direction={{ base: "column", md: "row" }}
           gap={4}
-          justify="space-between"
           w="100%"
         >
-          <InputGroup maxW={{ base: "100%", md: "400px" }}>
+          <InputGroup flex={{ base: "1", md: "1" }}>
             <InputLeftElement pointerEvents="none">
               <Icon as={SearchIcon} color="gray.400" />
             </InputLeftElement>
@@ -142,6 +141,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
               placeholder="Buscar productos..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              w="100%"
             />
           </InputGroup>
 
@@ -149,7 +149,8 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
             placeholder="Todas las categorías"
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            maxW={{ base: "100%", md: "200px" }}
+            flex={{ base: "1", md: "1" }}
+            w="100%"
           >
             {categories?.map((category) => (
               <option key={category.id} value={category.id}>

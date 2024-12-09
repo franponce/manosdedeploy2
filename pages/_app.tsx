@@ -2,7 +2,6 @@ import * as React from "react";
 import Head from "next/head";
 import {
   ChakraProvider,
-  Heading,
   Text,
   Container,
   Stack,
@@ -11,12 +10,13 @@ import {
   Box,
   Flex,
   Image,
-  Spinner,
   Button,
   Icon,
   useToast,
   Skeleton,
+  Heading,
 } from "@chakra-ui/react";
+import { FaEye, FaArrowRight, FaArrowLeft } from 'react-icons/fa';
 import { AppProps } from "next/app";
 import { Global, css } from "@emotion/react";
 import { useRouter } from "next/router";
@@ -28,7 +28,6 @@ import { auth, logoutUser } from '../utils/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { parseCookies, destroyCookie } from 'nookies';
 import HamburgerMenu from '../product/components/HamburgerMenu';
-import { FaArrowLeft, FaEye, FaArrowRight, FaLink } from 'react-icons/fa';
 import type { NextPage } from 'next';
 import Layout from "@/app/layout";
 import SiteInfoCollapsible from '../components/SiteInfoCollapsible';
@@ -386,65 +385,7 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
             <script dangerouslySetInnerHTML={{ __html: customScripts }} />
           )}
         </Head>
-        {!router.pathname.startsWith('/admin') && (
-          <Box 
-            borderRadius="lg"
-            height={{ md: "300px" }}
-            overflow="hidden"
-            width="100%"
-            position="relative"
-          >
-            <Image
-              src={bannerError ? "/default-banner.jpg" : `${siteInfo?.bannerUrl}?${new Date().getTime()}`}
-              alt="Header image"
-              objectFit="cover"
-              width="100%"
-              height="100%"
-              onError={() => setBannerError(true)}
-              fallback={<Box bg="gray.200" w="100%" h="100%" />}
-            />
-          </Box>
-        )}
-        {shouldShowHeader && (
-          <Box
-            as="header"
-            position="fixed"
-            top={0}
-            left={0}
-            right={0}
-            backgroundColor="white"
-            zIndex={1000}
-            borderBottom="1px"
-            borderColor="gray.200"
-          >
-            <Container maxWidth="container.xl">
-              <Flex
-                justify="space-between"
-                align="center"
-                padding={{ base: 2, sm: 4 }}
-                gap={2}
-              >
-                <Box flex="1" maxW={{ base: "70%", sm: "auto" }}>
-                  {getWelcomeMessage()}
-                </Box>
-                <Box>
-                  {shouldShowMenu && (
-                    <HamburgerMenu
-                      isLoggedIn={isLoggedIn}
-                      isAdmin={isAdmin}
-                      onLogout={handleLogout}
-                      onBackToAdmin={handleBackToAdmin}
-                      userName={userName}
-                    />
-                  )}
-                </Box>
-              </Flex>
-            </Container>
-          </Box>
-        )}
-        {!isLoginPage && !isProductDetail && showAnnouncement && (
-          <AnnouncementBanner announcementBar={announcementBar} />
-        )}
+
         {showPreviewBanner && (
           <Box position="sticky" top="70px" zIndex={999} bg="blue.50" py={{ base: 2, md: 3 }} borderBottom="1px" borderColor="blue.100">
             <Container maxW="container.xl">
@@ -485,6 +426,68 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
               </Flex>
             </Container>
           </Box>
+        )}
+
+        {/* Banner solo en la página principal */}
+        {router.pathname === '/' && (
+          <Box 
+            width="400px"
+            height="400px"
+            overflow="hidden"
+            position="relative"
+            margin="0 auto"
+          >
+            <Image
+              src={bannerError ? "/default-banner.jpg" : `${siteInfo?.bannerUrl}?${new Date().getTime()}`}
+              alt="Header image"
+              objectFit="cover"
+              width="100%"
+              height="100%"
+              onError={() => setBannerError(true)}
+              fallback={<Box bg="gray.200" w="100%" h="100%" />}
+            />
+          </Box>
+        )}
+
+        {shouldShowHeader && (
+          <Box
+            as="header"
+            position="fixed"
+            top={0}
+            left={0}
+            right={0}
+            backgroundColor="white"
+            zIndex={1000}
+            borderBottom="1px"
+            borderColor="gray.200"
+          >
+            <Container maxWidth="container.xl">
+              <Flex
+                justify="space-between"
+                align="center"
+                padding={{ base: 2, sm: 4 }}
+                gap={2}
+              >
+                <Box flex="1" maxW={{ base: "70%", sm: "auto" }}>
+                  {getWelcomeMessage()}
+                </Box>
+                <Box>
+                  {shouldShowMenu && (
+                    <HamburgerMenu
+                      isLoggedIn={isLoggedIn}
+                      isAdmin={isAdmin}
+                      onLogout={handleLogout}
+                      onBackToAdmin={handleBackToAdmin}
+                      userName={userName}
+                    />
+                  )}
+                </Box>
+              </Flex>
+            </Container>
+          </Box>
+        )}
+        {!isLoginPage && !isProductDetail && showAnnouncement && (
+          <AnnouncementBanner announcementBar={announcementBar} />
         )}
         <Box display="flex" flexDirection="column" minHeight="100vh">
           {router.pathname === '/admin' ? (
