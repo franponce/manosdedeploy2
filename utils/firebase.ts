@@ -46,6 +46,11 @@ export interface SiteInformation {
     maxWidth: number;
     maxHeight: number;
   };
+  address?: string;
+  logo?: string;
+  facebook?: string;
+  instagram?: string;
+  whatsapp?: string;
 }
 
 export const DEFAULT_SITE_INFORMATION: SiteInformation = {
