@@ -386,80 +386,7 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
           )}
         </Head>
 
-        {showPreviewBanner && (
-          <Box 
-            position="relative" 
-            zIndex={999} 
-            bg="blue.50" 
-            py={{ base: 2, md: 3 }} 
-            borderBottom="1px" 
-            borderColor="blue.100"
-            mb={4}
-          >
-            <Container maxW="container.xl">
-              <Flex
-                justify={{ base: "center", sm: "space-between" }}
-                align="center"
-                px={4}
-                direction={{ base: "column", sm: "row" }}
-                gap={{ base: 2, sm: 0 }}
-              >
-                <Flex 
-                  align="center" 
-                  gap={2}
-                  textAlign={{ base: "center", sm: "left" }}
-                >
-                  <Icon as={FaEye} color="blue.500" display={{ base: "none", sm: "block" }} />
-                  <Text 
-                    color="blue.700"
-                    fontSize={{ base: "sm", md: "md" }}
-                  >
-                    {(isAdmin || isLoggedIn) 
-                      ? "Estás visualizando la tienda como un cliente."
-                      : "¡Bienvenido a nuestra tienda!"}
-                  </Text>
-                </Flex>
-                {(isAdmin || isLoggedIn) && (
-                  <Button
-                    size={{ base: "xs", md: "sm" }}
-                    colorScheme="blue"
-                    variant="link"
-                    rightIcon={<Icon as={FaArrowRight} />}
-                    onClick={handleClosePreview}
-                    fontSize={{ base: "sm", md: "md" }}
-                  >
-                    Volver al administrador
-                  </Button>
-                )}
-              </Flex>
-            </Container>
-          </Box>
-        )}
-
-        {router.pathname === '/' && (
-          <Box 
-            width="100%"  // Ocupa todo el ancho disponible
-            height={{ base: "auto", md: "400px" }}  // Altura fija en desktop, proporcional en mobile
-            overflow="hidden"
-            position="relative"
-            borderRadius="xl"
-            mt={{ base: 4, md: 6 }}
-          >
-            <Image
-              src={bannerError ? "/default-banner.jpg" : `${siteInfo?.bannerUrl}?${new Date().getTime()}`}
-              alt="Header image"
-              objectFit="cover"
-              width="100%"
-              height="100%"
-              maxWidth="1920px"  // Ancho máximo en desktop
-              margin="0 auto"  // Centra la imagen si es más pequeña que el contenedor
-              // Mantiene la proporción 1920x400 le sacamos el aspect ratio 
-              onError={() => setBannerError(true)}
-              fallback={<Box bg="gray.200" w="100%" h="100%" />}
-            />
-          </Box>
-        )}
-
+        {/* Header fijo con "Te damos la bienvenida" */}
         {shouldShowHeader && (
           <Box
             as="header"
@@ -480,7 +407,11 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
                 gap={2}
               >
                 <Box flex="1" maxW={{ base: "70%", sm: "auto" }}>
-                  {getWelcomeMessage()}
+                  <NextLink href="/" passHref>
+                    <Link _hover={{ textDecoration: 'none' }}>
+                      <Text fontWeight="bold">Te damos la bienvenida</Text>
+                    </Link>
+                  </NextLink>
                 </Box>
                 <Box>
                   {shouldShowMenu && (
@@ -497,47 +428,124 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
             </Container>
           </Box>
         )}
-        {!isLoginPage && !isProductDetail && showAnnouncement && (
-          <AnnouncementBanner announcementBar={announcementBar} />
-        )}
-        <Box display="flex" flexDirection="column" minHeight="100vh">
-          {router.pathname === '/admin' ? (
-            <Box flex="1">
-              <Container maxWidth="container.xl" padding={4}>
-                <Component {...pageProps} />
-              </Container>
-            </Box>
-          ) : (
+
+        <Box 
+          pt={shouldShowHeader ? "70px" : "0"}  // Espacio para el header fijo
+        >
+          {/* Mensaje de previsualización */}
+          {showPreviewBanner && (
             <Box 
-              flex="1" 
-              pt={
-                isLoginPage || isProductDetail 
-                  ? "20px" 
-                  : announcementBar?.isEnabled 
-                    ? "110px"
-                    : "10px"
-              }
+              bg="blue.50" 
+              py={{ base: 2, md: 3 }} 
+              borderBottom="1px" 
+              borderColor="blue.100"
+              mb={4}
             >
-              <Container
-                backgroundColor="white"
-                borderRadius="sm"
-                maxWidth="container.xl"
-                padding={4}
-              >
-                {getLayout(<Component {...pageProps} />)}
+              <Container maxW="container.xl">
+                <Flex
+                  justify={{ base: "center", sm: "space-between" }}
+                  align="center"
+                  px={4}
+                  direction={{ base: "column", sm: "row" }}
+                  gap={{ base: 2, sm: 0 }}
+                >
+                  <Flex 
+                    align="center" 
+                    gap={2}
+                    textAlign={{ base: "center", sm: "left" }}
+                  >
+                    <Icon as={FaEye} color="blue.500" display={{ base: "none", sm: "block" }} />
+                    <Text 
+                      color="blue.700"
+                      fontSize={{ base: "sm", md: "md" }}
+                    >
+                      {(isAdmin || isLoggedIn) 
+                        ? "Estás visualizando la tienda como un cliente."
+                        : "¡Bienvenido a nuestra tienda!"}
+                    </Text>
+                  </Flex>
+                  {(isAdmin || isLoggedIn) && (
+                    <Button
+                      size={{ base: "xs", md: "sm" }}
+                      colorScheme="blue"
+                      variant="link"
+                      rightIcon={<Icon as={FaArrowRight} />}
+                      onClick={handleClosePreview}
+                      fontSize={{ base: "sm", md: "md" }}
+                    >
+                      Volver al administrador
+                    </Button>
+                  )}
+                </Flex>
               </Container>
             </Box>
           )}
 
-          {/* Footer condicional: no se muestra en admin */}
-          {!router.pathname.startsWith('/admin') && (
-            <Box mt="auto">
-              <Divider marginY={4} />
-              <Text textAlign="center" pb={4}>
-                © Copyright {new Date().getFullYear()}. Hecho con ♥ Simple Ecommerce
-              </Text>
+          {/* Banner */}
+          {router.pathname === '/' && (
+            <Box 
+              width="100%"
+              height={{ base: "auto", md: "400px" }}
+              overflow="hidden"
+              position="relative"
+              borderRadius="xl"
+              mt={4}
+            >
+              <Image
+                src={bannerError ? "/default-banner.jpg" : `${siteInfo?.bannerUrl}?${new Date().getTime()}`}
+                alt="Header image"
+                objectFit="cover"
+                width="100%"
+                height="100%"
+                maxWidth="1920px"
+                margin="0 auto"
+                aspectRatio="1920/400"
+                onError={() => setBannerError(true)}
+                fallback={<Box bg="gray.200" w="100%" h="100%" />}
+              />
             </Box>
           )}
+
+          {/* Contenido principal */}
+          <Box display="flex" flexDirection="column" minHeight="100vh">
+            {router.pathname === '/admin' ? (
+              <Box flex="1">
+                <Container maxWidth="container.xl" padding={4}>
+                  <Component {...pageProps} />
+                </Container>
+              </Box>
+            ) : (
+              <Box 
+                flex="1" 
+                pt={
+                  isLoginPage || isProductDetail 
+                    ? "20px" 
+                    : announcementBar?.isEnabled 
+                      ? "110px"
+                      : "10px"
+                }
+              >
+                <Container
+                  backgroundColor="white"
+                  borderRadius="sm"
+                  maxWidth="container.xl"
+                  padding={4}
+                >
+                  {getLayout(<Component {...pageProps} />)}
+                </Container>
+              </Box>
+            )}
+
+            {/* Footer condicional: no se muestra en admin */}
+            {!router.pathname.startsWith('/admin') && (
+              <Box mt="auto">
+                <Divider marginY={4} />
+                <Text textAlign="center" pb={4}>
+                  © Copyright {new Date().getFullYear()}. Hecho con ♥ Simple Ecommerce
+                </Text>
+              </Box>
+            )}
+          </Box>
         </Box>
         {!router.pathname.startsWith('/admin') && (
           <>
