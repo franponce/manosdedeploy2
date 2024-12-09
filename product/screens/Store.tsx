@@ -38,6 +38,7 @@ import { useProductsStock } from '../../hooks/useProductsStock';
 import { stockService } from '../../utils/firebase';
 import { useProducts } from '../../hooks/useProducts';
 import LoadingOverlay from '../../components/LoadingOverlay';
+import { StoreProductCard } from '../components/StoreProductCard';
 
 const fetcher = async (url: string) => {
   const response = await fetch(url);
@@ -117,15 +118,15 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
           padding={4}
         >
           {displayedProducts.map((product) => (
-            <ProductCard key={product.id} product={product} onAdd={function (product: Product): void {
-              throw new Error("Function not implemented.");
-            } } isLoading={false} onEdit={function (): void {
-              throw new Error("Function not implemented.");
-            } } onDelete={function (): void {
-              throw new Error("Function not implemented.");
-            } } onVisibilityToggle={function (): void {
-              throw new Error("Function not implemented.");
-            } } isAdminView={false} />
+            <StoreProductCard
+              key={product.id}
+              product={product}
+              onAdd={(product) => {
+                // Lógica para agregar al carrito
+                console.log('Producto agregado:', product);
+              }}
+              isLoading={false}
+            />
           ))}
         </SimpleGrid>
       ) : (

@@ -24,7 +24,7 @@ import { stockService } from '../../utils/firebase';
 import { useStock } from '@/hooks/useStock';
 import { useCart } from '@/hooks/useCart';
 
-interface Props {
+interface ProductCardProps {
   product: Product;
   onAdd: (product: Product) => void;
   isLoading: boolean;
@@ -32,11 +32,11 @@ interface Props {
   onDelete: () => void;
   onVisibilityToggle: () => void;
   isAdminView: boolean;
-  showStock?: boolean;
+  actionButton?: React.ReactNode;
   available?: number;
 }
 
-const ProductCard: React.FC<Props> = ({
+const ProductCard: React.FC<ProductCardProps> = ({
   product,
   onAdd,
   isLoading,
@@ -44,7 +44,7 @@ const ProductCard: React.FC<Props> = ({
   onDelete,
   onVisibilityToggle,
   isAdminView = false,
-  showStock = false,
+  actionButton,
   available = 0
 }) => {
   const { available: stockAvailable, isLoading: stockLoading } = useStock(product.id);
@@ -187,12 +187,13 @@ const ProductCard: React.FC<Props> = ({
   };
 
   return (
-    <Box 
-      borderWidth={1} 
-      borderRadius="lg" 
+    <Box
+      borderWidth="1px"
+      borderRadius="lg"
       overflow="hidden"
-      transition="transform 0.2s"
-      _hover={{ transform: 'translateY(-4px)', boxShadow: 'lg' }}
+      position="relative"
+      bg="white"
+      opacity={available === 0 ? 0.7 : 1}
     >
       <AspectRatio ratio={1}>
         {isLoading ? (
@@ -231,27 +232,20 @@ const ProductCard: React.FC<Props> = ({
                 {stockAvailable === 0 ? "Agotado" : `Stock disponible: ${stockAvailable}`}
               </Text>
               <Stack spacing={1}>
-                <Button
-                  colorScheme="blue"
-                  variant="solid"
-                  size="sm"
-                  width="100%"
-                  isDisabled={available === 0}
-                  onClick={handleViewDetail}
-                >
-                  {available === 0 ? "Agotado" : "Ver detalle"}
-                </Button>
-                
-                <Button
-                  colorScheme="green"
-                  variant="outline"
-                  size="sm"
-                  width="100%"
-                  onClick={handleAddToCart}
-                  isDisabled={available === 0}
-                >
-                  Agregar al carrito
-                </Button>
+                {isAdminView ? (
+                  <AdminActions />
+                ) : (
+                  actionButton || (
+                    <Button
+                      colorScheme="blue"
+                      width="100%"
+                      onClick={() => onAdd(product)}
+                      isDisabled={available === 0}
+                    >
+                      {available === 0 ? "Agotado" : "Agregar al carrito"}
+                    </Button>
+                  )
+                )}
               </Stack>
               {stockAvailable > 0 && stockAvailable <= 5 && (
                 <Text color="orange.500" fontSize="sm" mt={2}>
