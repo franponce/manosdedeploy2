@@ -125,7 +125,7 @@ const AdminPage: React.FC = () => {
       margin="auto" 
       maxWidth="1200px" 
       padding={4}
-      pt="90px"
+      pt="10px"
     >
       {isSiteInfoLoading ? (
         <Box p={4} borderRadius="md" boxShadow="sm">
