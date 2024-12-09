@@ -453,7 +453,7 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
               height="100%"
               maxWidth="1920px"  // Ancho máximo en desktop
               margin="0 auto"  // Centra la imagen si es más pequeña que el contenedor
-              aspectRatio="1920/400"  // Mantiene la proporción 1920x400
+              // Mantiene la proporción 1920x400 le sacamos el aspect ratio 
               onError={() => setBannerError(true)}
               fallback={<Box bg="gray.200" w="100%" h="100%" />}
             />
@@ -515,7 +515,7 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
                   ? "20px" 
                   : announcementBar?.isEnabled 
                     ? "110px"
-                    : "70px"
+                    : "10px"
               }
             >
               <Container
