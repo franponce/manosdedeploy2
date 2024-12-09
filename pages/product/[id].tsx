@@ -82,7 +82,6 @@ const ProductDetail: NextPageWithLayout = () => {
     position: 'top',
   });
   const { cart, addToCart, removeFromCart } = useCart();
-  const [isCartOpen, toggleCart] = useState(false);
   const [copied, setCopied] = useState(false);
   const [pageUrl, setPageUrl] = useState<string>('');
 
@@ -147,29 +146,6 @@ const ProductDetail: NextPageWithLayout = () => {
 
   const total = calculateTotal(cart);
   const quantity = calculateQuantity(cart);
-
-  const handleEditCart = (product: Product | CartItem, action: "increment" | "decrement") => {
-    const cartItem: CartItem = 'quantity' in product 
-      ? product as CartItem
-      : { ...product, quantity: 1 };
-
-    if (action === "increment") {
-      const currentQuantity = cart.find(item => item.id === cartItem.id)?.quantity || 0;
-      if (currentQuantity >= available) {
-        toast({
-          title: "No hay suficiente stock",
-          description: "Has alcanzado el límite de unidades disponibles",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-        return;
-      }
-      addToCart(cartItem);
-    } else {
-      removeFromCart(cartItem);
-    }
-  };
 
   const handleAddToCart = () => {
     if (!product || !available) return;
@@ -400,47 +376,12 @@ const ProductDetail: NextPageWithLayout = () => {
         </Grid>
       </Container>
 
-      {Boolean(cart.length) && (
-        <Flex alignItems="center" bottom={4} justifyContent="center" position="sticky">
-          <Button
-            boxShadow="xl"
-            colorScheme="primary"
-            data-testid="show-cart"
-            size="lg"
-            width={{ base: "100%", sm: "fit-content" }}
-            onClick={() => toggleCart(true)}
-          >
-            <Stack alignItems="center" direction="row" spacing={6}>
-              <Stack alignItems="center" direction="row" spacing={3}>
-                <Text fontSize="md" lineHeight={6}>
-                  Ver carrito
-                </Text>
-                <Text
-                  backgroundColor="rgba(0,0,0,0.25)"
-                  borderRadius="sm"
-                  color="gray.100"
-                  fontSize="xs"
-                  fontWeight="500"
-                  paddingX={2}
-                  paddingY={1}
-                >
-                  {quantity} {quantity === 1 ? "item" : "items"}
-                </Text>
-              </Stack>
-              <Text fontSize="md" lineHeight={6}>
-                {total}
-              </Text>
-            </Stack>
-          </Button>
-        </Flex>
-      )}
-
       <CartDrawer
-        isOpen={isCartOpen}
+        isOpen={false}
         items={cart}
-        onClose={() => toggleCart(false)}
-        onDecrement={(product) => handleEditCart(product, "decrement")}
-        onIncrement={(product) => handleEditCart(product, "increment")}
+        onClose={() => {}}
+        onDecrement={(product) => {}}
+        onIncrement={(product) => {}}
       />
     </>
   );

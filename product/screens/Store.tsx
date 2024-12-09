@@ -68,6 +68,8 @@ const CART_EXPIRY_TIME = 24 * 60 * 60 * 1000; // 24 horas en milisegundos
 const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCategories }) => {
   const { products, isLoading: productsLoading } = useProducts(initialProducts);
   const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
+  const { addToCart } = useCart();
+  const toast = useToast();
 
   // Efecto para procesar los productos
   useEffect(() => {
@@ -105,6 +107,17 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
     processProducts();
   }, [products]);
 
+  const handleAddToCart = (product: Product) => {
+    addToCart({ ...product, quantity: 1 });
+    toast({
+      title: "Producto agregado",
+      description: "El producto se agregó al carrito",
+      status: "success",
+      duration: 3000,
+      isClosable: true,
+    });
+  };
+
   if (productsLoading) {
     return <LoadingOverlay />;
   }
@@ -121,10 +134,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
             <StoreProductCard
               key={product.id}
               product={product}
-              onAdd={(product) => {
-                // Lógica para agregar al carrito
-                console.log('Producto agregado:', product);
-              }}
+              onAdd={handleAddToCart}
               isLoading={false}
             />
           ))}

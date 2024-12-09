@@ -33,6 +33,10 @@ import type { NextPage } from 'next';
 import Layout from "@/app/layout";
 import SiteInfoCollapsible from '../components/SiteInfoCollapsible';
 import AnnouncementBanner from '../components/AnnouncementBanner';
+import CartFloatingButton from '../components/CartFloatingButton';
+import CartDrawer from '../product/components/CartDrawer';
+import { useCart } from '../hooks/useCart';
+import { CartItem } from "@/product/types";
 
 type NextPageWithLayout = NextPage & {
   getLayout?: (page: React.ReactElement) => React.ReactElement;
@@ -56,6 +60,8 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
   const [isPreviewMode, setIsPreviewMode] = React.useState(false);
   const toast = useToast();
   const [buttonText, setButtonText] = React.useState("Volver a la gestión de productos");
+  const [isCartOpen, setIsCartOpen] = React.useState(false);
+  const { cart, addToCart, removeFromCart } = useCart();
 
   const showPreviewBanner = React.useMemo(() => {
     if (typeof window === 'undefined') return false;
@@ -283,6 +289,14 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
 
   const logoUrl = React.useMemo(() => siteInfo?.logoUrl || '', [siteInfo?.logoUrl]);
 
+  const handleEditCart = (product: CartItem, action: "increment" | "decrement") => {
+    if (action === "increment") {
+      addToCart(product);
+    } else {
+      removeFromCart(product);
+    }
+  };
+
   if (isLoading) {
     return (
       <Box p={4}>
@@ -492,6 +506,18 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
             </Box>
           )}
         </Box>
+        {!router.pathname.startsWith('/admin') && (
+          <>
+            <CartFloatingButton onOpen={() => setIsCartOpen(true)} />
+            <CartDrawer
+              isOpen={isCartOpen}
+              onClose={() => setIsCartOpen(false)}
+              items={cart}
+              onIncrement={(product) => handleEditCart(product, "increment")}
+              onDecrement={(product) => handleEditCart(product, "decrement")}
+            />
+          </>
+        )}
       </ChakraProvider>
     </SWRConfig>
   );
