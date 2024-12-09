@@ -39,6 +39,7 @@ import { stockService } from '../../utils/firebase';
 import { useProducts } from '../../hooks/useProducts';
 import LoadingOverlay from '../../components/LoadingOverlay';
 import { StoreProductCard } from '../components/StoreProductCard';
+import StoreHeader from '../../components/StoreHeader';
 
 const fetcher = async (url: string) => {
   const response = await fetch(url);
@@ -124,6 +125,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
 
   return (
     <>
+      <StoreHeader />
       {displayedProducts.length > 0 ? (
         <SimpleGrid
           columns={{ base: 1, sm: 2, md: 3, lg: 4 }}
