@@ -23,6 +23,8 @@ import ImageCarousel from './ImageCarousel';
 import { stockService } from '../../utils/firebase';
 import { useStock } from '@/hooks/useStock';
 import { useCart } from '@/hooks/useCart';
+import { FaEdit, FaTrash, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { Icon } from '@chakra-ui/react';
 
 interface ProductCardProps {
   product: Product;
@@ -185,6 +187,17 @@ const ProductCard: React.FC<ProductCardProps> = ({
       </Box>
     );
   };
+
+  const AdminActions = () => (
+    <Stack spacing={2}>
+      <Button colorScheme="blue" onClick={onEdit}>
+        Editar
+      </Button>
+      <Button colorScheme="red" onClick={onDelete}>
+        Eliminar
+      </Button>
+    </Stack>
+  );
 
   return (
     <Box
