@@ -438,14 +438,12 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
 
         {router.pathname === '/' && (
           <Box 
-            width="400px"  // Dimensión fija
-            height="400px"  // Dimensión fija
+            width="100%"  // Ocupa todo el ancho disponible
+            height={{ base: "auto", md: "400px" }}  // Altura fija en desktop, proporcional en mobile
             overflow="hidden"
             position="relative"
-            margin="0 auto"
             borderRadius="xl"
             mt={{ base: 4, md: 6 }}
-            mx="auto"  // Asegura centrado horizontal
           >
             <Image
               src={bannerError ? "/default-banner.jpg" : `${siteInfo?.bannerUrl}?${new Date().getTime()}`}
@@ -453,6 +451,9 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
               objectFit="cover"
               width="100%"
               height="100%"
+              maxWidth="1920px"  // Ancho máximo en desktop
+              margin="0 auto"  // Centra la imagen si es más pequeña que el contenedor
+              aspectRatio="1920/400"  // Mantiene la proporción 1920x400
               onError={() => setBannerError(true)}
               fallback={<Box bg="gray.200" w="100%" h="100%" />}
             />
