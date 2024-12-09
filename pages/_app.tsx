@@ -386,6 +386,25 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
             <script dangerouslySetInnerHTML={{ __html: customScripts }} />
           )}
         </Head>
+        {!router.pathname.startsWith('/admin') && (
+          <Box 
+            borderRadius="lg"
+            height={{ md: "300px" }}
+            overflow="hidden"
+            width="100%"
+            position="relative"
+          >
+            <Image
+              src={bannerError ? "/default-banner.jpg" : `${siteInfo?.bannerUrl}?${new Date().getTime()}`}
+              alt="Header image"
+              objectFit="cover"
+              width="100%"
+              height="100%"
+              onError={() => setBannerError(true)}
+              fallback={<Box bg="gray.200" w="100%" h="100%" />}
+            />
+          </Box>
+        )}
         {shouldShowHeader && (
           <Box
             as="header"
