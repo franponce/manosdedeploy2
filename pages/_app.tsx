@@ -499,7 +499,6 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
                 height="100%"
                 maxWidth="1920px"
                 margin="0 auto"
-                aspectRatio="1920/400"
                 onError={() => setBannerError(true)}
                 fallback={<Box bg="gray.200" w="100%" h="100%" />}
               />
