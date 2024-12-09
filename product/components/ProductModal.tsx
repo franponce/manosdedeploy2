@@ -32,6 +32,8 @@ import {
   IconButton,
   UnorderedList,
   ListItem,
+  Skeleton,
+  SkeletonText,
 } from "@chakra-ui/react";
 import { TimeIcon, AddIcon, CloseIcon } from "@chakra-ui/icons";
 import imageCompression from "browser-image-compression";
@@ -58,6 +60,44 @@ interface ProductModalProps {
 }
 
 const MAX_IMAGES = 2;
+
+const ProductModalSkeleton = () => {
+  return (
+    <VStack spacing={6} width="100%">
+      {/* Imagen principal */}
+      <Skeleton 
+        height="400px"
+        width="100%"
+        borderRadius="xl"
+      />
+      
+      {/* Miniaturas */}
+      <HStack spacing={4} justify="center">
+        {[1, 2, 3].map((i) => (
+          <Skeleton 
+            key={i}
+            height="60px"
+            width="60px"
+            borderRadius="md"
+          />
+        ))}
+      </HStack>
+
+      {/* Título */}
+      <Skeleton height="32px" width="80%" />
+      
+      {/* Precio */}
+      <Skeleton height="24px" width="40%" />
+      
+      {/* Descripción */}
+      <SkeletonText 
+        noOfLines={4} 
+        spacing={4} 
+        skeletonHeight="4"
+      />
+    </VStack>
+  );
+};
 
 const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, product, isLoading: submitLoading }) => {
   const { product: currentProductData } = useProduct(product?.id || null);
