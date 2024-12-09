@@ -126,110 +126,77 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
   return (
     <>
       <Stack spacing={6}>
-        <Box 
-          borderRadius="lg"
-          height={{ md: "300px" }}
-          overflow="hidden"
-          width="100%"
-          position="relative"
-        >
-          <Image
-            src={bannerError ? "/default-banner.jpg" : `${siteInfo?.bannerUrl}?${new Date().getTime()}`}
-            alt="Header image"
-            objectFit="cover"
-            width="100%"
-            height="100%"
-            onError={() => setBannerError(true)}
-            fallback={<Box bg="gray.200" w="100%" h="100%" />}
-          />
-        </Box>
-
         <SiteInfoBanner siteInfo={siteInfo} />
         
-        <Container maxW="container.xl" py={8}>
-          <VStack spacing={8}>
-            {/* Título y descripción */}
-            <Box textAlign="center">
-              <Heading size="xl" mb={4}>
-                Nuestros Productos
-              </Heading>
-              <Text color="gray.600">
-                Explora nuestra selección de productos
-              </Text>
-            </Box>
+        <Flex
+          direction={{ base: "column", md: "row" }}
+          gap={4}
+          justify="space-between"
+          w="100%"
+        >
+          <InputGroup maxW={{ base: "100%", md: "400px" }}>
+            <InputLeftElement pointerEvents="none">
+              <Icon as={SearchIcon} color="gray.400" />
+            </InputLeftElement>
+            <Input
+              placeholder="Buscar productos..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </InputGroup>
 
-            {/* Filtros */}
-            <Flex
-              direction={{ base: "column", md: "row" }}
-              gap={4}
-              justify="space-between"
+          <Select
+            placeholder="Todas las categorías"
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            maxW={{ base: "100%", md: "200px" }}
+          >
+            {categories?.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </Select>
+        </Flex>
+
+        {/* Grid de productos */}
+        {productsLoading ? (
+          <Center py={10}>
+            <Spinner size="xl" />
+          </Center>
+        ) : displayedProducts.length > 0 ? (
+          <VStack spacing={8} w="100%">
+            <SimpleGrid
+              columns={{ base: 1, sm: 2, md: 3, lg: 4 }}
+              spacing={6}
               w="100%"
             >
-              <InputGroup maxW={{ base: "100%", md: "400px" }}>
-                <InputLeftElement pointerEvents="none">
-                  <Icon as={SearchIcon} color="gray.400" />
-                </InputLeftElement>
-                <Input
-                  placeholder="Buscar productos..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+              {displayedProducts.map((product) => (
+                <StoreProductCard
+                  key={product.id}
+                  product={product}
+                  onAdd={handleAddToCart}
+                  isLoading={false}
                 />
-              </InputGroup>
-
-              <Select
-                placeholder="Todas las categorías"
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                maxW={{ base: "100%", md: "200px" }}
+              ))}
+            </SimpleGrid>
+            
+            {hasMore && (
+              <Button
+                onClick={handleLoadMore}
+                size="lg"
+                colorScheme="blue"
+                variant="outline"
               >
-                {categories?.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </Select>
-            </Flex>
-
-            {/* Grid de productos */}
-            {productsLoading ? (
-              <Center py={10}>
-                <Spinner size="xl" />
-              </Center>
-            ) : displayedProducts.length > 0 ? (
-              <VStack spacing={8} w="100%">
-                <SimpleGrid
-                  columns={{ base: 1, sm: 2, md: 3, lg: 4 }}
-                  spacing={6}
-                  w="100%"
-                >
-                  {displayedProducts.map((product) => (
-                    <StoreProductCard
-                      key={product.id}
-                      product={product}
-                      onAdd={handleAddToCart}
-                      isLoading={false}
-                    />
-                  ))}
-                </SimpleGrid>
-                
-                {hasMore && (
-                  <Button
-                    onClick={handleLoadMore}
-                    size="lg"
-                    colorScheme="blue"
-                    variant="outline"
-                  >
-                    Cargar más productos
-                  </Button>
-                )}
-              </VStack>
-            ) : (
-              <Center py={10}>
-                <Text>No se encontraron productos disponibles.</Text>
-              </Center>
+                Cargar más productos
+              </Button>
             )}
           </VStack>
-        </Container>
+        ) : (
+          <Center py={10}>
+            <Text>No se encontraron productos disponibles.</Text>
+          </Center>
+        )}
       </Stack>
     </>
   );
