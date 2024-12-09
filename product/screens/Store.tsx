@@ -73,7 +73,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
     if (!products) return;
 
     const processProducts = () => {
-      console.log('Productos recibidos:', products); // Debug
+      console.log('Productos recibidos:', products);
 
       const filteredProducts = products.filter(product => {
         const isValid = Boolean(
@@ -81,18 +81,23 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
           product?.title &&
           product?.images?.length > 0 &&
           product?.price > 0 &&
-          !product?.isScheduled &&
           product?.isVisible !== false
         );
 
         if (!isValid) {
-          console.log('Producto filtrado:', product); // Debug
+          console.log('Producto filtrado por validación:', {
+            id: product?.id,
+            hasTitle: Boolean(product?.title),
+            hasImages: Boolean(product?.images?.length > 0),
+            hasPrice: Boolean(product?.price > 0),
+            isVisible: product?.isVisible !== false
+          });
         }
 
         return isValid;
       });
 
-      console.log('Productos filtrados:', filteredProducts); // Debug
+      console.log('Productos filtrados:', filteredProducts);
       setDisplayedProducts(filteredProducts);
     };
 
