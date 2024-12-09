@@ -431,11 +431,12 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
         {/* Banner solo en la página principal */}
         {router.pathname === '/' && (
           <Box 
-            width="1290px"
+            width="400px"
             height="400px"
             overflow="hidden"
             position="relative"
             margin="0 auto"
+            borderRadius="xl"
           >
             <Image
               src={bannerError ? "/default-banner.jpg" : `${siteInfo?.bannerUrl}?${new Date().getTime()}`}
