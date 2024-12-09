@@ -39,20 +39,25 @@ const fetcher = async (url: string) => {
   }
 };
 
-export function useProducts() {
+export function useProducts(initialProducts: Product[] = []) {
   const { data: products, error, isLoading } = useSWR<Product[]>(
     SWR_KEYS.PRODUCTS,
     fetcher,
     {
+      fallbackData: initialProducts,
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
-      dedupingInterval: 300000, // 5 minutos
-      errorRetryCount: 3
+      dedupingInterval: 300000,
+      errorRetryCount: 3,
+      onError: (error) => {
+        console.error('Error en useProducts:', error);
+        return initialProducts;
+      }
     }
   );
 
   return {
-    products,
+    products: products || initialProducts,
     isLoading,
     error
   };

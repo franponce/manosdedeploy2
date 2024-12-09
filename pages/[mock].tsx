@@ -18,38 +18,42 @@ const MockRoute: React.FC<Props> = ({ initialProducts, initialCategories }) => {
 export const getStaticProps: GetStaticProps = async (context) => {
   const mock = context.params?.mock as string;
   let products: Product[] = [];
-  let siteInfo: SiteInformation;
 
   try {
     const fetchedProducts = await api.mock.list(mock);
+    console.log('Productos obtenidos:', fetchedProducts); // Debug
 
-    // Filtrar productos inválidos o incompletos
-    products = fetchedProducts.filter(
-      (product): product is Product =>
-        product !== null &&
+    products = fetchedProducts.filter((product): product is Product =>
+      Boolean(
+        product &&
         typeof product === "object" &&
-        typeof product.id === "string" &&
-        typeof product.title === "string" &&
-        typeof product.description === "string" &&
-        typeof product.images === "object" &&
+        product.id &&
+        product.title &&
+        product.description &&
+        Array.isArray(product.images) &&
         typeof product.price === "number"
+      )
     );
 
-    // Obtener la información del sitio
-    siteInfo = await getSiteInformation();
-  } catch (error) {
-    console.error(`Error fetching data for mock "${mock}":`, error);
-    // En caso de error, devolvemos una lista vacía de productos y la información del sitio por defecto
-    siteInfo = await getSiteInformation();
-  }
+    console.log('Productos filtrados:', products); // Debug
 
-  return {
-    props: {
-      initialProducts: products,
-      initialCategories: [], // Por ahora, pasamos un array vacío
-    },
-    revalidate: 10,
-  };
+    return {
+      props: {
+        initialProducts: products,
+        initialCategories: [],
+      },
+      revalidate: 10,
+    };
+  } catch (error) {
+    console.error(`Error en mock "${mock}":`, error);
+    return {
+      props: {
+        initialProducts: [],
+        initialCategories: [],
+      },
+      revalidate: 10,
+    };
+  }
 };
 
 export const getStaticPaths: GetStaticPaths = async () => {
