@@ -94,7 +94,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
   const TARGET_WIDTH = 800;
   const TARGET_HEIGHT = 800;
 
-  const { categories, isLoading: categoriesLoading, createCategory, mutate: mutateCategories } = useCategories([]);
+  const { categories, isLoading: categoriesLoading, createCategory, mutate: mutateCategories } = useCategories();
 
   useEffect(() => {
     if (product) {

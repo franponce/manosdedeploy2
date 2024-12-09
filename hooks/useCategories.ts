@@ -9,13 +9,14 @@ const fetcher = async (url: string) => {
   return response.json();
 };
 
-export function useCategories() {
+export function useCategories(initialCategories: Category[] = []) {
   const { 
     data: categories, 
     error, 
     isLoading,
     mutate 
   } = useSWR<Category[]>('/api/categories', fetcher, {
+    fallbackData: initialCategories,
     revalidateOnFocus: true,
     revalidateOnReconnect: true
   });
