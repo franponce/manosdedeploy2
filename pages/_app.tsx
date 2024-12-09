@@ -431,7 +431,7 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
         {/* Banner solo en la página principal */}
         {router.pathname === '/' && (
           <Box 
-            width="400px"
+            width="1920px"
             height="400px"
             overflow="hidden"
             position="relative"
