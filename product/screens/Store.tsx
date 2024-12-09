@@ -15,98 +15,99 @@ import {
   InputGroup,
   InputLeftElement,
   Icon,
-  Image,
   Container,
   SimpleGrid,
+  VStack,
 } from "@chakra-ui/react";
 import { SearchIcon } from "@chakra-ui/icons";
-import { CartItem, Product, Category } from "../types";
-import ProductCard from "../components/ProductCard";
-import CartDrawer from "../components/CartDrawer";
-import { editCart } from "../selectors";
-import { parseCurrency } from "../../utils/currency";
-import useSWR, { mutate } from 'swr';
+import { Product, Category } from "../types";
 import { useCart } from '../../hooks/useCart';
-import { SWR_KEYS } from '../constants';
-import SiteInfoBanner from '../../components/SiteInfoBanner';
-import { useSiteInfo } from '../../hooks/useSiteInfo';
-import { useRouter } from 'next/router';
-import { useStock } from '../../hooks/useStock';
-import { useState, useEffect } from 'react';
-import { doc, onSnapshot } from 'firebase/firestore';
-import { useProductsStock } from '../../hooks/useProductsStock';
-import { stockService } from '../../utils/firebase';
-import { useProducts } from '../../hooks/useProducts';
-import LoadingOverlay from '../../components/LoadingOverlay';
-import { StoreProductCard } from '../components/StoreProductCard';
 import StoreHeader from '../../components/StoreHeader';
-
-const fetcher = async (url: string) => {
-  const response = await fetch(url);
-  const data = await response.json();
-  
-  return data
-    .map((product: Product) => ({
-      ...product,
-      isVisible: product.isVisible === undefined ? true : product.isVisible === true
-    }))
-    .sort((a: Product, b: Product) => {
-      // Ordenar por el ID numérico (que refleja el orden en la hoja)
-      return parseInt(a.id) - parseInt(b.id);
-    });
-};
-
-const PRODUCTS_PER_PAGE = 12;
+import { StoreProductCard } from '../components/StoreProductCard';
+import SiteInfoBanner from '../../components/SiteInfoBanner';
+import { useProducts } from '../../hooks/useProducts';
+import { useCategories } from '../../hooks/useCategories';
 
 interface StoreScreenProps {
   initialProducts: Product[];
   initialCategories: Category[];
 }
 
-const CART_STORAGE_KEY = 'simple-ecommerce-cart';
-const CART_EXPIRY_TIME = 24 * 60 * 60 * 1000; // 24 horas en milisegundos
+const PRODUCTS_PER_PAGE = 12;
 
 const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCategories }) => {
+  const [searchTerm, setSearchTerm] = React.useState("");
+  const [selectedCategory, setSelectedCategory] = React.useState("");
+  const [displayedProducts, setDisplayedProducts] = React.useState<Product[]>([]);
+  const [page, setPage] = React.useState(1);
+  const [hasMore, setHasMore] = React.useState(true);
   const { products, isLoading: productsLoading } = useProducts(initialProducts);
-  const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
+  const { categories } = useCategories(initialCategories);
   const { addToCart } = useCart();
   const toast = useToast();
 
   // Efecto para procesar los productos
-  useEffect(() => {
-    if (!products) return;
+  React.useEffect(() => {
+    if (products) {
+      // Asegurarnos de que los productos sean únicos por ID
+      const uniqueProducts = Array.from(
+        new Map(products.map(product => [product.id, product])).values()
+      );
 
-    const processProducts = () => {
-      console.log('Productos recibidos:', products);
-
-      const filteredProducts = products.filter(product => {
-        const isValid = Boolean(
+      let filteredProducts = uniqueProducts.filter(product => {
+        const isValidProduct = Boolean(
           product?.id &&
           product?.title &&
           product?.images?.length > 0 &&
-          product?.price > 0 &&
-          product?.isVisible !== false
+          product?.price > 0
         );
 
-        if (!isValid) {
-          console.log('Producto filtrado por validación:', {
-            id: product?.id,
-            hasTitle: Boolean(product?.title),
-            hasImages: Boolean(product?.images?.length > 0),
-            hasPrice: Boolean(product?.price > 0),
-            isVisible: product?.isVisible !== false
-          });
-        }
-
-        return isValid;
+        const isVisible = product.isVisible !== false;
+        return isValidProduct && isVisible;
       });
 
-      console.log('Productos filtrados:', filteredProducts);
-      setDisplayedProducts(filteredProducts);
-    };
+      // Aplicar filtro de búsqueda
+      if (searchTerm) {
+        filteredProducts = filteredProducts.filter(product =>
+          product.title.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      }
 
-    processProducts();
-  }, [products]);
+      // Aplicar filtro de categoría
+      if (selectedCategory) {
+        filteredProducts = filteredProducts.filter(product => 
+          product.categoryId === selectedCategory
+        );
+      }
+
+      // Ordenar productos por orden si existe
+      filteredProducts.sort((a, b) => {
+        if (a.order && b.order) {
+          return parseInt(a.order) - parseInt(b.order);
+        }
+        return 0;
+      });
+
+      setDisplayedProducts(filteredProducts.slice(0, page * PRODUCTS_PER_PAGE));
+      setHasMore(page * PRODUCTS_PER_PAGE < filteredProducts.length);
+    }
+  }, [products, page, searchTerm, selectedCategory]);
+
+  // Efecto para el scroll al último producto visto
+  React.useEffect(() => {
+    const lastViewedProductId = sessionStorage.getItem('lastViewedProductId');
+    if (lastViewedProductId && displayedProducts.length > 0) {
+      const productElement = document.getElementById(`product-${lastViewedProductId}`);
+      if (productElement) {
+        productElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        sessionStorage.removeItem('lastViewedProductId');
+      }
+    }
+  }, [displayedProducts]);
+
+  const handleLoadMore = () => {
+    setPage(prevPage => prevPage + 1);
+  };
 
   const handleAddToCart = (product: Product) => {
     addToCart({ ...product, quantity: 1 });
@@ -119,34 +120,96 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
     });
   };
 
-  if (productsLoading) {
-    return <LoadingOverlay />;
-  }
-
   return (
-    <>
+    <Box>
+      <SiteInfoBanner siteInfo={undefined} />
       <StoreHeader />
-      {displayedProducts.length > 0 ? (
-        <SimpleGrid
-          columns={{ base: 1, sm: 2, md: 3, lg: 4 }}
-          spacing={6}
-          padding={4}
-        >
-          {displayedProducts.map((product) => (
-            <StoreProductCard
-              key={product.id}
-              product={product}
-              onAdd={handleAddToCart}
-              isLoading={false}
-            />
-          ))}
-        </SimpleGrid>
-      ) : (
-        <Box textAlign="center" py={10}>
-          <Text>No se encontraron productos disponibles.</Text>
-        </Box>
-      )}
-    </>
+      
+      <Container maxW="container.xl" py={8}>
+        <VStack spacing={8}>
+          {/* Título y descripción */}
+          <Box textAlign="center">
+            <Heading size="xl" mb={4}>
+              Nuestros Productos
+            </Heading>
+            <Text color="gray.600">
+              Explora nuestra selección de productos
+            </Text>
+          </Box>
+
+          {/* Filtros */}
+          <Flex
+            direction={{ base: "column", md: "row" }}
+            gap={4}
+            justify="space-between"
+            w="100%"
+          >
+            <InputGroup maxW={{ base: "100%", md: "400px" }}>
+              <InputLeftElement pointerEvents="none">
+                <Icon as={SearchIcon} color="gray.400" />
+              </InputLeftElement>
+              <Input
+                placeholder="Buscar productos..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </InputGroup>
+
+            <Select
+              placeholder="Todas las categorías"
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              maxW={{ base: "100%", md: "200px" }}
+            >
+              {categories?.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </Select>
+          </Flex>
+
+          {/* Grid de productos */}
+          {productsLoading ? (
+            <Center py={10}>
+              <Spinner size="xl" />
+            </Center>
+          ) : displayedProducts.length > 0 ? (
+            <VStack spacing={8} w="100%">
+              <SimpleGrid
+                columns={{ base: 1, sm: 2, md: 3, lg: 4 }}
+                spacing={6}
+                w="100%"
+              >
+                {displayedProducts.map((product) => (
+                  <StoreProductCard
+                    key={product.id}
+                    product={product}
+                    onAdd={handleAddToCart}
+                    isLoading={false}
+                  />
+                ))}
+              </SimpleGrid>
+              
+              {hasMore && (
+                <Button
+                  onClick={handleLoadMore}
+                  size="lg"
+                  colorScheme="blue"
+                  variant="outline"
+                >
+                  Cargar más productos
+                </Button>
+              )}
+            </VStack>
+          ) : (
+            <Center py={10}>
+              <Text>No se encontraron productos disponibles.</Text>
+            </Center>
+          )}
+        </VStack>
+      </Container>
+    </Box>
   );
 };
 
