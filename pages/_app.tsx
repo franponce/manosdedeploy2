@@ -438,13 +438,14 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
 
         {router.pathname === '/' && (
           <Box 
-            width={{ base: "90%", sm: "400px" }} 
-            height={{ base: "300px", sm: "400px" }} 
+            width="400px"  // Dimensión fija
+            height="400px"  // Dimensión fija
             overflow="hidden"
             position="relative"
             margin="0 auto"
             borderRadius="xl"
             mt={{ base: 4, md: 6 }}
+            mx="auto"  // Asegura centrado horizontal
           >
             <Image
               src={bannerError ? "/default-banner.jpg" : `${siteInfo?.bannerUrl}?${new Date().getTime()}`}
