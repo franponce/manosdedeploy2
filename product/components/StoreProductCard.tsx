@@ -1,8 +1,10 @@
 import React from 'react';
 import ProductCard from './ProductCard';
 import { Product } from '../types';
-import { Button, Text, Box } from "@chakra-ui/react";
+import { Button, Text, Box, VStack, Icon } from "@chakra-ui/react";
 import { useProductsStock } from '@/hooks/useProductsStock';
+import { FaEye } from 'react-icons/fa';
+import { useRouter } from 'next/router';
 
 interface StoreProductCardProps {
   product: Product;
@@ -15,50 +17,63 @@ export const StoreProductCard: React.FC<StoreProductCardProps> = ({
   onAdd,
   isLoading
 }) => {
-  // Usamos el hook de stock pasando un array con solo este producto
+  const router = useRouter();
   const { stocks, isLoading: stockLoading } = useProductsStock([product]);
   const available = stocks[product.id] || 0;
+
+  const handleViewDetail = () => {
+    router.push(`/product/${product.id}`);
+  };
 
   const renderActionButton = () => {
     if (stockLoading) {
       return (
-        <Button
-          colorScheme="blue"
-          isLoading
-          width="100%"
-        >
-          Cargando...
-        </Button>
-      );
-    }
-
-    if (available === 0) {
-      return (
-        <Button
-          isDisabled
-          width="100%"
-          bg="gray.100"
-          _hover={{ bg: "gray.100" }}
-          cursor="not-allowed"
-        >
-          Agotado
-        </Button>
+        <VStack spacing={2} width="100%">
+          <Button
+            colorScheme="blue"
+            isLoading
+            width="100%"
+          >
+            Cargando...
+          </Button>
+          <Button
+            variant="outline"
+            colorScheme="blue"
+            width="100%"
+            onClick={handleViewDetail}
+            leftIcon={<Icon as={FaEye} />}
+          >
+            Ver detalle
+          </Button>
+        </VStack>
       );
     }
 
     return (
-      <Box>
+      <VStack spacing={2} width="100%">
         <Button
           colorScheme="blue"
           width="100%"
           onClick={() => onAdd(product)}
+          isDisabled={available === 0}
         >
-          Agregar al carrito
+          {available === 0 ? "Agotado" : "Agregar al carrito"}
         </Button>
-        <Text fontSize="sm" color="gray.600" mt={2} textAlign="center">
-          Stock disponible: {available}
-        </Text>
-      </Box>
+        <Button
+          variant="outline"
+          colorScheme="blue"
+          width="100%"
+          onClick={handleViewDetail}
+          leftIcon={<Icon as={FaEye} />}
+        >
+          Ver detalle
+        </Button>
+        {available > 0 && (
+          <Text fontSize="sm" color="gray.600" textAlign="center">
+            Stock disponible: {available}
+          </Text>
+        )}
+      </VStack>
     );
   };
 
