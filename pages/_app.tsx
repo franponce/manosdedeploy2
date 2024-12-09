@@ -387,7 +387,15 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
         </Head>
 
         {showPreviewBanner && (
-          <Box position="sticky" top="70px" zIndex={999} bg="blue.50" py={{ base: 2, md: 3 }} borderBottom="1px" borderColor="blue.100">
+          <Box 
+            position="relative" 
+            zIndex={999} 
+            bg="blue.50" 
+            py={{ base: 2, md: 3 }} 
+            borderBottom="1px" 
+            borderColor="blue.100"
+            mb={4}
+          >
             <Container maxW="container.xl">
               <Flex
                 justify={{ base: "center", sm: "space-between" }}
@@ -428,15 +436,15 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
           </Box>
         )}
 
-        {/* Banner solo en la página principal */}
         {router.pathname === '/' && (
           <Box 
-            width="1290px"
-            height="400px"
+            width={{ base: "90%", sm: "400px" }} 
+            height={{ base: "300px", sm: "400px" }} 
             overflow="hidden"
             position="relative"
             margin="0 auto"
             borderRadius="xl"
+            mt={{ base: 4, md: 6 }}
           >
             <Image
               src={bannerError ? "/default-banner.jpg" : `${siteInfo?.bannerUrl}?${new Date().getTime()}`}
