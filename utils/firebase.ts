@@ -25,6 +25,10 @@ const db = getFirestore(app);
 const storage = getStorage(app);
 const auth = getAuth(app);
 
+auth.onAuthStateChanged((user) => {
+  console.log('Estado de autenticación:', user ? 'Autenticado' : 'No autenticado');
+});
+
 export interface SiteInformation {
   storeName: string;
   title: string;

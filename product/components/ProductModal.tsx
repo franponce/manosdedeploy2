@@ -48,6 +48,9 @@ import { useCategories } from '@/hooks/useCategories';
 import { imageService } from '../../services/imageService';
 import { useProduct } from '@/hooks/useProduct';
 import { stockService } from '../../utils/firebase';
+import { getAuth } from 'firebase/auth';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { storage } from '../../utils/firebase';
 
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 
@@ -190,6 +193,51 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     }
   }, [isOpen, product?.id]);
 
+  const handleImageUpload = async (file: File, index: number) => {
+    try {
+      const auth = getAuth();
+      const user = auth.currentUser;
+      
+      if (!user) {
+        toast({
+          title: "Error de autenticación",
+          description: "Debes estar autenticado para subir imágenes",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return null;
+      }
+
+      const timestamp = Date.now();
+      const fileName = `products/${timestamp}_${index + 1}.${file.name.split('.').pop()}`;
+      const storageRef = ref(storage, fileName);
+      
+      console.log('Intentando subir archivo:', {
+        fileName,
+        fileSize: file.size,
+        fileType: file.type,
+        userAuth: !!user
+      });
+
+      const uploadTask = await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(uploadTask.ref);
+      
+      return downloadURL;
+    } catch (error: unknown) {
+      console.error('Error detallado:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido al subir la imagen';
+      toast({
+        title: "Error al subir la imagen",
+        description: errorMessage,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+      return null;
+    }
+  };
+
   const handleProductImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -205,11 +253,11 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
 
     try {
       setIsUploading(true);
-      const imageUrl = await imageService.upload(file, currentProduct.id);
+      const imageUrl = await handleImageUpload(file, index);
       
       setCurrentProduct(prev => ({
         ...prev,
-        images: [...prev.images, imageUrl]
+        images: [...prev.images, imageUrl].filter((url): url is string => url !== null)
       }));
     } catch (error) {
       console.error('Error uploading image:', error);
