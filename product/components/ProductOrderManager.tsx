@@ -17,20 +17,12 @@ import {
   IconButton,
   Spinner,
   Center,
-  HStack,
-  Table,
-  Thead,
-  Tr,
-  Th,
-  Tbody,
-  Td,
-  ButtonGroup,
 } from '@chakra-ui/react';
+import { FaArrowUp, FaArrowDown } from 'react-icons/fa';
 import useSWR, { mutate } from 'swr';
 import { Product } from '../types';
 import { SWR_KEYS } from '../constants';
 import { getProducts, updateProductOrder } from '../../utils/googleSheets';
-import { FaArrowUp, FaArrowDown } from 'react-icons/fa';
 
 interface ProductOrderManagerProps {
   isOpen: boolean;
@@ -51,7 +43,7 @@ const ProductOrderManager: React.FC<ProductOrderManagerProps> = ({
     SWR_KEYS.PRODUCTS,
     () => getProducts(),
     {
-      refreshInterval: 0,
+      refreshInterval: 0, // Desactivamos el auto-refresh mientras ordenamos
       revalidateOnFocus: false,
     }
   );
@@ -60,53 +52,50 @@ const ProductOrderManager: React.FC<ProductOrderManagerProps> = ({
 
   useEffect(() => {
     if (isOpen && products) {
-      // Ordenar productos por el campo order al abrir el modal
+      // Ordenamos los productos según el orden guardado en el sheet
       const sortedProducts = [...products].sort((a, b) => {
-        const orderA = a.order ? parseInt(a.order) : Infinity;
-        const orderB = b.order ? parseInt(b.order) : Infinity;
+        // Convertimos el orden a número, si no existe usamos Infinity para ponerlo al final
+        const orderA = a.order ? parseInt(a.order, 10) : Infinity;
+        const orderB = b.order ? parseInt(b.order, 10) : Infinity;
         return orderA - orderB;
       });
-      
+
       setOrderedProducts(sortedProducts);
     }
   }, [isOpen, products]);
 
   const moveProduct = (index: number, direction: 'up' | 'down') => {
+    const newProducts = [...orderedProducts];
     const newIndex = direction === 'up' ? index - 1 : index + 1;
-    if (newIndex < 0 || newIndex >= orderedProducts.length) return;
 
-    const newOrderedProducts = [...orderedProducts];
-    const temp = newOrderedProducts[index];
-    newOrderedProducts[index] = newOrderedProducts[newIndex];
-    newOrderedProducts[newIndex] = temp;
-
-    // Actualizar el orden numérico
-    const updatedProducts = newOrderedProducts.map((product, idx) => ({
-      ...product,
-      order: (idx + 1).toString()
-    }));
-
-    setOrderedProducts(updatedProducts);
+    if (newIndex >= 0 && newIndex < newProducts.length) {
+      [newProducts[index], newProducts[newIndex]] = [newProducts[newIndex], newProducts[index]];
+      setOrderedProducts(newProducts);
+    }
   };
 
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      await updateProductOrder(orderedProducts);
+      // Actualizamos el orden en el sheet
+      await updateProductOrder(orderedProducts.map(p => p.id));
+      
+      // Actualizamos el cache de SWR con el nuevo orden
+      await mutate(SWR_KEYS.PRODUCTS, orderedProducts, false);
+      
       toast({
         title: "Orden actualizado",
-        description: "El orden de los productos se ha actualizado correctamente",
+        description: "El orden de los productos se ha guardado correctamente",
         status: "success",
         duration: 3000,
         isClosable: true,
       });
-      mutate(SWR_KEYS.PRODUCTS);
       onClose();
     } catch (error) {
-      console.error('Error updating product order:', error);
+      console.error('Error al guardar el orden:', error);
       toast({
         title: "Error",
-        description: "No se pudo actualizar el orden de los productos",
+        description: "No se pudo guardar el orden de los productos",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -118,15 +107,34 @@ const ProductOrderManager: React.FC<ProductOrderManagerProps> = ({
 
   const normalizeImage = (images: string | string[] | undefined): string => {
     if (!images) return '';
+    
     if (typeof images === 'string') {
       const parts = images.split('|||');
       return parts[0] || '';
     }
+    
     if (Array.isArray(images)) {
       return images[0] || '';
     }
+    
     return '';
   };
+
+  if (error) {
+    return (
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <ModalContent>
+          <ModalHeader>Error</ModalHeader>
+          <ModalBody>
+            No se pudieron cargar los productos. Por favor, intente nuevamente.
+          </ModalBody>
+          <ModalFooter>
+            <Button onClick={onClose}>Cerrar</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    );
+  }
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} {...modalProps}>
