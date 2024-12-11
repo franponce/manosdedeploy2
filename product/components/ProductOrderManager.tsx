@@ -18,13 +18,21 @@ import {
   Spinner,
   Center,
   HStack,
+  Table,
+  Thead,
+  Tr,
+  Th,
+  Tbody,
+  Td,
+  ButtonGroup,
+  ChevronUpIcon,
+  ChevronDownIcon,
 } from '@chakra-ui/react';
-import { FaArrowUp, FaArrowDown } from 'react-icons/fa';
 import useSWR, { mutate } from 'swr';
 import { Product } from '../types';
 import { SWR_KEYS } from '../constants';
 import { getProducts, updateProductOrder } from '../../utils/googleSheets';
-import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
+import { FaArrowUp, FaArrowDown } from 'react-icons/fa';
 
 interface ProductOrderManagerProps {
   isOpen: boolean;
@@ -41,50 +49,50 @@ const ProductOrderManager: React.FC<ProductOrderManagerProps> = ({
   modalProps = {} 
 }) => {
   const toast = useToast();
-  const { data: products, error, isLoading: isLoadingProducts } = useSWR<Product[]>(
+  const { data: products, error, isLoading } = useSWR<Product[]>(
     SWR_KEYS.PRODUCTS,
     () => getProducts(),
     {
-      refreshInterval: 0, // Desactivamos el auto-refresh mientras ordenamos
+      refreshInterval: 0,
       revalidateOnFocus: false,
     }
   );
   const [orderedProducts, setOrderedProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (isOpen && products) {
-      // Ordenar productos por el campo order
+      // Ordenar productos por el campo order al abrir el modal
       const sortedProducts = [...products].sort((a, b) => {
-        // Convertir order a número, si está vacío o no es número, usar Infinity
         const orderA = a.order ? parseInt(a.order) : Infinity;
         const orderB = b.order ? parseInt(b.order) : Infinity;
         return orderA - orderB;
       });
       
       setOrderedProducts(sortedProducts);
-      setIsLoading(false);
     }
   }, [isOpen, products]);
 
-  const handleDragEnd = (result: DropResult) => {
-    if (!result.destination) return;
+  const moveProduct = (index: number, direction: 'up' | 'down') => {
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= orderedProducts.length) return;
 
-    const items = Array.from(orderedProducts);
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
+    const newOrderedProducts = [...orderedProducts];
+    const temp = newOrderedProducts[index];
+    newOrderedProducts[index] = newOrderedProducts[newIndex];
+    newOrderedProducts[newIndex] = temp;
 
     // Actualizar el orden numérico
-    const updatedItems = items.map((item, index) => ({
-      ...item,
-      order: (index + 1).toString()
+    const updatedProducts = newOrderedProducts.map((product, idx) => ({
+      ...product,
+      order: (idx + 1).toString()
     }));
 
-    setOrderedProducts(updatedItems);
+    setOrderedProducts(updatedProducts);
   };
 
   const handleSave = async () => {
-    setIsLoading(true);
+    setIsSaving(true);
     try {
       await updateProductOrder(orderedProducts);
       toast({
@@ -106,117 +114,100 @@ const ProductOrderManager: React.FC<ProductOrderManagerProps> = ({
         isClosable: true,
       });
     } finally {
-      setIsLoading(false);
+      setIsSaving(false);
     }
   };
 
   const normalizeImage = (images: string | string[] | undefined): string => {
     if (!images) return '';
-    
     if (typeof images === 'string') {
       const parts = images.split('|||');
       return parts[0] || '';
     }
-    
     if (Array.isArray(images)) {
       return images[0] || '';
     }
-    
     return '';
   };
 
-  if (error) {
-    return (
-      <Modal isOpen={isOpen} onClose={onClose}>
-        <ModalContent>
-          <ModalHeader>Error</ModalHeader>
-          <ModalBody>
-            No se pudieron cargar los productos. Por favor, intente nuevamente.
-          </ModalBody>
-          <ModalFooter>
-            <Button onClick={onClose}>Cerrar</Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-    );
-  }
-
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="xl" {...modalProps}>
+    <Modal isOpen={isOpen} onClose={onClose} {...modalProps}>
       <ModalOverlay />
-      <ModalContent maxW="800px">
+      <ModalContent maxH="90vh">
         <ModalHeader>Ordenar Productos</ModalHeader>
         <ModalCloseButton />
-        <ModalBody>
-          {isLoading || isLoadingProducts ? (
-            <Center py={10}>
-              <VStack spacing={4}>
-                <Spinner size="xl" />
-                <Text>Cargando productos...</Text>
-              </VStack>
+        <ModalBody overflowY="auto">
+          {isLoading ? (
+            <Center py={8}>
+              <Spinner size="xl" />
             </Center>
           ) : (
-            <DragDropContext onDragEnd={handleDragEnd}>
-              <Droppable droppableId="products">
-                {(provided) => (
-                  <VStack
-                    {...provided.droppableProps}
-                    ref={provided.innerRef}
-                    spacing={2}
-                    align="stretch"
-                    w="100%"
-                  >
-                    {orderedProducts.map((product, index) => (
-                      <Draggable
-                        key={product.id}
-                        draggableId={product.id}
-                        index={index}
-                      >
-                        {(provided) => (
-                          <Box
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                            p={4}
-                            bg="white"
-                            borderWidth="1px"
-                            borderRadius="md"
-                            shadow="sm"
-                          >
-                            <HStack spacing={4}>
-                              <Text fontWeight="bold" minWidth="30px">
-                                {index + 1}
-                              </Text>
-                              {product.images?.[0] && (
-                                <Image
-                                  src={product.images[0]}
-                                  alt={product.title}
-                                  boxSize="50px"
-                                  objectFit="cover"
-                                  borderRadius="md"
-                                />
-                              )}
-                              <Text flex="1">{product.title}</Text>
-                            </HStack>
-                          </Box>
-                        )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                  </VStack>
-                )}
-              </Droppable>
-            </DragDropContext>
+            <VStack spacing={4} align="stretch">
+              {orderedProducts.map((product, index) => (
+                <Box
+                  key={product.id}
+                  p={4}
+                  bg="white"
+                  borderRadius="md"
+                  boxShadow="sm"
+                  border="1px"
+                  borderColor="gray.200"
+                >
+                  <Flex align="center" justify="space-between">
+                    <Flex align="center" gap={4} flex={1}>
+                      <Flex direction="column" align="center" minW="50px">
+                        <Text color="gray.500" fontSize="sm">
+                          Orden
+                        </Text>
+                        <Text color="blue.500" fontWeight="bold">
+                          #{index + 1}
+                        </Text>
+                      </Flex>
+                      <Image
+                        src={normalizeImage(product.images)}
+                        alt={product.title}
+                        boxSize="50px"
+                        objectFit="cover"
+                        borderRadius="md"
+                      />
+                      <Box>
+                        <Text fontWeight="medium">{product.title}</Text>
+                        <Text fontSize="sm" color="gray.500">
+                          ID: {product.id}
+                        </Text>
+                      </Box>
+                    </Flex>
+                    <Flex gap={2}>
+                      <IconButton
+                        aria-label="Mover arriba"
+                        icon={<FaArrowUp />}
+                        size="sm"
+                        isDisabled={index === 0}
+                        onClick={() => moveProduct(index, 'up')}
+                      />
+                      <IconButton
+                        aria-label="Mover abajo"
+                        icon={<FaArrowDown />}
+                        size="sm"
+                        isDisabled={index === orderedProducts.length - 1}
+                        onClick={() => moveProduct(index, 'down')}
+                      />
+                    </Flex>
+                  </Flex>
+                </Box>
+              ))}
+            </VStack>
           )}
         </ModalBody>
         <ModalFooter>
           <Button variant="ghost" mr={3} onClick={onClose}>
             Cancelar
           </Button>
-          <Button
-            colorScheme="blue"
+          <Button 
+            colorScheme="blue" 
             onClick={handleSave}
-            isLoading={isLoading}
+            isLoading={isSaving}
+            isDisabled={isLoading}
           >
             Guardar orden
           </Button>
