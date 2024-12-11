@@ -175,14 +175,31 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
 
   const handleSubmit = async (product: Product) => {
     try {
+      let updatedProduct;
       if (product.id) {
         await updateProduct(product);
+        updatedProduct = product;
       } else {
-        await createProduct(product);
+        const newId = await createProduct(product);
+        updatedProduct = { ...product, id: newId };
       }
       
-      // Forzamos la actualización inmediata de los datos
-      await mutate(SWR_KEYS.PRODUCTS);
+      // Actualizamos el cache de SWR inmediatamente con el nuevo producto
+      await mutate(
+        SWR_KEYS.PRODUCTS,
+        (currentProducts: Product[] = []) => {
+          if (product.id) {
+            // Si es una actualización, reemplazamos el producto existente
+            return currentProducts.map(p => 
+              p.id === product.id ? updatedProduct : p
+            );
+          } else {
+            // Si es un nuevo producto, lo agregamos al inicio
+            return [updatedProduct, ...currentProducts];
+          }
+        },
+        false // No revalidamos inmediatamente para evitar parpadeo
+      );
       
       setIsModalOpen(false);
       setCurrentProduct(null);
@@ -194,6 +211,11 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
         duration: 3000,
         isClosable: true,
       });
+
+      // Revalidamos después de un breve delay para asegurar sincronización
+      setTimeout(() => {
+        mutate(SWR_KEYS.PRODUCTS);
+      }, 1000);
     } catch (error) {
       console.error("Error saving product:", error);
       toast({
