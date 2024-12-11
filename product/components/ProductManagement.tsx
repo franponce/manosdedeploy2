@@ -66,6 +66,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
   const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
   const [productImageIndexes, setProductImageIndexes] = useState<{ [key: string]: number }>({});
   const [showHiddenProducts, setShowHiddenProducts] = useState(false);
+  const [deletingProductId, setDeletingProductId] = useState<string | null>(null);
 
   // Definir todos los callbacks y efectos primero
   const lastProductElementRef = useCallback((node: HTMLDivElement | null) => {
@@ -123,25 +124,54 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (product: Product) => {
-    if (window.confirm(`¿Estás seguro de que quieres eliminar ${product.title}?`)) {
-      try {
-        await deleteProduct(product.id);
-        toast({
-          title: "Producto eliminado",
-          status: "success",
-          duration: 2000,
-        });
-        mutate(SWR_KEYS.PRODUCTS);
-      } catch (error) {
-        console.error("Error deleting product:", error);
-        toast({
-          title: "Error",
-          description: "No se pudo eliminar el producto",
-          status: "error",
-          duration: 3000,
-        });
+  const handleDeleteProduct = async (productId: string) => {
+    try {
+      setDeletingProductId(productId);
+      
+      const response = await fetch(`/api/products?id=${productId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Error deleting product');
       }
+
+      // Actualizar la UI inmediatamente
+      mutate(
+        SWR_KEYS.PRODUCTS,
+        (currentProducts: Product[] = []) => 
+          currentProducts.filter(p => p.id !== productId),
+        false // No revalidar inmediatamente
+      );
+
+      toast({
+        title: "Éxito",
+        description: "Producto eliminado correctamente",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+
+      // Revalidar después de un breve delay
+      setTimeout(() => {
+        mutate(SWR_KEYS.PRODUCTS);
+      }, 1000);
+
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Error al eliminar el producto",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setDeletingProductId(null);
     }
   };
 
@@ -486,7 +516,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
                 flex={1}
                 size="lg"
                 colorScheme="red"
-                onClick={() => handleDelete(product)}
+                onClick={() => handleDeleteProduct(product.id)}
                 leftIcon={<Icon as={FaTrash} />}
                 borderRadius="md"
               >
@@ -627,9 +657,12 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
                 key={product.id}
                 product={product}
                 onEdit={handleEdit}
-                onDelete={handleDelete} productImageIndex={0} onImageIndexChange={function (productId: string, newIndex: number): void {
-                  throw new Error("Function not implemented.");
-                } }            />
+                onDelete={(product) => handleDeleteProduct(product.id)}
+                productImageIndex={0}
+                onImageIndexChange={(productId, newIndex) => {
+                  // Implementar lógica de cambio de imagen
+                }}
+              />
             ))}
           </Grid>
         )

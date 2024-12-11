@@ -3,16 +3,24 @@ import { google } from 'googleapis';
 import { deleteProduct } from '../../../utils/googleSheets';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (!['GET', 'PUT', 'DELETE'].includes(req.method || '')) {
-    return res.status(405).json({ message: 'Method not allowed' });
-  }
-
   try {
     const { id } = req.query;
-    
+
+    if (!id || typeof id !== 'string') {
+      return res.status(400).json({ message: 'Invalid product ID' });
+    }
+
     if (req.method === 'DELETE') {
-      await deleteProduct(id as string);
-      return res.status(200).json({ message: 'Product deleted successfully' });
+      try {
+        await deleteProduct(id);
+        return res.status(200).json({ message: 'Product deleted successfully' });
+      } catch (error) {
+        console.error('Error deleting product:', error);
+        return res.status(500).json({ 
+          message: 'Error deleting product',
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
     }
 
     const auth = new google.auth.GoogleAuth({
@@ -91,9 +99,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(200).json(product);
   } catch (error) {
     console.error('API Error:', error);
-    return res.status(500).json({ 
-      message: 'Internal server error',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    });
+    return res.status(500).json({ message: 'Internal server error' });
   }
 } 

@@ -254,53 +254,35 @@ if (typeof window === 'undefined') {
         const { google } = await import('googleapis');
         const sheets = google.sheets({ version: 'v4', auth });
 
-        // Primero obtenemos todas las filas para encontrar el índice correcto
+        // Obtener todas las filas
         const response = await sheets.spreadsheets.values.get({
           spreadsheetId: SPREADSHEET_ID,
-          range: 'La Libre Web - Catálogo online rev 2021 - products!A2:K'
+          range: 'La Libre Web - Catálogo online rev 2021 - products!A:K'
         });
 
         const rows = response.data.values || [];
-        // Encontramos el índice exacto del producto a eliminar
         const rowIndex = rows.findIndex(row => row[0] === productId);
 
         if (rowIndex === -1) {
-          throw new Error(`Producto con ID ${productId} no encontrado`);
+          throw new Error(`Product with ID ${productId} not found`);
         }
 
-        // El índice real en el sheet es rowIndex + 2 (por el encabezado y porque los índices empiezan en 0)
-        const actualRow = rowIndex + 2;
+        // El índice real es rowIndex + 1 (por el encabezado)
+        const actualRow = rowIndex + 1;
 
-        // Eliminamos la fila específica
-        await sheets.spreadsheets.batchUpdate({
+        // Limpiar la fila en lugar de eliminarla
+        await sheets.spreadsheets.values.update({
           spreadsheetId: SPREADSHEET_ID,
+          range: `La Libre Web - Catálogo online rev 2021 - products!A${actualRow}:K${actualRow}`,
+          valueInputOption: 'USER_ENTERED',
           requestBody: {
-            requests: [{
-              deleteDimension: {
-                range: {
-                  sheetId: 0, // Asegúrate de que este sea el ID correcto de tu hoja
-                  dimension: 'ROWS',
-                  startIndex: actualRow - 1, // -1 porque la API usa índices base 0
-                  endIndex: actualRow // No necesita -1 porque endIndex es exclusivo
-                }
-              }
-            }]
+            values: [['']] // Limpiar la fila
           }
         });
 
-        // Verificamos que se haya eliminado correctamente
-        const verifyResponse = await sheets.spreadsheets.values.get({
-          spreadsheetId: SPREADSHEET_ID,
-          range: `La Libre Web - Catálogo online rev 2021 - products!A${actualRow}:A${actualRow}`
-        });
-
-        if (verifyResponse.data.values?.[0]?.[0] === productId) {
-          throw new Error('La fila no se eliminó correctamente');
-        }
-
       } catch (error) {
         console.error('Error deleting product:', error);
-        throw error;
+        throw new Error('Failed to delete product');
       }
     },
 
