@@ -47,12 +47,18 @@ interface ProductManagementProps {
 const ProductManagement: React.FC<ProductManagementProps> = ({
   onCreateProduct
 }) => {
-  const [products, setProducts] = useState<Product[]>([]);
+  const { data: products, error, isLoading } = useSWR<Product[]>(
+    SWR_KEYS.PRODUCTS,
+    () => getProducts(),
+    {
+      refreshInterval: SYNC_INTERVAL,
+      revalidateOnFocus: false,
+    }
+  );
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const observer = useRef<IntersectionObserver | null>(null);
@@ -60,9 +66,8 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
   const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
   const [productImageIndexes, setProductImageIndexes] = useState<{ [key: string]: number }>({});
   const [showHiddenProducts, setShowHiddenProducts] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(true);
 
-  if (initialLoading && products.length === 0) {
+  if (isLoading || !products) {
     return (
       <Center py={10}>
         <VStack spacing={4}>
@@ -91,48 +96,6 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
     });
     if (node) observer.current.observe(node);
   }, [isLoading, hasMore]);
-
-  const fetchProducts = useCallback(async () => {
-    try {
-      const fetchedProducts = await getProducts();
-      setProducts(fetchedProducts);
-    } catch (error) {
-      console.error("Error fetching products:", error);
-      toast({
-        title: "Error",
-        description: "No se pudieron cargar los productos",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    } finally {
-      setInitialLoading(false);
-    }
-  }, [toast]);
-
-  useEffect(() => {
-    const loadProducts = async () => {
-      try {
-        const fetchedProducts = await getProducts();
-        setProducts(fetchedProducts);
-      } catch (error) {
-        console.error("Error fetching products:", error);
-        toast({
-          title: "Error",
-          description: "No se pudieron cargar los productos",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-      } finally {
-        setInitialLoading(false);
-      }
-    };
-
-    loadProducts();
-    const intervalId = setInterval(loadProducts, SYNC_INTERVAL);
-    return () => clearInterval(intervalId);
-  }, []);
 
   useEffect(() => {
     const lowercasedTerm = searchTerm.toLowerCase();
@@ -180,7 +143,6 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
 
   const handleDelete = async (product: Product) => {
     if (window.confirm(`¿Estás seguro de que quieres eliminar ${product.title}?`)) {
-      setIsLoading(true);
       try {
         await deleteProduct(product.id);
         toast({
@@ -197,8 +159,6 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
           status: "error",
           duration: 3000,
         });
-      } finally {
-        setIsLoading(false);
       }
     }
   };
@@ -210,7 +170,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
         isVisible: !product.isVisible
       };
       await updateProduct(updatedProduct);
-      await fetchProducts();
+      await getProducts();
 
       toast({
         title: "Visibilidad actualizada",
@@ -232,7 +192,6 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
   };
 
   const handleSubmit = async (product: Product) => {
-    setIsLoading(true);
     try {
       if (product.id) {
         await updateProduct(product);
@@ -243,7 +202,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
       setCurrentProduct(null);
 
       await mutate('/api/products');
-      await fetchProducts();
+      await getProducts();
 
       toast({
         title: "Éxito",
@@ -261,8 +220,6 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
         duration: 3000,
         isClosable: true,
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -340,7 +297,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
     }
 
     if (productsToUpdate.length > 0) {
-      await fetchProducts(); // Actualizar la lista después de los cambios
+      await getProducts(); // Actualizar la lista después de los cambios
     }
   }, [products]);
 
