@@ -17,12 +17,14 @@ import {
   IconButton,
   Spinner,
   Center,
+  HStack,
 } from '@chakra-ui/react';
 import { FaArrowUp, FaArrowDown } from 'react-icons/fa';
 import useSWR, { mutate } from 'swr';
 import { Product } from '../types';
 import { SWR_KEYS } from '../constants';
 import { getProducts, updateProductOrder } from '../../utils/googleSheets';
+import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 
 interface ProductOrderManagerProps {
   isOpen: boolean;
@@ -39,7 +41,7 @@ const ProductOrderManager: React.FC<ProductOrderManagerProps> = ({
   modalProps = {} 
 }) => {
   const toast = useToast();
-  const { data: products, error, isLoading } = useSWR<Product[]>(
+  const { data: products, error, isLoading: isLoadingProducts } = useSWR<Product[]>(
     SWR_KEYS.PRODUCTS,
     () => getProducts(),
     {
@@ -48,60 +50,63 @@ const ProductOrderManager: React.FC<ProductOrderManagerProps> = ({
     }
   );
   const [orderedProducts, setOrderedProducts] = useState<Product[]>([]);
-  const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (products) {
-      // Ordenamos los productos según el orden guardado en el sheet
+    if (isOpen && products) {
+      // Ordenar productos por el campo order
       const sortedProducts = [...products].sort((a, b) => {
-        // Convertimos el orden a número, si no existe usamos Infinity para ponerlo al final
-        const orderA = a.order ? parseInt(a.order, 10) : Infinity;
-        const orderB = b.order ? parseInt(b.order, 10) : Infinity;
+        // Convertir order a número, si está vacío o no es número, usar Infinity
+        const orderA = a.order ? parseInt(a.order) : Infinity;
+        const orderB = b.order ? parseInt(b.order) : Infinity;
         return orderA - orderB;
       });
-
+      
       setOrderedProducts(sortedProducts);
+      setIsLoading(false);
     }
-  }, [products]);
+  }, [isOpen, products]);
 
-  const moveProduct = (index: number, direction: 'up' | 'down') => {
-    const newProducts = [...orderedProducts];
-    const newIndex = direction === 'up' ? index - 1 : index + 1;
+  const handleDragEnd = (result: DropResult) => {
+    if (!result.destination) return;
 
-    if (newIndex >= 0 && newIndex < newProducts.length) {
-      [newProducts[index], newProducts[newIndex]] = [newProducts[newIndex], newProducts[index]];
-      setOrderedProducts(newProducts);
-    }
+    const items = Array.from(orderedProducts);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+
+    // Actualizar el orden numérico
+    const updatedItems = items.map((item, index) => ({
+      ...item,
+      order: (index + 1).toString()
+    }));
+
+    setOrderedProducts(updatedItems);
   };
 
   const handleSave = async () => {
-    setIsSaving(true);
+    setIsLoading(true);
     try {
-      // Actualizamos el orden en el sheet
-      await updateProductOrder(orderedProducts.map(p => p.id));
-      
-      // Actualizamos el cache de SWR con el nuevo orden
-      await mutate(SWR_KEYS.PRODUCTS, orderedProducts, false);
-      
+      await updateProductOrder(orderedProducts);
       toast({
         title: "Orden actualizado",
-        description: "El orden de los productos se ha guardado correctamente",
+        description: "El orden de los productos se ha actualizado correctamente",
         status: "success",
         duration: 3000,
         isClosable: true,
       });
+      mutate(SWR_KEYS.PRODUCTS);
       onClose();
     } catch (error) {
-      console.error('Error al guardar el orden:', error);
+      console.error('Error updating product order:', error);
       toast({
         title: "Error",
-        description: "No se pudo guardar el orden de los productos",
+        description: "No se pudo actualizar el orden de los productos",
         status: "error",
         duration: 3000,
         isClosable: true,
       });
     } finally {
-      setIsSaving(false);
+      setIsLoading(false);
     }
   };
 
@@ -137,83 +142,81 @@ const ProductOrderManager: React.FC<ProductOrderManagerProps> = ({
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} {...modalProps}>
+    <Modal isOpen={isOpen} onClose={onClose} size="xl" {...modalProps}>
       <ModalOverlay />
-      <ModalContent maxH="90vh">
+      <ModalContent maxW="800px">
         <ModalHeader>Ordenar Productos</ModalHeader>
         <ModalCloseButton />
-        <ModalBody overflowY="auto">
-          {isLoading ? (
-            <Center py={8}>
-              <Spinner size="xl" />
+        <ModalBody>
+          {isLoading || isLoadingProducts ? (
+            <Center py={10}>
+              <VStack spacing={4}>
+                <Spinner size="xl" />
+                <Text>Cargando productos...</Text>
+              </VStack>
             </Center>
           ) : (
-            <VStack spacing={4} align="stretch">
-              {orderedProducts.map((product, index) => (
-                <Box
-                  key={product.id}
-                  p={4}
-                  bg="white"
-                  borderRadius="md"
-                  boxShadow="sm"
-                  border="1px"
-                  borderColor="gray.200"
-                >
-                  <Flex align="center" justify="space-between">
-                    <Flex align="center" gap={4} flex={1}>
-                      <Flex direction="column" align="center" minW="50px">
-                        <Text color="gray.500" fontSize="sm">
-                          Orden
-                        </Text>
-                        <Text color="blue.500" fontWeight="bold">
-                          #{index + 1}
-                        </Text>
-                      </Flex>
-                      <Image
-                        src={normalizeImage(product.images)}
-                        alt={product.title}
-                        boxSize="50px"
-                        objectFit="cover"
-                        borderRadius="md"
-                      />
-                      <Box>
-                        <Text fontWeight="medium">{product.title}</Text>
-                        <Text fontSize="sm" color="gray.500">
-                          ID: {product.id}
-                        </Text>
-                      </Box>
-                    </Flex>
-                    <Flex gap={2}>
-                      <IconButton
-                        aria-label="Mover arriba"
-                        icon={<FaArrowUp />}
-                        size="sm"
-                        isDisabled={index === 0}
-                        onClick={() => moveProduct(index, 'up')}
-                      />
-                      <IconButton
-                        aria-label="Mover abajo"
-                        icon={<FaArrowDown />}
-                        size="sm"
-                        isDisabled={index === orderedProducts.length - 1}
-                        onClick={() => moveProduct(index, 'down')}
-                      />
-                    </Flex>
-                  </Flex>
-                </Box>
-              ))}
-            </VStack>
+            <DragDropContext onDragEnd={handleDragEnd}>
+              <Droppable droppableId="products">
+                {(provided) => (
+                  <VStack
+                    {...provided.droppableProps}
+                    ref={provided.innerRef}
+                    spacing={2}
+                    align="stretch"
+                    w="100%"
+                  >
+                    {orderedProducts.map((product, index) => (
+                      <Draggable
+                        key={product.id}
+                        draggableId={product.id}
+                        index={index}
+                      >
+                        {(provided) => (
+                          <Box
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            p={4}
+                            bg="white"
+                            borderWidth="1px"
+                            borderRadius="md"
+                            shadow="sm"
+                          >
+                            <HStack spacing={4}>
+                              <Text fontWeight="bold" minWidth="30px">
+                                {index + 1}
+                              </Text>
+                              {product.images?.[0] && (
+                                <Image
+                                  src={product.images[0]}
+                                  alt={product.title}
+                                  boxSize="50px"
+                                  objectFit="cover"
+                                  borderRadius="md"
+                                />
+                              )}
+                              <Text flex="1">{product.title}</Text>
+                            </HStack>
+                          </Box>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </VStack>
+                )}
+              </Droppable>
+            </DragDropContext>
           )}
         </ModalBody>
         <ModalFooter>
           <Button variant="ghost" mr={3} onClick={onClose}>
             Cancelar
           </Button>
-          <Button 
-            colorScheme="blue" 
+          <Button
+            colorScheme="blue"
             onClick={handleSave}
-            isLoading={isSaving}
-            isDisabled={isLoading}
+            isLoading={isLoading}
           >
             Guardar orden
           </Button>

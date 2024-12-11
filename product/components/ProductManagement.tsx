@@ -61,7 +61,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
   const [productImageIndexes, setProductImageIndexes] = useState<{ [key: string]: number }>({});
   const [showHiddenProducts, setShowHiddenProducts] = useState(false);
 
-  if (isLoading) {
+  if (products.length === 0) {
     return (
       <Center py={10}>
         <VStack spacing={4}>
