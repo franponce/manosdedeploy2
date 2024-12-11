@@ -216,7 +216,10 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     setIsUploading(true);
 
     try {
-      await onSubmit(currentProduct);
+      await Promise.all([
+        onSubmit(currentProduct),
+        new Promise(resolve => setTimeout(resolve, 1000))
+      ]);
       
       for (const imageUrl of imagesToDelete) {
         try {
