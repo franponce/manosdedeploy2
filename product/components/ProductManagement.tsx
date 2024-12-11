@@ -62,7 +62,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
   const [showHiddenProducts, setShowHiddenProducts] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
 
-  if (initialLoading) {
+  if (initialLoading && products.length === 0) {
     return (
       <Center py={10}>
         <VStack spacing={4}>
@@ -111,10 +111,28 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
   }, [toast]);
 
   useEffect(() => {
-    fetchProducts();
-    const intervalId = setInterval(fetchProducts, SYNC_INTERVAL);
+    const loadProducts = async () => {
+      try {
+        const fetchedProducts = await getProducts();
+        setProducts(fetchedProducts);
+      } catch (error) {
+        console.error("Error fetching products:", error);
+        toast({
+          title: "Error",
+          description: "No se pudieron cargar los productos",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      } finally {
+        setInitialLoading(false);
+      }
+    };
+
+    loadProducts();
+    const intervalId = setInterval(loadProducts, SYNC_INTERVAL);
     return () => clearInterval(intervalId);
-  }, [fetchProducts]);
+  }, []);
 
   useEffect(() => {
     const lowercasedTerm = searchTerm.toLowerCase();
