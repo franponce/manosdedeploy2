@@ -523,28 +523,22 @@ if (typeof window === 'undefined') {
       try {
         const response = await sheets.spreadsheets.values.get({
           spreadsheetId: SPREADSHEET_ID,
-          range: 'La Libre Web - Catálogo online rev 2021 - products!A2:K',
+          range: 'La Libre Web - Catálogo online rev 2021 - products!B2:K',
         });
 
         const currentRows = response.data.values || [];
         const rowMap = new Map(
-          currentRows.map(row => [row[0], row])
+          currentRows.map((row, index) => [orderedIds[index], row])
         );
 
-        // Crear las nuevas filas manteniendo el orden secuencial en la columna J
-        const newRows = orderedIds.map((id, index) => {
-          const row = rowMap.get(id);
-          if (!row) throw new Error(`Producto con ID ${id} no encontrado`);
-          
-          // Creamos una copia de la fila y actualizamos el índice secuencial
-          const updatedRow = [...row];
-          updatedRow[9] = (index + 1).toString(); // Columna J (índice 9) con números secuenciales
-          return updatedRow;
-        });
+        // Crear las nuevas filas manteniendo el orden secuencial
+        const newRows = orderedIds
+          .map(id => rowMap.get(id))
+          .filter((row): row is any[] => row !== undefined);
 
         await sheets.spreadsheets.values.update({
           spreadsheetId: SPREADSHEET_ID,
-          range: 'La Libre Web - Catálogo online rev 2021 - products!A2:K',
+          range: 'La Libre Web - Catálogo online rev 2021 - products!B2:K',
           valueInputOption: 'RAW',
           requestBody: {
             values: newRows
