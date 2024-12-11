@@ -33,7 +33,7 @@ async function getAuthClient() {
 if (typeof window === 'undefined') {
   // Constantes del servidor
   const SPREADSHEET_ID = process.env.GOOGLE_SHEET_ID;
-  const PRODUCT_RANGE = 'La Libre Web - Catálogo online rev 2021 - products!A2:I';
+  const PRODUCT_RANGE = 'La Libre Web - Catálogo online rev 2021 - products!A2:K';
   const CATEGORY_RANGE = 'Categories!A2:B';
   const PRODUCT_LIMIT = 30;
 
@@ -214,7 +214,7 @@ if (typeof window === 'undefined') {
           newId,                   // Columna A
           product.title,           // Columna B
           product.description || '', // Columna C
-          product.images.join('|||'), // Columna D
+          product.images ? (Array.isArray(product.images) ? product.images.join('|||') : product.images) : '', // Columna D
           product.price.toString(), // Columna E
           product.scheduledPublishDate ? formatLocalDateTime(product.scheduledPublishDate) : '', // Columna F
           product.isScheduled ? 'TRUE' : 'FALSE', // Columna G
