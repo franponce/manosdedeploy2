@@ -87,6 +87,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
   const [newCategoryName, setNewCategoryName] = useState('');
   const [showNewCategoryInput, setShowNewCategoryInput] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [imagesToDelete, setImagesToDelete] = useState<string[]>([]);
 
   const MAX_TITLE_LENGTH = 60;
   const MAX_DESCRIPTION_LENGTH = 300;
@@ -150,6 +151,12 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     }
   }, [isOpen, product?.id]);
 
+  useEffect(() => {
+    if (isOpen) {
+      setImagesToDelete([]);
+    }
+  }, [isOpen]);
+
   const handleProductImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -205,55 +212,31 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!currentProduct) return;
-
-    const price = parseFloat(currentProduct.price.toString());
-    if (isNaN(price) || price <= 0) {
-      toast({
-        title: "Error",
-        description: "Por favor, ingrese un precio válido mayor que 0.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
-    if (isScheduleOpen && !scheduledDate) {
-      toast({
-        title: "Error",
-        description: "Por favor, seleccione una fecha y hora para la publicación programada.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
+    setIsUploading(true);
 
     try {
-      if (currentProduct.id && typeof currentProduct.stock === 'number') {
-        await stockService.updateStock(currentProduct.id, currentProduct.stock);
+      await onSubmit(currentProduct);
+      
+      for (const imageUrl of imagesToDelete) {
+        try {
+          await imageService.delete(imageUrl);
+        } catch (error) {
+          console.error('Error eliminando imagen:', error);
+        }
       }
 
-      const productToSubmit: Product = {
-        ...currentProduct,
-        description: description,
-        price,
-        isScheduled: isScheduleOpen,
-        scheduledPublishDate: isScheduleOpen && scheduledDate ? scheduledDate : null,
-      };
-
-      await onSubmit(productToSubmit);
       onClose();
     } catch (error) {
-      console.error("Error al guardar el producto:", error);
+      console.error('Error al guardar el producto:', error);
       toast({
         title: "Error",
-        description: "No se pudo guardar el producto. Por favor, intente de nuevo.",
+        description: "No se pudo actualizar el producto",
         status: "error",
         duration: 3000,
         isClosable: true,
       });
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -348,24 +331,13 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     return img;
   };
 
-  const handleRemoveImage = useCallback(async (index: number) => {
-    try {
-      const imageUrl = currentProduct.images[index];
-      await imageService.delete(imageUrl);
-      
-      setCurrentProduct(prev => ({
-        ...prev,
-        images: prev.images.filter((_, i) => i !== index)
-      }));
-    } catch (error) {
-      console.error('Error removing image:', error);
-      toast({
-        title: "Error",
-        description: "No se pudo eliminar la imagen",
-        status: "error",
-      });
-    }
-  }, [currentProduct.images, toast]);
+  const handleRemoveImage = (imageUrl: string) => {
+    setImagesToDelete(prev => [...prev, imageUrl]);
+    setCurrentProduct(prev => ({
+      ...prev,
+      images: prev.images.filter(img => img !== imageUrl)
+    }));
+  };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl">
@@ -438,7 +410,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                           size="sm"
                           colorScheme="red"
                           variant="ghost"
-                          onClick={() => handleRemoveImage(index)}
+                          onClick={() => handleRemoveImage(img)}
                         />
                       </>
                     ) : null}
