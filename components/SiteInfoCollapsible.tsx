@@ -14,6 +14,7 @@ import {
   Skeleton,
   SkeletonCircle,
   SkeletonText,
+  Spinner,
 } from "@chakra-ui/react";
 import { FaLink } from "react-icons/fa";
 
@@ -24,6 +25,7 @@ interface SiteInfoCollapsibleProps {
 
 const SiteInfoCollapsible: React.FC<SiteInfoCollapsibleProps> = ({ siteInfo, onCopyLink }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isLogoLoading, setIsLogoLoading] = useState(true);
 
   const logoUrl = useMemo(() => siteInfo?.logoUrl || '', [siteInfo?.logoUrl]);
 
@@ -58,7 +60,26 @@ const SiteInfoCollapsible: React.FC<SiteInfoCollapsibleProps> = ({ siteInfo, onC
             boxSize="50px"
             overflow="hidden"
             flexShrink={0}
+            position="relative"
           >
+            {isLogoLoading && (
+              <Center 
+                position="absolute"
+                top="0"
+                left="0"
+                width="100%"
+                height="100%"
+                bg="gray.50"
+              >
+                <Spinner
+                  thickness="2px"
+                  speed="0.65s"
+                  emptyColor="gray.200"
+                  color="blue.500"
+                  size="sm"
+                />
+              </Center>
+            )}
             <Image
               src={logoUrl}
               alt="Logo"
@@ -66,6 +87,9 @@ const SiteInfoCollapsible: React.FC<SiteInfoCollapsibleProps> = ({ siteInfo, onC
               width="100%"
               height="100%"
               loading="eager"
+              onLoad={() => setIsLogoLoading(false)}
+              style={{ opacity: isLogoLoading ? 0 : 1 }}
+              transition="opacity 0.3s"
               fallback={<Box bg="gray.200" w="100%" h="100%" borderRadius="full" />}
             />
           </Box>
