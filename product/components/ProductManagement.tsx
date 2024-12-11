@@ -180,11 +180,12 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
       } else {
         await createProduct(product);
       }
+      
+      // Forzamos la actualización inmediata de los datos
+      await mutate(SWR_KEYS.PRODUCTS);
+      
       setIsModalOpen(false);
       setCurrentProduct(null);
-
-      await mutate('/api/products');
-      await getProducts();
 
       toast({
         title: "Éxito",

@@ -385,19 +385,18 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                 </Text>
               </FormControl>
 
-              <FormControl>
+              <FormControl isRequired>
                 <FormLabel>Descripción</FormLabel>
-                <Box border="1px" borderColor="gray.200" borderRadius="md">
-                  <ReactQuill
-                    value={description}
-                    onChange={handleDescriptionChange}
-                    modules={modules}
-                    formats={formats}
-                  />
-                </Box>
-                <Text fontSize="sm" color="gray.500" mt={1}>
-                  {`${description.replace(/<[^>]*>/g, '').length}/${MAX_DESCRIPTION_LENGTH}`}
-                </Text>
+                <ReactQuill
+                  value={currentProduct.description || ''}
+                  onChange={(content) => 
+                    setCurrentProduct(prev => ({
+                      ...prev,
+                      description: content
+                    }))
+                  }
+                  modules={modules}
+                />
               </FormControl>
 
               <FormControl>

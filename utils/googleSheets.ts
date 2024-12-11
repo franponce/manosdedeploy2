@@ -167,7 +167,7 @@ if (typeof window === 'undefined') {
         const values = [[
           product.id,                // Columna A
           product.title,            // Columna B
-          product.description || '', // Columna C
+          product.description,      // Columna C
           product.images ? (Array.isArray(product.images) ? product.images.join('|||') : product.images) : '', // Columna D
           product.price.toString(), // Columna E
           product.scheduledPublishDate ? formatLocalDateTime(product.scheduledPublishDate) : '', // Columna F
@@ -213,7 +213,7 @@ if (typeof window === 'undefined') {
         const values = [[
           newId,                   // Columna A
           product.title,           // Columna B
-          product.description || '', // Columna C
+          product.description,     // Columna C
           product.images ? (Array.isArray(product.images) ? product.images.join('|||') : product.images) : '', // Columna D
           product.price.toString(), // Columna E
           product.scheduledPublishDate ? formatLocalDateTime(product.scheduledPublishDate) : '', // Columna F
