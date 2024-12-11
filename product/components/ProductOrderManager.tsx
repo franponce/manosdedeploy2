@@ -25,8 +25,6 @@ import {
   Tbody,
   Td,
   ButtonGroup,
-  ChevronUpIcon,
-  ChevronDownIcon,
 } from '@chakra-ui/react';
 import useSWR, { mutate } from 'swr';
 import { Product } from '../types';
