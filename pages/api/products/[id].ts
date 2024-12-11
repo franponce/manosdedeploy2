@@ -1,14 +1,20 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { google } from 'googleapis';
+import { deleteProduct } from '../../../utils/googleSheets';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (!['GET', 'PUT'].includes(req.method || '')) {
+  if (!['GET', 'PUT', 'DELETE'].includes(req.method || '')) {
     return res.status(405).json({ message: 'Method not allowed' });
   }
 
   try {
     const { id } = req.query;
     
+    if (req.method === 'DELETE') {
+      await deleteProduct(id as string);
+      return res.status(200).json({ message: 'Product deleted successfully' });
+    }
+
     const auth = new google.auth.GoogleAuth({
       credentials: {
         client_email: process.env.GOOGLE_CLIENT_EMAIL,
@@ -84,7 +90,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     return res.status(200).json(product);
   } catch (error) {
-    console.error('Error handling request:', error);
-    return res.status(500).json({ message: 'Internal server error' });
+    console.error('API Error:', error);
+    return res.status(500).json({ 
+      message: 'Internal server error',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
 } 

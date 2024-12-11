@@ -65,7 +65,7 @@ const MAX_IMAGES = 2;
 
 const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, product, isLoading: submitLoading }) => {
   const { product: currentProductData } = useProduct(product?.id || null);
-  const [currentProduct, setCurrentProduct] = useState<Product>(product || {
+  const [currentProduct, setCurrentProduct] = useState<Product>(() => ({
     id: '',
     title: '',
     description: '',
@@ -78,7 +78,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     order: '',
     isScheduled: false,
     scheduledPublishDate: null
-  } as Product);
+  }));
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const toast = useToast();
   const [scheduledDate, setScheduledDate] = useState<Date | null>(null);
@@ -101,11 +101,10 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
 
   useEffect(() => {
     if (product) {
-      console.log('Stock from product:', product.stock);
-      setCurrentProduct(prev => ({
+      setCurrentProduct({
         ...product,
-        stock: typeof product.stock === 'number' ? product.stock : 0
-      }));
+        stock: product.stock ?? 0
+      });
     }
   }, [product]);
 
@@ -449,16 +448,17 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
               </FormControl>
 
               <FormControl>
-                <FormLabel>Stock</FormLabel>
+                <FormLabel>
+                  Stock disponible: {currentProduct.stock || 0}
+                </FormLabel>
                 <NumberInput
-                  value={typeof currentProduct.stock === 'number' ? currentProduct.stock : 0}
+                  value={currentProduct.stock ?? 0}
                   min={0}
                   precision={0}
                   onChange={(_, valueNumber) => {
-                    console.log('New stock value:', valueNumber);
                     setCurrentProduct(prev => ({
                       ...prev,
-                      stock: valueNumber
+                      stock: valueNumber ?? 0
                     }));
                   }}
                 >
