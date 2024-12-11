@@ -164,19 +164,19 @@ if (typeof window === 'undefined') {
         const actualRow = rowIndex + 2;
 
         // Mantener el orden secuencial en la columna J
-        const values = [
-          [
-            product.id,
-            product.title,
-            product.description || '',
-            product.price.toString(),
-            product.images ? (Array.isArray(product.images) ? product.images.join('|||') : product.images) : '',
-            product.categoryId || '',
-            product.isVisible === false ? 'FALSE' : 'TRUE',
-            product.order || '',
-            product.stock ?? 0
-          ]
-        ];
+        const values = [[
+          product.id,                // Columna A
+          product.title,            // Columna B
+          product.description || '', // Columna C
+          product.images ? (Array.isArray(product.images) ? product.images.join('|||') : product.images) : '', // Columna D
+          product.price.toString(), // Columna E
+          product.scheduledPublishDate ? formatLocalDateTime(product.scheduledPublishDate) : '', // Columna F
+          product.isScheduled ? 'TRUE' : 'FALSE', // Columna G
+          product.categoryId || '', // Columna H
+          product.isVisible ? 'TRUE' : 'FALSE', // Columna I
+          product.order || '',     // Columna J
+          product.stock ?? 0       // Columna K
+        ]];
 
         // Actualizar la fila
         await sheets.spreadsheets.values.update({
@@ -210,19 +210,19 @@ if (typeof window === 'undefined') {
         const currentProducts = await googleSheetsApi.getProducts();
         const newId = (Math.max(...currentProducts.map((p: Product) => parseInt(p.id)), 0) + 1).toString();
 
-        const values = [
-          [
-            newId,
-            product.title,
-            product.description || '',
-            product.price.toString(),
-            product.images ? (Array.isArray(product.images) ? product.images.join('|||') : product.images) : '',
-            product.categoryId || '',
-            product.isVisible === false ? 'FALSE' : 'TRUE',
-            product.order || '',
-            product.stock ?? 0
-          ]
-        ];
+        const values = [[
+          newId,                   // Columna A
+          product.title,           // Columna B
+          product.description || '', // Columna C
+          product.images.join('|||'), // Columna D
+          product.price.toString(), // Columna E
+          product.scheduledPublishDate ? formatLocalDateTime(product.scheduledPublishDate) : '', // Columna F
+          product.isScheduled ? 'TRUE' : 'FALSE', // Columna G
+          product.categoryId || '', // Columna H
+          product.isVisible ? 'TRUE' : 'FALSE', // Columna I
+          product.order || '',     // Columna J
+          product.stock ?? 0       // Columna K
+        ]];
 
         await sheets.spreadsheets.values.append({
           spreadsheetId: SPREADSHEET_ID,
