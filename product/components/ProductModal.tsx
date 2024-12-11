@@ -32,6 +32,7 @@ import {
   IconButton,
   UnorderedList,
   ListItem,
+  Spinner,
 } from "@chakra-ui/react";
 import { TimeIcon, AddIcon, CloseIcon } from "@chakra-ui/icons";
 import imageCompression from "browser-image-compression";
@@ -342,268 +343,285 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl">
       <ModalOverlay />
-      <ModalContent as="form" onSubmit={handleSubmit}>
+      <ModalContent maxH="90vh">
         <ModalHeader>
-          {currentProduct.id ? "Editar Producto" : "Crear Producto"}
+          {submitLoading ? 'Guardando producto...' : product ? 'Editar Producto' : 'Nuevo Producto'}
         </ModalHeader>
-        <ModalCloseButton />
-        <ModalBody>
-          <VStack spacing={4}>
-            <FormControl>
-              <FormLabel>Título</FormLabel>
-              <Input
-                name="title"
-                value={currentProduct.title}
-                onChange={handleInputChange}
-                maxLength={MAX_TITLE_LENGTH}
-              />
-              <Text fontSize="sm" color="gray.500">
-                {`${currentProduct.title.length}/${MAX_TITLE_LENGTH}`}
-              </Text>
-            </FormControl>
-
-            <FormControl>
-              <FormLabel>Descripción</FormLabel>
-              <Box border="1px" borderColor="gray.200" borderRadius="md">
-                <ReactQuill
-                  value={description}
-                  onChange={handleDescriptionChange}
-                  modules={modules}
-                  formats={formats}
-                />
-              </Box>
-              <Text fontSize="sm" color="gray.500" mt={1}>
-                {`${description.replace(/<[^>]*>/g, '').length}/${MAX_DESCRIPTION_LENGTH}`}
-              </Text>
-            </FormControl>
-
-            <FormControl>
-              <FormLabel>
-                Imágenes 
-                <Text as="span" fontSize="sm" color="gray.500" ml={2}>
-                  ({currentProduct.images.filter(Boolean).length}/{MAX_IMAGES})
+        <ModalCloseButton isDisabled={submitLoading} />
+        <ModalBody overflowY="auto">
+          {submitLoading ? (
+            <Center py={8}>
+              <VStack spacing={4}>
+                <Spinner size="xl" />
+                <Text>
+                  {product ? 'Actualizando producto...' : 'Creando producto...'}
                 </Text>
-              </FormLabel>
-              <Text fontSize="sm" color="gray.600" mb={3}>
-                Recomendaciones 😉:
-                <UnorderedList mt={1} spacing={1}>
-                  <ListItem>Intenta que tu imagen sea cuadrada.</ListItem>
-                  <ListItem>Las medidas recomendadas son de 800x800 px.</ListItem>
-                  <ListItem>No debe pesar más de 5MB.</ListItem>
-                </UnorderedList>
-              </Text>
-              <VStack spacing={4} align="stretch">
-                {currentProduct.images.map((img, index) => (
-                  <Flex key={index} align="center" gap={2}>
-                    {img ? (
-                      <>
-                        <Image 
-                          src={img} 
-                          alt={`Imagen ${index + 1}`} 
-                          boxSize="100px" 
-                          objectFit="cover"
-                          borderRadius="md" 
-                        />
-                        <IconButton
-                          icon={<CloseIcon />}
-                          aria-label="Eliminar imagen"
-                          size="sm"
-                          colorScheme="red"
-                          variant="ghost"
-                          onClick={() => handleRemoveImage(img)}
-                        />
-                      </>
-                    ) : null}
-                  </Flex>
-                ))}
-                {currentProduct.images.filter(Boolean).length < MAX_IMAGES && (
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleProductImageUpload(e, currentProduct.images.length)}
-                  />
-                )}
               </VStack>
-            </FormControl>
-
-            <FormControl>
-              <FormLabel>Precio ({siteInfo?.currency})</FormLabel>
-              <Input
-                name="price"
-                type="number"
-                step="0.01"
-                value={currentProduct.price}
-                onChange={handleInputChange}
-              />
-            </FormControl>
-
-            <FormControl>
-              <FormLabel>Stock disponible</FormLabel>
-              <Input
-                name="stock"
-                type="number"
-                min={0}
-                value={currentProduct.stock ?? ''}
-                onChange={handleInputChange}
-                isDisabled={submitLoading}
-                placeholder="0"
-              />
-            </FormControl>
-
-            <FormControl>
-              <FormLabel>Categoría</FormLabel>
-              <VStack align="stretch" spacing={2}>
-                <Select
-                  name="categoryId"
-                  value={currentProduct.categoryId}
-                  onChange={handleInputChange}
-                  isDisabled={categoriesLoading}
-                >
-                  <option value="">Sin categoría</option>
-                  {categories?.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
-                </Select>
-
-                {!showNewCategoryInput ? (
-                  categories.length < CATEGORY_CONSTANTS.MAX_CATEGORIES && (
-                    <Button
-                      size="sm"
-                      leftIcon={<AddIcon />}
-                      variant="outline"
-                      onClick={() => setShowNewCategoryInput(true)}
-                    >
-                      Crear nueva categoría
-                    </Button>
-                  )
-                ) : (
-                  <Box>
-                    <InputGroup size="md">
-                      <Input
-                        value={newCategoryName}
-                        onChange={(e) => setNewCategoryName(e.target.value)}
-                        placeholder="Nombre de la nueva categoría"
-                        maxLength={CATEGORY_CONSTANTS.MAX_NAME_LENGTH}
-                      />
-                      <InputRightElement width="4.5rem">
-                        <Text fontSize="xs" color="gray.500">
-                          {newCategoryName.length}/{CATEGORY_CONSTANTS.MAX_NAME_LENGTH}
-                        </Text>
-                      </InputRightElement>
-                    </InputGroup>
-                    <HStack mt={2} spacing={2}>
-                      <Button
-                        size="sm"
-                        colorScheme="purple"
-                        onClick={handleCreateCategory}
-                        isDisabled={!newCategoryName.trim()}
-                      >
-                        Crear y seleccionar
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => {
-                          setShowNewCategoryInput(false);
-                          setNewCategoryName('');
-                        }}
-                      >
-                        Cancelar
-                      </Button>
-                    </HStack>
-                  </Box>
-                )}
-              </VStack>
-            </FormControl>
-
-            <Button
-              leftIcon={<TimeIcon />}
-              variant="outline"
-              onClick={toggleSchedule}
-              width="100%"
-              justifyContent="flex-start"
-            >
-              {isScheduleOpen ? "Cancelar programación" : "Programar publicación"}
-            </Button>
-
-            <FormControl display="flex" alignItems="center">
-              <FormLabel htmlFor="isVisible" mb="0">
-                Visible en la tienda
-              </FormLabel>
-              <Switch
-                id="isVisible"
-                isChecked={currentProduct.isVisible}
-                onChange={handleVisibilityChange}
-              />
-            </FormControl>
-
-            <Collapse in={isScheduleOpen} animateOpacity>
+            </Center>
+          ) : (
+            <VStack spacing={4}>
               <FormControl>
-                <Center mb={4}>
-                  <VStack spacing={2}>
-                    <Text fontWeight="bold">Fecha y hora de publicación</Text>
-                    {scheduledDate && (
-                      <Text fontSize="sm" color="blue.600">
-                        Este producto se publicará automáticamente el {formatScheduleInfo()}
-                      </Text>
-                    )}
-                  </VStack>
-                </Center>
-                <Box 
-                  border="1px" 
-                  borderColor="gray.200" 
-                  borderRadius="md" 
-                  p={2}
-                  overflowX="auto"
-                  maxWidth="100%"
-                >
-                  <Flex 
-                    direction="row"
-                    alignItems="center"
-                    justifyContent="center"
-                    gap={4}
-                    flexWrap="nowrap"
-                  >
-                    <Box flexShrink={0}>
-                      <DatePicker
-                        selected={scheduledDate}
-                        onChange={handleDateChange}
-                        dateFormat="dd/MM/yyyy"
-                        minDate={new Date()}
-                        inline
-                      />
-                    </Box>
-                    <Box flexShrink={0}>
-                      <DatePicker
-                        selected={scheduledDate}
-                        onChange={handleDateChange}
-                        showTimeSelect
-                        showTimeSelectOnly
-                        timeIntervals={15}
-                        timeCaption="Hora"
-                        dateFormat="HH:mm"
-                        inline
-                      />
-                    </Box>
-                  </Flex>
-                </Box>
+                <FormLabel>Título</FormLabel>
+                <Input
+                  name="title"
+                  value={currentProduct.title}
+                  onChange={handleInputChange}
+                  maxLength={MAX_TITLE_LENGTH}
+                />
+                <Text fontSize="sm" color="gray.500">
+                  {`${currentProduct.title.length}/${MAX_TITLE_LENGTH}`}
+                </Text>
               </FormControl>
-            </Collapse>
-          </VStack>
+
+              <FormControl>
+                <FormLabel>Descripción</FormLabel>
+                <Box border="1px" borderColor="gray.200" borderRadius="md">
+                  <ReactQuill
+                    value={description}
+                    onChange={handleDescriptionChange}
+                    modules={modules}
+                    formats={formats}
+                  />
+                </Box>
+                <Text fontSize="sm" color="gray.500" mt={1}>
+                  {`${description.replace(/<[^>]*>/g, '').length}/${MAX_DESCRIPTION_LENGTH}`}
+                </Text>
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>
+                  Imágenes 
+                  <Text as="span" fontSize="sm" color="gray.500" ml={2}>
+                    ({currentProduct.images.filter(Boolean).length}/{MAX_IMAGES})
+                  </Text>
+                </FormLabel>
+                <Text fontSize="sm" color="gray.600" mb={3}>
+                  Recomendaciones 😉:
+                  <UnorderedList mt={1} spacing={1}>
+                    <ListItem>Intenta que tu imagen sea cuadrada.</ListItem>
+                    <ListItem>Las medidas recomendadas son de 800x800 px.</ListItem>
+                    <ListItem>No debe pesar más de 5MB.</ListItem>
+                  </UnorderedList>
+                </Text>
+                <VStack spacing={4} align="stretch">
+                  {currentProduct.images.map((img, index) => (
+                    <Flex key={index} align="center" gap={2}>
+                      {img ? (
+                        <>
+                          <Image 
+                            src={img} 
+                            alt={`Imagen ${index + 1}`} 
+                            boxSize="100px" 
+                            objectFit="cover"
+                            borderRadius="md" 
+                          />
+                          <IconButton
+                            icon={<CloseIcon />}
+                            aria-label="Eliminar imagen"
+                            size="sm"
+                            colorScheme="red"
+                            variant="ghost"
+                            onClick={() => handleRemoveImage(img)}
+                          />
+                        </>
+                      ) : null}
+                    </Flex>
+                  ))}
+                  {currentProduct.images.filter(Boolean).length < MAX_IMAGES && (
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleProductImageUpload(e, currentProduct.images.length)}
+                    />
+                  )}
+                </VStack>
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>Precio ({siteInfo?.currency})</FormLabel>
+                <Input
+                  name="price"
+                  type="number"
+                  step="0.01"
+                  value={currentProduct.price}
+                  onChange={handleInputChange}
+                />
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>Stock disponible</FormLabel>
+                <Input
+                  name="stock"
+                  type="number"
+                  min={0}
+                  value={currentProduct.stock ?? ''}
+                  onChange={handleInputChange}
+                  isDisabled={submitLoading}
+                  placeholder="0"
+                />
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>Categoría</FormLabel>
+                <VStack align="stretch" spacing={2}>
+                  <Select
+                    name="categoryId"
+                    value={currentProduct.categoryId}
+                    onChange={handleInputChange}
+                    isDisabled={categoriesLoading}
+                  >
+                    <option value="">Sin categoría</option>
+                    {categories?.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </Select>
+
+                  {!showNewCategoryInput ? (
+                    categories.length < CATEGORY_CONSTANTS.MAX_CATEGORIES && (
+                      <Button
+                        size="sm"
+                        leftIcon={<AddIcon />}
+                        variant="outline"
+                        onClick={() => setShowNewCategoryInput(true)}
+                      >
+                        Crear nueva categoría
+                      </Button>
+                    )
+                  ) : (
+                    <Box>
+                      <InputGroup size="md">
+                        <Input
+                          value={newCategoryName}
+                          onChange={(e) => setNewCategoryName(e.target.value)}
+                          placeholder="Nombre de la nueva categoría"
+                          maxLength={CATEGORY_CONSTANTS.MAX_NAME_LENGTH}
+                        />
+                        <InputRightElement width="4.5rem">
+                          <Text fontSize="xs" color="gray.500">
+                            {newCategoryName.length}/{CATEGORY_CONSTANTS.MAX_NAME_LENGTH}
+                          </Text>
+                        </InputRightElement>
+                      </InputGroup>
+                      <HStack mt={2} spacing={2}>
+                        <Button
+                          size="sm"
+                          colorScheme="purple"
+                          onClick={handleCreateCategory}
+                          isDisabled={!newCategoryName.trim()}
+                        >
+                          Crear y seleccionar
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => {
+                            setShowNewCategoryInput(false);
+                            setNewCategoryName('');
+                          }}
+                        >
+                          Cancelar
+                        </Button>
+                      </HStack>
+                    </Box>
+                  )}
+                </VStack>
+              </FormControl>
+
+              <Button
+                leftIcon={<TimeIcon />}
+                variant="outline"
+                onClick={toggleSchedule}
+                width="100%"
+                justifyContent="flex-start"
+              >
+                {isScheduleOpen ? "Cancelar programación" : "Programar publicación"}
+              </Button>
+
+              <FormControl display="flex" alignItems="center">
+                <FormLabel htmlFor="isVisible" mb="0">
+                  Visible en la tienda
+                </FormLabel>
+                <Switch
+                  id="isVisible"
+                  isChecked={currentProduct.isVisible}
+                  onChange={handleVisibilityChange}
+                />
+              </FormControl>
+
+              <Collapse in={isScheduleOpen} animateOpacity>
+                <FormControl>
+                  <Center mb={4}>
+                    <VStack spacing={2}>
+                      <Text fontWeight="bold">Fecha y hora de publicación</Text>
+                      {scheduledDate && (
+                        <Text fontSize="sm" color="blue.600">
+                          Este producto se publicará automáticamente el {formatScheduleInfo()}
+                        </Text>
+                      )}
+                    </VStack>
+                  </Center>
+                  <Box 
+                    border="1px" 
+                    borderColor="gray.200" 
+                    borderRadius="md" 
+                    p={2}
+                    overflowX="auto"
+                    maxWidth="100%"
+                  >
+                    <Flex 
+                      direction="row"
+                      alignItems="center"
+                      justifyContent="center"
+                      gap={4}
+                      flexWrap="nowrap"
+                    >
+                      <Box flexShrink={0}>
+                        <DatePicker
+                          selected={scheduledDate}
+                          onChange={handleDateChange}
+                          dateFormat="dd/MM/yyyy"
+                          minDate={new Date()}
+                          inline
+                        />
+                      </Box>
+                      <Box flexShrink={0}>
+                        <DatePicker
+                          selected={scheduledDate}
+                          onChange={handleDateChange}
+                          showTimeSelect
+                          showTimeSelectOnly
+                          timeIntervals={15}
+                          timeCaption="Hora"
+                          dateFormat="HH:mm"
+                          inline
+                        />
+                      </Box>
+                    </Flex>
+                  </Box>
+                </FormControl>
+              </Collapse>
+            </VStack>
+          )}
         </ModalBody>
         <ModalFooter>
+          <Button 
+            variant="ghost" 
+            mr={3} 
+            onClick={onClose}
+            isDisabled={submitLoading}
+          >
+            Cancelar
+          </Button>
           <Button
             colorScheme="blue"
-            mr={3}
-            type="submit"
+            onClick={handleSubmit}
             isLoading={submitLoading}
+            loadingText={product ? 'Actualizando...' : 'Creando...'}
+            type="submit"
           >
-            {currentProduct.id ? "Actualizar" : "Crear"}
-          </Button>
-          <Button variant="ghost" onClick={onClose}>
-            Cancelar
+            {product ? 'Actualizar' : 'Crear'}
           </Button>
         </ModalFooter>
       </ModalContent>

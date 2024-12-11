@@ -140,12 +140,19 @@ const ProductOrderManager: React.FC<ProductOrderManagerProps> = ({
     <Modal isOpen={isOpen} onClose={onClose} {...modalProps}>
       <ModalOverlay />
       <ModalContent maxH="90vh">
-        <ModalHeader>Ordenar Productos</ModalHeader>
+        <ModalHeader>
+          {isSaving ? 'Guardando orden...' : 'Ordenar Productos'}
+        </ModalHeader>
         <ModalCloseButton />
         <ModalBody overflowY="auto">
-          {isLoading ? (
+          {isLoading || isSaving ? (
             <Center py={8}>
-              <Spinner size="xl" />
+              <VStack spacing={4}>
+                <Spinner size="xl" />
+                <Text>
+                  {isLoading ? 'Cargando productos...' : 'Guardando cambios...'}
+                </Text>
+              </VStack>
             </Center>
           ) : (
             <VStack spacing={4} align="stretch">
@@ -206,13 +213,19 @@ const ProductOrderManager: React.FC<ProductOrderManagerProps> = ({
           )}
         </ModalBody>
         <ModalFooter>
-          <Button variant="ghost" mr={3} onClick={onClose}>
+          <Button 
+            variant="ghost" 
+            mr={3} 
+            onClick={onClose}
+            isDisabled={isSaving}
+          >
             Cancelar
           </Button>
           <Button 
             colorScheme="blue" 
             onClick={handleSave}
             isLoading={isSaving}
+            loadingText="Guardando..."
             isDisabled={isLoading}
           >
             Guardar orden
