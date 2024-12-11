@@ -65,22 +65,20 @@ const MAX_IMAGES = 2;
 
 const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, product, isLoading: submitLoading }) => {
   const { product: currentProductData } = useProduct(product?.id || null);
-  const [currentProduct, setCurrentProduct] = useState<Product>(() => {
-    return product || {
-      id: '',
-      title: '',
-      description: '',
-      images: ['', '', ''],
-      price: 0,
-      currency: 'ARS',
-      isScheduled: false,
-      scheduledPublishDate: null,
-      categoryId: '',
-      isVisible: true,
-      stock: '',
-      order: ''
-    };
-  });
+  const [currentProduct, setCurrentProduct] = useState<Product>(product || {
+    id: '',
+    title: '',
+    description: '',
+    price: 0,
+    images: [],
+    isVisible: true,
+    stock: 0,
+    categoryId: '',
+    currency: 'ARS',
+    order: '',
+    isScheduled: false,
+    scheduledPublishDate: null
+  } as Product);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const toast = useToast();
   const [scheduledDate, setScheduledDate] = useState<Date | null>(null);
@@ -103,25 +101,11 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
 
   useEffect(() => {
     if (product) {
-      setCurrentProduct({
+      console.log('Stock from product:', product.stock);
+      setCurrentProduct(prev => ({
         ...product,
-        stock: product.stock || 0
-      });
-    } else {
-      setCurrentProduct({
-        id: '',
-        title: '',
-        description: '',
-        price: 0,
-        images: [],
-        isVisible: true,
-        stock: 0,
-        categoryId: '',
-        currency: 'ARS',
-        order: '',
-        isScheduled: false,
-        scheduledPublishDate: null
-      } as Product);
+        stock: typeof product.stock === 'number' ? product.stock : 0
+      }));
     }
   }, [product]);
 
@@ -467,11 +451,11 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
               <FormControl>
                 <FormLabel>Stock</FormLabel>
                 <NumberInput
-                  defaultValue={currentProduct.stock || 0}
+                  value={typeof currentProduct.stock === 'number' ? currentProduct.stock : 0}
                   min={0}
                   precision={0}
-                  value={currentProduct.stock}
-                  onChange={(valueString, valueNumber) => {
+                  onChange={(_, valueNumber) => {
+                    console.log('New stock value:', valueNumber);
                     setCurrentProduct(prev => ({
                       ...prev,
                       stock: valueNumber
