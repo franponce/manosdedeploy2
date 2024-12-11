@@ -502,26 +502,6 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
     });
   }, [products, showHiddenProducts, searchTerm, selectedCategory]);
 
-  // Renderizado condicional al final
-  if (isLoading || !products) {
-    return (
-      <Center py={10}>
-        <VStack spacing={4}>
-          <Spinner
-            thickness="4px"
-            speed="0.65s"
-            emptyColor="gray.200"
-            color="blue.500"
-            size="xl"
-          />
-          <Text color="gray.600">
-            Cargando productos...
-          </Text>
-        </VStack>
-      </Center>
-    );
-  }
-
   // Renderizado principal
   return (
     <Box>
@@ -548,69 +528,56 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
         </Flex>
       </Flex>
 
-      {products.length >= PRODUCT_LIMIT - 5 && products.length < PRODUCT_LIMIT && (
-        <Box mb={4} p={3} bg="yellow.100" borderRadius="md">
-          <Text color="yellow.800">
-            Te estás acercando al límite de productos. Tienes {PRODUCT_LIMIT - products.length} productos disponibles.
+      {filteredProducts.length === 0 ? (
+        <Center flexDirection="column" p={8} bg="gray.50" borderRadius="lg" boxShadow="sm">
+          <Icon as={SearchIcon} w={12} h={12} color="gray.400" mb={4} />
+          <Heading as="h3" size="md" textAlign="center" mb={2}>
+            No se encontraron productos.
+          </Heading>
+          <Text color="gray.600" textAlign="center" maxW="md">
+            Intenta con otros términos o crea un nuevo producto.
           </Text>
-        </Box>
-      )}
-      {products.length >= PRODUCT_LIMIT && (
-        <Box mb={4} p={3} bg="red.100" borderRadius="md">
-          <Text color="red.800">
-            Has alcanzado el límite de productos. Contacta con soporte para aumentar tu límite.
-          </Text>
-        </Box>
-      )}
-
-      {isLoading ? (
-        <Center py={10}>
-          <VStack spacing={4}>
-            <Spinner size="xl" color="blue.500" />
-            <Text fontSize="lg">Cargando productos...</Text>
-          </VStack>
+          {searchTerm && (
+            <Button
+              mt={4}
+              colorScheme="blue"
+              onClick={() => setSearchTerm("")}
+            >
+              Limpiar búsqueda
+            </Button>
+          )}
         </Center>
       ) : (
-        filteredProducts.length === 0 ? (
-          <Center flexDirection="column" p={8} bg="gray.50" borderRadius="lg" boxShadow="sm">
-            <Icon as={SearchIcon} w={12} h={12} color="gray.400" mb={4} />
-            <Heading as="h3" size="md" textAlign="center" mb={2}>
-              No se encontraron productos.
-            </Heading>
-            <Text color="gray.600" textAlign="center" maxW="md">
-              Intenta con otros términos o crea un nuevo producto.
-            </Text>
-            {searchTerm && (
-              <Button
-                mt={4}
-                colorScheme="blue"
-                onClick={() => setSearchTerm("")}
-              >
-                Limpiar búsqueda
-              </Button>
-            )}
-          </Center>
-        ) : (
-          <Grid
-            templateColumns={{
-              base: "1fr",
-              md: "repeat(2, 1fr)",
-              lg: "repeat(3, 1fr)"
-            }}
-            gap={6}
-          >
-            {filteredProducts.map((product) => (
-              <AdminProductCard 
-                key={product.id}
+        <Grid
+          templateColumns={{
+            base: "1fr",
+            md: "repeat(2, 1fr)",
+            lg: "repeat(3, 1fr)"
+          }}
+          gap={6}
+        >
+          {filteredProducts.map((product, index) => (
+            <Box
+              key={product.id}
+              ref={index === filteredProducts.length - 1 ? lastProductElementRef : null}
+            >
+              <AdminProductCard
                 product={product}
                 onEdit={handleEdit}
-                onDelete={handleDelete} productImageIndex={0} onImageIndexChange={function (productId: string, newIndex: number): void {
-                  throw new Error("Function not implemented.");
-                } }            />
-            ))}
-          </Grid>
-        )
+                onDelete={handleDelete}
+                productImageIndex={productImageIndexes[product.id] || 0}
+                onImageIndexChange={(productId, newIndex) => {
+                  setProductImageIndexes(prev => ({
+                    ...prev,
+                    [productId]: newIndex
+                  }));
+                }}
+              />
+            </Box>
+          ))}
+        </Grid>
       )}
+      
       <ProductModal
         isOpen={isModalOpen}
         onClose={() => {
