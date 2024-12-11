@@ -422,7 +422,7 @@ if (typeof window === 'undefined') {
       const rowIndex = rows.findIndex(row => row[0] === id);
 
       if (rowIndex === -1) {
-        throw new Error('Categoría no encontrada');
+        throw new Error('Categor��a no encontrada');
       }
 
       await sheets.spreadsheets.batchUpdate({
@@ -521,29 +521,32 @@ if (typeof window === 'undefined') {
       const sheets = google.sheets({ version: 'v4', auth });
 
       try {
+        // Primero obtenemos todas las filas actuales
         const response = await sheets.spreadsheets.values.get({
           spreadsheetId: SPREADSHEET_ID,
-          range: 'La Libre Web - Catálogo online rev 2021 - products!B2:K',
+          range: 'La Libre Web - Catálogo online rev 2021 - products!A2:K', // Incluimos columna A para referencia
         });
 
         const currentRows = response.data.values || [];
+        
+        // Creamos un mapa con los datos actuales, excluyendo la columna A (ID)
         const rowMap = new Map(
-          currentRows.map((row, index) => [orderedIds[index], row])
+          currentRows.map(row => [row[0], row.slice(1)]) // row[0] es el ID, slice(1) toma el resto
         );
 
-        // Crear las nuevas filas manteniendo el orden secuencial
+        // Creamos las nuevas filas en el orden deseado, pero solo desde la columna B
         const newRows = orderedIds
           .map(id => rowMap.get(id))
           .filter((row): row is any[] => row !== undefined);
 
-        await sheets.spreadsheets.values.update({
-          spreadsheetId: SPREADSHEET_ID,
-          range: 'La Libre Web - Catálogo online rev 2021 - products!B2:K',
-          valueInputOption: 'RAW',
-          requestBody: {
-            values: newRows
-          }
-        });
+        if (newRows.length > 0) {
+          await sheets.spreadsheets.values.update({
+            spreadsheetId: SPREADSHEET_ID,
+            range: 'La Libre Web - Catálogo online rev 2021 - products!B2:K',
+            valueInputOption: 'RAW',
+            requestBody: { values: newRows }
+          });
+        }
       } catch (error) {
         console.error('Error updating product order:', error);
         throw error;
