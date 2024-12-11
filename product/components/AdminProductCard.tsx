@@ -32,10 +32,23 @@ const AdminProductCard: React.FC<AdminProductCardProps> = ({
   const { available, isLoading: stockLoading } = useStock(product.id);
   const [expandedTitle, setExpandedTitle] = useState(false);
   const [expandedDescription, setExpandedDescription] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const truncateText = (text: string, maxLength: number) => {
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength).trim() + '...';
+  };
+
+  const handleImageChange = (direction: 'next' | 'prev') => {
+    if (!product.images || product.images.length <= 1) return;
+    
+    setCurrentImageIndex(prevIndex => {
+      if (direction === 'next') {
+        return prevIndex === product.images.length - 1 ? 0 : prevIndex + 1;
+      } else {
+        return prevIndex === 0 ? product.images.length - 1 : prevIndex - 1;
+      }
+    });
   };
 
   return (
@@ -49,7 +62,7 @@ const AdminProductCard: React.FC<AdminProductCardProps> = ({
       <Box position="relative" width="100%" paddingTop="100%">
         <Box position="absolute" top={0} left={0} right={0} bottom={0}>
           <Image
-            src={product.images[productImageIndex] || ''}
+            src={product.images[currentImageIndex]}
             alt={product.title}
             objectFit="cover"
             width="100%"
@@ -58,38 +71,26 @@ const AdminProductCard: React.FC<AdminProductCardProps> = ({
           {product.images.length > 1 && (
             <>
               <IconButton
-                aria-label="Anterior"
+                aria-label="Previous image"
                 icon={<ChevronLeftIcon />}
                 position="absolute"
-                left={2}
+                left="2"
                 top="50%"
                 transform="translateY(-50%)"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  const newIndex = productImageIndex === 0 ? 
-                    product.images.length - 1 : 
-                    productImageIndex - 1;
-                  onImageIndexChange(product.id, newIndex);
-                }}
-                zIndex={2}
+                onClick={() => handleImageChange('prev')}
+                bg="white"
+                _hover={{ bg: 'gray.100' }}
               />
               <IconButton
-                aria-label="Siguiente"
+                aria-label="Next image"
                 icon={<ChevronRightIcon />}
                 position="absolute"
-                right={2}
+                right="2"
                 top="50%"
                 transform="translateY(-50%)"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  const newIndex = productImageIndex === product.images.length - 1 ? 
-                    0 : 
-                    productImageIndex + 1;
-                  onImageIndexChange(product.id, newIndex);
-                }}
-                zIndex={2}
+                onClick={() => handleImageChange('next')}
+                bg="white"
+                _hover={{ bg: 'gray.100' }}
               />
             </>
           )}
