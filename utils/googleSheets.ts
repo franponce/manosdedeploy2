@@ -175,7 +175,7 @@ if (typeof window === 'undefined') {
           product.categoryId || '', // Columna H
           product.isVisible ? 'TRUE' : 'FALSE', // Columna I
           product.order || '',     // Columna J
-          product.stock?.toString() || '0' // Columna K
+          (product.stock ?? 0).toString() // Columna K
         ]];
 
         // Actualizar la fila
@@ -194,6 +194,15 @@ if (typeof window === 'undefined') {
 
         if (!verifyResponse.data.values?.[0]) {
           throw new Error('Error al verificar la actualización');
+        }
+
+        // Verificamos específicamente el stock
+        const updatedStock = parseInt(verifyResponse.data.values[0][10] || '0', 10);
+        if (updatedStock !== product.stock) {
+          console.warn('Stock verification mismatch:', {
+            expected: product.stock,
+            received: updatedStock
+          });
         }
       } catch (error) {
         console.error('Error updating product in Google Sheets:', error);

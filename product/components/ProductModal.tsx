@@ -467,12 +467,14 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
               <FormControl>
                 <FormLabel>Stock</FormLabel>
                 <NumberInput
-                  value={currentProduct.stock || 0}
+                  defaultValue={currentProduct.stock || 0}
                   min={0}
-                  onChange={(_, value) => {
+                  precision={0}
+                  value={currentProduct.stock}
+                  onChange={(valueString, valueNumber) => {
                     setCurrentProduct(prev => ({
                       ...prev,
-                      stock: isNaN(value) ? 0 : value
+                      stock: valueNumber
                     }));
                   }}
                 >
