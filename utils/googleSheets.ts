@@ -168,14 +168,12 @@ if (typeof window === 'undefined') {
           [
             product.id,
             product.title,
-            product.description,
-            product.images.join('|||'),
+            product.description || '',
             product.price.toString(),
-            product.scheduledPublishDate ? formatLocalDateTime(product.scheduledPublishDate) : '',
-            product.isScheduled ? 'TRUE' : 'FALSE',
-            product.categoryId,
-            product.isVisible ? 'TRUE' : 'FALSE',
-            (actualRow - 1).toString(), // Mantener el orden secuencial
+            product.images ? (Array.isArray(product.images) ? product.images.join('|||') : product.images) : '',
+            product.categoryId || '',
+            product.isVisible === false ? 'FALSE' : 'TRUE',
+            product.order || '',
             product.stock ?? 0
           ]
         ];
@@ -216,13 +214,11 @@ if (typeof window === 'undefined') {
           [
             newId,
             product.title,
-            product.description,
-            product.images.join('|||'),
+            product.description || '',
             product.price.toString(),
-            product.scheduledPublishDate ? formatLocalDateTime(product.scheduledPublishDate) : '',
-            product.isScheduled ? 'TRUE' : 'FALSE',
+            product.images ? (Array.isArray(product.images) ? product.images.join('|||') : product.images) : '',
             product.categoryId || '',
-            product.isVisible ? 'TRUE' : 'FALSE',
+            product.isVisible === false ? 'FALSE' : 'TRUE',
             product.order || '',
             product.stock ?? 0
           ]
@@ -422,7 +418,7 @@ if (typeof window === 'undefined') {
       const rowIndex = rows.findIndex(row => row[0] === id);
 
       if (rowIndex === -1) {
-        throw new Error('Categor��a no encontrada');
+        throw new Error('Categoría no encontrada');
       }
 
       await sheets.spreadsheets.batchUpdate({
