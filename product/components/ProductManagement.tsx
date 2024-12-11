@@ -67,25 +67,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
   const [productImageIndexes, setProductImageIndexes] = useState<{ [key: string]: number }>({});
   const [showHiddenProducts, setShowHiddenProducts] = useState(false);
 
-  if (isLoading || !products) {
-    return (
-      <Center py={10}>
-        <VStack spacing={4}>
-          <Spinner
-            thickness="4px"
-            speed="0.65s"
-            emptyColor="gray.200"
-            color="blue.500"
-            size="xl"
-          />
-          <Text color="gray.600">
-            Cargando productos...
-          </Text>
-        </VStack>
-      </Center>
-    );
-  }
-
+  // Definir todos los callbacks y efectos primero
   const lastProductElementRef = useCallback((node: HTMLDivElement | null) => {
     if (isLoading) return;
     if (observer.current) observer.current.disconnect();
@@ -99,12 +81,12 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
 
   useEffect(() => {
     const lowercasedTerm = searchTerm.toLowerCase();
-    const filtered = products.filter(
+    const filtered = products?.filter(
       (product) =>
         product.title.toLowerCase().includes(lowercasedTerm) ||
         product.description.toLowerCase().includes(lowercasedTerm) ||
         product.price.toString().includes(lowercasedTerm)
-    );
+    ) || [];
     setDisplayedProducts(filtered);
     setPage(1);
     setHasMore(true);
@@ -112,8 +94,8 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
 
   useEffect(() => {
     const PRODUCTS_PER_PAGE = 10;
-    setDisplayedProducts(products.slice(0, page * PRODUCTS_PER_PAGE));
-    setHasMore(page * PRODUCTS_PER_PAGE < products.length);
+    setDisplayedProducts(products?.slice(0, page * PRODUCTS_PER_PAGE) || []);
+    setHasMore(page * PRODUCTS_PER_PAGE < (products?.length || 0));
   }, [products, page]);
 
   useEffect(() => {
@@ -276,6 +258,8 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
   };
 
   const checkAndUpdateScheduledProducts = useCallback(async () => {
+    if (!products) return;
+    
     const now = new Date();
     const productsToUpdate = products.filter(product =>
       product.isScheduled &&
@@ -518,6 +502,27 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
     });
   }, [products, showHiddenProducts, searchTerm, selectedCategory]);
 
+  // Renderizado condicional al final
+  if (isLoading || !products) {
+    return (
+      <Center py={10}>
+        <VStack spacing={4}>
+          <Spinner
+            thickness="4px"
+            speed="0.65s"
+            emptyColor="gray.200"
+            color="blue.500"
+            size="xl"
+          />
+          <Text color="gray.600">
+            Cargando productos...
+          </Text>
+        </VStack>
+      </Center>
+    );
+  }
+
+  // Renderizado principal
   return (
     <Box>
       <Flex direction="column" mb={6}>
