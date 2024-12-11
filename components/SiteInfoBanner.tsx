@@ -15,11 +15,16 @@ import {
 } from "@chakra-ui/react";
 import { FaLink } from "react-icons/fa";
 import { useSiteInfo } from '../hooks/useSiteInfo';
+import { SiteInformation } from "@/utils/firebase";
 
-const SiteInfoBanner = () => {
+interface SiteInfoBannerProps {
+  siteInfo: SiteInformation;
+}
+
+const SiteInfoBanner: React.FC<SiteInfoBannerProps> = ({ siteInfo }) => {
   const toast = useToast();
   const [isLogoLoading, setIsLogoLoading] = useState(true);
-  const { siteInfo, isLoading } = useSiteInfo();
+  const { isLoading } = useSiteInfo();
 
   const handleCopyLink = () => {
     const url = window.location.origin;

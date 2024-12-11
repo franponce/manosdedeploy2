@@ -437,7 +437,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
                 onClick={() => toggleTitle(product.id)}
                 mt={1}
               >
-                {expandedTitles[product.id] ? "Ver menos" : "Ver título completo"}
+                {expandedTitles[product.id] ? "Ver menos" : "Ver t��tulo completo"}
               </Button>
             )}
           </Box>
@@ -561,49 +561,53 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
         </Box>
       )}
 
-      {filteredProducts.length === 0 ? (
-        <Center flexDirection="column" p={8} bg="gray.50" borderRadius="lg" boxShadow="sm">
-          <Icon as={SearchIcon} w={12} h={12} color="gray.400" mb={4} />
-          <Heading as="h3" size="md" textAlign="center" mb={2}>
-            No se encontraron productos.
-          </Heading>
-          <Text color="gray.600" textAlign="center" maxW="md">
-            Intenta con otros términos o crea un nuevo producto.
-          </Text>
-          {searchTerm && (
-            <Button
-              mt={4}
-              colorScheme="blue"
-              onClick={() => setSearchTerm("")}
-            >
-              Limpiar búsqueda
-            </Button>
-          )}
+      {isLoading ? (
+        <Center py={10}>
+          <VStack spacing={4}>
+            <Spinner size="xl" color="blue.500" />
+            <Text fontSize="lg">Cargando productos...</Text>
+          </VStack>
         </Center>
       ) : (
-        <Grid
-          templateColumns={{
-            base: "1fr",
-            md: "repeat(2, 1fr)",
-            lg: "repeat(3, 1fr)"
-          }}
-          gap={6}
-        >
-          {filteredProducts.map((product) => (
-            <AdminProductCard 
-              key={product.id}
-              product={product}
-              onEdit={handleEdit}
-              onDelete={handleDelete} productImageIndex={0} onImageIndexChange={function (productId: string, newIndex: number): void {
-                throw new Error("Function not implemented.");
-              } }            />
-          ))}
-        </Grid>
-      )}
-      {isLoading && (
-        <Center mt={4}>
-          <Spinner size="xl" />
-        </Center>
+        filteredProducts.length === 0 ? (
+          <Center flexDirection="column" p={8} bg="gray.50" borderRadius="lg" boxShadow="sm">
+            <Icon as={SearchIcon} w={12} h={12} color="gray.400" mb={4} />
+            <Heading as="h3" size="md" textAlign="center" mb={2}>
+              No se encontraron productos.
+            </Heading>
+            <Text color="gray.600" textAlign="center" maxW="md">
+              Intenta con otros términos o crea un nuevo producto.
+            </Text>
+            {searchTerm && (
+              <Button
+                mt={4}
+                colorScheme="blue"
+                onClick={() => setSearchTerm("")}
+              >
+                Limpiar búsqueda
+              </Button>
+            )}
+          </Center>
+        ) : (
+          <Grid
+            templateColumns={{
+              base: "1fr",
+              md: "repeat(2, 1fr)",
+              lg: "repeat(3, 1fr)"
+            }}
+            gap={6}
+          >
+            {filteredProducts.map((product) => (
+              <AdminProductCard 
+                key={product.id}
+                product={product}
+                onEdit={handleEdit}
+                onDelete={handleDelete} productImageIndex={0} onImageIndexChange={function (productId: string, newIndex: number): void {
+                  throw new Error("Function not implemented.");
+                } }            />
+            ))}
+          </Grid>
+        )
       )}
       <ProductModal
         isOpen={isModalOpen}

@@ -16,6 +16,7 @@ import {
   InputLeftElement,
   Icon,
   Image,
+  VStack,
 } from "@chakra-ui/react";
 import { SearchIcon } from "@chakra-ui/icons";
 import { CartItem, Product, Category } from "../types";
@@ -312,39 +313,47 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
         </Flex>
 
         {isLoading ? (
-          <Grid
-            gridGap={8}
-            templateColumns={{
-              base: "repeat(auto-fill, minmax(240px, 1fr))",
-              sm: "repeat(auto-fill, minmax(280px, 1fr))",
-            }}
-          >
-            {Array.from({ length: 6 }).map((_, index) => (
-              <ProductCard
-                key={`skeleton-${index}`}
-                product={{
-                  id: `skeleton-${index}`,
-                  title: '',
-                  description: '',
-                  images: [],
-                  stock: 0,
-                  price: 0,
-                  currency: 'ARS',
-                  isScheduled: false,
-                  scheduledPublishDate: null,
-                  categoryId: '',
-                  isVisible: true,
-                  order: ''
-                }}
-                onAdd={() => {}}
-                isLoading={true}
-                onEdit={() => {}}
-                onDelete={() => {}}
-                onVisibilityToggle={() => {}}
-                isAdminView={false}
-              />
-            ))}
-          </Grid>
+          <>
+            <Center py={10}>
+              <VStack spacing={4}>
+                <Spinner size="xl" color="blue.500" />
+                <Text fontSize="lg">Cargando productos...</Text>
+              </VStack>
+            </Center>
+            <Grid
+              gridGap={8}
+              templateColumns={{
+                base: "repeat(auto-fill, minmax(240px, 1fr))",
+                sm: "repeat(auto-fill, minmax(280px, 1fr))",
+              }}
+            >
+              {Array.from({ length: 6 }).map((_, index) => (
+                <ProductCard
+                  key={`skeleton-${index}`}
+                  product={{
+                    id: `skeleton-${index}`,
+                    title: '',
+                    description: '',
+                    images: [],
+                    stock: 0,
+                    price: 0,
+                    currency: 'ARS',
+                    isScheduled: false,
+                    scheduledPublishDate: null,
+                    categoryId: '',
+                    isVisible: true,
+                    order: ''
+                  }}
+                  onAdd={() => {}}
+                  isLoading={true}
+                  onEdit={() => {}}
+                  onDelete={() => {}}
+                  onVisibilityToggle={() => {}}
+                  isAdminView={false}
+                />
+              ))}
+            </Grid>
+          </>
         ) : displayedProducts.length ? (
           <Grid
             gridGap={8}
