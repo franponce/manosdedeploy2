@@ -61,6 +61,25 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
   const [productImageIndexes, setProductImageIndexes] = useState<{ [key: string]: number }>({});
   const [showHiddenProducts, setShowHiddenProducts] = useState(false);
 
+  if (isLoading || products.length === 0) {
+    return (
+      <Center py={10}>
+        <VStack spacing={4}>
+          <Spinner
+            thickness="4px"
+            speed="0.65s"
+            emptyColor="gray.200"
+            color="blue.500"
+            size="xl"
+          />
+          <Text color="gray.600">
+            Cargando productos...
+          </Text>
+        </VStack>
+      </Center>
+    );
+  }
+
   const lastProductElementRef = useCallback((node: HTMLDivElement | null) => {
     if (isLoading) return;
     if (observer.current) observer.current.disconnect();
@@ -437,7 +456,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
                 onClick={() => toggleTitle(product.id)}
                 mt={1}
               >
-                {expandedTitles[product.id] ? "Ver menos" : "Ver t��tulo completo"}
+                {expandedTitles[product.id] ? "Ver menos" : "Ver título completo"}
               </Button>
             )}
           </Box>
