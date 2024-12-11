@@ -3,13 +3,19 @@ import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage
 
 export const imageService = {
   async upload(file: File, productId: string): Promise<string> {
-    const fileName = `${Date.now()}_${file.name}`;
-    const storageRef = ref(storage, `products/${productId}/${fileName}`);
-    
-    await uploadBytes(storageRef, file);
-    const url = await getDownloadURL(storageRef);
-    
-    return url;
+    try {
+      const fileName = `${Date.now()}_${file.name}`;
+      // Usamos 'products' como carpeta base para nuevos productos
+      const storageRef = ref(storage, `products/${fileName}`);
+      
+      await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(storageRef);
+      
+      return url;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      throw error;
+    }
   },
 
   async delete(imageUrl: string): Promise<void> {
