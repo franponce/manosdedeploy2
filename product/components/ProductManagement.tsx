@@ -60,8 +60,9 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
   const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
   const [productImageIndexes, setProductImageIndexes] = useState<{ [key: string]: number }>({});
   const [showHiddenProducts, setShowHiddenProducts] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
 
-  if (products.length === 0) {
+  if (initialLoading) {
     return (
       <Center py={10}>
         <VStack spacing={4}>
@@ -104,6 +105,8 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
         duration: 3000,
         isClosable: true,
       });
+    } finally {
+      setInitialLoading(false);
     }
   }, [toast]);
 
