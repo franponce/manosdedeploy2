@@ -23,6 +23,9 @@ import {
   Center,
   NumberInput,
   NumberInputField,
+  NumberInputStepper,
+  NumberIncrementStepper,
+  NumberDecrementStepper,
   Textarea,
   Select,
   InputGroup,
@@ -100,23 +103,25 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
 
   useEffect(() => {
     if (product) {
-      const stockValue = product.stock ?? 0;
-      
-      setCurrentProduct(prevProduct => ({
-        ...prevProduct,
+      setCurrentProduct({
         ...product,
-        categoryId: product.categoryId || "",
-        isVisible: product.isVisible ?? true,
-        stock: typeof stockValue === 'number' ? stockValue : 
-               typeof stockValue === 'string' ? parseInt(stockValue, 10) : 0,
-        order: product.order || ''
-      }));
-      setImagePreview(product.images[0] || null);
-      setDescription(product.description || '');
-      if (product.scheduledPublishDate) {
-        setScheduledDate(new Date(product.scheduledPublishDate));
-        toggleSchedule();
-      }
+        stock: product.stock || 0
+      });
+    } else {
+      setCurrentProduct({
+        id: '',
+        title: '',
+        description: '',
+        price: 0,
+        images: [],
+        isVisible: true,
+        stock: 0,
+        categoryId: '',
+        currency: 'ARS',
+        order: '',
+        isScheduled: false,
+        scheduledPublishDate: null
+      } as Product);
     }
   }, [product]);
 
@@ -460,16 +465,23 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
               </FormControl>
 
               <FormControl>
-                <FormLabel>Stock disponible</FormLabel>
-                <Input
-                  name="stock"
-                  type="number"
+                <FormLabel>Stock</FormLabel>
+                <NumberInput
+                  value={currentProduct.stock || 0}
                   min={0}
-                  value={currentProduct.stock ?? ''}
-                  onChange={handleInputChange}
-                  isDisabled={submitLoading}
-                  placeholder="0"
-                />
+                  onChange={(_, value) => {
+                    setCurrentProduct(prev => ({
+                      ...prev,
+                      stock: isNaN(value) ? 0 : value
+                    }));
+                  }}
+                >
+                  <NumberInputField />
+                  <NumberInputStepper>
+                    <NumberIncrementStepper />
+                    <NumberDecrementStepper />
+                  </NumberInputStepper>
+                </NumberInput>
               </FormControl>
 
               <FormControl>

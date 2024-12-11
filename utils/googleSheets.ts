@@ -126,13 +126,13 @@ if (typeof window === 'undefined') {
             description: row[2],
             images: (row[3] || '').split('|||').filter(Boolean),
             price: parseFloat(row[4]),
-            currency: 'USD',
-            isScheduled: row[6] === 'TRUE',
             scheduledPublishDate: row[5] ? new Date(row[5].replace(' ', 'T')) : null,
+            isScheduled: row[6] === 'TRUE',
             categoryId: row[7] || '',
             isVisible: row[8] ? row[8].toUpperCase() === 'TRUE' : true,
             order: row[9] || '',
-            stock: parseInt(row[10] || '0', 10)
+            stock: row[10] ? parseInt(row[10], 10) : 0,
+            currency: 'ARS'
           }))
           .filter((product) => product.title && product.title.trim() !== '');
       } catch (error) {
@@ -175,7 +175,7 @@ if (typeof window === 'undefined') {
           product.categoryId || '', // Columna H
           product.isVisible ? 'TRUE' : 'FALSE', // Columna I
           product.order || '',     // Columna J
-          product.stock ?? 0       // Columna K
+          product.stock?.toString() || '0' // Columna K
         ]];
 
         // Actualizar la fila
