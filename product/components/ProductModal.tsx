@@ -436,15 +436,24 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                 </VStack>
               </FormControl>
 
-              <FormControl>
-                <FormLabel>Precio ({siteInfo?.currency})</FormLabel>
-                <Input
-                  name="price"
-                  type="number"
-                  step="0.01"
-                  value={currentProduct.price}
-                  onChange={handleInputChange}
-                />
+              <FormControl isRequired>
+                <FormLabel>Precio</FormLabel>
+                <NumberInput
+                  value={Number(currentProduct.price) || 0}
+                  min={0}
+                  onChange={(_, value) => {
+                    setCurrentProduct(prev => ({
+                      ...prev,
+                      price: Number(value) || 0
+                    }));
+                  }}
+                >
+                  <NumberInputField />
+                  <NumberInputStepper>
+                    <NumberIncrementStepper />
+                    <NumberDecrementStepper />
+                  </NumberInputStepper>
+                </NumberInput>
               </FormControl>
 
               <FormControl>

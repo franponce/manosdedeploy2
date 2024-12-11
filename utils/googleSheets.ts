@@ -125,7 +125,7 @@ if (typeof window === 'undefined') {
             title: row[1],
             description: row[2],
             images: (row[3] || '').split('|||').filter(Boolean),
-            price: parseFloat(row[4]),
+            price: Number(row[4]) || 0,
             scheduledPublishDate: row[5] ? new Date(row[5].replace(' ', 'T')) : null,
             isScheduled: row[6] === 'TRUE',
             categoryId: row[7] || '',
