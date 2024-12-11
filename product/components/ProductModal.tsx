@@ -345,16 +345,25 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
       <ModalOverlay />
       <ModalContent maxH="90vh">
         <ModalHeader>
-          {submitLoading ? 'Guardando producto...' : product ? 'Editar Producto' : 'Nuevo Producto'}
+          {product ? 'Editar Producto' : 'Nuevo Producto'}
         </ModalHeader>
         <ModalCloseButton isDisabled={submitLoading} />
         <ModalBody overflowY="auto">
           {submitLoading ? (
             <Center py={8}>
               <VStack spacing={4}>
-                <Spinner size="xl" />
-                <Text>
+                <Spinner
+                  thickness="4px"
+                  speed="0.65s"
+                  emptyColor="gray.200"
+                  color="blue.500"
+                  size="xl"
+                />
+                <Text fontWeight="medium">
                   {product ? 'Actualizando producto...' : 'Creando producto...'}
+                </Text>
+                <Text fontSize="sm" color="gray.500">
+                  Por favor, espere un momento
                 </Text>
               </VStack>
             </Center>
@@ -618,7 +627,12 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
             colorScheme="blue"
             onClick={handleSubmit}
             isLoading={submitLoading}
-            loadingText={product ? 'Actualizando...' : 'Creando...'}
+            loadingText={
+              <HStack spacing={2}>
+                <Spinner size="sm" color="white" />
+                <Text>{product ? 'Actualizando...' : 'Creando...'}</Text>
+              </HStack>
+            }
             type="submit"
           >
             {product ? 'Actualizar' : 'Crear'}
