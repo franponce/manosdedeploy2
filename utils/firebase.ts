@@ -46,6 +46,7 @@ export interface SiteInformation {
     maxWidth: number;
     maxHeight: number;
   };
+  bannerText?: string;
 }
 
 export const DEFAULT_SITE_INFORMATION: SiteInformation = {

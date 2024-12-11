@@ -14,15 +14,12 @@ import {
   Spinner,
 } from "@chakra-ui/react";
 import { FaLink } from "react-icons/fa";
+import { useSiteInfo } from '../hooks/useSiteInfo';
 
-interface SiteInfoBannerProps {
-  siteInfo: any;
-}
-
-const SiteInfoBanner: React.FC<SiteInfoBannerProps> = ({ siteInfo }) => {
+const SiteInfoBanner = () => {
   const toast = useToast();
-  const logoUrl = React.useMemo(() => siteInfo?.logoUrl || '', [siteInfo?.logoUrl]);
   const [isLogoLoading, setIsLogoLoading] = useState(true);
+  const { siteInfo, isLoading } = useSiteInfo();
 
   const handleCopyLink = () => {
     const url = window.location.origin;
@@ -70,20 +67,22 @@ const SiteInfoBanner: React.FC<SiteInfoBannerProps> = ({ siteInfo }) => {
       <Box width="100%" mb={8}>
         <Center flexDirection="column" p={4}>
           <Box position="relative" width="150px" height="150px">
-            {isLogoLoading && (
+            {(isLoading || isLogoLoading) && (
               <Center position="absolute" top="0" left="0" right="0" bottom="0">
                 <Spinner size="xl" color="blue.500" />
               </Center>
             )}
-            <Image
-              src={logoUrl}
-              alt="Logo"
-              width={150}
-              height={150}
-              objectFit="contain"
-              onLoad={() => setIsLogoLoading(false)}
-              style={{ opacity: isLogoLoading ? 0 : 1 }}
-            />
+            {siteInfo.logoUrl && (
+              <Image
+                src={siteInfo.logoUrl}
+                alt="Logo"
+                width={150}
+                height={150}
+                objectFit="contain"
+                onLoad={() => setIsLogoLoading(false)}
+                style={{ opacity: isLogoLoading ? 0 : 1 }}
+              />
+            )}
           </Box>
           
           <Heading size="xl" mb={4} textAlign="center">
