@@ -78,7 +78,10 @@ const ProductOrderManager: React.FC<ProductOrderManagerProps> = ({
     setIsSaving(true);
     try {
       // Actualizamos el orden en el sheet
-      await updateProductOrder(orderedProducts.map(p => p.id));
+      await updateProductOrder(
+        orderedProducts.map(p => p.id).join(','),
+        orderedProducts.map((_, i) => (i + 1).toString()).join(',')
+      );
       
       // Actualizamos el cache de SWR con el nuevo orden
       await mutate(SWR_KEYS.PRODUCTS, orderedProducts, false);
