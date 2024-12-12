@@ -18,7 +18,11 @@ export default async function handler(
         if (!name) {
           return res.status(400).json({ message: 'El nombre es requerido' });
         }
-        const updatedCategory = await updateCategory(id, name);
+        const updatedCategory = await updateCategory({
+          id,
+          name,
+          order: ''  // o el orden actual si lo tienes
+        });
         return res.status(200).json(updatedCategory);
 
       case 'DELETE':
