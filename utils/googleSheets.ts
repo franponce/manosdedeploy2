@@ -267,16 +267,20 @@ if (typeof window === 'undefined') {
           throw new Error(`Product with ID ${productId} not found`);
         }
 
-        // El índice real es rowIndex + 1 (por el encabezado)
-        const actualRow = rowIndex + 1;
-
-        // Limpiar la fila en lugar de eliminarla
-        await sheets.spreadsheets.values.update({
+        // Eliminar la fila usando batchUpdate
+        await sheets.spreadsheets.batchUpdate({
           spreadsheetId: SPREADSHEET_ID,
-          range: `La Libre Web - Catálogo online rev 2021 - products!A${actualRow}:K${actualRow}`,
-          valueInputOption: 'USER_ENTERED',
           requestBody: {
-            values: [['']] // Limpiar la fila
+            requests: [{
+              deleteDimension: {
+                range: {
+                  sheetId: 0,
+                  dimension: 'ROWS',
+                  startIndex: rowIndex + 1, // +1 por el encabezado
+                  endIndex: rowIndex + 2
+                }
+              }
+            }]
           }
         });
 
