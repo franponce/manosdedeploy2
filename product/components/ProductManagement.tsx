@@ -143,8 +143,14 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
 
     try {
       setDeletingProductId(productToDelete.id);
-      await deleteProduct(productToDelete.id);
-      
+      const response = await fetch(`/api/products/${productToDelete.id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete product');
+      }
+
       toast({
         title: "Producto eliminado",
         description: "El producto se eliminó correctamente",
@@ -359,14 +365,23 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
     if (!productToDelete) return;
 
     try {
-      await deleteProduct(productToDelete.id);
+      setDeletingProductId(productToDelete.id);
+      const response = await fetch(`/api/products/${productToDelete.id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete product');
+      }
+
       toast({
         title: "Producto eliminado",
         description: "El producto se eliminó correctamente",
         status: "success",
         duration: 3000,
       });
-      mutate(SWR_KEYS.PRODUCTS); // Recargar productos
+      
+      mutate(SWR_KEYS.PRODUCTS);
     } catch (error) {
       console.error('Error deleting product:', error);
       toast({
@@ -378,6 +393,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
     } finally {
       setIsDeleteDialogOpen(false);
       setProductToDelete(null);
+      setDeletingProductId(null);
     }
   };
 
