@@ -1,6 +1,6 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+import type { NextApiRequest, NextApiResponse } from 'next';
 import { google } from 'googleapis';
-import { deleteProduct } from '../../../utils/googleSheets';
+import { googleSheetsApi } from '../../../utils/googleSheets';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -12,7 +12,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (req.method === 'DELETE') {
       try {
-        await deleteProduct(id);
+        await googleSheetsApi.deleteProduct(id);
         return res.status(200).json({ message: 'Product deleted successfully' });
       } catch (error) {
         console.error('Error deleting product:', error);
