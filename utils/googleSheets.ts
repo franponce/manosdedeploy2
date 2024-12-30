@@ -254,7 +254,7 @@ if (typeof window === 'undefined') {
         const { google } = await import('googleapis');
         const sheets = google.sheets({ version: 'v4', auth });
 
-        // Obtener todas las filas
+        // 1. Obtener todas las filas
         const response = await sheets.spreadsheets.values.get({
           spreadsheetId: SPREADSHEET_ID,
           range: 'La Libre Web - Catálogo online rev 2021 - products!A:K'
@@ -267,46 +267,33 @@ if (typeof window === 'undefined') {
           throw new Error(`Product with ID ${productId} not found`);
         }
 
-        // El índice real es rowIndex + 1 (por el encabezado)
-        const actualRow = rowIndex + 1;
-
-        // 1. Primero limpiamos toda la fila del producto a eliminar
-        await sheets.spreadsheets.values.update({
-          spreadsheetId: SPREADSHEET_ID,
-          range: `La Libre Web - Catálogo online rev 2021 - products!A${actualRow}:K${actualRow}`,
-          valueInputOption: 'USER_ENTERED',
-          requestBody: {
-            values: [[...Array(11)].map(() => '')] // 11 columnas vacías (A-K)
-          }
-        });
-
-        // 2. Obtenemos todos los productos nuevamente
-        const updatedResponse = await sheets.spreadsheets.values.get({
-          spreadsheetId: SPREADSHEET_ID,
-          range: 'La Libre Web - Catálogo online rev 2021 - products!A:K'
-        });
-
-        const updatedRows = updatedResponse.data.values || [];
-        
-        // 3. Filtramos las filas vacías y reordenamos los IDs
-        const validRows = updatedRows
-          .filter(row => row[0] && row[0].trim() !== '')
-          .map((row, index) => {
-            return [
-              (index + 1).toString(), // Nuevo ID consecutivo
-              ...row.slice(1)         // Resto de los datos del producto
-            ];
+        // 2. Si hay un producto siguiente, moverlo a la posición actual
+        if (rowIndex + 1 < rows.length) {
+          const nextRow = rows[rowIndex + 1];
+          await sheets.spreadsheets.values.update({
+            spreadsheetId: SPREADSHEET_ID,
+            range: `La Libre Web - Catálogo online rev 2021 - products!A${rowIndex + 2}:K${rowIndex + 2}`,
+            valueInputOption: 'USER_ENTERED',
+            requestBody: {
+              values: [[
+                productId, // Usamos el ID del producto eliminado
+                ...nextRow.slice(1) // Resto de los datos del siguiente producto
+              ]]
+            }
           });
 
-        // 4. Actualizamos toda la hoja con los nuevos IDs consecutivos
-        await sheets.spreadsheets.values.update({
-          spreadsheetId: SPREADSHEET_ID,
-          range: 'La Libre Web - Catálogo online rev 2021 - products!A2:K',
-          valueInputOption: 'USER_ENTERED',
-          requestBody: {
-            values: validRows
-          }
-        });
+          // 3. Limpiar la fila del producto que se movió
+          await sheets.spreadsheets.values.clear({
+            spreadsheetId: SPREADSHEET_ID,
+            range: `La Libre Web - Catálogo online rev 2021 - products!A${rowIndex + 3}:K${rowIndex + 3}`
+          });
+        } else {
+          // Si es el último producto, simplemente lo eliminamos
+          await sheets.spreadsheets.values.clear({
+            spreadsheetId: SPREADSHEET_ID,
+            range: `La Libre Web - Catálogo online rev 2021 - products!A${rowIndex + 2}:K${rowIndex + 2}`
+          });
+        }
 
       } catch (error) {
         console.error('Error deleting product:', error);
