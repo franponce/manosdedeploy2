@@ -35,33 +35,32 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           return res.status(404).json({ message: 'Product not found' });
         }
 
-        // 1. Si hay un producto siguiente, lo movemos a la posición actual
-        if (rowIndex + 1 < rows.length) {
-          const nextRow = rows[rowIndex + 1];
-          await sheets.spreadsheets.values.update({
-            spreadsheetId: process.env.GOOGLE_SHEET_ID,
-            range: `La Libre Web - Catálogo online rev 2021 - products!A${rowIndex + 2}:K${rowIndex + 2}`,
-            valueInputOption: 'RAW',
-            requestBody: {
-              values: [[
-                id, // Usamos el ID del producto eliminado
-                ...nextRow.slice(1) // Resto de los datos del siguiente producto
-              ]]
-            }
-          });
+        // Simplemente limpiamos la fila del producto a eliminar
+        await sheets.spreadsheets.values.clear({
+          spreadsheetId: process.env.GOOGLE_SHEET_ID,
+          range: `La Libre Web - Catálogo online rev 2021 - products!A${rowIndex + 2}:K${rowIndex + 2}`
+        });
 
-          // 2. Limpiamos la fila original del producto que movimos
-          await sheets.spreadsheets.values.clear({
-            spreadsheetId: process.env.GOOGLE_SHEET_ID,
-            range: `La Libre Web - Catálogo online rev 2021 - products!A${rowIndex + 3}:K${rowIndex + 3}`
-          });
-        } else {
-          // Si no hay producto siguiente, solo limpiamos la fila actual
-          await sheets.spreadsheets.values.clear({
-            spreadsheetId: process.env.GOOGLE_SHEET_ID,
-            range: `La Libre Web - Catálogo online rev 2021 - products!A${rowIndex + 2}:K${rowIndex + 2}`
-          });
-        }
+        // Obtenemos los datos actualizados
+        const updatedResponse = await sheets.spreadsheets.values.get({
+          spreadsheetId: process.env.GOOGLE_SHEET_ID,
+          range: 'La Libre Web - Catálogo online rev 2021 - products!A:K'
+        });
+
+        // Filtramos las filas vacías
+        const validRows = (updatedResponse.data.values || []).filter(row => 
+          row[0] && row[0].trim() !== ''
+        );
+
+        // Actualizamos toda la hoja con las filas filtradas
+        await sheets.spreadsheets.values.update({
+          spreadsheetId: process.env.GOOGLE_SHEET_ID,
+          range: 'La Libre Web - Catálogo online rev 2021 - products!A2:K',
+          valueInputOption: 'RAW',
+          requestBody: {
+            values: validRows
+          }
+        });
 
         return res.status(200).json({ message: 'Product deleted successfully' });
       } catch (error) {
