@@ -267,31 +267,37 @@ if (typeof window === 'undefined') {
           throw new Error(`Product with ID ${productId} not found`);
         }
 
-        // 2. Si hay un producto siguiente, moverlo a la posición actual
+        // 2. Eliminar completamente la fila del producto
+        await sheets.spreadsheets.batchUpdate({
+          spreadsheetId: SPREADSHEET_ID,
+          requestBody: {
+            requests: [{
+              deleteDimension: {
+                range: {
+                  sheetId: 0, // ID de la hoja, normalmente 0 para la primera hoja
+                  dimension: 'ROWS',
+                  startIndex: rowIndex + 1, // +1 porque la primera fila es el encabezado
+                  endIndex: rowIndex + 2
+                }
+              }
+            }]
+          }
+        });
+
+        // 3. Si hay productos después, mover cada uno una posición arriba
         if (rowIndex + 1 < rows.length) {
-          const nextRow = rows[rowIndex + 1];
+          const remainingRows = rows.slice(rowIndex + 1).map(row => [
+            row[0], // Mantener el ID original
+            ...row.slice(1)
+          ]);
+
           await sheets.spreadsheets.values.update({
             spreadsheetId: SPREADSHEET_ID,
-            range: `La Libre Web - Catálogo online rev 2021 - products!A${rowIndex + 2}:K${rowIndex + 2}`,
+            range: `La Libre Web - Catálogo online rev 2021 - products!A${rowIndex + 2}:K${rowIndex + 1 + remainingRows.length}`,
             valueInputOption: 'USER_ENTERED',
             requestBody: {
-              values: [[
-                productId, // Usamos el ID del producto eliminado
-                ...nextRow.slice(1) // Resto de los datos del siguiente producto
-              ]]
+              values: remainingRows
             }
-          });
-
-          // 3. Limpiar la fila del producto que se movió
-          await sheets.spreadsheets.values.clear({
-            spreadsheetId: SPREADSHEET_ID,
-            range: `La Libre Web - Catálogo online rev 2021 - products!A${rowIndex + 3}:K${rowIndex + 3}`
-          });
-        } else {
-          // Si es el último producto, simplemente lo eliminamos
-          await sheets.spreadsheets.values.clear({
-            spreadsheetId: SPREADSHEET_ID,
-            range: `La Libre Web - Catálogo online rev 2021 - products!A${rowIndex + 2}:K${rowIndex + 2}`
           });
         }
 
