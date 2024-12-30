@@ -76,6 +76,8 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const cancelRef = useRef<HTMLButtonElement>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const toastIdRef = useRef<string | number>();
 
   // Definir todos los callbacks y efectos primero
   const lastProductElementRef = useCallback((node: HTMLDivElement | null) => {
@@ -206,6 +208,16 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
 
   const handleSubmit = async (product: Product) => {
     try {
+      setIsSubmitting(true);
+      toastIdRef.current = toast({
+        title: product.id ? "Actualizando producto..." : "Creando producto...",
+        description: "Esto puede tomar unos momentos",
+        status: "info",
+        duration: null,
+        isClosable: false,
+        position: "top",
+      });
+
       let updatedProduct;
       if (product.id) {
         await updateProduct(product);
@@ -215,47 +227,56 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
         updatedProduct = { ...product, id: newId };
       }
       
-      // Actualizamos el cache de SWR inmediatamente con el nuevo producto
+      // Actualizamos el cache de SWR inmediatamente
       await mutate(
         SWR_KEYS.PRODUCTS,
         (currentProducts: Product[] = []) => {
           if (product.id) {
-            // Si es una actualización, reemplazamos el producto existente
             return currentProducts.map(p => 
               p.id === product.id ? updatedProduct : p
             );
           } else {
-            // Si es un nuevo producto, lo agregamos al inicio
             return [updatedProduct, ...currentProducts];
           }
         },
-        false // No revalidamos inmediatamente para evitar parpadeo
+        false
       );
       
       setIsModalOpen(false);
       setCurrentProduct(null);
 
+      if (toastIdRef.current) {
+        toast.close(toastIdRef.current);
+      }
+
       toast({
-        title: "Éxito",
-        description: `Producto ${product.id ? "actualizado" : "creado"} exitosamente.`,
+        title: "¡Listo!",
+        description: `El producto ha sido ${product.id ? "actualizado" : "creado"} exitosamente. Los cambios se verán reflejados en breve.`,
         status: "success",
-        duration: 3000,
+        duration: 5000,
         isClosable: true,
+        position: "top",
       });
 
-      // Revalidamos después de un breve delay para asegurar sincronización
+      // Forzar recarga de productos después de un breve delay
       setTimeout(() => {
         mutate(SWR_KEYS.PRODUCTS);
-      }, 1000);
+      }, 2000);
     } catch (error) {
-      console.error("Error saving product:", error);
+      if (toastIdRef.current) {
+        toast.close(toastIdRef.current);
+      }
+
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Error desconocido al guardar el producto",
+        description: error instanceof Error ? error.message : "Error al guardar el producto",
         status: "error",
-        duration: 3000,
+        duration: 5000,
         isClosable: true,
+        position: "top",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -675,12 +696,14 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
       <ProductModal
         isOpen={isModalOpen}
         onClose={() => {
-          setIsModalOpen(false);
-          setCurrentProduct(null);
+          if (!isSubmitting) {
+            setIsModalOpen(false);
+            setCurrentProduct(null);
+          }
         }}
         onSubmit={handleSubmit}
         product={currentProduct}
-        isLoading={isLoading}
+        isLoading={isSubmitting}
       />
       <AlertDialog
         isOpen={isDeleteDialogOpen}
