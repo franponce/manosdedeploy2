@@ -207,11 +207,14 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
   };
 
   const handleSubmit = async (product: Product) => {
+    const isEditing = Boolean(product.id);
     try {
       setIsSubmitting(true);
-      toast({
-        title: "Creando producto",
-        description: "Este proceso puede demorar unos minutos. Por favor, no cierres esta ventana.",
+      const toastId = toast({
+        title: isEditing ? "Actualizando producto" : "Creando nuevo producto",
+        description: isEditing 
+          ? "Guardando los cambios..." 
+          : "Este proceso puede demorar unos minutos mientras se procesan las imágenes y se actualiza el catálogo.",
         status: "info",
         duration: null,
         isClosable: false,
@@ -219,23 +222,31 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
       });
 
       let updatedProduct;
-      if (product.id) {
-        await updateProduct(product);
+      if (isEditing) {
+        await updateProduct({
+          ...product,
+          stock: parseInt(product.stock.toString(), 10) || 0
+        });
         updatedProduct = product;
       } else {
-        const newId = await createProduct(product);
+        const newId = await createProduct({
+          ...product,
+          stock: parseInt(product.stock.toString(), 10) || 0
+        });
         updatedProduct = { ...product, id: newId };
       }
 
-      // Cerrar el modal inmediatamente
       setIsModalOpen(false);
       setCurrentProduct(null);
 
-      // Actualizar la caché de SWR
+      // Cerrar el toast de "procesando"
+      toast.close(toastId);
+
+      // Actualizar caché SWR
       await mutate(
         SWR_KEYS.PRODUCTS,
         (currentProducts: Product[] = []) => {
-          if (product.id) {
+          if (isEditing) {
             return currentProducts.map(p => p.id === product.id ? updatedProduct : p);
           } else {
             return [updatedProduct, ...currentProducts];
@@ -244,25 +255,34 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
         false
       );
 
-      // Mostrar mensaje de éxito
-      toast({
-        title: "¡Producto creado!",
-        description: "El producto estará visible en la tienda en unos momentos.",
+      const successToastId = toast({
+        title: isEditing ? "¡Cambios guardados!" : "¡Producto creado exitosamente!",
+        description: isEditing 
+          ? "El producto se actualizó correctamente."
+          : "El producto aparecerá en el catálogo en los próximos minutos.",
         status: "success",
-        duration: 8000,
+        duration: 5000,
         isClosable: true,
         position: "bottom",
       });
 
-      // Forzar recarga de productos
-      setTimeout(() => {
-        mutate(SWR_KEYS.PRODUCTS);
-      }, 3000);
+      if (!isEditing) {
+        // Para nuevos productos, forzar actualización después de 3 segundos
+        setTimeout(() => {
+          mutate(SWR_KEYS.PRODUCTS);
+          // Cerrar el toast de éxito después de la actualización
+          setTimeout(() => {
+            toast.close(successToastId);
+          }, 2000);
+        }, 3000);
+      }
 
     } catch (error) {
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "No se pudo crear el producto",
+        title: isEditing ? "Error al actualizar" : "Error al crear producto",
+        description: isEditing
+          ? "No se pudieron guardar los cambios. Por favor, intenta nuevamente."
+          : "No se pudo crear el producto. Verifica la información e intenta nuevamente.",
         status: "error",
         duration: 5000,
         isClosable: true,
