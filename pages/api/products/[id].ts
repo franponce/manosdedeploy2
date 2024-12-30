@@ -35,32 +35,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           return res.status(404).json({ message: 'Product not found' });
         }
 
-        // 1. Obtenemos todas las filas después del producto eliminado
-        const remainingRows = rows.slice(rowIndex + 1);
+        // 1. Obtenemos todas las filas excepto la que queremos eliminar
+        const remainingRows = rows.filter((_, index) => index !== rowIndex);
 
-        // 2. Actualizamos los IDs y preparamos las filas para mover
+        // 2. Actualizamos los IDs para que sean consecutivos
         const updatedRows = remainingRows.map((row, index) => {
+          if (index === 0) return row; // Mantener la fila de encabezados
           return [
-            (rowIndex + index + 1).toString(), // Nuevo ID consecutivo
+            (index).toString(), // Nuevo ID consecutivo
             ...row.slice(1) // Resto de los datos del producto
           ];
         });
 
-        // 3. Movemos todas las filas una posición arriba
+        // 3. Actualizamos toda la hoja con las filas actualizadas
         await sheets.spreadsheets.values.update({
           spreadsheetId: process.env.GOOGLE_SHEET_ID,
-          range: `La Libre Web - Catálogo online rev 2021 - products!A${rowIndex + 2}:K${rowIndex + 1 + remainingRows.length}`,
+          range: 'La Libre Web - Catálogo online rev 2021 - products!A1:K',
           valueInputOption: 'RAW',
           requestBody: {
             values: updatedRows
           }
-        });
-
-        // 4. Limpiamos la última fila
-        const lastRowIndex = rowIndex + 1 + remainingRows.length;
-        await sheets.spreadsheets.values.clear({
-          spreadsheetId: process.env.GOOGLE_SHEET_ID,
-          range: `La Libre Web - Catálogo online rev 2021 - products!A${lastRowIndex}:K${lastRowIndex}`
         });
 
         return res.status(200).json({ message: 'Product deleted successfully' });
