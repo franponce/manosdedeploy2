@@ -3,7 +3,7 @@ import { Category, Product } from '../product/types';
 
 export let googleSheetsApi: any;
 
-async function getAuthClient() {
+export async function getAuthClient() {
   if (typeof window !== 'undefined') {
     throw new Error('This function should only be called on the server side');
   }

@@ -1,6 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { google } from 'googleapis';
-import { getAuthClient } from '../../../utils/googleSheets';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -10,7 +9,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ message: 'Invalid product ID' });
     }
 
-    const auth = await getAuthClient();
+    // Configurar autenticación de Google
+    const auth = new google.auth.GoogleAuth({
+      credentials: {
+        client_email: process.env.GOOGLE_CLIENT_EMAIL,
+        private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+      },
+      scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+    });
+
     const sheets = google.sheets({ version: 'v4', auth });
 
     if (req.method === 'DELETE') {
