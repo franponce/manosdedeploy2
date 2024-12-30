@@ -270,13 +270,41 @@ if (typeof window === 'undefined') {
         // El índice real es rowIndex + 1 (por el encabezado)
         const actualRow = rowIndex + 1;
 
-        // Limpiar la fila en lugar de eliminarla
+        // 1. Primero limpiamos toda la fila del producto a eliminar
         await sheets.spreadsheets.values.update({
           spreadsheetId: SPREADSHEET_ID,
           range: `La Libre Web - Catálogo online rev 2021 - products!A${actualRow}:K${actualRow}`,
           valueInputOption: 'USER_ENTERED',
           requestBody: {
-            values: [['']] // Limpiar la fila
+            values: [[...Array(11)].map(() => '')] // 11 columnas vacías (A-K)
+          }
+        });
+
+        // 2. Obtenemos todos los productos nuevamente
+        const updatedResponse = await sheets.spreadsheets.values.get({
+          spreadsheetId: SPREADSHEET_ID,
+          range: 'La Libre Web - Catálogo online rev 2021 - products!A:K'
+        });
+
+        const updatedRows = updatedResponse.data.values || [];
+        
+        // 3. Filtramos las filas vacías y reordenamos los IDs
+        const validRows = updatedRows
+          .filter(row => row[0] && row[0].trim() !== '')
+          .map((row, index) => {
+            return [
+              (index + 1).toString(), // Nuevo ID consecutivo
+              ...row.slice(1)         // Resto de los datos del producto
+            ];
+          });
+
+        // 4. Actualizamos toda la hoja con los nuevos IDs consecutivos
+        await sheets.spreadsheets.values.update({
+          spreadsheetId: SPREADSHEET_ID,
+          range: 'La Libre Web - Catálogo online rev 2021 - products!A2:K',
+          valueInputOption: 'USER_ENTERED',
+          requestBody: {
+            values: validRows
           }
         });
 
