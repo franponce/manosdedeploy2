@@ -194,7 +194,8 @@ const AdminProductCard: React.FC<AdminProductCardProps> = ({
               aria-label="Delete product"
               icon={<DeleteIcon />}
               colorScheme="red"
-              variant="ghost"
+              variant="outline"
+              borderWidth="2px"
               isLoading={isDeleting}
               onClick={() => onDelete(product)}
             />
