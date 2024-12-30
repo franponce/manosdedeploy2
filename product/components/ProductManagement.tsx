@@ -23,6 +23,12 @@ import {
   IconButton,
   Switch,
   Stack,
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogContent,
+  AlertDialogOverlay,
 } from "@chakra-ui/react";
 import { SearchIcon, ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
 import { FaTrash, FaEye, FaEyeSlash } from "react-icons/fa";
@@ -67,6 +73,9 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
   const [productImageIndexes, setProductImageIndexes] = useState<{ [key: string]: number }>({});
   const [showHiddenProducts, setShowHiddenProducts] = useState(false);
   const [deletingProductId, setDeletingProductId] = useState<string | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+  const cancelRef = useRef<HTMLButtonElement>(null);
 
   // Definir todos los callbacks y efectos primero
   const lastProductElementRef = useCallback((node: HTMLDivElement | null) => {
@@ -354,6 +363,37 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
       mutate(SWR_KEYS.PRODUCTS);
     } catch (error) {
       console.error('Error toggling visibility:', error);
+    }
+  };
+
+  const handleDeleteClick = (product: Product) => {
+    setProductToDelete(product);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!productToDelete) return;
+
+    try {
+      await deleteProduct(productToDelete.id);
+      toast({
+        title: "Producto eliminado",
+        description: "El producto se eliminó correctamente",
+        status: "success",
+        duration: 3000,
+      });
+      mutate(SWR_KEYS.PRODUCTS); // Recargar productos
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo eliminar el producto",
+        status: "error",
+        duration: 3000,
+      });
+    } finally {
+      setIsDeleteDialogOpen(false);
+      setProductToDelete(null);
     }
   };
 
@@ -677,6 +717,32 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
         product={currentProduct}
         isLoading={isLoading}
       />
+      <AlertDialog
+        isOpen={isDeleteDialogOpen}
+        leastDestructiveRef={cancelRef}
+        onClose={() => setIsDeleteDialogOpen(false)}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize='lg' fontWeight='bold'>
+              Eliminar Producto
+            </AlertDialogHeader>
+
+            <AlertDialogBody>
+              ¿Estás seguro? Esta acción es irreversible y el producto será eliminado permanentemente.
+            </AlertDialogBody>
+
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={() => setIsDeleteDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button colorScheme='red' onClick={handleDeleteConfirm} ml={3}>
+                Eliminar
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
     </Box>
   );
 };

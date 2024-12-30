@@ -35,11 +35,40 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           return res.status(404).json({ message: 'Product not found' });
         }
 
-        // Eliminar producto
+        // 1. Primero limpiamos la fila del producto a eliminar
         await sheets.spreadsheets.values.clear({
           spreadsheetId: process.env.GOOGLE_SHEET_ID,
           range: `La Libre Web - Catálogo online rev 2021 - products!A${rowIndex + 2}:K${rowIndex + 2}`
         });
+
+        // 2. Obtenemos todas las filas después del producto eliminado
+        const remainingRows = rows.slice(rowIndex + 1);
+
+        // 3. Actualizamos los IDs y movemos las filas hacia arriba
+        const updatedRows = remainingRows.map((row, index) => {
+          return [
+            (rowIndex + index + 1).toString(), // Nuevo ID consecutivo
+            ...row.slice(1) // Resto de los datos del producto
+          ];
+        });
+
+        // 4. Actualizamos las filas restantes con los nuevos IDs
+        if (updatedRows.length > 0) {
+          await sheets.spreadsheets.values.update({
+            spreadsheetId: process.env.GOOGLE_SHEET_ID,
+            range: `La Libre Web - Catálogo online rev 2021 - products!A${rowIndex + 2}:K${rowIndex + 2 + updatedRows.length - 1}`,
+            valueInputOption: 'RAW',
+            requestBody: {
+              values: updatedRows
+            }
+          });
+
+          // 5. Limpiamos la última fila para evitar duplicados
+          await sheets.spreadsheets.values.clear({
+            spreadsheetId: process.env.GOOGLE_SHEET_ID,
+            range: `La Libre Web - Catálogo online rev 2021 - products!A${rowIndex + 2 + updatedRows.length}:K${rowIndex + 2 + updatedRows.length}`
+          });
+        }
 
         return res.status(200).json({ message: 'Product deleted successfully' });
       } catch (error) {
