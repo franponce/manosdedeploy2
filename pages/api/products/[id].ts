@@ -4,12 +4,13 @@ import { google } from 'googleapis';
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     const { id } = req.query;
+    console.log('Received delete request for product ID:', id);
 
     if (!id || typeof id !== 'string') {
+      console.error('Invalid ID received:', id);
       return res.status(400).json({ message: 'Invalid product ID' });
     }
 
-    // Configurar autenticación de Google
     const auth = new google.auth.GoogleAuth({
       credentials: {
         client_email: process.env.GOOGLE_CLIENT_EMAIL,
@@ -22,6 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (req.method === 'DELETE') {
       try {
+        console.log('Fetching current sheet data...');
         // 1. Obtener datos actuales
         const response = await sheets.spreadsheets.values.get({
           spreadsheetId: process.env.GOOGLE_SHEET_ID,
@@ -30,19 +32,35 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         const rows = response.data.values || [];
         const rowIndex = rows.findIndex(row => row[0] === id);
+        console.log('Found product at row index:', rowIndex);
 
         if (rowIndex === -1) {
+          console.error('Product not found in sheet');
           return res.status(404).json({ message: 'Product not found' });
         }
 
-        // 2. Eliminar la fila usando batchUpdate
+        // 2. Obtener el ID de la hoja
+        console.log('Getting sheet ID...');
+        const sheetsResponse = await sheets.spreadsheets.get({
+          spreadsheetId: process.env.GOOGLE_SHEET_ID
+        });
+        
+        const sheetId = sheetsResponse.data.sheets?.[0].properties?.sheetId;
+        
+        if (!sheetId) {
+          console.error('Sheet ID not found');
+          return res.status(500).json({ message: 'Sheet ID not found' });
+        }
+
+        console.log('Deleting row...');
+        // 3. Eliminar la fila
         await sheets.spreadsheets.batchUpdate({
           spreadsheetId: process.env.GOOGLE_SHEET_ID,
           requestBody: {
             requests: [{
               deleteDimension: {
                 range: {
-                  sheetId: 0,
+                  sheetId: sheetId,
                   dimension: 'ROWS',
                   startIndex: rowIndex + 1,
                   endIndex: rowIndex + 2
@@ -52,85 +70,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           }
         });
 
+        console.log('Row deleted successfully');
         return res.status(200).json({ message: 'Product deleted successfully' });
-      } catch (error: unknown) {
-        console.error('Error deleting product:', error);
-        if (error instanceof Error) {
-          return res.status(500).json({ message: 'Error deleting product', error: error.message });
-        }
-        return res.status(500).json({ message: 'Error deleting product', error: 'Unknown error occurred' });
+      } catch (error: any) {
+        console.error('Detailed error:', error);
+        return res.status(500).json({ 
+          message: 'Error deleting product', 
+          error: error?.message || 'Unknown error',
+          details: error?.response?.data || 'No additional details'
+        });
       }
     }
 
-    // Obtener datos actuales
-    const response = await sheets.spreadsheets.values.get({
-      spreadsheetId: process.env.GOOGLE_SHEET_ID,
-      range: 'La Libre Web - Catálogo online rev 2021 - products!A:I',
-    });
-
-    const rows = response.data.values || [];
-    const productIndex = rows.findIndex(row => row[0] === id);
-
-    if (productIndex === -1) {
-      return res.status(404).json({ message: 'Product not found' });
-    }
-
-    if (req.method === 'PUT') {
-      const product = req.body;
-      
-      // Actualizar la fila existente
-      await sheets.spreadsheets.values.update({
-        spreadsheetId: process.env.GOOGLE_SHEET_ID,
-        range: `La Libre Web - Catálogo online rev 2021 - products!A${productIndex + 2}:I${productIndex + 2}`,
-        valueInputOption: 'RAW',
-        requestBody: {
-          values: [[
-            product.id,
-            product.title,
-            product.description,
-            product.image,
-            product.price.toString(),
-            product.scheduledPublishDate || '',
-            product.isScheduled ? 'TRUE' : 'FALSE',
-            product.categoryId || '',
-            product.isVisible ? 'TRUE' : 'FALSE'
-          ]]
-        }
-      });
-
-      // Verificar la actualización
-      const verifyResponse = await sheets.spreadsheets.values.get({
-        spreadsheetId: process.env.GOOGLE_SHEET_ID,
-        range: `La Libre Web - Catálogo online rev 2021 - products!A${productIndex + 2}:I${productIndex + 2}`,
-      });
-
-      if (!verifyResponse.data.values?.[0]) {
-        throw new Error('Failed to verify update');
-      }
-
-      return res.status(200).json({ message: 'Product updated successfully' });
-    }
-
-    // GET request
-    const productData = rows[productIndex];
-    const product = {
-      id: productData[0],
-      title: productData[1],
-      description: productData[2],
-      image: productData[3],
-      price: parseFloat(productData[4]) || 0,
-      scheduledPublishDate: productData[5] || null,
-      isScheduled: productData[6] === 'TRUE',
-      categoryId: productData[7] || '',
-      isVisible: productData[8] ? productData[8].toUpperCase() === 'TRUE' : true,
-    };
-
-    return res.status(200).json(product);
-  } catch (error: unknown) {
+    return res.status(405).json({ message: 'Method not allowed' });
+  } catch (error: any) {
     console.error('API error:', error);
-    if (error instanceof Error) {
-      return res.status(500).json({ message: 'Server error', error: error.message });
-    }
-    return res.status(500).json({ message: 'Server error', error: 'Unknown error occurred' });
+    return res.status(500).json({ 
+      message: 'Server error', 
+      error: error?.message || 'Unknown error',
+      stack: process.env.NODE_ENV === 'development' ? error?.stack : undefined
+    });
   }
 }

@@ -138,7 +138,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
     setIsDeleteDialogOpen(true);
   };
 
-  const handleDelete = async () => {
+  const handleDeleteConfirm = async () => {
     if (!productToDelete) return;
 
     try {
@@ -147,8 +147,10 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
         method: 'DELETE',
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error('Failed to delete product');
+        throw new Error(data.message || 'Failed to delete product');
       }
 
       toast({
@@ -159,11 +161,11 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
       });
       
       mutate(SWR_KEYS.PRODUCTS);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting product:', error);
       toast({
         title: "Error",
-        description: "No se pudo eliminar el producto",
+        description: error?.message || "No se pudo eliminar el producto",
         status: "error",
         duration: 3000,
       });
@@ -359,42 +361,6 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
   const handleDeleteClick = (product: Product) => {
     setProductToDelete(product);
     setIsDeleteDialogOpen(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!productToDelete) return;
-
-    try {
-      setDeletingProductId(productToDelete.id);
-      const response = await fetch(`/api/products/${productToDelete.id}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete product');
-      }
-
-      toast({
-        title: "Producto eliminado",
-        description: "El producto se eliminó correctamente",
-        status: "success",
-        duration: 3000,
-      });
-      
-      mutate(SWR_KEYS.PRODUCTS);
-    } catch (error) {
-      console.error('Error deleting product:', error);
-      toast({
-        title: "Error",
-        description: "No se pudo eliminar el producto",
-        status: "error",
-        duration: 3000,
-      });
-    } finally {
-      setIsDeleteDialogOpen(false);
-      setProductToDelete(null);
-      setDeletingProductId(null);
-    }
   };
 
   const renderProduct = (product: Product) => {
