@@ -1,7 +1,7 @@
 import { mutate } from 'swr';
 import { Category, Product } from '../product/types';
 
-let googleSheetsApi: any;
+export let googleSheetsApi: any;
 
 async function getAuthClient() {
   if (typeof window !== 'undefined') {
@@ -248,7 +248,7 @@ if (typeof window === 'undefined') {
       }
     },
 
-    deleteProduct: async (productId: string): Promise<void> => {
+    deleteProduct: async (productId: string) => {
       try {
         const auth = await getAuthClient();
         const { google } = await import('googleapis');
