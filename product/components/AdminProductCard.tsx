@@ -9,7 +9,7 @@ import {
   Icon,
   Image,
 } from '@chakra-ui/react';
-import { ChevronLeftIcon, ChevronRightIcon, WarningIcon } from '@chakra-ui/icons';
+import { ChevronLeftIcon, ChevronRightIcon, WarningIcon, DeleteIcon } from '@chakra-ui/icons';
 import { FaTrash } from 'react-icons/fa';
 import { Product } from '../types';
 import { useStock } from '@/hooks/useStock';
@@ -20,6 +20,7 @@ interface AdminProductCardProps {
   onDelete: (product: Product) => void;
   productImageIndex: number;
   onImageIndexChange: (productId: string, newIndex: number) => void;
+  isDeleting: boolean;
 }
 
 const AdminProductCard: React.FC<AdminProductCardProps> = ({
@@ -28,6 +29,7 @@ const AdminProductCard: React.FC<AdminProductCardProps> = ({
   onDelete,
   productImageIndex,
   onImageIndexChange,
+  isDeleting,
 }) => {
   const { available, isLoading: stockLoading } = useStock(product.id);
   const [expandedTitle, setExpandedTitle] = useState(false);
@@ -188,16 +190,14 @@ const AdminProductCard: React.FC<AdminProductCardProps> = ({
 
         <Box width="100%">
           <HStack spacing={4} width="100%">
-            <Button
-              flex={1}
-              size="lg"
+            <IconButton
+              aria-label="Delete product"
+              icon={<DeleteIcon />}
               colorScheme="red"
+              variant="ghost"
+              isLoading={isDeleting}
               onClick={() => onDelete(product)}
-              leftIcon={<Icon as={FaTrash} />}
-              borderRadius="md"
-            >
-              Eliminar
-            </Button>
+            />
             <Button
               flex={1}
               size="lg"
