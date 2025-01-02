@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { doc, onSnapshot } from 'firebase/firestore';
-import { db, stockService } from '../utils/firebase';
+import { stockService } from '../utils/stockService';
 
 interface StockHookReturn {
   available: number;
@@ -14,32 +13,31 @@ export const useStock = (productId: string | null): StockHookReturn => {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    if (!productId) return;
+    if (!productId) {
+      setIsLoading(false);
+      return;
+    }
 
-    setIsLoading(true);
-    const unsubscribe = onSnapshot(doc(db, 'stock', productId), 
-      (docSnapshot) => {
-        if (docSnapshot.exists()) {
-          const data = docSnapshot.data();
-          const availableStock = Number(data.available) || 0;
-          const reservedStock = Number(data.reserved) || 0;
-          
-          // Calcular stock real disponible
-          const realAvailable = Math.max(0, availableStock - reservedStock);
-          setAvailable(realAvailable);
-        } else {
-          setAvailable(0);
-        }
-        setIsLoading(false);
-      },
-      (error) => {
-        console.error('Error fetching stock:', error);
-        setError(error as Error);
+    const fetchStock = async () => {
+      try {
+        setIsLoading(true);
+        const stock = await stockService.getAvailableStock(productId);
+        setAvailable(stock);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching stock:', err);
+        setError(err instanceof Error ? err : new Error('Error al obtener stock'));
+        setAvailable(0);
+      } finally {
         setIsLoading(false);
       }
-    );
+    };
 
-    return () => unsubscribe();
+    fetchStock();
+
+    // Actualizar cada 30 segundos
+    const interval = setInterval(fetchStock, 30000);
+    return () => clearInterval(interval);
   }, [productId]);
 
   return { available, isLoading, error };
