@@ -467,23 +467,27 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                 <FormLabel>
                   Stock disponible
                 </FormLabel>
-                <NumberInput
-                  value={currentProduct.stock ?? 0}
-                  min={0}
-                  precision={0}
-                  onChange={(_, valueNumber) => {
-                    setCurrentProduct(prev => ({
-                      ...prev,
-                      stock: valueNumber || 0
-                    }));
-                  }}
-                >
-                  <NumberInputField />
-                  <NumberInputStepper>
-                    <NumberIncrementStepper />
-                    <NumberDecrementStepper />
-                  </NumberInputStepper>
-                </NumberInput>
+                {stockLoading ? (
+                  <Spinner size="sm" />
+                ) : (
+                  <NumberInput
+                    value={stockAvailable}
+                    min={0}
+                    precision={0}
+                    onChange={(_, valueNumber) => {
+                      setCurrentProduct(prev => ({
+                        ...prev,
+                        stock: valueNumber || 0
+                      }));
+                    }}
+                  >
+                    <NumberInputField />
+                    <NumberInputStepper>
+                      <NumberIncrementStepper />
+                      <NumberDecrementStepper />
+                    </NumberInputStepper>
+                  </NumberInput>
+                )}
               </FormControl>
 
               <FormControl>
