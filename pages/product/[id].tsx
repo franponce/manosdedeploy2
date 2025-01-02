@@ -61,6 +61,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, error }) => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [pageUrl, setPageUrl] = useState<string>('');
+  const [isTitleExpanded, setIsTitleExpanded] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -223,6 +224,35 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, error }) => {
   const total = calculateTotal(cart);
   const quantity = calculateQuantity(cart);
 
+  const renderTitle = () => {
+    const titleContent = (
+      <Heading 
+        as="h1" 
+        size="xl"
+        noOfLines={isTitleExpanded ? undefined : 2}
+      >
+        {product?.title}
+      </Heading>
+    );
+
+    return (
+      <Box>
+        {titleContent}
+        {product?.title && product.title.length > 60 && (
+          <Button
+            size="xs"
+            variant="link"
+            color="blue.500"
+            onClick={() => setIsTitleExpanded(!isTitleExpanded)}
+            mt={1}
+          >
+            {isTitleExpanded ? "Ver menos" : "Ver título completo"}
+          </Button>
+        )}
+      </Box>
+    );
+  };
+
   return (
     <>
       <Box bg="white" position="sticky" top={0} zIndex={10} borderBottom="1px" borderColor="gray.200">
@@ -247,9 +277,9 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, error }) => {
 
           <GridItem>
             <VStack spacing={6} align="stretch">
-              <Heading as="h1" size="xl">
-                {product.title}
-              </Heading>
+              <Skeleton isLoaded={!stockLoading}>
+                {renderTitle()}
+              </Skeleton>
 
               <Text fontSize="sm" color={stock === 0 ? "red.500" : "gray.600"}>
                 {stockLoading ? (

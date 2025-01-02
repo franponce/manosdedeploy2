@@ -183,8 +183,14 @@ const ProductOrderManager: React.FC<ProductOrderManagerProps> = ({
                         objectFit="cover"
                         borderRadius="md"
                       />
-                      <Box>
-                        <Text fontWeight="medium">{product.title}</Text>
+                      <Box maxW="200px">
+                        <Text 
+                          fontWeight="medium"
+                          noOfLines={1}
+                          title={product.title}
+                        >
+                          {product.title}
+                        </Text>
                         <Text fontSize="sm" color="gray.500">
                           ID: {product.id}
                         </Text>

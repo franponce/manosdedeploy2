@@ -336,7 +336,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
       <ModalOverlay />
       <ModalContent maxH="90vh">
         <ModalHeader>
-          {product ? 'Editar Producto' : 'Nuevo producto'}
+          {product ? 'Editar producto' : 'Nuevo producto'}
         </ModalHeader>
         <ModalCloseButton isDisabled={submitLoading} />
         <ModalBody overflowY="auto">
