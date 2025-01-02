@@ -141,7 +141,7 @@ const ProductOrderManager: React.FC<ProductOrderManagerProps> = ({
       <ModalOverlay />
       <ModalContent maxH="90vh">
         <ModalHeader>
-          {isSaving ? 'Guardando orden...' : 'Ordenar Productos'}
+          {isSaving ? 'Guardando orden...' : 'Ordenar productos'}
         </ModalHeader>
         <ModalCloseButton />
         <ModalBody overflowY="auto">

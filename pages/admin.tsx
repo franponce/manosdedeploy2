@@ -195,7 +195,7 @@ const AdminPage: React.FC = () => {
                 icon={<Icon as={FaTags} />}
                 onClick={() => setIsCategoryManagerOpen(true)}
               >
-                Gestionar Categorías
+                Gestionar categorías
               </MenuItem>
               <MenuItem 
                 icon={<Icon as={FaSort} />}

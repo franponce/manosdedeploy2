@@ -179,7 +179,7 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
       >
         <ModalHeader>
           <VStack align="start" spacing={1}>
-            <Text fontSize={{ base: 'xl', md: '2xl' }}>Gestionar Categorías</Text>
+            <Text fontSize={{ base: 'xl', md: '2xl' }}>Gestionar categorías</Text>
             <Text 
               fontSize="sm" 
               color={categories.length >= CATEGORY_CONSTANTS.MAX_CATEGORIES ? "orange.500" : "gray.500"}
