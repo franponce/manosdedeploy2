@@ -33,7 +33,6 @@ import { useRouter } from 'next/router';
 import { useStock } from '../../hooks/useStock';
 import { useState, useEffect } from 'react';
 import { doc, onSnapshot } from 'firebase/firestore';
-import { useProductsStock } from '../../hooks/useProductsStock';
 import { stockService } from '../../utils/firebase';
 
 const fetcher = async (url: string) => {
@@ -213,50 +212,6 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
     }
   }
 
-  const { stocks, isLoading: stocksLoading } = useProductsStock(displayedProducts);
-
-  // Modificar el efecto de limpieza para incluir manejo de errores y debounce
-  React.useEffect(() => {
-    let isSubscribed = true;
-    let timeoutId: NodeJS.Timeout;
-
-    const cleanupAndUpdateStocks = async () => {
-      if (!isSubscribed || !displayedProducts.length) return;
-
-      try {
-        // Usar Promise.allSettled en lugar de Promise.all para manejar errores individuales
-        const results = await Promise.allSettled(
-          displayedProducts.map(async (product) => {
-            try {
-              await stockService.getProductStock(product.id);
-            } catch (error) {
-              console.error(`Error getting stock for product ${product.id}:`, error);
-            }
-          })
-        );
-
-        // Solo actualizar si el componente sigue montado
-        if (isSubscribed) {
-          mutate(SWR_KEYS.PRODUCTS_STOCK);
-        }
-      } catch (error) {
-        console.error('Error in cleanup process:', error);
-      }
-    };
-
-    // Debounce la limpieza para evitar demasiadas llamadas
-    timeoutId = setTimeout(cleanupAndUpdateStocks, 1000);
-
-    // Configurar intervalo con un tiempo más largo
-    const interval = setInterval(cleanupAndUpdateStocks, 300000); // 5 minutos
-
-    return () => {
-      isSubscribed = false;
-      clearTimeout(timeoutId);
-      clearInterval(interval);
-    };
-  }, [displayedProducts]);
-
   useEffect(() => {
     if (isCartOpen) {
       // No es necesario hacer nada aquí
@@ -364,7 +319,6 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
           >
             {displayedProducts.map((product, index) => {
               const isLastElement = index === displayedProducts.length - 1;
-              const available = stocks[product.id] || 0;
 
               return (
                 <Box
@@ -375,8 +329,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
                   <ProductCard
                     product={product}
                     onAdd={(product) => handleEditCart(product, "increment")}
-                    isLoading={isLoading || stocksLoading}
-                    available={available}
+                    isLoading={isLoading}
                     onEdit={() => {}}
                     onDelete={() => {}}
                     onVisibilityToggle={() => {}}
