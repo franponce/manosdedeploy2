@@ -50,6 +50,7 @@ import { useCategories } from '@/hooks/useCategories';
 import { imageService } from '../../services/imageService';
 import { useProduct } from '@/hooks/useProduct';
 import { stockService } from '../../utils/firebase';
+import { useStock } from '@/hooks/useStock';
 
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 
@@ -65,6 +66,7 @@ const MAX_IMAGES = 2;
 
 const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, product, isLoading: submitLoading }) => {
   const { product: currentProductData } = useProduct(product?.id || null);
+  const { available: stockAvailable, isLoading: stockLoading } = useStock(product?.id || null);
   const [currentProduct, setCurrentProduct] = useState<Product>(() => ({
     id: '',
     title: '',
@@ -103,10 +105,10 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     if (product) {
       setCurrentProduct({
         ...product,
-        stock: product.stock ?? 0
+        stock: stockAvailable
       });
     }
-  }, [product]);
+  }, [product, stockAvailable]);
 
   useEffect(() => {
     if (isOpen) {
