@@ -121,7 +121,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
           const stockValue = await stockService.getProductStock(product.id);
           setCurrentProduct(prev => ({
             ...prev,
-            stock: stockValue
+            stock: stockValue || 0
           }));
         } catch (error) {
           console.error('Error fetching stock:', error);
@@ -138,7 +138,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     if (isOpen && product?.id) {
       fetchStock();
     }
-  }, [isOpen, product?.id]);
+  }, [isOpen, product?.id, toast]);
 
   useEffect(() => {
     if (isOpen) {
@@ -458,7 +458,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
 
               <FormControl>
                 <FormLabel>
-                  Stock disponible: {currentProduct.stock || 0}
+                  Stock disponible
                 </FormLabel>
                 <NumberInput
                   value={currentProduct.stock ?? 0}
@@ -467,7 +467,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                   onChange={(_, valueNumber) => {
                     setCurrentProduct(prev => ({
                       ...prev,
-                      stock: valueNumber ?? 0
+                      stock: valueNumber || 0
                     }));
                   }}
                 >
