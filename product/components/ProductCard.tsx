@@ -201,9 +201,19 @@ const ProductCard: React.FC<Props> = ({
                 onClick={handleProductClick}
                 width="100%"
                 isDisabled={stockAvailable === 0}
+                mb={2}
               >
                 {stockAvailable === 0 ? "Agotado" : "Ver detalle"}
               </Button>
+              {stockAvailable > 0 && (
+                <Button
+                  colorScheme="green"
+                  onClick={handleClick}
+                  width="100%"
+                >
+                  Agregar al carrito
+                </Button>
+              )}
               {stockAvailable > 0 && stockAvailable <= 5 && (
                 <Text color="orange.500" fontSize="sm" mt={2}>
                   {stockAvailable === 1 
