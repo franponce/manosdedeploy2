@@ -225,21 +225,19 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, error }) => {
   const quantity = calculateQuantity(cart);
 
   const renderTitle = () => {
+    const truncateText = (text: string, maxLength: number) => {
+      if (!text || text.length <= maxLength) return text;
+      return text.slice(0, maxLength) + '...';
+    };
+
     return (
       <Box width="100%">
         <Heading 
           as="h1" 
           size="xl"
-          sx={{
-            display: '-webkit-box',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            WebkitLineClamp: isTitleExpanded ? 'unset' : 2,
-            WebkitBoxOrient: 'vertical',
-          }}
           mb={2}
         >
-          {product?.title}
+          {isTitleExpanded ? product?.title : truncateText(product?.title || '', 60)}
         </Heading>
         {product?.title && product.title.length > 60 && (
           <Button
