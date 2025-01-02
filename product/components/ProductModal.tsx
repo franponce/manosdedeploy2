@@ -121,14 +121,19 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
           const stockValue = await stockService.getProductStock(product.id);
           setCurrentProduct(prev => ({
             ...prev,
-            stock: stockValue || 0
+            stock: typeof stockValue === 'number' ? stockValue : 0
           }));
         } catch (error) {
           console.error('Error fetching stock:', error);
+          setCurrentProduct(prev => ({
+            ...prev,
+            stock: prev.stock || 0
+          }));
+          
           toast({
-            title: "Error",
-            description: "No se pudo cargar el stock del producto",
-            status: "error",
+            title: "Advertencia",
+            description: "No se pudo cargar el stock actual del producto",
+            status: "warning",
             duration: 3000,
           });
         }
