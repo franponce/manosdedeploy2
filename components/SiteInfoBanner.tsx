@@ -81,8 +81,8 @@ const SiteInfoBanner: React.FC<SiteInfoBannerProps> = ({ siteInfo }) => {
               <Image
                 src={siteInfo.logoUrl}
                 alt="Logo"
-                height={{ base: "50px", md: "60px" }}
-                width={{ base: "50px", md: "60px" }}
+                height={150}
+                width={150}
                 objectFit="cover"
                 borderRadius="full"  // Esto hace que sea circular
                 border="2px solid"  // Opcional: agrega un borde
