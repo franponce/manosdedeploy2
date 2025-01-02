@@ -1,100 +1,30 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import {
-  Box,
-  Container,
-  Image,
-  Text,
-  Button,
-  VStack,
-  Heading,
-  Grid,
-  GridItem,
-  Skeleton,
-  useToast,
-  Icon,
-  Flex,
-  Stack,
-  Tooltip,
-  IconButton,
-  HStack,
-  SkeletonText,
-  Spinner,
-  NumberInput,
-  NumberInputField,
-  NumberInputStepper,
-  NumberIncrementStepper,
-  NumberDecrementStepper
-} from '@chakra-ui/react';
-import { useRouter } from 'next/router';
-import { useProduct } from '../../hooks/useProduct';
-import { useSiteInfo } from '../../hooks/useSiteInfo';
-import { parseCurrency } from '../../utils/currency';
-import { FaArrowLeft, FaShoppingCart, FaCopy } from 'react-icons/fa';
-import { useScrollPosition } from '../../hooks/useScrollPosition';
-import { useCart } from '../../hooks/useCart';
-import CartDrawer from '@/product/components/CartDrawer';
-import {
-  WhatsappShareButton,
-  WhatsappIcon,
-  FacebookShareButton,
-  FacebookIcon,
-  TwitterShareButton,
-  TwitterIcon,
-  EmailShareButton,
-  EmailIcon
-} from 'next-share';
-import { Product, CartItem } from '@/product/types';
-import { NextPage } from 'next';
-import ImageCarousel from '@/product/components/ImageCarousel';
-import error from 'next/error';
-import { useProductsStock } from '@/hooks/useProductsStock';
+import { useState } from 'react';
 import { useStock } from '../../hooks/useStock';
 import { stockService } from '../../utils/stockService';
-
-type NextPageWithLayout = NextPage & {
-  getLayout?: (page: React.ReactElement) => React.ReactElement;
-};
-
-const calculateTotal = (cart: CartItem[]) => 
-  parseCurrency((Array.isArray(cart) ? cart : []).reduce(
-    (total: number, item: CartItem) => total + (item?.price || 0) * (item?.quantity || 0), 
-    0
-  ));
-
-const calculateQuantity = (cart: CartItem[]) => 
-  (Array.isArray(cart) ? cart : []).reduce(
-    (acc: number, item: CartItem) => acc + (item?.quantity || 0), 
-    0
-  );
-
-const processImages = (images: string[] = []) => {
-  return images
-    .filter(Boolean)
-    .map(url => {
-      try {
-        return url.split('|||')[0].trim();
-      } catch (e) {
-        console.error('Error processing image URL:', url);
-        return null;
-      }
-    })
-    .filter(Boolean);
-};
+import { Product } from '../../product/types';
+import { useToast, Box, Text, Button, Spinner, NumberInput, NumberInputField, NumberInputStepper, NumberIncrementStepper, NumberDecrementStepper } from '@chakra-ui/react';
+import { GetServerSideProps } from 'next';
+import { getProducts } from '../../utils/googleSheets';
 
 interface ProductDetailProps {
-  product: Product;
-  onAddToCart: (item: Product & { quantity: number }) => void;
+  product: Product | null;
+  error?: string;
 }
 
-const ProductDetail: React.FC<ProductDetailProps> = ({ product, onAddToCart }) => {
+const ProductDetail: React.FC<ProductDetailProps> = ({ product, error }) => {
   const { available: stock, isLoading: stockLoading } = useStock(product?.id || null);
   const [selectedQuantity, setSelectedQuantity] = useState(1);
   const toast = useToast();
-  
-  // Validar stock antes de agregar al carrito
-  const handleAddToCart = async () => {
-    if (!product?.id) return;
 
+  if (error) {
+    return <Box p={4}>Error: {error}</Box>;
+  }
+  
+  if (!product) {
+    return <Box p={4}>Producto no encontrado</Box>;
+  }
+
+  const handleAddToCart = async () => {
     try {
       const currentStock = await stockService.getAvailableStock(product.id);
       
@@ -108,10 +38,11 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, onAddToCart }) =
         return;
       }
 
-      onAddToCart({
-        ...product,
-        quantity: selectedQuantity
-      });
+      // Aquí deberías tener la función para agregar al carrito
+      // onAddToCart({
+      //   ...product,
+      //   quantity: selectedQuantity
+      // });
 
       toast({
         title: "¡Producto agregado!",
@@ -130,16 +61,12 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, onAddToCart }) =
     }
   };
 
-  if (!product) {
-    return <Box>Producto no encontrado</Box>;
-  }
-
   return (
-    <Box>
-      {/* ... otros elementos ... */}
+    <Box p={4}>
+      <Text fontSize="2xl" fontWeight="bold" mb={4}>{product.title}</Text>
       
       {/* Mostrar stock */}
-      <Text color={stock > 0 ? "green.500" : "red.500"}>
+      <Text color={stock > 0 ? "green.500" : "red.500"} mb={4}>
         {stockLoading ? (
           <Spinner size="sm" />
         ) : stock > 0 ? (
@@ -156,6 +83,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, onAddToCart }) =
         value={selectedQuantity}
         onChange={(_, value) => setSelectedQuantity(value)}
         isDisabled={stock === 0}
+        mb={4}
       >
         <NumberInputField />
         <NumberInputStepper>
@@ -170,11 +98,43 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, onAddToCart }) =
         onClick={handleAddToCart}
         isDisabled={stock === 0}
         isLoading={stockLoading}
+        width="full"
       >
         Agregar al carrito
       </Button>
     </Box>
   );
+};
+
+export const getServerSideProps: GetServerSideProps = async ({ params }) => {
+  try {
+    const products = await getProducts();
+    const product = products.find((p: { id: string | string[] | undefined; }) => p.id === params?.id);
+
+    if (!product) {
+      return {
+        props: {
+          product: null,
+          error: "Producto no encontrado"
+        }
+      };
+    }
+
+    return {
+      props: {
+        product,
+        error: null
+      }
+    };
+  } catch (error) {
+    console.error('Error fetching product:', error);
+    return {
+      props: {
+        product: null,
+        error: "Error al cargar el producto"
+      }
+    };
+  }
 };
 
 export default ProductDetail; 
