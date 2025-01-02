@@ -225,22 +225,25 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, error }) => {
   const quantity = calculateQuantity(cart);
 
   const renderTitle = () => {
-    const titleContent = (
-      <Heading 
-        as="h1" 
-        size="xl"
-        noOfLines={isTitleExpanded ? undefined : 2}
-      >
-        {product?.title}
-      </Heading>
-    );
-
     return (
-      <Box>
-        {titleContent}
+      <Box width="100%">
+        <Heading 
+          as="h1" 
+          size="xl"
+          sx={{
+            display: '-webkit-box',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            WebkitLineClamp: isTitleExpanded ? 'unset' : 2,
+            WebkitBoxOrient: 'vertical',
+          }}
+          mb={2}
+        >
+          {product?.title}
+        </Heading>
         {product?.title && product.title.length > 60 && (
           <Button
-            size="xs"
+            size="sm"
             variant="link"
             color="blue.500"
             onClick={() => setIsTitleExpanded(!isTitleExpanded)}
