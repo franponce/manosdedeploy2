@@ -236,6 +236,8 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, error }) => {
           as="h1" 
           size="xl"
           mb={2}
+          maxWidth="100%"
+          wordBreak="break-word"
         >
           {isTitleExpanded ? product?.title : truncateText(product?.title || '', 60)}
         </Heading>
