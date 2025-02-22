@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
-import { doc, onSnapshot } from 'firebase/firestore';
-import { db } from '../utils/firebase';
 import { Product } from '../product/types';
+import { unifiedStockService } from '../services/unifiedStockService';
 
 interface StockMap {
   [productId: string]: number;
@@ -18,26 +17,13 @@ export const useProductsStock = (products: Product[]) => {
     }
 
     const unsubscribers = products.map(product => {
-      return onSnapshot(doc(db, 'stock', product.id), 
-        (docSnapshot) => {
-          if (docSnapshot.exists()) {
-            const data = docSnapshot.data();
-            const availableStock = Number(data.available) || 0;
-            const reservedStock = Number(data.reserved) || 0;
-            const realAvailable = Math.max(0, availableStock - reservedStock);
-            
-            setStocks(prev => ({
-              ...prev,
-              [product.id]: realAvailable
-            }));
-          } else {
-            setStocks(prev => ({
-              ...prev,
-              [product.id]: 0
-            }));
-          }
-        }
-      );
+      return unifiedStockService.subscribeToStock(product.id, (stockData) => {
+        const realAvailable = Math.max(0, stockData.available - stockData.reserved);
+        setStocks(prev => ({
+          ...prev,
+          [product.id]: realAvailable
+        }));
+      });
     });
 
     setIsLoading(false);

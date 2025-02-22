@@ -228,8 +228,16 @@ interface StockDocument {
   available: number;
 }
 
+/**
+ * @deprecated Use unifiedStockService from '../services/unifiedStockService' instead.
+ * This service will be removed in future versions.
+ */
 export const stockService = {
+  /**
+   * @deprecated Use unifiedStockService.updateStock instead
+   */
   async initializeStockDocument(productId: string): Promise<void> {
+    console.warn('Deprecated: Use unifiedStockService.updateStock instead');
     const stockRef = doc(db, 'stock', productId);
     
     try {
@@ -258,7 +266,11 @@ export const stockService = {
     }
   },
 
+  /**
+   * @deprecated Use unifiedStockService.updateStock instead
+   */
   async updateStock(productId: string, quantity: number): Promise<void> {
+    console.warn('Deprecated: Use unifiedStockService.updateStock instead');
     const stockRef = doc(db, 'stock', productId);
     
     try {
@@ -284,7 +296,11 @@ export const stockService = {
     }
   },
 
+  /**
+   * @deprecated Use unifiedStockService.getStock instead
+   */
   async getAvailableStock(productId: string): Promise<number> {
+    console.warn('Deprecated: Use unifiedStockService.getStock instead');
     try {
       const stockRef = doc(db, 'stock', productId);
       const stockDoc = await getDoc(stockRef);
@@ -296,7 +312,11 @@ export const stockService = {
     }
   },
 
+  /**
+   * @deprecated Use unifiedStockService.getStock instead
+   */
   async getProductStock(productId: string): Promise<number> {
+    console.warn('Deprecated: Use unifiedStockService.getStock instead');
     try {
       const stockRef = doc(db, 'stock', productId);
       const stockDoc = await getDoc(stockRef);

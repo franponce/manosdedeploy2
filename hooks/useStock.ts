@@ -1,15 +1,9 @@
 import { useState, useEffect } from 'react';
-import { stockService } from '../utils/stockService';
+import { unifiedStockService, StockData } from '../services/unifiedStockService';
 
-interface StockHookReturn {
-  available: number;
-  isLoading: boolean;
-  error: Error | null;
-}
-
-export const useStock = (productId: string | null): StockHookReturn => {
-  const [available, setAvailable] = useState<number>(0);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+export const useStock = (productId: string | null) => {
+  const [stockData, setStockData] = useState<StockData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
@@ -18,27 +12,19 @@ export const useStock = (productId: string | null): StockHookReturn => {
       return;
     }
 
-    const fetchStock = async () => {
-      try {
-        setIsLoading(true);
-        const stock = await stockService.getAvailableStock(productId);
-        setAvailable(stock);
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching stock:', err);
-        setError(err instanceof Error ? err : new Error('Error al obtener stock'));
-        setAvailable(0);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    const unsubscribe = unifiedStockService.subscribeToStock(productId, (data) => {
+      setStockData(data);
+      setIsLoading(false);
+      setError(null);
+    });
 
-    fetchStock();
-
-    // Actualizar cada 30 segundos
-    const interval = setInterval(fetchStock, 30000);
-    return () => clearInterval(interval);
+    return () => unsubscribe();
   }, [productId]);
 
-  return { available, isLoading, error };
+  return {
+    available: stockData ? stockData.available - stockData.reserved : 0,
+    isLoading,
+    error,
+    stockData
+  };
 }; 
