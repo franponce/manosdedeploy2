@@ -445,22 +445,20 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
 
               <FormControl isRequired>
                 <FormLabel>Precio</FormLabel>
-                <NumberInput
-                  value={Number(currentProduct.price) || 0}
-                  min={0}
-                  onChange={(_, value) => {
+                <Input
+                  type="number"
+                  value={currentProduct.price || ''}
+                  onChange={(e) => {
+                    const value = e.target.value;
                     setCurrentProduct(prev => ({
                       ...prev,
-                      price: Number(value) || 0
+                      price: value === '' ? 0 : Number(value)
                     }));
                   }}
-                >
-                  <NumberInputField />
-                  <NumberInputStepper>
-                    <NumberIncrementStepper />
-                    <NumberDecrementStepper />
-                  </NumberInputStepper>
-                </NumberInput>
+                  min={0}
+                  step="any"
+                  placeholder="Ingresa el precio"
+                />
               </FormControl>
 
               <FormControl>
@@ -470,23 +468,19 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                 {stockLoading ? (
                   <Spinner size="sm" />
                 ) : (
-                  <NumberInput
-                    value={stockAvailable}
-                    min={0}
-                    precision={0}
-                    onChange={(_, valueNumber) => {
+                  <Input
+                    type="number"
+                    value={currentProduct.stock}
+                    onChange={(e) => {
+                      const value = e.target.value;
                       setCurrentProduct(prev => ({
                         ...prev,
-                        stock: valueNumber || 0
+                        stock: value === '' ? '' : parseInt(value, 10)
                       }));
                     }}
-                  >
-                    <NumberInputField />
-                    <NumberInputStepper>
-                      <NumberIncrementStepper />
-                      <NumberDecrementStepper />
-                    </NumberInputStepper>
-                  </NumberInput>
+                    min={0}
+                    placeholder="Ingresa el stock disponible"
+                  />
                 )}
               </FormControl>
 
