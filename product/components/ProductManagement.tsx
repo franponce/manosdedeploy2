@@ -42,6 +42,7 @@ import { SWR_KEYS } from '../constants';
 import { useStock } from '../../hooks/useStock';
 import { WarningIcon } from "@chakra-ui/icons";
 import AdminProductCard from './AdminProductCard';
+import { unifiedStockService } from '../../services/unifiedStockService';
 
 const PRODUCT_LIMIT = 30;
 const SYNC_INTERVAL = 30000; // 30 segundos
@@ -212,27 +213,25 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
       setIsSubmitting(true);
       const toastId = toast({
         title: isEditing ? "Actualizando producto" : "Creando nuevo producto",
-        description: isEditing 
-          ? "Guardando los cambios..." 
-          : "Este proceso puede demorar unos minutos mientras se procesan las imágenes y se actualiza el catálogo.",
+        description: "Guardando los cambios...",
         status: "info",
         duration: null,
         isClosable: false,
         position: "bottom",
       });
 
+      // Actualizar stock usando el nuevo servicio
+      await unifiedStockService.updateStock(
+        product.id, 
+        parseInt(product.stock.toString(), 10) || 0
+      );
+
       let updatedProduct;
       if (isEditing) {
-        await updateProduct({
-          ...product,
-          stock: parseInt(product.stock.toString(), 10) || 0
-        });
+        await updateProduct(product);
         updatedProduct = product;
       } else {
-        const newId = await createProduct({
-          ...product,
-          stock: parseInt(product.stock.toString(), 10) || 0
-        });
+        const newId = await createProduct(product);
         updatedProduct = { ...product, id: newId };
       }
 

@@ -49,8 +49,8 @@ import { CATEGORY_CONSTANTS } from '../../utils/constants';
 import { useCategories } from '@/hooks/useCategories';
 import { imageService } from '../../services/imageService';
 import { useProduct } from '@/hooks/useProduct';
-import { stockService } from '../../utils/firebase';
 import { useStock } from '@/hooks/useStock';
+import { unifiedStockService } from '../../services/unifiedStockService';
 
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 
@@ -66,7 +66,7 @@ const MAX_IMAGES = 2;
 
 const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, product, isLoading: submitLoading }) => {
   const { product: currentProductData } = useProduct(product?.id || null);
-  const { available: stockAvailable, isLoading: stockLoading } = useStock(product?.id || null);
+  const { stockData } = useStock(product?.id || null);
   const [currentProduct, setCurrentProduct] = useState<Product>(() => ({
     id: '',
     title: '',
@@ -102,50 +102,20 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
   const { categories, isLoading: categoriesLoading, createCategory, mutate: mutateCategories } = useCategories();
 
   useEffect(() => {
-    if (product) {
-      setCurrentProduct({
+    if (isOpen && product) {
+      setCurrentProduct(prev => ({
+        ...prev,
         ...product,
-        stock: stockAvailable
-      });
+        stock: stockData?.available || 0
+      }));
     }
-  }, [product, stockAvailable]);
+  }, [isOpen, product, stockData]);
 
   useEffect(() => {
     if (isOpen) {
       mutateCategories();
     }
   }, [isOpen, mutateCategories]);
-
-  useEffect(() => {
-    const fetchStock = async () => {
-      if (product?.id) {
-        try {
-          const stockValue = await stockService.getProductStock(product.id);
-          setCurrentProduct(prev => ({
-            ...prev,
-            stock: typeof stockValue === 'number' ? stockValue : 0
-          }));
-        } catch (error) {
-          console.error('Error fetching stock:', error);
-          setCurrentProduct(prev => ({
-            ...prev,
-            stock: prev.stock || 0
-          }));
-          
-          toast({
-            title: "Advertencia",
-            description: "No se pudo cargar el stock actual del producto",
-            status: "warning",
-            duration: 3000,
-          });
-        }
-      }
-    };
-
-    if (isOpen && product?.id) {
-      fetchStock();
-    }
-  }, [isOpen, product?.id, toast]);
 
   useEffect(() => {
     if (isOpen) {
@@ -191,7 +161,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
 
     if (name === 'stock') {
       if (value === '' || /^\d+$/.test(value)) {
-        const newStockValue = value === '' ? '' : parseInt(value, 10);
+        const newStockValue = value === '' ? 0 : parseInt(value, 10);
         
         setCurrentProduct(prev => ({
           ...prev,
@@ -211,6 +181,11 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     setIsUploading(true);
 
     try {
+      // Actualizar stock primero
+      if (product?.id && typeof currentProduct.stock === 'number') {
+        await unifiedStockService.updateStock(product.id, currentProduct.stock);
+      }
+      
       await Promise.all([
         onSubmit(currentProduct),
         new Promise(resolve => setTimeout(resolve, 1000))
@@ -465,9 +440,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                 <FormLabel>
                   Stock disponible
                 </FormLabel>
-                {stockLoading ? (
-                  <Spinner size="sm" />
-                ) : (
+                {stockData ? (
                   <Input
                     type="number"
                     value={currentProduct.stock}
@@ -481,6 +454,8 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                     min={0}
                     placeholder="Ingresa el stock disponible"
                   />
+                ) : (
+                  <Spinner size="sm" />
                 )}
               </FormControl>
 
