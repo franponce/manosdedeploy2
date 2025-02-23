@@ -239,12 +239,26 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
   };
 
   const handleDateChange = (date: Date | null) => {
-    setScheduledDate(date);
-    setCurrentProduct(prev => ({
-      ...prev,
-      scheduledPublishDate: date,
-      isScheduled: date !== null,
-    }));
+    if (date) {
+      // Convertir a UTC-3 (Argentina)
+      const argentinaDate = new Date(date.toLocaleString('en-US', {
+        timeZone: 'America/Argentina/Buenos_Aires'
+      }));
+      
+      setScheduledDate(argentinaDate);
+      setCurrentProduct(prev => ({
+        ...prev,
+        scheduledPublishDate: argentinaDate,
+        isScheduled: true,
+      }));
+    } else {
+      setScheduledDate(null);
+      setCurrentProduct(prev => ({
+        ...prev,
+        scheduledPublishDate: null,
+        isScheduled: false,
+      }));
+    }
   };
 
   const modules = {

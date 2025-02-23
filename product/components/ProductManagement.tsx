@@ -298,9 +298,25 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
     const scheduledDate = new Date(product.scheduledPublishDate);
     const now = new Date();
 
+    // Obtener fecha actual en Argentina
     const argentinaTime = new Date(now.toLocaleString('en-US', {
       timeZone: 'America/Argentina/Buenos_Aires'
     }));
+
+    // Si la fecha programada ya pasó, actualizar el producto
+    if (scheduledDate <= argentinaTime && !product.isVisible) {
+      updateProduct({
+        ...product,
+        isVisible: true,
+        isScheduled: false
+      }).then(() => {
+        // Forzar actualización de la lista
+        mutate(SWR_KEYS.PRODUCTS);
+      }).catch((error: Error) => {
+        console.error('Error actualizando visibilidad programada:', error);
+      });
+      return false;
+    }
 
     return scheduledDate > argentinaTime;
   };
@@ -593,6 +609,23 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
       return matchesSearch && matchesCategory && matchesVisibility;
     });
   }, [products, showHiddenProducts, searchTerm, selectedCategory]);
+
+  useEffect(() => {
+    if (!products) return;
+
+    const checkScheduledProducts = () => {
+      products.forEach(product => {
+        if (product.isScheduled) {
+          isProductScheduled(product);
+        }
+      });
+    };
+
+    // Verificar cada minuto
+    const interval = setInterval(checkScheduledProducts, 60000);
+    
+    return () => clearInterval(interval);
+  }, [products]);
 
   // Renderizado condicional al final
   if (isLoading || !products) {
