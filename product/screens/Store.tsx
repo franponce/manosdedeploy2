@@ -122,6 +122,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
   }, [isLoading, hasMore]);
 
   React.useEffect(() => {
+    /* TODO: Feature futura - Programación de productos
     const checkScheduledProducts = () => {
       const now = new Date();
       const updatedProducts = products?.map(product => {
@@ -139,6 +140,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
     const interval = setInterval(checkScheduledProducts, 60000); // Verificar cada minuto
 
     return () => clearInterval(interval);
+    */
   }, [products, mutate]);
 
   React.useEffect(() => {
@@ -153,8 +155,9 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
           product?.id &&
           product?.title &&
           product?.images &&
-          product?.price &&
-          !product?.isScheduled
+          product?.price
+          // Feature futura - Programación de productos
+          // && !product?.isScheduled
         );
 
         // Ser explícitos con la visibilidad
@@ -293,8 +296,8 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ initialProducts, initialCateg
                     stock: 0,
                     price: 0,
                     currency: 'ARS',
-                    isScheduled: false,
-                    scheduledPublishDate: null,
+                   // isScheduled: false,
+                   // scheduledPublishDate: null,
                     categoryId: '',
                     isVisible: true,
                     order: ''
