@@ -102,12 +102,32 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
   const { categories, isLoading: categoriesLoading, createCategory, mutate: mutateCategories } = useCategories();
 
   useEffect(() => {
-    if (isOpen && product) {
-      setCurrentProduct(prev => ({
-        ...prev,
-        ...product,
-        stock: product ? stockData?.available || 0 : 0 // Asegurarse de que el stock sea 0 para nuevos productos
-      }));
+    if (isOpen) {
+      if (product) {
+        // Producto existente: usar stockData
+        setCurrentProduct(prev => ({
+          ...prev,
+          ...product,
+          stock: stockData?.available || 0
+        }));
+      } else {
+        // Nuevo producto: inicializar con valores por defecto
+        setCurrentProduct(prev => ({
+          ...prev,
+          id: '',
+          title: '',
+          description: '',
+          price: 0,
+          images: [],
+          isVisible: true,
+          stock: 0,
+          categoryId: '',
+          currency: 'ARS',
+          order: '',
+          isScheduled: false,
+          scheduledPublishDate: null
+        }));
+      }
     }
   }, [isOpen, product, stockData]);
 
@@ -437,26 +457,23 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
               </FormControl>
 
               <FormControl>
-                <FormLabel>
-                  Stock disponible
-                </FormLabel>
-                {stockData ? (
-                  <Input
-                    type="number"
-                    value={currentProduct.stock}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setCurrentProduct(prev => ({
-                        ...prev,
-                        stock: value === '' ? '' : parseInt(value, 10)
-                      }));
-                    }}
-                    min={0}
-                    placeholder="Ingresa el stock disponible"
-                  />
-                ) : (
-                  <Spinner size="sm" />
-                )}
+                <FormLabel>Stock disponible</FormLabel>
+                <NumberInput
+                  min={0}
+                  value={currentProduct.stock}
+                  onChange={(_, value) => 
+                    setCurrentProduct(prev => ({
+                      ...prev,
+                      stock: isNaN(value) ? 0 : value
+                    }))
+                  }
+                >
+                  <NumberInputField name="stock" />
+                  <NumberInputStepper>
+                    <NumberIncrementStepper />
+                    <NumberDecrementStepper />
+                  </NumberInputStepper>
+                </NumberInput>
               </FormControl>
 
               <FormControl>
