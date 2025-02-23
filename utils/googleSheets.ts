@@ -100,6 +100,43 @@ if (typeof window === 'undefined') {
     }
   };
 
+  const mapProductToRow = (product: Product): string[] => {
+    return [
+      product.id,                // Columna A
+      product.title,            // Columna B
+      product.description,      // Columna C
+      product.images ? (Array.isArray(product.images) ? product.images.join('|||') : product.images) : '', // Columna D
+      product.price.toString(), // Columna E
+      // TODO: Feature futura - Programación de productos
+      // product.scheduledPublishDate ? formatLocalDateTime(product.scheduledPublishDate) : '', // Columna F
+      // product.isScheduled ? 'TRUE' : 'FALSE', // Columna G
+      '',                       // Columna F (temporal)
+      'FALSE',                  // Columna G (temporal)
+      product.categoryId || '', // Columna H
+      product.isVisible ? 'TRUE' : 'FALSE', // Columna I
+      product.stock?.toString() || '0',     // Columna J
+      product.currency || 'ARS' // Columna K
+    ];
+  };
+
+  const mapRowToProduct = (row: string[]): Product => {
+    return {
+      id: row[0],
+      title: row[1],
+      description: row[2],
+      images: row[3] ? row[3].split('|||') : [],
+      price: parseFloat(row[4]) || 0,
+      // TODO: Feature futura - Programación de productos
+      // scheduledPublishDate: row[5] ? new Date(row[5]) : null,
+      // isScheduled: row[6] === 'TRUE',
+      categoryId: row[7] || '',
+      isVisible: row[8] === 'TRUE',
+      stock: row[9] ? parseInt(row[9], 10) : 0,
+      currency: row[10] || 'ARS',
+      order: ''
+    };
+  };
+
   googleSheetsApi = {
     getProducts: async (): Promise<Product[]> => {
       try {
@@ -170,8 +207,8 @@ if (typeof window === 'undefined') {
           product.description,      // Columna C
           product.images ? (Array.isArray(product.images) ? product.images.join('|||') : product.images) : '', // Columna D
           product.price.toString(), // Columna E
-          product.scheduledPublishDate ? formatLocalDateTime(product.scheduledPublishDate) : '', // Columna F
-          product.isScheduled ? 'TRUE' : 'FALSE', // Columna G
+          '',  // Columna F (temporal)
+          'FALSE',  // Columna G (temporal)
           product.categoryId || '', // Columna H
           product.isVisible ? 'TRUE' : 'FALSE', // Columna I
           product.order || '',     // Columna J
@@ -225,8 +262,8 @@ if (typeof window === 'undefined') {
           product.description,     // Columna C
           product.images ? (Array.isArray(product.images) ? product.images.join('|||') : product.images) : '', // Columna D
           product.price.toString(), // Columna E
-          product.scheduledPublishDate ? formatLocalDateTime(product.scheduledPublishDate) : '', // Columna F
-          product.isScheduled ? 'TRUE' : 'FALSE', // Columna G
+          '',  // Columna F (temporal)
+          'FALSE',  // Columna G (temporal)
           product.categoryId || '', // Columna H
           product.isVisible ? 'TRUE' : 'FALSE', // Columna I
           product.order || '',     // Columna J
