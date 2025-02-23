@@ -106,7 +106,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
       setCurrentProduct(prev => ({
         ...prev,
         ...product,
-        stock: stockData?.available || 0
+        stock: product ? stockData?.available || 0 : 0 // Asegurarse de que el stock sea 0 para nuevos productos
       }));
     }
   }, [isOpen, product, stockData]);
