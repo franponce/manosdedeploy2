@@ -78,13 +78,18 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     categoryId: '',
     currency: 'ARS',
     order: '',
-    isScheduled: false,
-    scheduledPublishDate: null
+    // Feature futura - Programación de productos
+    // isScheduled: false,
+    // scheduledPublishDate: null
   }));
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const toast = useToast();
+  // Comentar/eliminar estos estados y hooks
+  /* Feature futura - Programación de productos
   const [scheduledDate, setScheduledDate] = useState<Date | null>(null);
   const { isOpen: isScheduleOpen, onToggle: toggleSchedule } = useDisclosure();
+  */
+
   const [isMobile] = useMediaQuery("(max-width: 48em)");
   const { siteInfo } = useSiteInfo();
   const [description, setDescription] = useState('');
@@ -159,7 +164,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     try {
       setIsUploading(true);
       const imageUrl = await imageService.upload(file, currentProduct.id);
-      
+
       setCurrentProduct(prev => ({
         ...prev,
         images: [...prev.images, imageUrl]
@@ -182,7 +187,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     if (name === 'stock') {
       if (value === '' || /^\d+$/.test(value)) {
         const newStockValue = value === '' ? 0 : parseInt(value, 10);
-        
+
         setCurrentProduct(prev => ({
           ...prev,
           stock: newStockValue
@@ -205,12 +210,12 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
       if (product?.id && typeof currentProduct.stock === 'number') {
         await unifiedStockService.updateStock(product.id, currentProduct.stock);
       }
-      
+
       await Promise.all([
         onSubmit(currentProduct),
         new Promise(resolve => setTimeout(resolve, 1000))
       ]);
-      
+
       for (const imageUrl of imagesToDelete) {
         try {
           await imageService.delete(imageUrl);
@@ -238,99 +243,101 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
     setCurrentProduct(prev => ({ ...prev, isVisible: e.target.checked }));
   };
 
-  const handleDateChange = (date: Date | null) => {
-    if (date) {
-      // Convertir a UTC-3 (Argentina)
-      const argentinaDate = new Date(date.toLocaleString('en-US', {
-        timeZone: 'America/Argentina/Buenos_Aires'
-      }));
-      
-      setScheduledDate(argentinaDate);
-      setCurrentProduct(prev => ({
-        ...prev,
-        scheduledPublishDate: argentinaDate,
-        isScheduled: true,
-      }));
-    } else {
-      setScheduledDate(null);
-      setCurrentProduct(prev => ({
-        ...prev,
-        scheduledPublishDate: null,
-        isScheduled: false,
-      }));
-    }
-  };
-
-  const modules = {
-    toolbar: [
-      ['bold', 'italic', 'underline'],
-      [{'list': 'ordered'}, {'list': 'bullet'}],
-      ['clean'],
-    ],
-  };
-
-  const formats = [
-    'bold', 'italic', 'underline', 'list', 'bullet'
-  ];
-
-  const handleDescriptionChange = (content: string) => {
-    const textContent = content.replace(/<[^>]*>/g, '');
-    if (textContent.length <= MAX_DESCRIPTION_LENGTH) {
-      setDescription(content);
-    }
-  };
-
-  const handleCreateCategory = async () => {
-    if (!newCategoryName.trim()) return;
+  /* Feature futura - Programación de productos
+    const handleDateChange = (date: Date | null) => {
+      if (date) {
+        // Convertir a UTC-3 (Argentina)
+        const argentinaDate = new Date(date.toLocaleString('en-US', {
+          timeZone: 'America/Argentina/Buenos_Aires'
+        }));
+        
+        setScheduledDate(argentinaDate);
+        setCurrentProduct(prev => ({
+          ...prev,
+          scheduledPublishDate: argentinaDate.toISOString(),
+          isScheduled: true,
+        }));
+      } else {
+        setScheduledDate(null);
+        setCurrentProduct(prev => ({
+          ...prev,
+          scheduledPublishDate: null,
+          isScheduled: false,
+        }));
+      }
+    };
     
-    try {
-      if (categories.length >= CATEGORY_CONSTANTS.MAX_CATEGORIES) {
+    const modules = {
+      toolbar: [
+        ['bold', 'italic', 'underline'],
+        [{'list': 'ordered'}, {'list': 'bullet'}],
+        ['clean'],
+      ],
+    };
+  
+    const formats = [
+      'bold', 'italic', 'underline', 'list', 'bullet'
+    ];
+  
+    const handleDescriptionChange = (content: string) => {
+      const textContent = content.replace(/<[^>]*>/g, '');
+      if (textContent.length <= MAX_DESCRIPTION_LENGTH) {
+        setDescription(content);
+      }
+    };
+  
+    const handleCreateCategory = async () => {
+      if (!newCategoryName.trim()) return;
+      
+      try {
+        if (categories.length >= CATEGORY_CONSTANTS.MAX_CATEGORIES) {
+          toast({
+            title: "Límite alcanzado",
+            description: CATEGORY_CONSTANTS.ERROR_MESSAGES.LIMIT_REACHED,
+            status: "info",
+            duration: 3000,
+          });
+          return;
+        }
+  
+        const newCategory = await createCategory(newCategoryName.trim());
+        await mutateCategories();
+        setCurrentProduct(prev => ({ ...prev, categoryId: newCategory.id }));
+        setNewCategoryName("");
+        setShowNewCategoryInput(false);
+        
         toast({
-          title: "Límite alcanzado",
-          description: CATEGORY_CONSTANTS.ERROR_MESSAGES.LIMIT_REACHED,
-          status: "info",
+          title: "¡Categoría creada! 🎉",
+          description: "La nueva categoría se ha creado y seleccionado.",
+          status: "success",
           duration: 3000,
         });
-        return;
+      } catch (error) {
+        toast({
+          title: "No se pudo crear la categoría",
+          description: error instanceof Error ? error.message : "Error desconocido",
+          status: "warning",
+          duration: 3000,
+        });
       }
-
-      const newCategory = await createCategory(newCategoryName.trim());
-      await mutateCategories();
-      setCurrentProduct(prev => ({ ...prev, categoryId: newCategory.id }));
-      setNewCategoryName("");
-      setShowNewCategoryInput(false);
-      
-      toast({
-        title: "¡Categoría creada! 🎉",
-        description: "La nueva categoría se ha creado y seleccionado.",
-        status: "success",
-        duration: 3000,
-      });
-    } catch (error) {
-      toast({
-        title: "No se pudo crear la categoría",
-        description: error instanceof Error ? error.message : "Error desconocido",
-        status: "warning",
-        duration: 3000,
-      });
-    }
-  };
-
-  const formatScheduleInfo = () => {
-    if (!scheduledDate) return '';
-    
-    const options: Intl.DateTimeFormatOptions = {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-      timeZone: 'America/Argentina/Buenos_Aires'
     };
-
-    return new Intl.DateTimeFormat('es-AR', options).format(scheduledDate);
-  };
+  
+    const formatScheduleInfo = () => {
+      if (!scheduledDate) return '';
+      
+      const options: Intl.DateTimeFormatOptions = {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+        timeZone: 'America/Argentina/Buenos_Aires'
+      };
+  
+      return new Intl.DateTimeFormat('es-AR', options).format(scheduledDate);
+    };
+    */
 
   const normalizeImage = (img: string | string[]): string => {
     if (Array.isArray(img)) {
@@ -393,19 +400,20 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                 <FormLabel>Descripción</FormLabel>
                 <ReactQuill
                   value={currentProduct.description || ''}
-                  onChange={(content) => 
+                  onChange={(content) =>
                     setCurrentProduct(prev => ({
                       ...prev,
                       description: content
                     }))
                   }
-                  modules={modules}
+                  // Feature futura - Editor de texto enriquecido
+                  // modules={modules}
                 />
               </FormControl>
 
               <FormControl>
                 <FormLabel>
-                  Imágenes 
+                  Imágenes
                   <Text as="span" fontSize="sm" color="gray.500" ml={2}>
                     ({currentProduct.images.filter(Boolean).length}/{MAX_IMAGES})
                   </Text>
@@ -423,12 +431,12 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                     <Flex key={index} align="center" gap={2}>
                       {img ? (
                         <>
-                          <Image 
-                            src={img} 
-                            alt={`Imagen ${index + 1}`} 
-                            boxSize="100px" 
+                          <Image
+                            src={img}
+                            alt={`Imagen ${index + 1}`}
+                            boxSize="100px"
                             objectFit="cover"
-                            borderRadius="md" 
+                            borderRadius="md"
                           />
                           <IconButton
                             icon={<CloseIcon />}
@@ -475,7 +483,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                 <NumberInput
                   min={0}
                   value={currentProduct.stock}
-                  onChange={(_, value) => 
+                  onChange={(_, value) =>
                     setCurrentProduct(prev => ({
                       ...prev,
                       stock: isNaN(value) ? 0 : value
@@ -537,7 +545,28 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                         <Button
                           size="sm"
                           colorScheme="purple"
-                          onClick={handleCreateCategory}
+                          onClick={() => {
+                            if (!newCategoryName.trim()) return;
+                            createCategory(newCategoryName.trim())
+                              .then(() => {
+                                setNewCategoryName("");
+                                setShowNewCategoryInput(false);
+                                toast({
+                                  title: "¡Categoría creada! 🎉",
+                                  description: "La nueva categoría se ha creado y seleccionado.",
+                                  status: "success",
+                                  duration: 3000,
+                                });
+                              })
+                              .catch((error) => {
+                                toast({
+                                  title: "No se pudo crear la categoría",
+                                  description: error instanceof Error ? error.message : "Error desconocido",
+                                  status: "warning",
+                                  duration: 3000,
+                                });
+                              });
+                          }}
                           isDisabled={!newCategoryName.trim()}
                         >
                           Crear y seleccionar
@@ -558,6 +587,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                 </VStack>
               </FormControl>
 
+              {/* TODO: Feature futura - Programación de productos
               <Button
                 leftIcon={<TimeIcon />}
                 variant="outline"
@@ -567,6 +597,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
               >
                 {isScheduleOpen ? "Cancelar programación" : "Programar publicación"}
               </Button>
+              */}
 
               <FormControl display="flex" alignItems="center">
                 <FormLabel htmlFor="isVisible" mb="0">
@@ -579,6 +610,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                 />
               </FormControl>
 
+              {/* TODO: Feature futura - Programación de productos 
               <Collapse in={isScheduleOpen} animateOpacity>
                 <FormControl>
                   <Center mb={4}>
@@ -591,15 +623,15 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                       )}
                     </VStack>
                   </Center>
-                  <Box 
-                    border="1px" 
-                    borderColor="gray.200" 
-                    borderRadius="md" 
+                  <Box
+                    border="1px"
+                    borderColor="gray.200"
+                    borderRadius="md"
                     p={2}
                     overflowX="auto"
                     maxWidth="100%"
                   >
-                    <Flex 
+                    <Flex
                       direction="row"
                       alignItems="center"
                       justifyContent="center"
@@ -631,13 +663,14 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit, 
                   </Box>
                 </FormControl>
               </Collapse>
+              */}
             </VStack>
           )}
         </ModalBody>
         <ModalFooter>
-          <Button 
-            variant="ghost" 
-            mr={3} 
+          <Button
+            variant="ghost"
+            mr={3}
             onClick={onClose}
             isDisabled={submitLoading}
           >

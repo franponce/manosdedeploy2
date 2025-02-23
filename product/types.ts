@@ -6,8 +6,9 @@ export interface Product {
   images: string[];
   price: number;
   currency: string;
-  isScheduled: boolean;
-  scheduledPublishDate: Date | null;
+  // Feature futura - Programación de productos
+  // isScheduled: boolean;
+  // scheduledPublishDate: Date | null;
   categoryId: string;
   isVisible: boolean;
   stock: number | '';

@@ -292,6 +292,8 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
     }
   };
 
+  
+  /* TODO: Feature futura - Programación de productos
   const isProductScheduled = (product: Product): boolean => {
     if (!product.isScheduled || !product.scheduledPublishDate) return false;
 
@@ -320,6 +322,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
 
     return scheduledDate > argentinaTime;
   };
+  */
 
   const [expandedTitles, setExpandedTitles] = useState<{ [key: string]: boolean }>({});
   const [expandedDescriptions, setExpandedDescriptions] = useState<{ [key: string]: boolean }>({});
@@ -360,6 +363,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
     return new Intl.DateTimeFormat('es-AR', options).format(scheduledDate);
   };
 
+  /* TODO: Feature futura - Programación de productos
   const checkAndUpdateScheduledProducts = useCallback(async () => {
     if (!products) return;
     
@@ -393,6 +397,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
     const interval = setInterval(checkAndUpdateScheduledProducts, 60000);
     return () => clearInterval(interval);
   }, [checkAndUpdateScheduledProducts]);
+  */
 
   const handleVisibilityToggle = async (product: Product) => {
     try {
@@ -610,6 +615,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
     });
   }, [products, showHiddenProducts, searchTerm, selectedCategory]);
 
+    /* Feature futura - Programación de productos
   useEffect(() => {
     if (!products) return;
 
@@ -626,6 +632,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
     
     return () => clearInterval(interval);
   }, [products]);
+  */
 
   // Renderizado condicional al final
   if (isLoading || !products) {
