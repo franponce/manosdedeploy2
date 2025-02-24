@@ -1,5 +1,5 @@
-import { initializeApp } from "firebase/app";
-import { getFirestore, doc, getDoc, setDoc, updateDoc, runTransaction } from "firebase/firestore";
+import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
+import { getFirestore, collection, doc, getDocs, getDoc, addDoc, updateDoc, deleteDoc, query, where, setDoc, runTransaction } from 'firebase/firestore';
 import { getStorage, ref, uploadString, getDownloadURL, uploadBytes, deleteObject, listAll } from "firebase/storage";
 import { 
   getAuth, 
@@ -12,18 +12,23 @@ import {
 import { setCookie, destroyCookie } from 'nookies';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDwcuPITsTK09h8nv--CW0uRWiCWyITjHo",
-  authDomain: "manosdedeploy.firebaseapp.com",
-  projectId: "manosdedeploy",
-  storageBucket: "manosdedeploy.appspot.com",
-  messagingSenderId: "1064025881490",
-  appId: "1:1064025881490:web:ec981224ec63b1ef1a9f4b"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const storage = getStorage(app);
-const auth = getAuth(app);
+let app: FirebaseApp;
+
+if (!getApps().length) {
+  app = initializeApp(firebaseConfig);
+}
+
+const db = getFirestore(app!);
+const storage = getStorage(app!);
+const auth = getAuth(app!);
 
 export interface SiteInformation {
   storeName: string;
@@ -185,6 +190,7 @@ export const getCurrentUser = (): User | null => {
 export const isAdminUser = (user: User | null): boolean => {
   return user?.uid === 'admin';
 };
+
 export interface ProductImage {
   url: string;
   path: string;
@@ -274,7 +280,7 @@ export const stockService = {
     const stockRef = doc(db, 'stock', productId);
     
     try {
-      await runTransaction(db, async (transaction) => {
+      await runTransaction(db, async (transaction: any) => {
         const stockDoc = await transaction.get(stockRef);
         const newQuantity = Number(quantity) || 0;
         
@@ -331,6 +337,52 @@ export const stockService = {
       console.error('Error getting product stock:', error);
       return 0;
     }
+  }
+};
+
+// Operaciones CRUD para productos
+export const productService = {
+  getProducts: async () => {
+    const snapshot = await getDocs(collection(db, 'products'));
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  },
+
+  createProduct: async (productData: any) => {
+    const docRef = await addDoc(collection(db, 'products'), productData);
+    return { id: docRef.id, ...productData };
+  },
+
+  updateProduct: async (id: string, productData: any) => {
+    await updateDoc(doc(db, 'products', id), productData);
+    return { id, ...productData };
+  },
+
+  deleteProduct: async (id: string) => {
+    await deleteDoc(doc(db, 'products', id));
+    return { id };
+  },
+
+  toggleVisibility: async (id: string, isVisible: boolean) => {
+    await updateDoc(doc(db, 'products', id), { isVisible });
+    return { id, isVisible };
+  }
+};
+
+// Operaciones CRUD para categorías
+export const categoryService = {
+  getCategories: async () => {
+    const snapshot = await getDocs(collection(db, 'categories'));
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  },
+
+  createCategory: async (name: string) => {
+    const docRef = await addDoc(collection(db, 'categories'), { name });
+    return { id: docRef.id, name };
+  },
+
+  deleteCategory: async (id: string) => {
+    await deleteDoc(doc(db, 'categories', id));
+    return { id };
   }
 };
 
