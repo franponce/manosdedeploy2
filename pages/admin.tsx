@@ -32,7 +32,7 @@ import {
 } from 'react-icons/fa';
 import ProductModal from '../product/components/ProductModal';
 import { Product } from "../product/types";
-import { createProduct, updateProduct } from "../utils/googleSheets";
+import { productService } from '../utils/firebase';
 import { CategoryManager } from '../product/components/CategoryManager';
 import { useCategories } from '../hooks/useCategories';
 import SiteInfoCollapsible from '../components/SiteInfoCollapsible';
@@ -65,9 +65,9 @@ const AdminPage: React.FC = () => {
     setIsLoading(true);
     try {
       if (product.id) {
-        await updateProduct(product);
+        await productService.updateProduct(product);
       } else {
-        await createProduct(product);
+        await productService.createProduct(product);
       }
       setIsModalOpen(false);
       toast({

@@ -1,5 +1,5 @@
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
-import { getFirestore, collection, doc, getDocs, getDoc, addDoc, updateDoc, deleteDoc, query, where, setDoc, runTransaction } from 'firebase/firestore';
+import { getFirestore, collection, doc, getDocs, getDoc, addDoc, updateDoc, deleteDoc, query, where, setDoc, runTransaction, writeBatch } from 'firebase/firestore';
 import { getStorage, ref, uploadString, getDownloadURL, uploadBytes, deleteObject, listAll } from "firebase/storage";
 import { 
   getAuth, 
@@ -10,6 +10,7 @@ import {
   User
 } from "firebase/auth";
 import { setCookie, destroyCookie } from 'nookies';
+import { Product } from '../product/types';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -352,9 +353,9 @@ export const productService = {
     return { id: docRef.id, ...productData };
   },
 
-  updateProduct: async (id: string, productData: any) => {
-    await updateDoc(doc(db, 'products', id), productData);
-    return { id, ...productData };
+  updateProduct: async (product: Product) => {
+    await updateDoc(doc(db, 'products', product.id), { ...product });
+    return product;
   },
 
   deleteProduct: async (id: string) => {
@@ -365,6 +366,14 @@ export const productService = {
   toggleVisibility: async (id: string, isVisible: boolean) => {
     await updateDoc(doc(db, 'products', id), { isVisible });
     return { id, isVisible };
+  },
+
+  updateProductOrder: async (orderedIds: string[]) => {
+    const batch = writeBatch(db);
+    orderedIds.forEach((id, index) => {
+      batch.update(doc(db, 'products', id), { order: index + 1 });
+    });
+    await batch.commit();
   }
 };
 

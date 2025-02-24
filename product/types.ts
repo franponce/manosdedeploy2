@@ -1,17 +1,17 @@
 export interface Product {
-  order: string;
   id: string;
   title: string;
   description: string;
   images: string[];
   price: number;
-  currency: string;
-  // Feature futura - Programación de productos
-  // isScheduled: boolean;
-  // scheduledPublishDate: Date | null;
   categoryId: string;
   isVisible: boolean;
-  stock: number | '';
+  order?: string;
+  stock: number;
+  currency: string;
+  // Campos opcionales para futuras features
+  // scheduledPublishDate?: string;
+  // isScheduled?: boolean;
 }
 
 export interface CartItem extends Product {

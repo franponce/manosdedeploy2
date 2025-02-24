@@ -33,7 +33,7 @@ import {
 import { SearchIcon, ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
 import { FaTrash, FaEye, FaEyeSlash } from "react-icons/fa";
 import ProductModal from "./ProductModal";
-import { getProducts, createProduct, updateProduct, deleteProduct } from "../../utils/googleSheets";
+import { productService } from "../../utils/firebase";
 import { Product } from "../types";
 import useSWR, { mutate } from 'swr';
 import ImageCarousel from '../components/ImageCarousel';
@@ -55,11 +55,11 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
   onCreateProduct
 }) => {
   const { data: products, error, isLoading } = useSWR<Product[]>(
-    SWR_KEYS.PRODUCTS,
-    () => getProducts(),
+    SWR_KEYS.PRODUCTS, 
+    () => productService.getProducts().then(products => products as Product[]),
     {
-      refreshInterval: SYNC_INTERVAL,
       revalidateOnFocus: false,
+      dedupingInterval: 5000
     }
   );
   const [searchTerm, setSearchTerm] = useState("");
@@ -185,8 +185,8 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
         ...product,
         isVisible: !product.isVisible
       };
-      await updateProduct(updatedProduct);
-      await getProducts();
+      await productService.updateProduct(updatedProduct);
+      await productService.getProducts();
 
       toast({
         title: "Visibilidad actualizada",
@@ -228,10 +228,10 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
 
       let updatedProduct;
       if (isEditing) {
-        await updateProduct(product);
+        await productService.updateProduct(product);
         updatedProduct = product;
       } else {
-        const newId = await createProduct(product);
+        const newId = await productService.createProduct(product);
         updatedProduct = { ...product, id: newId };
       }
 
@@ -307,7 +307,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
 
     // Si la fecha programada ya pasó, actualizar el producto
     if (scheduledDate <= argentinaTime && !product.isVisible) {
-      updateProduct({
+      productService.updateProduct({
         ...product,
         isVisible: true,
         isScheduled: false
@@ -376,7 +376,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
 
     for (const product of productsToUpdate) {
       try {
-        await updateProduct({
+        await productService.updateProduct({
           ...product,
           isScheduled: false,
           scheduledPublishDate: null,
@@ -388,7 +388,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
     }
 
     if (productsToUpdate.length > 0) {
-      await getProducts(); // Actualizar la lista después de los cambios
+      await productService.getProducts(); // Actualizar la lista después de los cambios
     }
   }, [products]);
 
@@ -405,7 +405,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({
         ...product,
         isVisible: !product.isVisible
       };
-      await updateProduct(updatedProduct);
+      await productService.updateProduct(updatedProduct);
       mutate(SWR_KEYS.PRODUCTS);
     } catch (error) {
       console.error('Error toggling visibility:', error);

@@ -22,7 +22,7 @@ import { FaArrowUp, FaArrowDown } from 'react-icons/fa';
 import useSWR, { mutate } from 'swr';
 import { Product } from '../types';
 import { SWR_KEYS } from '../constants';
-import { getProducts, updateProductOrder } from '../../utils/googleSheets';
+import { productService } from '../../utils/firebase';
 
 interface ProductOrderManagerProps {
   isOpen: boolean;
@@ -41,7 +41,10 @@ const ProductOrderManager: React.FC<ProductOrderManagerProps> = ({
   const toast = useToast();
   const { data: products, error, isLoading } = useSWR<Product[]>(
     SWR_KEYS.PRODUCTS,
-    () => getProducts(),
+    async () => {
+      const data = await productService.getProducts();
+      return data as Product[]; // Aseguramos el tipo correcto
+    },
     {
       refreshInterval: 0, // Desactivamos el auto-refresh mientras ordenamos
       revalidateOnFocus: false,
@@ -78,7 +81,7 @@ const ProductOrderManager: React.FC<ProductOrderManagerProps> = ({
     setIsSaving(true);
     try {
       // Actualizamos el orden en el sheet
-      await updateProductOrder(orderedProducts.map(p => p.id));
+      await productService.updateProductOrder(orderedProducts.map(p => p.id));
       
       // Actualizamos el cache de SWR con el nuevo orden
       await mutate(SWR_KEYS.PRODUCTS, orderedProducts, false);
