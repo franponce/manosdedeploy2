@@ -35,7 +35,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         console.log('Found product at row index:', rowIndex);
 
         if (rowIndex === -1) {
-          console.error('Product not found in sheet');
+          console.error(`Producto con ID ${id} no encontrado en filas:`, rows.map(r => r[0]));
           return res.status(404).json({ message: 'Product not found' });
         }
 
@@ -52,8 +52,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           return res.status(500).json({ message: 'Sheet ID not found' });
         }
 
-        // Corregir el cálculo de la fila (las filas en Sheets empiezan en 1, no en 0)
-        const sheetRowIndex = rowIndex + 2; // +1 para el header, +1 porque rowIndex es base 0
+        // Calcular la fila real en Sheets (las filas empiezan en 1, +1 por el header)
+        const sheetRowNumber = rowIndex + 2;
 
         console.log('Deleting row...');
         // 3. Eliminar la fila
@@ -65,8 +65,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 range: {
                   sheetId: sheetId,
                   dimension: 'ROWS',
-                  startIndex: sheetRowIndex - 1, // Índice base 0
-                  endIndex: sheetRowIndex
+                  startIndex: sheetRowNumber - 1,
+                  endIndex: sheetRowNumber
                 }
               }
             }]
@@ -75,33 +75,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         console.log('Row deleted successfully');
 
-        const reindexProductIds = async (sheets: any) => {
-          // Obtener todas las filas actuales
-          const response = await sheets.spreadsheets.values.get({
-            spreadsheetId: process.env.GOOGLE_SHEET_ID,
-            range: 'La Libre Web - Catálogo online rev 2021 - products!A:K'
-          });
+        // Reindexar IDs
+        const reindexResponse = await sheets.spreadsheets.values.get({
+          spreadsheetId: process.env.GOOGLE_SHEET_ID,
+          range: 'La Libre Web - Catálogo online rev 2021 - products!A2:K'
+        });
 
-          const rows = response.data.values || [];
-          
-          // Generar nuevos IDs secuenciales
-          const updatedRows = rows.map((row: string[], index: number) => {
-            const newId = (index + 1).toString();
-            return [newId, ...row.slice(1)]; // Mantener el resto de las columnas
-          });
+        const currentRows = reindexResponse.data.values || [];
+        const updatedIds = currentRows.map((_, index) => [(index + 1).toString()]);
 
-          // Actualizar todo el rango con los nuevos IDs
-          await sheets.spreadsheets.values.update({
-            spreadsheetId: process.env.GOOGLE_SHEET_ID,
-            range: 'La Libre Web - Catálogo online rev 2021 - products!A:K',
-            valueInputOption: 'USER_ENTERED',
-            requestBody: {
-              values: updatedRows
-            }
-          });
-        };
-
-        await reindexProductIds(sheets);
+        await sheets.spreadsheets.values.update({
+          spreadsheetId: process.env.GOOGLE_SHEET_ID,
+          range: 'La Libre Web - Catálogo online rev 2021 - products!A2:A',
+          valueInputOption: 'USER_ENTERED',
+          requestBody: {
+            values: updatedIds
+          }
+        });
 
         return res.status(200).json({ message: 'Product deleted successfully' });
       } catch (error: any) {

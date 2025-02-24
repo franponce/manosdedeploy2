@@ -254,7 +254,7 @@ if (typeof window === 'undefined') {
         const sheets = google.sheets({ version: 'v4', auth });
 
         const currentProducts = await googleSheetsApi.getProducts();
-        const newId = (Math.max(...currentProducts.map((p: Product) => parseInt(p.id)), 0) + 1).toString();
+        const newId = Date.now().toString();
 
         const values = [[
           newId,                   // Columna A
