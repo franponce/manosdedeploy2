@@ -52,6 +52,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           return res.status(500).json({ message: 'Sheet ID not found' });
         }
 
+        // Corregir el cálculo de la fila (las filas en Sheets empiezan en 1, no en 0)
+        const sheetRowIndex = rowIndex + 2; // +1 para el header, +1 porque rowIndex es base 0
+
         console.log('Deleting row...');
         // 3. Eliminar la fila
         await sheets.spreadsheets.batchUpdate({
@@ -62,8 +65,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 range: {
                   sheetId: sheetId,
                   dimension: 'ROWS',
-                  startIndex: rowIndex + 1,
-                  endIndex: rowIndex + 2
+                  startIndex: sheetRowIndex - 1, // Índice base 0
+                  endIndex: sheetRowIndex
                 }
               }
             }]
@@ -71,6 +74,35 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         });
 
         console.log('Row deleted successfully');
+
+        const reindexProductIds = async (sheets: any) => {
+          // Obtener todas las filas actuales
+          const response = await sheets.spreadsheets.values.get({
+            spreadsheetId: process.env.GOOGLE_SHEET_ID,
+            range: 'La Libre Web - Catálogo online rev 2021 - products!A:K'
+          });
+
+          const rows = response.data.values || [];
+          
+          // Generar nuevos IDs secuenciales
+          const updatedRows = rows.map((row: string[], index: number) => {
+            const newId = (index + 1).toString();
+            return [newId, ...row.slice(1)]; // Mantener el resto de las columnas
+          });
+
+          // Actualizar todo el rango con los nuevos IDs
+          await sheets.spreadsheets.values.update({
+            spreadsheetId: process.env.GOOGLE_SHEET_ID,
+            range: 'La Libre Web - Catálogo online rev 2021 - products!A:K',
+            valueInputOption: 'USER_ENTERED',
+            requestBody: {
+              values: updatedRows
+            }
+          });
+        };
+
+        await reindexProductIds(sheets);
+
         return res.status(200).json({ message: 'Product deleted successfully' });
       } catch (error: any) {
         console.error('Detailed error:', error);
